@@ -1,4 +1,4 @@
-from decimal import Decimal
+import uuid
 
 from django.db import models
 from django.utils import timezone
@@ -9,19 +9,12 @@ from clientes.models import Cliente
 
 class LancamentoCashback(models.Model):
 
-    STATUS_PENDENTE = 'pendente'
-    STATUS_DISPONIVEL = 'disponivel'
-    STATUS_USADO = 'usado'
-    STATUS_EXPIRADO = 'expirado'
-    STATUS_CANCELADO = 'cancelado'
-
-    STATUS_CHOICES = [
-        (STATUS_PENDENTE, 'Pendente'),
-        (STATUS_DISPONIVEL, 'Disponível'),
-        (STATUS_USADO, 'Usado'),
-        (STATUS_EXPIRADO, 'Expirado'),
-        (STATUS_CANCELADO, 'Cancelado'),
-    ]
+    uuid = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        db_index=True
+    )
 
     matriz = models.ForeignKey(
         Matriz,
@@ -31,13 +24,13 @@ class LancamentoCashback(models.Model):
 
     loja = models.ForeignKey(
         Loja,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='lancamentos_cashback'
     )
 
     cliente = models.ForeignKey(
         Cliente,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='lancamentos_cashback'
     )
 
@@ -45,16 +38,15 @@ class LancamentoCashback(models.Model):
     percentual_cashback = models.DecimalField(max_digits=5, decimal_places=2)
     valor_cashback = models.DecimalField(max_digits=10, decimal_places=2)
 
-    data_compra = models.DateField(default=timezone.localdate)
-    data_liberacao = models.DateField()
-    data_expiracao = models.DateField()
-
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default=STATUS_PENDENTE,
-        db_index=True
+    valor_utilizado = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
     )
+
+    data_compra = models.DateField(default=timezone.localdate)
+    data_liberacao = models.DateField(db_index=True)
+    data_expiracao = models.DateField(db_index=True)
 
     observacao = models.TextField(blank=True, null=True)
 
@@ -66,17 +58,45 @@ class LancamentoCashback(models.Model):
         indexes = [
             models.Index(fields=['matriz', 'cliente']),
             models.Index(fields=['matriz', 'loja']),
-            models.Index(fields=['matriz', 'status']),
             models.Index(fields=['matriz', 'data_liberacao']),
             models.Index(fields=['matriz', 'data_expiracao']),
-            models.Index(fields=['cliente', 'status']),
+            models.Index(fields=['matriz', 'cliente', 'data_liberacao']),
+            models.Index(fields=['matriz', 'cliente', 'data_expiracao']),
+            models.Index(fields=['cliente', 'data_compra']),
         ]
 
     def __str__(self):
         return f'{self.cliente.nome} - R$ {self.valor_cashback}'
-    
+
+    @property
+    def valor_restante(self):
+        return self.valor_cashback - self.valor_utilizado
+
+    @property
+    def esta_liberado(self):
+        return timezone.localdate() >= self.data_liberacao
+
+    @property
+    def esta_expirado(self):
+        return timezone.localdate() > self.data_expiracao
+
+    @property
+    def disponivel_para_uso(self):
+        return (
+            self.esta_liberado and
+            not self.esta_expirado and
+            self.valor_restante > 0
+        )
+
 
 class UsoCashback(models.Model):
+
+    uuid = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        db_index=True
+    )
 
     matriz = models.ForeignKey(
         Matriz,
@@ -86,13 +106,13 @@ class UsoCashback(models.Model):
 
     loja = models.ForeignKey(
         Loja,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='usos_cashback'
     )
 
     cliente = models.ForeignKey(
         Cliente,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='usos_cashback'
     )
 
@@ -112,3 +132,38 @@ class UsoCashback(models.Model):
 
     def __str__(self):
         return f'{self.cliente.nome} usou R$ {self.valor_usado}'
+
+
+class UsoLancamentoCashback(models.Model):
+
+    uso_cashback = models.ForeignKey(
+        UsoCashback,
+        on_delete=models.CASCADE,
+        related_name='itens'
+    )
+
+    lancamento = models.ForeignKey(
+        LancamentoCashback,
+        on_delete=models.PROTECT,
+        related_name='utilizacoes'
+    )
+
+    valor_utilizado = models.DecimalField(max_digits=10, decimal_places=2)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['uso_cashback']),
+            models.Index(fields=['lancamento']),
+        ]
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor_utilizado__gt=0),
+                name='valor_utilizado_maior_que_zero'
+            )
+        ]
+
+    def __str__(self):
+        return f'R$ {self.valor_utilizado} do lançamento {self.lancamento_id}'
