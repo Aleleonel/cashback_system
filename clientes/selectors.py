@@ -19,3 +19,10 @@ def get_clientes_da_matriz(*, matriz):
         'matriz',
         'loja_cadastro'
     ).order_by('nome')
+
+def get_cliente_por_cpf(matriz, cpf):
+    return Cliente.objects.filter(
+        matriz=matriz,
+        cpf=cpf,
+        ativo=True
+    ).first()
