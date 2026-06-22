@@ -1,6 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
+
+from core.services import get_contexto_operacional_usuario
 
 from .forms import NovaCompraForm
 from .services import registrar_compra
@@ -9,13 +12,28 @@ from .services import registrar_compra
 @login_required
 def nova_compra(request):
 
+    try:
+        contexto_operacional = get_contexto_operacional_usuario(request.user)
+
+    except ValidationError as erro:
+        messages.error(request, erro.message)
+
+        return render(
+            request,
+            'cashback/nova_compra.html',
+            {
+                'form': NovaCompraForm(),
+                'bloquear_formulario': True,
+            }
+        )
+
     if request.method == 'POST':
         form = NovaCompraForm(request.POST)
 
         if form.is_valid():
             lancamento = registrar_compra(
-                matriz=request.user.matriz,
-                loja=request.user.lojas.first(),
+                matriz=contexto_operacional['matriz'],
+                loja=contexto_operacional['loja'],
                 cpf=form.cleaned_data['cpf'],
                 nome=form.cleaned_data['nome'],
                 telefone=form.cleaned_data['telefone'],
@@ -41,6 +59,8 @@ def nova_compra(request):
         request,
         'cashback/nova_compra.html',
         {
-            'form': form
+            'form': form,
+            'bloquear_formulario': False,
+            'loja_operacional': contexto_operacional['loja'],
         }
     )
