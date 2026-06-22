@@ -10,7 +10,8 @@ class ClienteAdmin(admin.ModelAdmin):
         'cpf',
         'telefone',
         'email',
-        'loja',
+        'matriz',
+        'loja_cadastro',
         'aceita_email',
         'aceita_sms',
         'ativo',
@@ -24,7 +25,8 @@ class ClienteAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
-        'loja',
+        'matriz',
+        'loja_cadastro',
         'ativo',
         'aceita_email',
         'aceita_sms',

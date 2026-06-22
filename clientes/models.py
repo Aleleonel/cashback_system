@@ -1,12 +1,23 @@
 from django.db import models
-from empresas.models import Loja
+from empresas.models import Matriz, Loja
+
+from decimal import Decimal
 
 
 class Cliente(models.Model):
-    loja = models.ForeignKey(
-        Loja,
+
+    matriz = models.ForeignKey(
+        Matriz,
         on_delete=models.CASCADE,
         related_name='clientes'
+    )
+
+    loja_cadastro = models.ForeignKey(
+        Loja,
+        on_delete=models.CASCADE,
+        related_name='clientes_cadastrados',
+        null=True,
+        blank=True
     )
 
     nome = models.CharField(max_length=150)
@@ -22,8 +33,10 @@ class Cliente(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('loja', 'cpf')
+        unique_together = ('matriz', 'cpf')
         ordering = ['nome']
 
     def __str__(self):
         return f'{self.nome} - {self.cpf}'
+
+    
