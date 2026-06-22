@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block content %}
 
@@ -12,23 +12,25 @@
 
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0">Nova Compra</h5>
-                </div>
 
-                {% if loja_operacional %}
-                <small class="text-muted">
-                    Loja operacional: {{ loja_operacional.nome }}
-                </small>
-                {% endif %}
+                    {% if loja_operacional %}
+                        <small class="text-white-50">
+                            Loja operacional: {{ loja_operacional.nome }}
+                        </small>
+                    {% endif %}
+                </div>
 
                 <div class="card-body">
 
                     {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} mb-3">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} mb-3">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
                     {% endif %}
+
+                    <div id="cliente-status" class="alert d-none mb-3"></div>
 
                     <form method="post" novalidate>
                         {% csrf_token %}
@@ -110,5 +112,65 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cpfInput = document.getElementById('id_cpf');
+    const nomeInput = document.getElementById('id_nome');
+    const telefoneInput = document.getElementById('id_telefone');
+    const emailInput = document.getElementById('id_email');
+    const statusBox = document.getElementById('cliente-status');
+
+    function somenteNumeros(valor) {
+        return valor.replace(/\D/g, '');
+    }
+
+    function mostrarStatus(tipo, texto) {
+        statusBox.className = 'alert mb-3 alert-' + tipo;
+        statusBox.textContent = texto;
+        statusBox.classList.remove('d-none');
+    }
+
+    function esconderStatus() {
+        statusBox.classList.add('d-none');
+        statusBox.textContent = '';
+    }
+
+    cpfInput.addEventListener('blur', function () {
+        const cpf = somenteNumeros(cpfInput.value);
+
+        if (cpf.length < 11) {
+            esconderStatus();
+            return;
+        }
+
+        fetch(`/clientes/buscar-cpf/?cpf=${cpf}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.encontrado) {
+                    nomeInput.value = data.nome || '';
+                    telefoneInput.value = data.telefone || '';
+                    emailInput.value = data.email || '';
+
+                    mostrarStatus(
+                        'success',
+                        'Cliente encontrado. Dados preenchidos automaticamente.'
+                    );
+                } else {
+                    mostrarStatus(
+                        'warning',
+                        'Cliente não encontrado. Preencha o cadastro rápido.'
+                    );
+                }
+            })
+            .catch(() => {
+                mostrarStatus(
+                    'danger',
+                    'Erro ao buscar cliente. Tente novamente.'
+                );
+            });
+    });
+});
+</script>
 
 {% endblock %}
