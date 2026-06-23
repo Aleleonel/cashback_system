@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 
 from core.services import get_contexto_operacional_usuario
+from cashback.selectors import get_saldo_disponivel_cliente
 
 from .selectors import get_cliente_por_cpf
 
@@ -16,13 +18,18 @@ def buscar_cliente_cpf(request):
             'encontrado': False
         })
 
-    contexto = get_contexto_operacional_usuario(
-        request.user
-    )
+    try:
+        contexto = get_contexto_operacional_usuario(request.user)
+
+    except ValidationError as erro:
+        return JsonResponse({
+            'encontrado': False,
+            'erro': erro.message
+        }, status=400)
 
     cliente = get_cliente_por_cpf(
-        contexto['matriz'],
-        cpf
+        matriz=contexto['matriz'],
+        cpf=cpf
     )
 
     if not cliente:
@@ -30,9 +37,15 @@ def buscar_cliente_cpf(request):
             'encontrado': False
         })
 
+    saldo_disponivel = get_saldo_disponivel_cliente(
+        matriz=contexto['matriz'],
+        cliente=cliente
+    )
+
     return JsonResponse({
         'encontrado': True,
         'nome': cliente.nome,
-        'telefone': cliente.telefone,
-        'email': cliente.email,
+        'telefone': cliente.telefone or '',
+        'email': cliente.email or '',
+        'saldo_disponivel': str(saldo_disponivel),
     })
