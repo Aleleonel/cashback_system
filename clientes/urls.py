@@ -1,6 +1,9 @@
 from django.urls import path
+
 from .views import (
     buscar_cliente_cpf,
+    criar_cliente,
+    editar_cliente,
     extrato_cliente,
     lista_clientes,
 )
@@ -8,10 +11,23 @@ from .views import (
 app_name = 'clientes'
 
 urlpatterns = [
+
     path(
-        'buscar-cpf/',
-        buscar_cliente_cpf,
-        name='buscar_cliente_cpf'
+        '', 
+        lista_clientes, 
+        name='lista_clientes'
+    ),
+
+    path(
+        'novo/', 
+        criar_cliente, 
+        name='criar_cliente'
+    ),
+
+    path(
+        '<int:cliente_id>/editar/',
+        editar_cliente,
+        name='editar_cliente'
     ),
 
     path(
@@ -21,8 +37,9 @@ urlpatterns = [
     ),
 
     path(
-        '',
-        lista_clientes,
-        name='lista_clientes'
+        'buscar-cpf/',
+        buscar_cliente_cpf,
+        name='buscar_cliente_cpf'
     ),
+
 ]

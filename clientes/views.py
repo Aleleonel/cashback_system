@@ -14,6 +14,10 @@ from .selectors import get_cliente_por_cpf
 
 from django.db import models
 
+from django.contrib import messages
+from django.shortcuts import redirect
+from .forms import ClienteForm
+
 from django.core.paginator import Paginator
 
 
@@ -138,5 +142,70 @@ def lista_clientes(request):
         {
             'clientes': clientes,
             'busca': busca,
+        }
+    )
+
+@login_required
+def criar_cliente(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+
+        if form.is_valid():
+            cliente = form.save(commit=False)
+            cliente.matriz = contexto['matriz']
+            cliente.loja_cadastro = contexto['loja']
+            cliente.save()
+
+            messages.success(request, 'Cliente cadastrado com sucesso.')
+
+            return redirect('clientes:lista_clientes')
+
+    else:
+        form = ClienteForm()
+
+    return render(
+        request,
+        'clientes/form_cliente.html',
+        {
+            'form': form,
+            'titulo': 'Novo Cliente',
+        }
+    )
+
+
+@login_required
+def editar_cliente(request, cliente_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    cliente = get_object_or_404(
+        Cliente.objects.select_related('matriz', 'loja_cadastro'),
+        id=cliente_id,
+        matriz=contexto['matriz'],
+    )
+
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, 'Cliente atualizado com sucesso.')
+
+            return redirect('clientes:lista_clientes')
+
+    else:
+        form = ClienteForm(instance=cliente)
+
+    return render(
+        request,
+        'clientes/form_cliente.html',
+        {
+            'form': form,
+            'titulo': 'Editar Cliente',
+            'cliente': cliente,
         }
     )

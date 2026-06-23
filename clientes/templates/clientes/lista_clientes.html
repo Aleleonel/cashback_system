@@ -6,8 +6,12 @@
 
     <div class="card shadow-sm">
 
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Clientes</strong>
+
+            <a href="{% url 'clientes:criar_cliente' %}" class="btn btn-sm btn-dark">
+                Novo Cliente
+            </a>
         </div>
 
         <div class="card-body border-bottom">
@@ -51,11 +55,17 @@
                         <td>{{ cliente.cpf }}</td>
                         <td>{{ cliente.telefone }}</td>
 
-                        <td width="120">
+                        <td width="180">
                             <a href="{% url 'clientes:extrato_cliente' cliente.id %}" class="btn btn-sm btn-dark">
                                 Extrato
                             </a>
+
+                            <a href="{% url 'clientes:editar_cliente' cliente.id %}"
+                                class="btn btn-sm btn-outline-secondary">
+                                Editar
+                            </a>
                         </td>
+
                     </tr>
 
                     {% empty %}
@@ -102,8 +112,6 @@
                                 {{ num }}
                             </a>
                         </li>
-                        {% endif %}
-
                         {% endif %}
 
                         {% endfor %}

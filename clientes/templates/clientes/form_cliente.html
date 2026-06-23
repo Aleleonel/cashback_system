@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+            <strong>{{ titulo }}</strong>
+        </div>
+
+        <div class="card-body">
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        {{ form.nome.label_tag }}
+                        {{ form.nome }}
+                        {{ form.nome.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.cpf.label_tag }}
+                        {{ form.cpf }}
+                        {{ form.cpf.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.telefone.label_tag }}
+                        {{ form.telefone }}
+                        {{ form.telefone.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.data_nascimento.label_tag }}
+                        {{ form.data_nascimento }}
+                        {{ form.data_nascimento.errors }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            {{ form.aceita_email }}
+                            {{ form.aceita_email.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            {{ form.aceita_sms }}
+                            {{ form.aceita_sms.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            {{ form.ativo }}
+                            {{ form.ativo.label_tag }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Salvar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
