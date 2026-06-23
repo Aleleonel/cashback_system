@@ -16,7 +16,16 @@ from django.db import models
 
 from django.contrib import messages
 from django.shortcuts import redirect
-from .forms import ClienteForm
+
+from .forms import (
+    ClienteForm,
+    ImportarClientesForm,
+)
+
+from .services import (
+    importar_clientes_validados,
+    validar_planilha_clientes,
+)
 
 from django.core.paginator import Paginator
 
@@ -209,3 +218,74 @@ def editar_cliente(request, cliente_id):
             'cliente': cliente,
         }
     )
+
+@login_required
+def importar_clientes(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    if request.method == 'POST':
+        form = ImportarClientesForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            resultado = validar_planilha_clientes(
+                arquivo=form.cleaned_data['arquivo'],
+                matriz=contexto['matriz']
+            )
+
+            if not resultado['valido']:
+                messages.error(request, resultado['erro_estrutura'])
+
+            else:
+                resultado['possui_validos'] = (
+                    resultado['resumo']['validos'] > 0
+                )
+
+                request.session['importacao_clientes_linhas'] = resultado['linhas']
+
+                return render(
+                    request,
+                    'clientes/confirmar_importacao.html',
+                    {
+                        'resultado': resultado,
+                    }
+                )
+
+    else:
+        form = ImportarClientesForm()
+
+    return render(
+        request,
+        'clientes/importar_clientes.html',
+        {
+            'form': form,
+        }
+    )
+
+
+@login_required
+def confirmar_importacao_clientes(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    linhas = request.session.get('importacao_clientes_linhas')
+
+    if not linhas:
+        messages.error(request, 'Nenhuma importação pendente encontrada.')
+
+        return redirect('clientes:importar_clientes')
+
+    resultado = importar_clientes_validados(
+        matriz=contexto['matriz'],
+        loja=contexto['loja'],
+        linhas=linhas
+    )
+
+    del request.session['importacao_clientes_linhas']
+
+    messages.success(
+        request,
+        f"Importação concluída. Criados: {resultado['criados']}. Atualizados: {resultado['atualizados']}."
+    )
+
+    return redirect('clientes:lista_clientes')

@@ -9,9 +9,15 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Clientes</strong>
 
-            <a href="{% url 'clientes:criar_cliente' %}" class="btn btn-sm btn-dark">
-                Novo Cliente
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'clientes:importar_clientes' %}" class="btn btn-sm btn-outline-secondary">
+                    Importar
+                </a>
+
+                <a href="{% url 'clientes:criar_cliente' %}" class="btn btn-sm btn-dark">
+                    Novo Cliente
+                </a>
+            </div>
         </div>
 
         <div class="card-body border-bottom">
@@ -65,7 +71,6 @@
                                 Editar
                             </a>
                         </td>
-
                     </tr>
 
                     {% empty %}
@@ -89,7 +94,6 @@
         <div class="card-footer">
 
             <nav>
-
                 <ul class="pagination justify-content-center mb-0">
 
                     {% if clientes.has_previous %}
@@ -102,16 +106,18 @@
 
                     {% for num in clientes.paginator.page_range %}
 
-                    {% if num >= clientes.number|add:'-2' and num <= clientes.number|add:'2' %} {% if
-                        clientes.number==num %} <li class="page-item active">
+                    {% if num == clientes.number %}
+
+                    <li class="page-item active">
                         <span class="page-link">{{ num }}</span>
+                    </li>
+
+                    {% elif num > clientes.number|add:"-3" and num < clientes.number|add:"3" %} <li class="page-item">
+                        <a class="page-link" href="?q={{ busca }}&page={{ num }}">
+                            {{ num }}
+                        </a>
                         </li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="?q={{ busca }}&page={{ num }}">
-                                {{ num }}
-                            </a>
-                        </li>
+
                         {% endif %}
 
                         {% endfor %}
@@ -125,7 +131,6 @@
                         {% endif %}
 
                 </ul>
-
             </nav>
 
         </div>

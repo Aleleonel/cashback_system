@@ -64,3 +64,29 @@ class ClienteForm(forms.ModelForm):
             raise forms.ValidationError('Informe o nome completo do cliente.')
 
         return nome
+    
+
+class ImportarClientesForm(forms.Form):
+
+    arquivo = forms.FileField(
+        label='Planilha de clientes',
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'form-control',
+            'accept': '.xlsx,.xls',
+        })
+    )
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data['arquivo']
+
+        extensoes_permitidas = [
+            '.xlsx',
+            '.xls',
+        ]
+
+        if not any(arquivo.name.lower().endswith(ext) for ext in extensoes_permitidas):
+            raise forms.ValidationError(
+                'Envie uma planilha Excel nos formatos .xlsx ou .xls.'
+            )
+
+        return arquivo

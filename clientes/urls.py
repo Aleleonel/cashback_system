@@ -6,6 +6,8 @@ from .views import (
     editar_cliente,
     extrato_cliente,
     lista_clientes,
+    importar_clientes,
+    confirmar_importacao_clientes,
 )
 
 app_name = 'clientes'
@@ -22,6 +24,18 @@ urlpatterns = [
         'novo/', 
         criar_cliente, 
         name='criar_cliente'
+    ),
+
+    path(
+        'importar/',
+        importar_clientes, 
+        name='importar_clientes'
+    ),
+
+    path(
+        'importar/confirmar/',
+        confirmar_importacao_clientes,
+        name='confirmar_importacao_clientes'
     ),
 
     path(

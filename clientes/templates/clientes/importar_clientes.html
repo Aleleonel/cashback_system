@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+            <strong>Importar Clientes</strong>
+        </div>
+
+        <div class="card-body">
+
+            <p class="text-muted">
+                A planilha deve conter as colunas:
+                <strong>Nome, CPF, Nascimento, Celular, E-mail</strong>.
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {{ form.arquivo.label_tag }}
+                {{ form.arquivo }}
+                {{ form.arquivo.errors }}
+
+                <div class="mt-4 d-flex justify-content-between">
+
+                    <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Validar planilha
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
