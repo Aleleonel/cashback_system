@@ -47,21 +47,23 @@
                     {% for cliente in clientes %}
 
                     <tr>
-
                         <td>{{ cliente.nome }}</td>
                         <td>{{ cliente.cpf }}</td>
                         <td>{{ cliente.telefone }}</td>
 
                         <td width="120">
-
                             <a href="{% url 'clientes:extrato_cliente' cliente.id %}" class="btn btn-sm btn-dark">
-
                                 Extrato
-
                             </a>
-
                         </td>
+                    </tr>
 
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            Nenhum cliente encontrado.
+                        </td>
                     </tr>
 
                     {% endfor %}
@@ -72,61 +74,57 @@
 
         </div>
 
+        {% if clientes.paginator.num_pages > 1 %}
+
+        <div class="card-footer">
+
+            <nav>
+
+                <ul class="pagination justify-content-center mb-0">
+
+                    {% if clientes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ busca }}&page={{ clientes.previous_page_number }}">
+                            Anterior
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in clientes.paginator.page_range %}
+
+                    {% if num >= clientes.number|add:'-2' and num <= clientes.number|add:'2' %} {% if
+                        clientes.number==num %} <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?q={{ busca }}&page={{ num }}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% endif %}
+
+                        {% endfor %}
+
+                        {% if clientes.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?q={{ busca }}&page={{ clientes.next_page_number }}">
+                                Próxima
+                            </a>
+                        </li>
+                        {% endif %}
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+        {% endif %}
+
     </div>
-
-</div>
-
-</div>
-
-{% if clientes.paginator.num_pages > 1 %}
-
-<div class="card-footer">
-
-    <nav>
-
-        <ul class="pagination justify-content-center mb-0">
-
-            {% if clientes.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?q={{ busca }}&page={{ clientes.previous_page_number }}">
-                    Anterior
-                </a>
-            </li>
-            {% endif %}
-
-            {% for num in clientes.paginator.page_range %}
-
-            {% if clientes.number == num %}
-            <li class="page-item active">
-                <span class="page-link">{{ num }}</span>
-            </li>
-            {% else %}
-            <li class="page-item">
-                <a class="page-link" href="?q={{ busca }}&page={{ num }}">
-                    {{ num }}
-                </a>
-            </li>
-            {% endif %}
-
-            {% endfor %}
-
-            {% if clientes.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?q={{ busca }}&page={{ clientes.next_page_number }}">
-                    Próxima
-                </a>
-            </li>
-            {% endif %}
-
-        </ul>
-
-    </nav>
-
-</div>
-
-{% endif %}
-
-</div>
 
 </div>
 
