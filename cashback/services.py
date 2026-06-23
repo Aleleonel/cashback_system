@@ -7,7 +7,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from clientes.models import Cliente
-from core.models import ConfiguracaoSistema
+from core.services import garantir_configuracao_sistema
 
 from .models import (
     LancamentoCashback,
@@ -32,9 +32,9 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
                      telefone='', email='', data_nascimento=None,
                      aceita_email=True, aceita_sms=False, observacao=''):
 
-    configuracao = ConfiguracaoSistema.objects.select_for_update().get(
-        matriz=matriz
-    )
+    configuracao = garantir_configuracao_sistema(
+    matriz=matriz
+)
 
     if Decimal(valor_compra) < configuracao.valor_minimo_compra:
         raise ValidationError(

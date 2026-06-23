@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied, ValidationError
+from .models import ConfiguracaoSistema
 
 
 def get_contexto_operacional_usuario(usuario):
@@ -19,3 +20,20 @@ def get_contexto_operacional_usuario(usuario):
         'matriz': usuario.matriz,
         'loja': loja,
     }
+
+
+def garantir_configuracao_sistema(*, matriz):
+    configuracao, criada = ConfiguracaoSistema.objects.get_or_create(
+        matriz=matriz,
+        defaults={
+            'percentual_cashback': 5,
+            'dias_liberacao': 7,
+            'dias_expiracao': 45,
+            'valor_minimo_compra': 0,
+            'enviar_email_saldo': True,
+            'enviar_email_aniversario': True,
+            'enviar_sms_aniversario': False,
+        }
+    )
+
+    return configuracao
