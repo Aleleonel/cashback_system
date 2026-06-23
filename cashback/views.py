@@ -40,6 +40,7 @@ def nova_compra(request):
                 email=form.cleaned_data['email'],
                 data_nascimento=form.cleaned_data['data_nascimento'],
                 valor_compra=form.cleaned_data['valor_compra'],
+                valor_cashback_usado=form.cleaned_data['valor_cashback_usado'],
                 aceita_email=form.cleaned_data['aceita_email'],
                 aceita_sms=form.cleaned_data['aceita_sms'],
                 observacao=form.cleaned_data['observacao'],

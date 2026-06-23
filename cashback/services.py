@@ -28,6 +28,7 @@ def calcular_cashback(*, valor_compra, percentual):
 
 @transaction.atomic
 def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
+                     valor_cashback_usado=0,
                      telefone='', email='', data_nascimento=None,
                      aceita_email=True, aceita_sms=False, observacao=''):
 
@@ -86,6 +87,17 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
         valor_compra=valor_compra,
         percentual=configuracao.percentual_cashback
     )
+
+    valor_cashback_usado = Decimal(valor_cashback_usado or 0)
+
+    if valor_cashback_usado > 0:
+        usar_cashback(
+            matriz=matriz,
+            loja=loja,
+            cliente=cliente,
+            valor_usado=valor_cashback_usado,
+            observacao='Uso de cashback na compra atual.'
+        )
 
     lancamento = LancamentoCashback.objects.create(
         matriz=matriz,

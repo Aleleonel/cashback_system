@@ -63,6 +63,20 @@ class NovaCompraForm(forms.Form):
         })
     )
 
+    valor_cashback_usado = forms.DecimalField(
+        label='Cashback utilizado',
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+        required=False,
+        initial=0,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '0,00',
+            'step': '0.01',
+        })
+    )
+
     aceita_email = forms.BooleanField(
         label='Cliente aceita receber e-mail',
         required=False,
