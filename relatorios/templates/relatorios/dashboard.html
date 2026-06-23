@@ -66,4 +66,133 @@
 
 </div>
 
+
+<div class="row g-3 mt-2">
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header">
+                <strong>Últimos Clientes</strong>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Telefone</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for cliente in resumo.ultimos_clientes %}
+                        <tr>
+                            <td>{{ cliente.nome }}</td>
+                            <td>{{ cliente.cpf }}</td>
+                            <td>{{ cliente.telefone }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">
+                                Nenhum cliente encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header">
+                <strong>Últimas Compras</strong>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Loja</th>
+                            <th>Compra</th>
+                            <th>Cashback</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for compra in resumo.ultimas_compras %}
+                        <tr>
+                            <td>{{ compra.cliente.nome }}</td>
+                            <td>{{ compra.loja.nome }}</td>
+                            <td>R$ {{ compra.valor_compra }}</td>
+                            <td>R$ {{ compra.valor_cashback }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">
+                                Nenhuma compra encontrada.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm border-0 mt-3">
+
+    <div class="card-header">
+        <strong>Top Clientes por Cashback</strong>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>CPF</th>
+                    <th>Compras</th>
+                    <th>Cashback Gerado</th>
+                    <th>Utilizado</th>
+                    <th>Restante</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in resumo.top_clientes_cashback %}
+                <tr>
+                    <td>{{ item.cliente__nome }}</td>
+                    <td>{{ item.cliente__cpf }}</td>
+                    <td>{{ item.total_compras }}</td>
+                    <td>R$ {{ item.total_cashback }}</td>
+                    <td>R$ {{ item.total_utilizado }}</td>
+                    <td>R$ {{ item.total_restante }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                        Nenhum ranking encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
 {% endblock %}
