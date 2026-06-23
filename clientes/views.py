@@ -12,6 +12,8 @@ from core.services import get_contexto_operacional_usuario
 from .models import Cliente
 from .selectors import get_cliente_por_cpf
 
+from django.db import models
+
 from django.core.paginator import Paginator
 
 
@@ -102,6 +104,8 @@ def lista_clientes(request):
         request.user
     )
 
+    busca = request.GET.get('q', '').strip()
+
     clientes = Cliente.objects.filter(
         matriz=contexto['matriz'],
         ativo=True
@@ -111,7 +115,16 @@ def lista_clientes(request):
         'cpf',
         'telefone',
         'email'
-    ).order_by('nome')
+    )
+
+    if busca:
+        clientes = clientes.filter(
+            models.Q(nome__icontains=busca) |
+            models.Q(cpf__icontains=busca) |
+            models.Q(telefone__icontains=busca)
+        )
+
+    clientes = clientes.order_by('nome')
 
     paginator = Paginator(clientes, 50)
 
@@ -123,6 +136,7 @@ def lista_clientes(request):
         request,
         'clientes/lista_clientes.html',
         {
-            'clientes': clientes
+            'clientes': clientes,
+            'busca': busca,
         }
     )
