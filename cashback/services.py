@@ -10,11 +10,17 @@ from clientes.models import Cliente
 from core.services import garantir_configuracao_sistema
 
 from .models import (
+
     LancamentoCashback,
     UsoCashback,
     UsoLancamentoCashback,
 )
-from .selectors import get_lancamentos_disponiveis_cliente
+
+from .selectors import (
+    get_lancamentos_disponiveis_cliente, 
+    get_saldo_disponivel_cliente,
+    
+)
 
 
 def calcular_cashback(*, valor_compra, percentual):
@@ -35,6 +41,16 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
     configuracao = garantir_configuracao_sistema(
     matriz=matriz
 )
+
+    saldo_disponivel = get_saldo_disponivel_cliente(
+        matriz=matriz,
+        cliente=cliente
+    )
+
+    if valor_cashback_usado > saldo_disponivel:
+        raise ValidationError(
+            'O valor informado é maior que o saldo disponível.'
+        )
 
     if Decimal(valor_compra) < configuracao.valor_minimo_compra:
         raise ValidationError(
@@ -91,6 +107,22 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
 
     if valor_cashback_usado > 0:
+
+        saldo_disponivel = get_saldo_disponivel_cliente(
+            matriz=matriz,
+            cliente=cliente
+        )
+
+        if valor_cashback_usado > saldo_disponivel:
+            raise ValidationError(
+                'O valor informado é maior que o saldo disponível.'
+            )
+
+        if valor_cashback_usado > Decimal(valor_compra):
+            raise ValidationError(
+                'O cashback utilizado não pode ser maior que o valor da compra.'
+            )
+
         usar_cashback(
             matriz=matriz,
             loja=loja,

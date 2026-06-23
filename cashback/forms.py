@@ -44,11 +44,14 @@ class NovaCompraForm(forms.Form):
     data_nascimento = forms.DateField(
         label='Data de nascimento',
         required=False,
-        input_formats=['%d/%m/%Y', '%Y-%m-%d'],
-        widget=forms.DateInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'dd/mm/aaaa',
-        })
+        input_formats=['%d/%m/%Y'],
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'dd/mm/aaaa',
+                'maxlength': '10',
+            }
+        )
     )
 
     valor_compra = forms.DecimalField(

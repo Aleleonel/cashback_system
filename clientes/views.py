@@ -48,4 +48,9 @@ def buscar_cliente_cpf(request):
         'telefone': cliente.telefone or '',
         'email': cliente.email or '',
         'saldo_disponivel': str(saldo_disponivel),
+        'data_nascimento': (
+            cliente.data_nascimento.strftime('%d/%m/%Y')
+            if cliente.data_nascimento
+            else ''
+        )
     })

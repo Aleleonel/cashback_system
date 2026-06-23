@@ -31,27 +31,33 @@ def nova_compra(request):
         form = NovaCompraForm(request.POST)
 
         if form.is_valid():
-            lancamento = registrar_compra(
-                matriz=contexto_operacional['matriz'],
-                loja=contexto_operacional['loja'],
-                cpf=form.cleaned_data['cpf'],
-                nome=form.cleaned_data['nome'],
-                telefone=form.cleaned_data['telefone'],
-                email=form.cleaned_data['email'],
-                data_nascimento=form.cleaned_data['data_nascimento'],
-                valor_compra=form.cleaned_data['valor_compra'],
-                valor_cashback_usado=form.cleaned_data['valor_cashback_usado'],
-                aceita_email=form.cleaned_data['aceita_email'],
-                aceita_sms=form.cleaned_data['aceita_sms'],
-                observacao=form.cleaned_data['observacao'],
-            )
 
-            messages.success(
-                request,
-                f'Compra registrada. Cashback gerado: R$ {lancamento.valor_cashback}.'
-            )
+            try:
+                lancamento = registrar_compra(
+                    matriz=contexto_operacional['matriz'],
+                    loja=contexto_operacional['loja'],
+                    cpf=form.cleaned_data['cpf'],
+                    nome=form.cleaned_data['nome'],
+                    telefone=form.cleaned_data['telefone'],
+                    email=form.cleaned_data['email'],
+                    data_nascimento=form.cleaned_data['data_nascimento'],
+                    valor_compra=form.cleaned_data['valor_compra'],
+                    valor_cashback_usado=form.cleaned_data['valor_cashback_usado'],
+                    aceita_email=form.cleaned_data['aceita_email'],
+                    aceita_sms=form.cleaned_data['aceita_sms'],
+                    observacao=form.cleaned_data['observacao'],
+                )
 
-            return redirect('cashback:nova_compra')
+            except ValidationError as erro:
+                messages.error(request, erro.message)
+
+            else:
+                messages.success(
+                    request,
+                    f'Compra registrada. Cashback gerado: R$ {lancamento.valor_cashback}.'
+                )
+
+                return redirect('cashback:nova_compra')
 
     else:
         form = NovaCompraForm()
