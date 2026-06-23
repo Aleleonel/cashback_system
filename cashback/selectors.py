@@ -44,7 +44,19 @@ def get_extrato_cliente(*, matriz, cliente):
         matriz=matriz,
         cliente=cliente
     ).select_related(
-        'matriz',
-        'loja',
-        'cliente'
-    ).order_by('-data_compra', '-criado_em')
+        'loja'
+    ).only(
+        'id',
+        'loja__nome',
+        'valor_compra',
+        'percentual_cashback',
+        'valor_cashback',
+        'valor_utilizado',
+        'data_compra',
+        'data_liberacao',
+        'data_expiracao',
+        'criado_em',
+    ).order_by(
+        '-data_compra',
+        '-criado_em'
+    )

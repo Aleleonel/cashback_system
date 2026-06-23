@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Extrato do Cliente</h5>
+        </div>
+
+        <div class="card-body">
+            <h4>{{ cliente.nome }}</h4>
+            <p class="mb-1"><strong>CPF:</strong> {{ cliente.cpf }}</p>
+            <p class="mb-1"><strong>Loja cadastro:</strong> {{ cliente.loja_cadastro.nome }}</p>
+
+            <div class="alert alert-success mt-3 mb-0">
+                <strong>Saldo disponível:</strong> R$ {{ saldo }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header">
+            <strong>Lançamentos de Cashback</strong>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Loja</th>
+                        <th>Compra</th>
+                        <th>%</th>
+                        <th>Cashback</th>
+                        <th>Usado</th>
+                        <th>Restante</th>
+                        <th>Liberação</th>
+                        <th>Expiração</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in extrato %}
+                    <tr>
+                        <td>{{ item.data_compra|date:"d/m/Y" }}</td>
+                        <td>{{ item.loja.nome }}</td>
+                        <td>R$ {{ item.valor_compra }}</td>
+                        <td>{{ item.percentual_cashback }}%</td>
+                        <td>R$ {{ item.valor_cashback }}</td>
+                        <td>R$ {{ item.valor_utilizado }}</td>
+                        <td>R$ {{ item.valor_restante }}</td>
+                        <td>{{ item.data_liberacao|date:"d/m/Y" }}</td>
+                        <td>{{ item.data_expiracao|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            Nenhum lançamento encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

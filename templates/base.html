@@ -1,3 +1,5 @@
+{% load static %}
+
 <!doctype html>
 <html lang="pt-br">
 
@@ -11,20 +13,73 @@
 
 <body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                Cashback System
-            </a>
-        </div>
-    </nav>
+    <div class="d-flex">
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+        <aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
+
+            <h5 class="fw-bold mb-4">
+                Cashback System
+            </h5>
+
+            <nav class="nav flex-column gap-1">
+
+                <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
+                    Nova Compra
+                </a>
+
+                <a href="{% url 'clientes:lista_clientes' %}" class="nav-link text-white">
+                    Clientes
+                </a>
+
+                <a href="#" class="nav-link text-white-50">
+                    Vouchers
+                </a>
+
+                <a href="#" class="nav-link text-white-50">
+                    Campanhas
+                </a>
+
+                <a href="#" class="nav-link text-white-50">
+                    Relatórios
+                </a>
+
+                <a href="/admin/" class="nav-link text-white-50">
+                    Administração
+                </a>
+
+            </nav>
+
+        </aside>
+
+        <div class="flex-grow-1">
+
+            <header class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+
+                <div>
+                    <strong>Sistema de Cashback</strong>
+                </div>
+
+                <div class="text-muted small">
+                    {% if request.user.is_authenticated %}
+                    {{ request.user.username }}
+                    {% endif %}
+                </div>
+
+            </header>
+
+            <main>
+                {% block content %}
+                {% endblock %}
+            </main>
+
+        </div>
+
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}
+    {% endblock %}
 
 </body>
 
