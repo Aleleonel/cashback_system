@@ -17,6 +17,11 @@
                 <strong>Nome, CPF, Nascimento, Celular, E-mail</strong>.
             </p>
 
+            <a href="{% url 'clientes:baixar_modelo_importacao_clientes' %}"
+                class="btn btn-outline-secondary btn-sm mb-3">
+                Baixar modelo da planilha
+            </a>
+
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 

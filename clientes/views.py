@@ -2,6 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from io import BytesIO
+
+from django.http import HttpResponse
+from openpyxl import Workbook
 
 from cashback.selectors import (
     get_extrato_cliente,
@@ -289,3 +293,57 @@ def confirmar_importacao_clientes(request):
     )
 
     return redirect('clientes:lista_clientes')
+
+
+@login_required
+def baixar_modelo_importacao_clientes(request):
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Clientes'
+
+    colunas = [
+        'Nome',
+        'CPF',
+        'Nascimento',
+        'Celular',
+        'E-mail',
+    ]
+
+    worksheet.append(colunas)
+
+    worksheet.append([
+        'João Silva',
+        '12345678900',
+        '01/01/1990',
+        '11999999999',
+        'joao@email.com',
+    ])
+
+    for column in worksheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+
+        for cell in column:
+            if cell.value:
+                max_length = max(
+                    max_length,
+                    len(str(cell.value))
+                )
+
+        worksheet.column_dimensions[column_letter].width = max_length + 4
+
+    arquivo = BytesIO()
+    workbook.save(arquivo)
+    arquivo.seek(0)
+
+    response = HttpResponse(
+        arquivo,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+    response['Content-Disposition'] = (
+        'attachment; filename="modelo_importacao_clientes.xlsx"'
+    )
+
+    return response

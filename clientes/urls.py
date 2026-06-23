@@ -8,6 +8,7 @@ from .views import (
     lista_clientes,
     importar_clientes,
     confirmar_importacao_clientes,
+    baixar_modelo_importacao_clientes,
 )
 
 app_name = 'clientes'
@@ -56,4 +57,9 @@ urlpatterns = [
         name='buscar_cliente_cpf'
     ),
 
+    path(
+        'importar/modelo/',
+        baixar_modelo_importacao_clientes,
+        name='baixar_modelo_importacao_clientes'
+    ),
 ]
