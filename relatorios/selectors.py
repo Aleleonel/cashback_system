@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Count, F, Sum
+from django.db.models import Count, F, Sum, Avg
 from django.utils import timezone
 
 from cashback.models import LancamentoCashback
@@ -11,6 +11,7 @@ def get_dashboard_resumo(*, matriz):
 
     hoje = timezone.localdate()
     mes_atual = hoje.month
+    inicio_mes = hoje.replace(day=1)
 
     clientes_base = Cliente.objects.filter(
         matriz=matriz
@@ -87,6 +88,35 @@ def get_dashboard_resumo(*, matriz):
         '-total_cashback'
     )[:10]
 
+    compras_hoje_base = cashback_base.filter(
+        data_compra=hoje
+    )
+
+    compras_mes_base = cashback_base.filter(
+        data_compra__gte=inicio_mes,
+        data_compra__lte=hoje
+    )
+
+    vendas_hoje = compras_hoje_base.count()
+
+    vendas_mes = compras_mes_base.count()
+
+    valor_vendido_hoje = compras_hoje_base.aggregate(
+        total=Sum('valor_compra')
+    )['total'] or Decimal('0.00')
+
+    valor_vendido_mes = compras_mes_base.aggregate(
+        total=Sum('valor_compra')
+    )['total'] or Decimal('0.00')
+
+    ticket_medio_mes = compras_mes_base.aggregate(
+        media=Avg('valor_compra')
+    )['media'] or Decimal('0.00')
+
+    cashback_gerado_mes = compras_mes_base.aggregate(
+        total=Sum('valor_cashback')
+    )['total'] or Decimal('0.00')
+
     return {
         'total_clientes': total_clientes,
         'clientes_ativos': clientes_ativos,
@@ -97,4 +127,10 @@ def get_dashboard_resumo(*, matriz):
         'ultimos_clientes': ultimos_clientes,
         'ultimas_compras': ultimas_compras,
         'top_clientes_cashback': top_clientes_cashback,
+        'vendas_hoje': vendas_hoje,
+        'vendas_mes': vendas_mes,
+        'valor_vendido_hoje': valor_vendido_hoje,
+        'valor_vendido_mes': valor_vendido_mes,
+        'ticket_medio_mes': ticket_medio_mes,
+        'cashback_gerado_mes': cashback_gerado_mes,
     }
