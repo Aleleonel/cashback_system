@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <h4 class="mb-4">Dashboard</h4>
+
+    <div class="row g-3">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Total de Clientes</small>
+                    <h3 class="mb-0">{{ resumo.total_clientes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Clientes Ativos</small>
+                    <h3 class="mb-0">{{ resumo.clientes_ativos }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Aniversariantes do Mês</small>
+                    <h3 class="mb-0">{{ resumo.aniversariantes_mes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Cashback Emitido</small>
+                    <h3 class="mb-0">R$ {{ resumo.cashback_emitido }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Cashback Utilizado</small>
+                    <h3 class="mb-0">R$ {{ resumo.cashback_utilizado }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Cashback Disponível</small>
+                    <h3 class="mb-0">R$ {{ resumo.cashback_disponivel }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
