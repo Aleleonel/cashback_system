@@ -23,6 +23,8 @@
             </a>
         </div>
 
+
+
         <div class="row g-3 mb-3">
 
             <div class="col-md-4">
@@ -86,6 +88,25 @@
             </div>
 
         </div>
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2">
+
+                <div class="col-md-10">
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Buscar por nome, CPF, telefone ou e-mail">
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark">
+                        Buscar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
 
         <div class="table-responsive">
 

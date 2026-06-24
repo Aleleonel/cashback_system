@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render
-
+from django.db import models
 from core.services import get_contexto_operacional_usuario
 
 from .selectors import get_aniversariantes_do_mes
@@ -13,6 +13,9 @@ from .forms import DisparoAniversariantesForm
 from .models import CampanhaAniversarioEnvio
 from .services import registrar_disparos_aniversariantes
 
+from django.db.models import F, Value
+from django.db.models.functions import Replace
+
 @login_required
 def aniversariantes_mes(request):
 
@@ -21,6 +24,55 @@ def aniversariantes_mes(request):
     aniversariantes = get_aniversariantes_do_mes(
         matriz=contexto['matriz']
     )
+
+    busca = request.GET.get('q', '').strip()
+
+    if busca:
+        busca_numerica = ''.join(filter(str.isdigit, busca))
+
+        aniversariantes = aniversariantes.annotate(
+            telefone_limpo=Replace(
+                Replace(
+                    Replace(
+                        Replace(
+                            Replace(
+                                F('telefone'),
+                                Value('('),
+                                Value('')
+                            ),
+                            Value(')'),
+                            Value('')
+                        ),
+                        Value(' '),
+                        Value('')
+                    ),
+                    Value('-'),
+                    Value('')
+                ),
+                Value('.'),
+                Value('')
+            ),
+            cpf_limpo=Replace(
+                Replace(
+                    Replace(
+                        F('cpf'),
+                        Value('.'),
+                        Value('')
+                    ),
+                    Value('-'),
+                    Value('')
+                ),
+                Value(' '),
+                Value('')
+            )
+        ).filter(
+            models.Q(nome__icontains=busca) |
+            models.Q(email__icontains=busca) |
+            models.Q(cpf__icontains=busca) |
+            models.Q(telefone__icontains=busca) |
+            models.Q(cpf_limpo__icontains=busca_numerica) |
+            models.Q(telefone_limpo__icontains=busca_numerica)
+        )
 
     total_aniversariantes = aniversariantes.count()
 
@@ -43,9 +95,11 @@ def aniversariantes_mes(request):
         'campanhas/aniversariantes_mes.html',
         {
             'aniversariantes': aniversariantes,
+            'busca': busca,
             'total_aniversariantes': total_aniversariantes,
             'total_enviados': total_enviados,
             'total_pendentes': total_pendentes,
+            
         }
     )
 
