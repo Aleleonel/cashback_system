@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-inbox me-2"></i>
+                Fila de Envios
+            </strong>
+            <div class="text-muted small">
+                Envios pendentes, em processamento ou com erro
+            </div>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2">
+
+                <div class="col-md-4">
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Buscar cliente ou CPF">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="canal" class="form-select">
+                        <option value="">Todos os canais</option>
+
+                        {% for item in canais %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Todos os status</option>
+
+                        {% for item in status_choices %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>CPF</th>
+                        <th>Canal</th>
+                        <th>Status</th>
+                        <th>Assunto</th>
+                        <th>Erro</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for envio in envios %}
+
+                    <tr>
+                        <td>{{ envio.criado_em|date:"d/m/Y H:i" }}</td>
+                        <td>{{ envio.cliente.nome }}</td>
+                        <td>{{ envio.cliente.cpf }}</td>
+                        <td>{{ envio.get_canal_display }}</td>
+
+                        <td>
+                            {% if envio.status == 'pendente' %}
+                            <span class="badge bg-secondary">Pendente</span>
+                            {% elif envio.status == 'processando' %}
+                            <span class="badge bg-warning text-dark">Processando</span>
+                            {% elif envio.status == 'erro' %}
+                            <span class="badge bg-danger">Erro</span>
+                            {% else %}
+                            <span class="badge bg-success">{{ envio.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ envio.assunto|default:"-" }}</td>
+                        <td>{{ envio.erro|default:"-" }}</td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhum envio na fila.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

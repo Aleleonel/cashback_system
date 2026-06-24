@@ -10,6 +10,7 @@ from core.services import get_contexto_operacional_usuario
 from .selectors import (
     get_aniversariantes_do_mes,
     get_historico_envios_aniversario,
+    get_fila_envios_aniversario,
 )
 
 from django.contrib import messages
@@ -235,6 +236,72 @@ def historico_envios(request):
     return render(
         request,
         'campanhas/historico_envios.html',
+        {
+            'envios': envios,
+            'busca': busca,
+            'canal': canal,
+            'status': status,
+            'canais': canais_formatados,
+            'status_choices': status_formatados,
+        }
+    )
+
+
+@login_required
+def fila_envios(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    envios = get_fila_envios_aniversario(
+        matriz=contexto['matriz']
+    )
+
+    busca = request.GET.get('q', '').strip()
+    canal = request.GET.get('canal', '').strip()
+    status = request.GET.get('status', '').strip()
+
+    if busca:
+        busca_numerica = ''.join(filter(str.isdigit, busca))
+
+        envios = envios.filter(
+            models.Q(cliente__nome__icontains=busca) |
+            models.Q(cliente__cpf__icontains=busca) |
+            models.Q(cliente__cpf_normalizado__icontains=busca_numerica)
+        )
+
+    if canal:
+        envios = envios.filter(canal=canal)
+
+    if status:
+        envios = envios.filter(status=status)
+
+    canais_formatados = [
+        {
+            'valor': valor,
+            'nome': nome,
+            'selecionado': canal == valor,
+        }
+        for valor, nome in CampanhaAniversarioEnvio.CANAL_CHOICES
+    ]
+
+    status_formatados = [
+        {
+            'valor': valor,
+            'nome': nome,
+            'selecionado': status == valor,
+        }
+        for valor, nome in CampanhaAniversarioEnvio.STATUS_CHOICES
+    ]
+
+    paginator = Paginator(envios, 50)
+
+    page = request.GET.get('page')
+
+    envios = paginator.get_page(page)
+
+    return render(
+        request,
+        'campanhas/fila_envios.html',
         {
             'envios': envios,
             'busca': busca,

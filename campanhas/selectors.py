@@ -79,3 +79,29 @@ def get_historico_envios_aniversario(*, matriz):
     ).order_by(
         '-criado_em'
     )
+
+def get_fila_envios_aniversario(*, matriz):
+
+    return CampanhaAniversarioEnvio.objects.filter(
+        matriz=matriz,
+        status__in=[
+            CampanhaAniversarioEnvio.STATUS_PENDENTE,
+            CampanhaAniversarioEnvio.STATUS_PROCESSANDO,
+            CampanhaAniversarioEnvio.STATUS_ERRO,
+        ]
+    ).select_related(
+        'cliente'
+    ).only(
+        'id',
+        'cliente__nome',
+        'cliente__cpf',
+        'canal',
+        'status',
+        'assunto',
+        'erro',
+        'criado_em',
+        'enviado_em',
+    ).order_by(
+        'status',
+        'criado_em'
+    )
