@@ -13,6 +13,7 @@ from .selectors import (
     get_aniversariantes_do_mes,
     get_historico_envios_aniversario,
     get_fila_envios_aniversario,
+    get_configuracao_campanha_aniversario,
 )
 
 from django.contrib import messages
@@ -81,6 +82,11 @@ def disparar_aniversariantes(request):
         matriz=contexto['matriz']
     )
 
+    configuracao = get_configuracao_campanha_aniversario(
+        matriz=contexto['matriz']
+    )
+
+
     if request.method == 'POST':
         form = DisparoAniversariantesForm(request.POST)
 
@@ -113,14 +119,25 @@ def disparar_aniversariantes(request):
             return redirect('campanhas:aniversariantes_mes')
 
     else:
-        form = DisparoAniversariantesForm()
+        form = DisparoAniversariantesForm(
+            initial={
+                'assunto': configuracao.assunto_padrao,
+                'mensagem': configuracao.mensagem_padrao,
+                'enviar_email': configuracao.canal_padrao == CampanhaAniversarioEnvio.CANAL_EMAIL,
+                'enviar_whatsapp': configuracao.canal_padrao == CampanhaAniversarioEnvio.CANAL_WHATSAPP,
+                'enviar_sms': configuracao.canal_padrao == CampanhaAniversarioEnvio.CANAL_SMS,
+            }
+        )
+
 
     return render(
         request,
         'campanhas/disparar_aniversariantes.html',
+        
         {
             'form': form,
             'total_clientes': clientes.count(),
+            'configuracao': configuracao,
         }
     )
 
@@ -134,6 +151,9 @@ def reenviar_aniversariante(request, cliente_id):
         id=cliente_id,
         matriz=contexto['matriz'],
         ativo=True
+    )
+    configuracao = get_configuracao_campanha_aniversario(
+        matriz=contexto['matriz']
     )
 
     ultimo_envio = (
@@ -156,11 +176,8 @@ def reenviar_aniversariante(request, cliente_id):
         matriz=contexto['matriz'],
         cliente=cliente,
         canais=[canal],
-        assunto='Feliz aniversário! Temos um presente especial para você',
-        mensagem=(
-            'Olá, {nome}! A equipe preparou uma condição especial '
-            'para comemorar seu aniversário. Entre em contato e aproveite!'
-        ),
+        assunto=configuracao.assunto_padrao,
+        mensagem=configuracao.mensagem_padrao,
     )
 
     messages.success(

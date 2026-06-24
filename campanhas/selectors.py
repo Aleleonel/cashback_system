@@ -2,7 +2,10 @@ from django.utils import timezone
 
 from clientes.models import Cliente
 
-from .models import CampanhaAniversarioEnvio
+from .models import (
+    CampanhaAniversarioEnvio,
+    ConfiguracaoCampanhaAniversario,
+)
 from django.db.models import Count, Exists, OuterRef, Subquery
 
 
@@ -105,3 +108,11 @@ def get_fila_envios_aniversario(*, matriz):
         'status',
         'criado_em'
     )
+
+def get_configuracao_campanha_aniversario(*, matriz):
+
+    configuracao, criada = ConfiguracaoCampanhaAniversario.objects.get_or_create(
+        matriz=matriz
+    )
+
+    return configuracao
