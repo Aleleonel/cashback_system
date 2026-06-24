@@ -92,6 +92,27 @@
             </header>
 
             <main>
+
+                {% if messages %}
+
+                <div class="container-fluid mt-3">
+
+                    {% for message in messages %}
+
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm">
+
+                        {{ message }}
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert">
+                        </button>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% endif %}
                 {% block content %}
                 {% endblock %}
             </main>

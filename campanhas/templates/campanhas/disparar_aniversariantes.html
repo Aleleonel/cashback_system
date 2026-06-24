@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-send me-2"></i>
+                Disparar Campanha de Aniversário
+            </strong>
+            <div class="text-muted small">
+                Total de aniversariantes encontrados: {{ total_clientes }}
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.enviar_email }}
+                            {{ form.enviar_email.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.enviar_whatsapp }}
+                            {{ form.enviar_whatsapp.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.enviar_sms }}
+                            {{ form.enviar_sms.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.assunto.label_tag }}
+                        {{ form.assunto }}
+                        {{ form.assunto.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.mensagem.label_tag }}
+                        {{ form.mensagem }}
+                        {{ form.mensagem.errors }}
+                        <div class="form-text">
+                            Use <strong>{nome}</strong> para personalizar com o nome do cliente.
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'campanhas:aniversariantes_mes' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Registrar Disparos
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

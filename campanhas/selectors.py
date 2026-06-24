@@ -1,15 +1,26 @@
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
 
 from clientes.models import Cliente
 
+from .models import CampanhaAniversarioEnvio
+
 
 def get_aniversariantes_do_mes(*, matriz):
+
     hoje = timezone.localdate()
 
-    return Cliente.objects.filter(
+    envio_subquery = CampanhaAniversarioEnvio.objects.filter(
+        matriz=matriz,
+        cliente=OuterRef('pk')
+    )
+
+    aniversariantes = Cliente.objects.filter(
         matriz=matriz,
         ativo=True,
         data_nascimento__month=hoje.month
+    ).annotate(
+        campanha_enviada=Exists(envio_subquery)
     ).only(
         'id',
         'nome',
@@ -23,3 +34,5 @@ def get_aniversariantes_do_mes(*, matriz):
         'data_nascimento__day',
         'nome'
     )
+
+    return aniversariantes

@@ -16,6 +16,75 @@
                     Clientes ativos com aniversário no mês atual
                 </div>
             </div>
+
+            <a href="{% url 'campanhas:disparar_aniversariantes' %}" class="btn btn-sm btn-dark">
+                <i class="bi bi-send me-1"></i>
+                Disparar Campanha
+            </a>
+        </div>
+
+        <div class="row g-3 mb-3">
+
+            <div class="col-md-4">
+
+                <div class="card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <small class="text-muted">
+                            Total de Aniversariantes
+                        </small>
+
+                        <h3 class="mb-0">
+                            {{ total_aniversariantes }}
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <small class="text-muted">
+                            Campanhas Enviadas
+                        </small>
+
+                        <h3 class="mb-0 text-success">
+                            {{ total_enviados }}
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <small class="text-muted">
+                            Pendentes
+                        </small>
+
+                        <h3 class="mb-0 text-warning">
+                            {{ total_pendentes }}
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
         <div class="table-responsive">
@@ -30,6 +99,7 @@
                         <th>Telefone</th>
                         <th>E-mail</th>
                         <th>Permissões</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
 
@@ -52,12 +122,31 @@
                             <span class="badge bg-primary">SMS</span>
                             {% endif %}
                         </td>
+
+                        <td>
+
+                            {% if cliente.campanha_enviada %}
+
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Enviado
+                            </span>
+
+                            {% else %}
+
+                            <span class="badge bg-secondary">
+                                Pendente
+                            </span>
+
+                            {% endif %}
+
+                        </td>
                     </tr>
 
                     {% empty %}
 
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="7" class="text-center text-muted py-4">
                             Nenhum aniversariante encontrado neste mês.
                         </td>
                     </tr>
