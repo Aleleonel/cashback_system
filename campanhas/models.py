@@ -87,3 +87,52 @@ class CampanhaAniversarioEnvio(models.Model):
 
     def __str__(self):
         return f'{self.cliente.nome} - {self.get_canal_display()}'
+    
+
+class ConfiguracaoCampanhaAniversario(models.Model):
+
+    CANAL_EMAIL = 'email'
+    CANAL_WHATSAPP = 'whatsapp'
+    CANAL_SMS = 'sms'
+
+    CANAL_CHOICES = [
+        (CANAL_EMAIL, 'E-mail'),
+        (CANAL_WHATSAPP, 'WhatsApp'),
+        (CANAL_SMS, 'SMS'),
+    ]
+
+    matriz = models.OneToOneField(
+        Matriz,
+        on_delete=models.CASCADE,
+        related_name='configuracao_campanha_aniversario'
+    )
+
+    ativa = models.BooleanField(default=True)
+
+    canal_padrao = models.CharField(
+        max_length=20,
+        choices=CANAL_CHOICES,
+        default=CANAL_EMAIL
+    )
+
+    assunto_padrao = models.CharField(
+        max_length=150,
+        default='Feliz aniversário! Temos um presente especial para você'
+    )
+
+    mensagem_padrao = models.TextField(
+        default=(
+            'Olá, {nome}! A equipe preparou uma condição especial '
+            'para comemorar seu aniversário. Entre em contato e aproveite!'
+        )
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Configuração de Campanha de Aniversário'
+        verbose_name_plural = 'Configurações de Campanhas de Aniversário'
+
+    def __str__(self):
+        return f'Campanha de aniversário - {self.matriz.nome}'
