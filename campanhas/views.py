@@ -1,11 +1,13 @@
 from django.shortcuts import get_object_or_404
 from clientes.models import Cliente
-
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.db import models
 from core.services import get_contexto_operacional_usuario
+from clientes.selectors import aplicar_busca_clientes
+
+from clientes.utils import limpar_numero, normalizar_texto
 
 from .selectors import (
     get_aniversariantes_do_mes,
@@ -37,19 +39,10 @@ def aniversariantes_mes(request):
     busca = request.GET.get('q', '').strip()
 
     if busca:
-        busca_numerica = ''.join(filter(str.isdigit, busca))
-
-        if busca:
-            busca_numerica = ''.join(filter(str.isdigit, busca))
-
-            aniversariantes = aniversariantes.filter(
-                models.Q(nome__icontains=busca) |
-                models.Q(email__icontains=busca) |
-                models.Q(cpf__icontains=busca) |
-                models.Q(telefone__icontains=busca) |
-                models.Q(cpf_normalizado__icontains=busca_numerica) |
-                models.Q(telefone_normalizado__icontains=busca_numerica)
-            )
+        aniversariantes = aplicar_busca_clientes(
+            aniversariantes,
+            busca
+        )
 
     total_aniversariantes = aniversariantes.count()
 
@@ -76,7 +69,6 @@ def aniversariantes_mes(request):
             'total_aniversariantes': total_aniversariantes,
             'total_enviados': total_enviados,
             'total_pendentes': total_pendentes,
-            
         }
     )
 
@@ -193,10 +185,18 @@ def historico_envios(request):
     status = request.GET.get('status', '').strip()
 
     if busca:
+        clientes_filtrados = Cliente.objects.filter(
+            matriz=contexto['matriz'],
+            ativo=True
+        )
+
+        clientes_filtrados = aplicar_busca_clientes(
+            clientes_filtrados,
+            busca
+        ).values('id')
+
         envios = envios.filter(
-            models.Q(cliente__nome__icontains=busca) |
-            models.Q(cliente__cpf__icontains=busca) |
-            models.Q(cliente__cpf_normalizado__icontains=''.join(filter(str.isdigit, busca)))
+            cliente_id__in=clientes_filtrados
         )
 
     if canal:
@@ -261,12 +261,18 @@ def fila_envios(request):
     status = request.GET.get('status', '').strip()
 
     if busca:
-        busca_numerica = ''.join(filter(str.isdigit, busca))
+        clientes_filtrados = Cliente.objects.filter(
+            matriz=contexto['matriz'],
+            ativo=True
+        )
+
+        clientes_filtrados = aplicar_busca_clientes(
+            clientes_filtrados,
+            busca
+        ).values('id')
 
         envios = envios.filter(
-            models.Q(cliente__nome__icontains=busca) |
-            models.Q(cliente__cpf__icontains=busca) |
-            models.Q(cliente__cpf_normalizado__icontains=busca_numerica)
+            cliente_id__in=clientes_filtrados
         )
 
     if canal:

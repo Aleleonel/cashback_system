@@ -14,7 +14,7 @@ from cashback.selectors import (
 from core.services import get_contexto_operacional_usuario
 
 from .models import Cliente
-from .selectors import get_cliente_por_cpf
+
 
 from django.db import models
 
@@ -29,6 +29,11 @@ from .forms import (
 from .services import (
     importar_clientes_validados,
     validar_planilha_clientes,
+)
+
+from .selectors import (
+    aplicar_busca_clientes,
+    get_cliente_por_cpf,
 )
 
 from django.core.paginator import Paginator
@@ -129,23 +134,19 @@ def lista_clientes(request):
     ).only(
         'id',
         'nome',
+        'nome_normalizado',
         'cpf',
         'cpf_normalizado',
         'telefone',
         'telefone_normalizado',
-        'email'
+        'email',
+        'email_normalizado',
     )
 
     if busca:
-        busca_numerica = ''.join(filter(str.isdigit, busca))
-
-        clientes = clientes.filter(
-            models.Q(nome__icontains=busca) |
-            models.Q(email__icontains=busca) |
-            models.Q(cpf__icontains=busca) |
-            models.Q(telefone__icontains=busca) |
-            models.Q(cpf_normalizado__icontains=busca_numerica) |
-            models.Q(telefone_normalizado__icontains=busca_numerica)
+        clientes = aplicar_busca_clientes(
+            clientes,
+            busca
         )
 
     clientes = clientes.order_by('nome')

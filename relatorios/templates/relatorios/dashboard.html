@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load formatadores %}
 
 {% block content %}
 
@@ -22,120 +23,12 @@
                         style="width: 52px; height: 52px;">
                         <i class="bi bi-people fs-4"></i>
                     </div>
-
                     <div>
                         <small class="text-muted">Total de Clientes</small>
                         <h3 class="mb-0">{{ resumo.total_clientes }}</h3>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="mt-4 mb-2">
-            <h5 class="mb-1">Resumo Comercial</h5>
-            <p class="text-muted mb-0">
-                Indicadores de vendas e cashback no período atual
-            </p>
-        </div>
-
-        <div class="row g-3">
-
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 52px; height: 52px;">
-                            <i class="bi bi-calendar-day fs-4"></i>
-                        </div>
-
-                        <div>
-                            <small class="text-muted">Vendas Hoje</small>
-                            <h3 class="mb-0">{{ resumo.vendas_hoje }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 52px; height: 52px;">
-                            <i class="bi bi-calendar-month fs-4"></i>
-                        </div>
-
-                        <div>
-                            <small class="text-muted">Vendas no Mês</small>
-                            <h3 class="mb-0">{{ resumo.vendas_mes }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 52px; height: 52px;">
-                            <i class="bi bi-currency-dollar fs-4"></i>
-                        </div>
-
-                        <div>
-                            <small class="text-muted">Valor Vendido Hoje</small>
-                            <h3 class="mb-0">R$ {{ resumo.valor_vendido_hoje }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 52px; height: 52px;">
-                            <i class="bi bi-graph-up-arrow fs-4"></i>
-                        </div>
-
-                        <div>
-                            <small class="text-muted">Valor Vendido no Mês</small>
-                            <h3 class="mb-0">R$ {{ resumo.valor_vendido_mes }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 52px; height: 52px;">
-                            <i class="bi bi-receipt fs-4"></i>
-                        </div>
-
-                        <div>
-                            <small class="text-muted">Ticket Médio no Mês</small>
-                            <h3 class="mb-0">R$ {{ resumo.ticket_medio_mes }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 52px; height: 52px;">
-                            <i class="bi bi-cash-coin fs-4"></i>
-                        </div>
-
-                        <div>
-                            <small class="text-muted">Cashback Gerado no Mês</small>
-                            <h3 class="mb-0">R$ {{ resumo.cashback_gerado_mes }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <div class="col-md-4">
@@ -145,7 +38,6 @@
                         style="width: 52px; height: 52px;">
                         <i class="bi bi-person-check fs-4"></i>
                     </div>
-
                     <div>
                         <small class="text-muted">Clientes Ativos</small>
                         <h3 class="mb-0">{{ resumo.clientes_ativos }}</h3>
@@ -161,7 +53,6 @@
                         style="width: 52px; height: 52px;">
                         <i class="bi bi-gift fs-4"></i>
                     </div>
-
                     <div>
                         <small class="text-muted">Aniversariantes do Mês</small>
                         <h3 class="mb-0">{{ resumo.aniversariantes_mes }}</h3>
@@ -177,10 +68,9 @@
                         style="width: 52px; height: 52px;">
                         <i class="bi bi-cash-stack fs-4"></i>
                     </div>
-
                     <div>
                         <small class="text-muted">Cashback Emitido</small>
-                        <h3 class="mb-0">R$ {{ resumo.cashback_emitido }}</h3>
+                        <h3 class="mb-0">R$ {{ resumo.cashback_emitido|moeda_br }}</h3>
                     </div>
                 </div>
             </div>
@@ -193,10 +83,9 @@
                         style="width: 52px; height: 52px;">
                         <i class="bi bi-arrow-down-circle fs-4"></i>
                     </div>
-
                     <div>
                         <small class="text-muted">Cashback Utilizado</small>
-                        <h3 class="mb-0">R$ {{ resumo.cashback_utilizado }}</h3>
+                        <h3 class="mb-0">R$ {{ resumo.cashback_utilizado|moeda_br }}</h3>
                     </div>
                 </div>
             </div>
@@ -209,10 +98,110 @@
                         style="width: 52px; height: 52px;">
                         <i class="bi bi-wallet2 fs-4"></i>
                     </div>
-
                     <div>
                         <small class="text-muted">Cashback Disponível</small>
-                        <h3 class="mb-0">R$ {{ resumo.cashback_disponivel }}</h3>
+                        <h3 class="mb-0">R$ {{ resumo.cashback_disponivel|moeda_br }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mt-4 mb-2">
+        <h5 class="mb-1">Resumo Comercial</h5>
+        <p class="text-muted mb-0">
+            Indicadores de vendas e cashback no período atual
+        </p>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px;">
+                        <i class="bi bi-calendar-day fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Vendas Hoje</small>
+                        <h3 class="mb-0">{{ resumo.vendas_hoje }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px;">
+                        <i class="bi bi-calendar-month fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Vendas no Mês</small>
+                        <h3 class="mb-0">{{ resumo.vendas_mes }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px;">
+                        <i class="bi bi-currency-dollar fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Valor Vendido Hoje</small>
+                        <h3 class="mb-0">R$ {{ resumo.valor_vendido_hoje|moeda_br }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px;">
+                        <i class="bi bi-graph-up-arrow fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Valor Vendido no Mês</small>
+                        <h3 class="mb-0">R$ {{ resumo.valor_vendido_mes|moeda_br }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px;">
+                        <i class="bi bi-receipt fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Ticket Médio no Mês</small>
+                        <h3 class="mb-0">R$ {{ resumo.ticket_medio_mes|moeda_br }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 52px; height: 52px;">
+                        <i class="bi bi-cash-coin fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Cashback Gerado no Mês</small>
+                        <h3 class="mb-0">R$ {{ resumo.cashback_gerado_mes|moeda_br }}</h3>
                     </div>
                 </div>
             </div>
@@ -223,9 +212,7 @@
     <div class="row g-3 mt-2">
 
         <div class="col-lg-6">
-
             <div class="card shadow-sm border-0 h-100">
-
                 <div class="card-header bg-white">
                     <strong>
                         <i class="bi bi-person-lines-fill me-2"></i>
@@ -262,13 +249,10 @@
                 </div>
 
             </div>
-
         </div>
 
         <div class="col-lg-6">
-
             <div class="card shadow-sm border-0 h-100">
-
                 <div class="card-header bg-white">
                     <strong>
                         <i class="bi bi-cart-check me-2"></i>
@@ -292,8 +276,8 @@
                             <tr>
                                 <td>{{ compra.cliente.nome }}</td>
                                 <td>{{ compra.loja.nome }}</td>
-                                <td>R$ {{ compra.valor_compra }}</td>
-                                <td>R$ {{ compra.valor_cashback }}</td>
+                                <td>R$ {{ compra.valor_compra|moeda_br }}</td>
+                                <td>R$ {{ compra.valor_cashback|moeda_br }}</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -307,7 +291,6 @@
                 </div>
 
             </div>
-
         </div>
 
     </div>
@@ -340,9 +323,9 @@
                         <td>{{ item.cliente__nome }}</td>
                         <td>{{ item.cliente__cpf }}</td>
                         <td>{{ item.total_compras }}</td>
-                        <td>R$ {{ item.total_cashback }}</td>
-                        <td>R$ {{ item.total_utilizado }}</td>
-                        <td>R$ {{ item.total_restante }}</td>
+                        <td>R$ {{ item.total_cashback|moeda_br }}</td>
+                        <td>R$ {{ item.total_utilizado|moeda_br }}</td>
+                        <td>R$ {{ item.total_restante|moeda_br }}</td>
                     </tr>
                     {% empty %}
                     <tr>

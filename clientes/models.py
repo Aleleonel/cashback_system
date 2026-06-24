@@ -64,6 +64,17 @@ class Cliente(models.Model):
         db_index=True
     )
 
+    nome_normalizado = models.CharField(
+        max_length=150,
+        db_index=True,
+        blank=True
+    )
+
+    email_normalizado = models.EmailField(
+        db_index=True,
+        blank=True
+    )
+
     aceita_email = models.BooleanField(default=True)
     aceita_sms = models.BooleanField(default=False)
 
@@ -92,11 +103,17 @@ class Cliente(models.Model):
             models.Index(fields=['matriz', 'data_nascimento']),
             models.Index(fields=['matriz', 'ativo']),
             models.Index(fields=['loja_cadastro', 'criado_em']),
+            models.Index(fields=['matriz', 'nome_normalizado']),
+            models.Index(fields=['matriz', 'email_normalizado']),
         ]
 
     def save(self, *args, **kwargs):
-        self.cpf_normalizado = ''.join(filter(str.isdigit, self.cpf or ''))
-        self.telefone_normalizado = ''.join(filter(str.isdigit, self.telefone or ''))
+        from .utils import normalizar_texto, limpar_numero
+
+        self.nome_normalizado = normalizar_texto(self.nome)
+        self.email_normalizado = normalizar_texto(self.email)
+        self.cpf_normalizado = limpar_numero(self.cpf)
+        self.telefone_normalizado = limpar_numero(self.telefone)
 
         super().save(*args, **kwargs)
 

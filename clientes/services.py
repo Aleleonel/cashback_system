@@ -5,6 +5,7 @@ import pandas as pd
 from django.db import transaction
 
 from .models import Cliente
+from .utils import limpar_numero, normalizar_texto
 
 
 COLUNAS_OBRIGATORIAS = [
@@ -25,13 +26,6 @@ def normalizar_coluna(coluna):
         .replace('-', '')
         .replace('_', '')
     )
-
-
-def limpar_numero(valor):
-    if pd.isna(valor):
-        return ''
-
-    return ''.join(filter(str.isdigit, str(valor)))
 
 
 def limpar_texto(valor):
@@ -111,7 +105,7 @@ def validar_planilha_clientes(*, arquivo, matriz):
         Cliente.objects.filter(
             matriz=matriz
         ).values_list(
-            'cpf',
+            'cpf_normalizado',
             flat=True
         )
     )
@@ -202,16 +196,16 @@ def importar_clientes_validados(*, matriz, loja, linhas):
         if linha['valido']
     ]
 
-    cpfs = [
-        linha['cpf']
+    cpfs_normalizados = [
+        limpar_numero(linha['cpf'])
         for linha in linhas_validas
     ]
 
     clientes_existentes = {
-        cliente.cpf: cliente
+        cliente.cpf_normalizado: cliente
         for cliente in Cliente.objects.filter(
             matriz=matriz,
-            cpf__in=cpfs
+            cpf_normalizado__in=cpfs_normalizados
         )
     }
 
@@ -223,17 +217,37 @@ def importar_clientes_validados(*, matriz, loja, linhas):
             linha.get('nascimento')
         )
 
+        cpf_normalizado = limpar_numero(
+            linha.get('cpf')
+        )
+
+        telefone_normalizado = limpar_numero(
+            linha.get('celular')
+        )
+
+        nome_normalizado = normalizar_texto(
+            linha.get('nome')
+        )
+
+        email_normalizado = normalizar_texto(
+            linha.get('email')
+        )
+
         cliente = clientes_existentes.get(
-            linha['cpf']
+            cpf_normalizado
         )
 
         if cliente:
             cliente.nome = linha['nome']
+            cliente.nome_normalizado = nome_normalizado
             cliente.telefone = linha['celular']
+            cliente.telefone_normalizado = telefone_normalizado
             cliente.email = linha['email']
+            cliente.email_normalizado = email_normalizado
             cliente.data_nascimento = nascimento
-            cliente.cpf_normalizado = ''.join(filter(str.isdigit, linha['cpf'] or ''))
-            cliente.telefone_normalizado = ''.join(filter(str.isdigit, linha['celular'] or ''))
+            cliente.cpf = linha['cpf']
+            cliente.cpf_normalizado = cpf_normalizado
+
             atualizar.append(cliente)
 
         else:
@@ -242,15 +256,13 @@ def importar_clientes_validados(*, matriz, loja, linhas):
                     matriz=matriz,
                     loja_cadastro=loja,
                     nome=linha['nome'],
+                    nome_normalizado=nome_normalizado,
                     cpf=linha['cpf'],
-                    cpf_normalizado=''.join(
-                        filter(str.isdigit, linha['cpf'] or '')
-                    ),
+                    cpf_normalizado=cpf_normalizado,
                     telefone=linha['celular'],
-                    telefone_normalizado=''.join(
-                        filter(str.isdigit, linha['celular'] or '')
-                    ),
+                    telefone_normalizado=telefone_normalizado,
                     email=linha['email'],
+                    email_normalizado=email_normalizado,
                     data_nascimento=nascimento,
                     aceita_email=True,
                     aceita_sms=False,
@@ -262,7 +274,6 @@ def importar_clientes_validados(*, matriz, loja, linhas):
         Cliente.objects.bulk_create(
             novos,
             batch_size=1000
-            
         )
 
     if atualizar:
@@ -270,11 +281,14 @@ def importar_clientes_validados(*, matriz, loja, linhas):
             atualizar,
             [
                 'nome',
+                'nome_normalizado',
                 'telefone',
-                'email',
-                'data_nascimento',
-                'cpf_normalizado',
                 'telefone_normalizado',
+                'email',
+                'email_normalizado',
+                'data_nascimento',
+                'cpf',
+                'cpf_normalizado',
             ],
             batch_size=1000
         )
