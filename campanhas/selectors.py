@@ -77,6 +77,7 @@ def get_historico_envios_aniversario(*, matriz):
         'canal',
         'status',
         'assunto',
+        'mensagem',
         'criado_em',
         'enviado_em',
     ).order_by(

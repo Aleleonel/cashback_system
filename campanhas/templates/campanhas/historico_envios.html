@@ -68,6 +68,7 @@
                         <th>Canal</th>
                         <th>Status</th>
                         <th>Assunto</th>
+                        <th>Mensagem</th>
                     </tr>
                 </thead>
 
@@ -82,12 +83,13 @@
                         <td>{{ envio.get_canal_display }}</td>
                         <td>{{ envio.get_status_display }}</td>
                         <td>{{ envio.assunto|default:"-" }}</td>
+                        <td>{{ envio.mensagem|truncatechars:80 }}</td>
                     </tr>
 
                     {% empty %}
 
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="7" class="text-center text-muted py-4">
                             Nenhum envio encontrado.
                         </td>
                     </tr>
