@@ -13,8 +13,6 @@ from .forms import DisparoAniversariantesForm
 from .models import CampanhaAniversarioEnvio
 from .services import registrar_disparos_aniversariantes
 
-from django.db.models import F, Value
-from django.db.models.functions import Replace
 
 @login_required
 def aniversariantes_mes(request):
@@ -30,49 +28,17 @@ def aniversariantes_mes(request):
     if busca:
         busca_numerica = ''.join(filter(str.isdigit, busca))
 
-        aniversariantes = aniversariantes.annotate(
-            telefone_limpo=Replace(
-                Replace(
-                    Replace(
-                        Replace(
-                            Replace(
-                                F('telefone'),
-                                Value('('),
-                                Value('')
-                            ),
-                            Value(')'),
-                            Value('')
-                        ),
-                        Value(' '),
-                        Value('')
-                    ),
-                    Value('-'),
-                    Value('')
-                ),
-                Value('.'),
-                Value('')
-            ),
-            cpf_limpo=Replace(
-                Replace(
-                    Replace(
-                        F('cpf'),
-                        Value('.'),
-                        Value('')
-                    ),
-                    Value('-'),
-                    Value('')
-                ),
-                Value(' '),
-                Value('')
+        if busca:
+            busca_numerica = ''.join(filter(str.isdigit, busca))
+
+            aniversariantes = aniversariantes.filter(
+                models.Q(nome__icontains=busca) |
+                models.Q(email__icontains=busca) |
+                models.Q(cpf__icontains=busca) |
+                models.Q(telefone__icontains=busca) |
+                models.Q(cpf_normalizado__icontains=busca_numerica) |
+                models.Q(telefone_normalizado__icontains=busca_numerica)
             )
-        ).filter(
-            models.Q(nome__icontains=busca) |
-            models.Q(email__icontains=busca) |
-            models.Q(cpf__icontains=busca) |
-            models.Q(telefone__icontains=busca) |
-            models.Q(cpf_limpo__icontains=busca_numerica) |
-            models.Q(telefone_limpo__icontains=busca_numerica)
-        )
 
     total_aniversariantes = aniversariantes.count()
 

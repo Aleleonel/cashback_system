@@ -40,6 +40,18 @@ class Cliente(models.Model):
         db_index=True
     )
 
+    cpf_normalizado = models.CharField(
+    max_length=11,
+    db_index=True,
+    blank=True
+)
+
+    telefone_normalizado = models.CharField(
+        max_length=20,
+        db_index=True,
+        blank=True
+    )
+
     data_nascimento = models.DateField(
         blank=True,
         null=True,
@@ -62,14 +74,18 @@ class Cliente(models.Model):
 
     class Meta:
         ordering = ['nome']
+
         constraints = [
             models.UniqueConstraint(
                 fields=['matriz', 'cpf'],
                 name='unique_cliente_por_matriz_cpf'
             )
         ]
+
         indexes = [
             models.Index(fields=['matriz', 'cpf']),
+            models.Index(fields=['matriz', 'cpf_normalizado']),
+            models.Index(fields=['matriz', 'telefone_normalizado']),
             models.Index(fields=['matriz', 'nome']),
             models.Index(fields=['matriz', 'telefone']),
             models.Index(fields=['matriz', 'email']),
@@ -77,6 +93,12 @@ class Cliente(models.Model):
             models.Index(fields=['matriz', 'ativo']),
             models.Index(fields=['loja_cadastro', 'criado_em']),
         ]
+
+    def save(self, *args, **kwargs):
+        self.cpf_normalizado = ''.join(filter(str.isdigit, self.cpf or ''))
+        self.telefone_normalizado = ''.join(filter(str.isdigit, self.telefone or ''))
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.nome} - {self.cpf}'

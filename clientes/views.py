@@ -130,15 +130,22 @@ def lista_clientes(request):
         'id',
         'nome',
         'cpf',
+        'cpf_normalizado',
         'telefone',
+        'telefone_normalizado',
         'email'
     )
 
     if busca:
+        busca_numerica = ''.join(filter(str.isdigit, busca))
+
         clientes = clientes.filter(
             models.Q(nome__icontains=busca) |
+            models.Q(email__icontains=busca) |
             models.Q(cpf__icontains=busca) |
-            models.Q(telefone__icontains=busca)
+            models.Q(telefone__icontains=busca) |
+            models.Q(cpf_normalizado__icontains=busca_numerica) |
+            models.Q(telefone_normalizado__icontains=busca_numerica)
         )
 
     clientes = clientes.order_by('nome')

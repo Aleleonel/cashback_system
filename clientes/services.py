@@ -232,6 +232,8 @@ def importar_clientes_validados(*, matriz, loja, linhas):
             cliente.telefone = linha['celular']
             cliente.email = linha['email']
             cliente.data_nascimento = nascimento
+            cliente.cpf_normalizado = ''.join(filter(str.isdigit, linha['cpf'] or ''))
+            cliente.telefone_normalizado = ''.join(filter(str.isdigit, linha['celular'] or ''))
             atualizar.append(cliente)
 
         else:
@@ -241,7 +243,13 @@ def importar_clientes_validados(*, matriz, loja, linhas):
                     loja_cadastro=loja,
                     nome=linha['nome'],
                     cpf=linha['cpf'],
+                    cpf_normalizado=''.join(
+                        filter(str.isdigit, linha['cpf'] or '')
+                    ),
                     telefone=linha['celular'],
+                    telefone_normalizado=''.join(
+                        filter(str.isdigit, linha['celular'] or '')
+                    ),
                     email=linha['email'],
                     data_nascimento=nascimento,
                     aceita_email=True,
@@ -254,6 +262,7 @@ def importar_clientes_validados(*, matriz, loja, linhas):
         Cliente.objects.bulk_create(
             novos,
             batch_size=1000
+            
         )
 
     if atualizar:
@@ -264,6 +273,8 @@ def importar_clientes_validados(*, matriz, loja, linhas):
                 'telefone',
                 'email',
                 'data_nascimento',
+                'cpf_normalizado',
+                'telefone_normalizado',
             ],
             batch_size=1000
         )
