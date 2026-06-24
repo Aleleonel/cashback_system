@@ -39,20 +39,13 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
                      aceita_email=True, aceita_sms=False, observacao=''):
 
     configuracao = garantir_configuracao_sistema(
-    matriz=matriz
-)
-
-    saldo_disponivel = get_saldo_disponivel_cliente(
-        matriz=matriz,
-        cliente=cliente
+        matriz=matriz
     )
 
-    if valor_cashback_usado > saldo_disponivel:
-        raise ValidationError(
-            'O valor informado é maior que o saldo disponível.'
-        )
+    valor_compra = Decimal(valor_compra)
+    valor_cashback_usado = Decimal(valor_cashback_usado or 0)
 
-    if Decimal(valor_compra) < configuracao.valor_minimo_compra:
+    if valor_compra < configuracao.valor_minimo_compra:
         raise ValidationError(
             'Valor da compra abaixo do mínimo configurado para gerar cashback.'
         )
@@ -72,7 +65,9 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
     )
 
     if not cliente.ativo:
-        raise ValidationError('Cliente inativo. Não é possível lançar cashback.')
+        raise ValidationError(
+            'Cliente inativo. Não é possível lançar cashback.'
+        )
 
     if not criado:
         campos_atualizar = []
@@ -94,17 +89,7 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
             campos_atualizar.append('data_nascimento')
 
         if campos_atualizar:
-            campos_atualizar.append('atualizado_em')
             cliente.save(update_fields=campos_atualizar)
-
-    hoje = timezone.localdate()
-
-    valor_cashback = calcular_cashback(
-        valor_compra=valor_compra,
-        percentual=configuracao.percentual_cashback
-    )
-
-    valor_cashback_usado = Decimal(valor_cashback_usado or 0)
 
     if valor_cashback_usado > 0:
 
@@ -118,7 +103,7 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
                 'O valor informado é maior que o saldo disponível.'
             )
 
-        if valor_cashback_usado > Decimal(valor_compra):
+        if valor_cashback_usado > valor_compra:
             raise ValidationError(
                 'O cashback utilizado não pode ser maior que o valor da compra.'
             )
@@ -130,6 +115,13 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
             valor_usado=valor_cashback_usado,
             observacao='Uso de cashback na compra atual.'
         )
+
+    hoje = timezone.localdate()
+
+    valor_cashback = calcular_cashback(
+        valor_compra=valor_compra,
+        percentual=configuracao.percentual_cashback
+    )
 
     lancamento = LancamentoCashback.objects.create(
         matriz=matriz,
