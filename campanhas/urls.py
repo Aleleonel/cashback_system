@@ -6,6 +6,7 @@ from .views import (
     reenviar_aniversariante,
     historico_envios,
     fila_envios,
+    configurar_campanha_aniversario,
 )
 
 
@@ -40,5 +41,11 @@ urlpatterns = [
         'fila/',
         fila_envios,
         name='fila_envios'
+    ),
+    
+    path(
+        'aniversariantes/configuracao/',
+        configurar_campanha_aniversario,
+        name='configurar_campanha_aniversario'
     ),
 ]

@@ -1,5 +1,5 @@
 from django import forms
-
+from .models import ConfiguracaoCampanhaAniversario
 
 class DisparoAniversariantesForm(forms.Form):
 
@@ -63,3 +63,32 @@ class DisparoAniversariantesForm(forms.Form):
             )
 
         return cleaned_data
+    
+
+class ConfiguracaoCampanhaAniversarioForm(forms.ModelForm):
+
+    class Meta:
+        model = ConfiguracaoCampanhaAniversario
+
+        fields = [
+            'ativa',
+            'canal_padrao',
+            'assunto_padrao',
+            'mensagem_padrao',
+        ]
+
+        widgets = {
+            'ativa': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'canal_padrao': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'assunto_padrao': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'mensagem_padrao': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 6,
+            }),
+        }

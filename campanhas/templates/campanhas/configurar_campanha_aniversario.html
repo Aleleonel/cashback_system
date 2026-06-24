@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-gear me-2"></i>
+                Configuração da Campanha de Aniversário
+            </strong>
+            <div class="text-muted small">
+                Defina o canal padrão, assunto e mensagem usada nos disparos.
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <div class="form-check mt-2">
+                            {{ form.ativa }}
+                            {{ form.ativa.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        {{ form.canal_padrao.label_tag }}
+                        {{ form.canal_padrao }}
+                        {{ form.canal_padrao.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.assunto_padrao.label_tag }}
+                        {{ form.assunto_padrao }}
+                        {{ form.assunto_padrao.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.mensagem_padrao.label_tag }}
+                        {{ form.mensagem_padrao }}
+                        {{ form.mensagem_padrao.errors }}
+
+                        <div class="form-text">
+                            Use <strong>{nome}</strong> para personalizar com o nome do cliente.
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'campanhas:aniversariantes_mes' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Salvar Configuração
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -19,7 +19,11 @@ from .selectors import (
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from .forms import DisparoAniversariantesForm
+from .forms import (
+    DisparoAniversariantesForm, 
+    ConfiguracaoCampanhaAniversarioForm,
+)
+
 from .models import CampanhaAniversarioEnvio
 from .services import (
     registrar_disparos_aniversariantes, 
@@ -332,5 +336,43 @@ def fila_envios(request):
             'status': status,
             'canais': canais_formatados,
             'status_choices': status_formatados,
+        }
+    )
+
+@login_required
+def configurar_campanha_aniversario(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    configuracao = get_configuracao_campanha_aniversario(
+        matriz=contexto['matriz']
+    )
+
+    if request.method == 'POST':
+        form = ConfiguracaoCampanhaAniversarioForm(
+            request.POST,
+            instance=configuracao
+        )
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                'Configuração da campanha atualizada com sucesso.'
+            )
+
+            return redirect('campanhas:configurar_campanha_aniversario')
+
+    else:
+        form = ConfiguracaoCampanhaAniversarioForm(
+            instance=configuracao
+        )
+
+    return render(
+        request,
+        'campanhas/configurar_campanha_aniversario.html',
+        {
+            'form': form,
         }
     )
