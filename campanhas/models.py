@@ -19,11 +19,13 @@ class CampanhaAniversarioEnvio(models.Model):
     ]
 
     STATUS_PENDENTE = 'pendente'
+    STATUS_PROCESSANDO = 'processando'
     STATUS_ENVIADO = 'enviado'
     STATUS_ERRO = 'erro'
 
     STATUS_CHOICES = [
         (STATUS_PENDENTE, 'Pendente'),
+        (STATUS_PROCESSANDO, 'Processando'),
         (STATUS_ENVIADO, 'Enviado'),
         (STATUS_ERRO, 'Erro'),
     ]
