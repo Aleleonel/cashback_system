@@ -123,6 +123,8 @@
                         <th>Status</th>
                         <th>Último Envio</th>
                         <th>Canal</th>
+                        <th>Envios</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
 
@@ -184,12 +186,24 @@
                             -
                             {% endif %}
                         </td>
+
+                        <td>
+                            {{ cliente.total_envios|default:0 }}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'campanhas:reenviar_aniversariante' cliente.id %}"
+                                class="btn btn-sm btn-outline-dark">
+                                <i class="bi bi-arrow-repeat me-1"></i>
+                                Reenviar
+                            </a>
+                        </td>
                     </tr>
 
                     {% empty %}
 
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="11" class="text-center text-muted py-4">
                             Nenhum aniversariante encontrado neste mês.
                         </td>
                     </tr>

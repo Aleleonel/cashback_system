@@ -1,3 +1,6 @@
+from django.shortcuts import get_object_or_404
+from clientes.models import Cliente
+
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render
@@ -11,7 +14,10 @@ from django.shortcuts import redirect
 
 from .forms import DisparoAniversariantesForm
 from .models import CampanhaAniversarioEnvio
-from .services import registrar_disparos_aniversariantes
+from .services import (
+    registrar_disparos_aniversariantes, 
+    registrar_reenvio_aniversariante,
+)
 
 
 @login_required
@@ -120,3 +126,49 @@ def disparar_aniversariantes(request):
             'total_clientes': clientes.count(),
         }
     )
+
+@login_required
+def reenviar_aniversariante(request, cliente_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    cliente = get_object_or_404(
+        Cliente,
+        id=cliente_id,
+        matriz=contexto['matriz'],
+        ativo=True
+    )
+
+    ultimo_envio = (
+        CampanhaAniversarioEnvio.objects
+        .filter(
+            matriz=contexto['matriz'],
+            cliente=cliente
+        )
+        .order_by('-criado_em')
+        .first()
+    )
+
+    canal = (
+        ultimo_envio.canal
+        if ultimo_envio
+        else CampanhaAniversarioEnvio.CANAL_EMAIL
+    )
+
+    total = registrar_reenvio_aniversariante(
+        matriz=contexto['matriz'],
+        cliente=cliente,
+        canais=[canal],
+        assunto='Feliz aniversário! Temos um presente especial para você',
+        mensagem=(
+            'Olá, {nome}! A equipe preparou uma condição especial '
+            'para comemorar seu aniversário. Entre em contato e aproveite!'
+        ),
+    )
+
+    messages.success(
+        request,
+        f'{total} reenvio registrado para {cliente.nome}.'
+    )
+
+    return redirect('campanhas:aniversariantes_mes')

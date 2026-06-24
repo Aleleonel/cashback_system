@@ -1,9 +1,9 @@
-from django.db.models import Exists, OuterRef, Subquery
 from django.utils import timezone
 
 from clientes.models import Cliente
 
 from .models import CampanhaAniversarioEnvio
+from django.db.models import Count, Exists, OuterRef, Subquery
 
 
 def get_aniversariantes_do_mes(*, matriz):
@@ -15,6 +15,17 @@ def get_aniversariantes_do_mes(*, matriz):
         cliente=OuterRef('pk')
     ).order_by(
         '-criado_em'
+    )
+
+    total_envios_subquery = (
+        CampanhaAniversarioEnvio.objects
+        .filter(
+            matriz=matriz,
+            cliente=OuterRef('pk')
+        )
+        .values('cliente')
+        .annotate(total=Count('id'))
+        .values('total')[:1]
     )
 
     aniversariantes = Cliente.objects.filter(
@@ -32,6 +43,7 @@ def get_aniversariantes_do_mes(*, matriz):
         ultimo_envio_status=Subquery(
             ultimo_envio.values('status')[:1]
         ),
+        total_envios=Subquery(total_envios_subquery),
     ).only(
         'id',
         'nome',

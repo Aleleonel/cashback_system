@@ -39,3 +39,39 @@ def registrar_disparos_aniversariantes(
         )
 
     return len(envios)
+
+
+@transaction.atomic
+def registrar_reenvio_aniversariante(
+    *,
+    matriz,
+    cliente,
+    canais,
+    assunto,
+    mensagem
+):
+    envios = []
+
+    mensagem_personalizada = mensagem.format(
+        nome=cliente.nome
+    )
+
+    for canal in canais:
+        envios.append(
+            CampanhaAniversarioEnvio(
+                matriz=matriz,
+                cliente=cliente,
+                canal=canal,
+                assunto=assunto if canal == CampanhaAniversarioEnvio.CANAL_EMAIL else '',
+                mensagem=mensagem_personalizada,
+                status=CampanhaAniversarioEnvio.STATUS_PENDENTE,
+            )
+        )
+
+    if envios:
+        CampanhaAniversarioEnvio.objects.bulk_create(
+            envios,
+            batch_size=1000
+        )
+
+    return len(envios)
