@@ -7,7 +7,10 @@ from django.shortcuts import render
 from django.db import models
 from core.services import get_contexto_operacional_usuario
 
-from .selectors import get_aniversariantes_do_mes
+from .selectors import (
+    get_aniversariantes_do_mes,
+    get_historico_envios_aniversario,
+)
 
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -17,6 +20,7 @@ from .models import CampanhaAniversarioEnvio
 from .services import (
     registrar_disparos_aniversariantes, 
     registrar_reenvio_aniversariante,
+    
 )
 
 
@@ -172,3 +176,71 @@ def reenviar_aniversariante(request, cliente_id):
     )
 
     return redirect('campanhas:aniversariantes_mes')
+
+
+@login_required
+def historico_envios(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    envios = get_historico_envios_aniversario(
+        matriz=contexto['matriz']
+    )
+
+    busca = request.GET.get('q', '').strip()
+    canal = request.GET.get('canal', '').strip()
+    status = request.GET.get('status', '').strip()
+
+    if busca:
+        envios = envios.filter(
+            models.Q(cliente__nome__icontains=busca) |
+            models.Q(cliente__cpf__icontains=busca) |
+            models.Q(cliente__cpf_normalizado__icontains=''.join(filter(str.isdigit, busca)))
+        )
+
+    if canal:
+        envios = envios.filter(
+            canal=canal
+        )
+
+    if status:
+        envios = envios.filter(
+            status=status
+        )
+
+    paginator = Paginator(envios, 50)
+
+    page = request.GET.get('page')
+
+    envios = paginator.get_page(page)
+
+    canais_formatados = [
+        {
+            'valor': valor,
+            'nome': nome,
+            'selecionado': canal == valor,
+        }
+        for valor, nome in CampanhaAniversarioEnvio.CANAL_CHOICES
+    ]
+
+    status_formatados = [
+        {
+            'valor': valor,
+            'nome': nome,
+            'selecionado': status == valor,
+        }
+        for valor, nome in CampanhaAniversarioEnvio.STATUS_CHOICES
+    ]
+
+    return render(
+        request,
+        'campanhas/historico_envios.html',
+        {
+            'envios': envios,
+            'busca': busca,
+            'canal': canal,
+            'status': status,
+            'canais': canais_formatados,
+            'status_choices': status_formatados,
+        }
+    )

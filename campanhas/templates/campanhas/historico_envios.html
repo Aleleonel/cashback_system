@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-clock-history me-2"></i>
+                Histórico de Envios
+            </strong>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2">
+
+                <div class="col-md-4">
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Buscar cliente ou CPF">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="canal" class="form-select">
+                        <option value="">Todos os canais</option>
+
+                        {% for item in canais %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Todos os status</option>
+
+                        {% for item in status_choices %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>CPF</th>
+                        <th>Canal</th>
+                        <th>Status</th>
+                        <th>Assunto</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for envio in envios %}
+
+                    <tr>
+                        <td>{{ envio.criado_em|date:"d/m/Y H:i" }}</td>
+                        <td>{{ envio.cliente.nome }}</td>
+                        <td>{{ envio.cliente.cpf }}</td>
+                        <td>{{ envio.get_canal_display }}</td>
+                        <td>{{ envio.get_status_display }}</td>
+                        <td>{{ envio.assunto|default:"-" }}</td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Nenhum envio encontrado.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

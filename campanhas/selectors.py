@@ -59,3 +59,23 @@ def get_aniversariantes_do_mes(*, matriz):
     )
 
     return aniversariantes
+
+
+def get_historico_envios_aniversario(*, matriz):
+
+    return CampanhaAniversarioEnvio.objects.filter(
+        matriz=matriz
+    ).select_related(
+        'cliente'
+    ).only(
+        'id',
+        'cliente__nome',
+        'cliente__cpf',
+        'canal',
+        'status',
+        'assunto',
+        'criado_em',
+        'enviado_em',
+    ).order_by(
+        '-criado_em'
+    )

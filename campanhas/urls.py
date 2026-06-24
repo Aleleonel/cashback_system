@@ -4,6 +4,7 @@ from .views import (
     aniversariantes_mes,
     disparar_aniversariantes,
     reenviar_aniversariante,
+    historico_envios,
 )
 
 
@@ -26,5 +27,11 @@ urlpatterns = [
         'aniversariantes/<int:cliente_id>/reenviar/',
         reenviar_aniversariante,
         name='reenviar_aniversariante'
+    ),
+
+    path(
+        'historico/',
+        historico_envios,
+        name='historico_envios'
     ),
 ]
