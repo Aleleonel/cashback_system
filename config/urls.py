@@ -9,4 +9,5 @@ urlpatterns = [
     path('cashback/', include('cashback.urls')),
     path('clientes/', include('clientes.urls')),
     path('dashboard/', include('relatorios.urls')),
+    path('campanhas/', include('campanhas.urls')),
 ]

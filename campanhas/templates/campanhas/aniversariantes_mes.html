@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>
+                    <i class="bi bi-gift me-2"></i>
+                    Aniversariantes do Mês
+                </strong>
+                <div class="text-muted small">
+                    Clientes ativos com aniversário no mês atual
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Cliente</th>
+                        <th>CPF</th>
+                        <th>Nascimento</th>
+                        <th>Telefone</th>
+                        <th>E-mail</th>
+                        <th>Permissões</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for cliente in aniversariantes %}
+
+                    <tr>
+                        <td>{{ cliente.nome }}</td>
+                        <td>{{ cliente.cpf }}</td>
+                        <td>{{ cliente.data_nascimento|date:"d/m/Y" }}</td>
+                        <td>{{ cliente.telefone }}</td>
+                        <td>{{ cliente.email }}</td>
+                        <td>
+                            {% if cliente.aceita_email %}
+                            <span class="badge bg-success">E-mail</span>
+                            {% endif %}
+
+                            {% if cliente.aceita_sms %}
+                            <span class="badge bg-primary">SMS</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Nenhum aniversariante encontrado neste mês.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
