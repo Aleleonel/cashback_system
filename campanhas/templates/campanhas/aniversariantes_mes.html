@@ -100,6 +100,8 @@
                         <th>E-mail</th>
                         <th>Permissões</th>
                         <th>Status</th>
+                        <th>Último Envio</th>
+                        <th>Canal</th>
                     </tr>
                 </thead>
 
@@ -141,12 +143,32 @@
                             {% endif %}
 
                         </td>
+
+                        <td>
+                            {% if cliente.ultimo_envio_data %}
+                            {{ cliente.ultimo_envio_data|date:"d/m/Y H:i" }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if cliente.ultimo_envio_canal == 'email' %}
+                            <span class="badge bg-success">E-mail</span>
+                            {% elif cliente.ultimo_envio_canal == 'whatsapp' %}
+                            <span class="badge bg-primary">WhatsApp</span>
+                            {% elif cliente.ultimo_envio_canal == 'sms' %}
+                            <span class="badge bg-info">SMS</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
                     </tr>
 
                     {% empty %}
 
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             Nenhum aniversariante encontrado neste mês.
                         </td>
                     </tr>
