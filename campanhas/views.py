@@ -41,6 +41,10 @@ def aniversariantes_mes(request):
         matriz=contexto['matriz']
     )
 
+    configuracao = get_configuracao_campanha_aniversario(
+        matriz=contexto['matriz']
+    )
+
     busca = request.GET.get('q', '').strip()
 
     if busca:
@@ -74,6 +78,7 @@ def aniversariantes_mes(request):
             'total_aniversariantes': total_aniversariantes,
             'total_enviados': total_enviados,
             'total_pendentes': total_pendentes,
+            'configuracao': configuracao,
         }
     )
 
@@ -90,7 +95,15 @@ def disparar_aniversariantes(request):
         matriz=contexto['matriz']
     )
 
+    if not configuracao.ativa:
+        messages.warning(
+            request,
+            'A campanha de aniversário está desativada. Ative a campanha nas configurações para realizar disparos.'
+        )
 
+        return redirect('campanhas:aniversariantes_mes')
+
+    
     if request.method == 'POST':
         form = DisparoAniversariantesForm(request.POST)
 
@@ -160,6 +173,14 @@ def reenviar_aniversariante(request, cliente_id):
         matriz=contexto['matriz']
     )
 
+    if not configuracao.ativa:
+        messages.warning(
+            request,
+            'A campanha de aniversário está desativada. Ative a campanha nas configurações para reenviar.'
+        )
+
+        return redirect('campanhas:aniversariantes_mes')
+    
     ultimo_envio = (
         CampanhaAniversarioEnvio.objects
         .filter(

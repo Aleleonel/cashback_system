@@ -17,10 +17,34 @@
                 </div>
             </div>
 
-            <a href="{% url 'campanhas:disparar_aniversariantes' %}" class="btn btn-sm btn-dark">
-                <i class="bi bi-send me-1"></i>
-                Disparar Campanha
-            </a>
+            <div class="d-flex gap-2 align-items-center">
+
+                {% if not configuracao.ativa %}
+
+                <span class="badge bg-danger">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Campanha desativada
+                </span>
+
+                <a href="{% url 'campanhas:configurar_campanha_aniversario' %}" class="btn btn-sm btn-outline-dark">
+                    Configurar
+                </a>
+
+                <button class="btn btn-sm btn-secondary" disabled>
+                    <i class="bi bi-send me-1"></i>
+                    Disparar Campanha
+                </button>
+
+                {% else %}
+
+                <a href="{% url 'campanhas:disparar_aniversariantes' %}" class="btn btn-sm btn-dark">
+                    <i class="bi bi-send me-1"></i>
+                    Disparar Campanha
+                </a>
+
+                {% endif %}
+
+            </div>
         </div>
 
 
