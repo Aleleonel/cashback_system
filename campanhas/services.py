@@ -75,3 +75,23 @@ def registrar_reenvio_aniversariante(
         )
 
     return len(envios)
+
+def renderizar_mensagem_template(*, texto, contexto):
+    resultado = texto or ''
+
+    for chave, valor in contexto.items():
+        resultado = resultado.replace(
+            '{' + chave + '}',
+            str(valor)
+        )
+
+    return resultado
+
+
+def get_contexto_exemplo_template():
+    return {
+        'nome': 'Alexandre',
+        'saldo': '25,00',
+        'loja': 'Pro Corps',
+        'dias': '7',
+    }

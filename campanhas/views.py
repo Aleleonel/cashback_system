@@ -34,6 +34,8 @@ from .models import (
 from .services import (
     registrar_disparos_aniversariantes, 
     registrar_reenvio_aniversariante,
+    renderizar_mensagem_template,
+    get_contexto_exemplo_template,
     
 )
 
@@ -446,12 +448,32 @@ def criar_template_campanha(request):
     else:
         form = TemplateCampanhaForm()
 
+    
+    preview = None
+
+    if request.method == 'POST':
+        assunto = request.POST.get('assunto', '')
+        mensagem = request.POST.get('mensagem', '')
+        contexto_preview = get_contexto_exemplo_template()
+
+        preview = {
+            'assunto': renderizar_mensagem_template(
+                texto=assunto,
+                contexto=contexto_preview
+            ),
+            'mensagem': renderizar_mensagem_template(
+                texto=mensagem,
+                contexto=contexto_preview
+            ),
+        }
+
     return render(
         request,
         'campanhas/form_template_campanha.html',
         {
             'form': form,
             'titulo': 'Novo Template de Campanha',
+            'preview': preview,
         }
     )
 
