@@ -7,6 +7,11 @@ from .views import (
     historico_envios,
     fila_envios,
     configurar_campanha_aniversario,
+
+    lista_templates_campanhas,
+    criar_template_campanha,
+    editar_template_campanha,
+    detalhe_template_campanha_json,
 )
 
 
@@ -48,4 +53,30 @@ urlpatterns = [
         configurar_campanha_aniversario,
         name='configurar_campanha_aniversario'
     ),
+
+    path(
+        'templates/',
+        lista_templates_campanhas,
+        name='lista_templates_campanhas'
+    ),
+
+    path(
+        'templates/novo/',
+        criar_template_campanha,
+        name='criar_template_campanha'
+    ),
+
+    path(
+        'templates/<int:template_id>/editar/',
+        editar_template_campanha,
+        name='editar_template_campanha'
+    ),
+
+    path(
+        'templates/<int:template_id>/json/',
+        detalhe_template_campanha_json,
+        name='detalhe_template_campanha_json'
+    ),
+
+    
 ]

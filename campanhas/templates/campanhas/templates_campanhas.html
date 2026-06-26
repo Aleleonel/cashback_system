@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>
+                    <i class="bi bi-layout-text-window-reverse me-2"></i>
+                    Templates de Campanhas
+                </strong>
+                <div class="text-muted small">
+                    Modelos de mensagens para campanhas e automações.
+                </div>
+            </div>
+
+            <a href="{% url 'campanhas:criar_template_campanha' %}" class="btn btn-sm btn-dark">
+                Novo Template
+            </a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Canal</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for template in templates %}
+
+                    <tr>
+                        <td>{{ template.nome }}</td>
+                        <td>{{ template.get_tipo_display }}</td>
+                        <td>{{ template.get_canal_display }}</td>
+                        <td>
+                            {% if template.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td width="120">
+                            <a href="{% url 'campanhas:editar_template_campanha' template.id %}"
+                                class="btn btn-sm btn-outline-dark">
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            Nenhum template cadastrado.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

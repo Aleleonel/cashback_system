@@ -72,6 +72,7 @@
                         <th>Status</th>
                         <th>Assunto</th>
                         <th>Erro</th>
+                        <th>Template</th>
                     </tr>
                 </thead>
 
@@ -99,12 +100,19 @@
 
                         <td>{{ envio.assunto|default:"-" }}</td>
                         <td>{{ envio.erro|default:"-" }}</td>
+                        <td>
+                            {% if envio.template %}
+                            {{ envio.template.nome }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
                     </tr>
 
                     {% empty %}
 
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             Nenhum envio na fila.
                         </td>
                     </tr>

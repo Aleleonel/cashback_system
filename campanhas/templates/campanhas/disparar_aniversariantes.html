@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
@@ -24,6 +25,24 @@
                 {{ form.non_field_errors }}
 
                 <div class="row g-3">
+
+                    <div class="col-12">
+
+                        {{ form.template.label_tag }}
+
+                        {{ form.template }}
+
+                        {{ form.template.errors }}
+
+                        <div id="template-json-config" data-url="{{ template_json_url }}"
+                            data-placeholder="{{ template_json_placeholder }}">
+                        </div>
+
+                        <div class="form-text">
+                            Opcional. Você pode escolher um template e ajustar a mensagem antes de registrar o disparo.
+                        </div>
+
+                    </div>
 
                     <div class="col-md-4">
                         <div class="form-check">
@@ -63,6 +82,7 @@
 
                 </div>
 
+
                 <div class="d-flex justify-content-between mt-4">
 
                     <a href="{% url 'campanhas:aniversariantes_mes' %}" class="btn btn-outline-secondary">
@@ -82,5 +102,9 @@
     </div>
 
 </div>
+
+{% block extra_js %}
+<script src="{% static 'js/disparo_aniversariantes.js' %}"></script>
+{% endblock %}
 
 {% endblock %}

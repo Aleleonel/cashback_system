@@ -1,7 +1,20 @@
 from django import forms
-from .models import ConfiguracaoCampanhaAniversario
+
+from .models import (
+    ConfiguracaoCampanhaAniversario,
+    TemplateCampanha,
+)
 
 class DisparoAniversariantesForm(forms.Form):
+
+    template = forms.ModelChoiceField(
+        label='Template de campanha',
+        queryset=TemplateCampanha.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+        })
+    )
 
     enviar_email = forms.BooleanField(
         label='Enviar por e-mail',
@@ -32,7 +45,6 @@ class DisparoAniversariantesForm(forms.Form):
         label='Assunto do e-mail',
         max_length=150,
         required=False,
-        initial='Feliz aniversário! Temos um presente especial para você',
         widget=forms.TextInput(attrs={
             'class': 'form-control',
         })
@@ -40,15 +52,20 @@ class DisparoAniversariantesForm(forms.Form):
 
     mensagem = forms.CharField(
         label='Mensagem',
-        initial=(
-            'Olá, {nome}! A equipe preparou uma condição especial '
-            'para comemorar seu aniversário. Entre em contato e aproveite!'
-        ),
         widget=forms.Textarea(attrs={
             'class': 'form-control',
             'rows': 6,
         })
     )
+
+    def __init__(self, *args, matriz=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if matriz:
+            self.fields['template'].queryset = TemplateCampanha.objects.filter(
+                matriz=matriz,
+                ativo=True
+            ).order_by('nome')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -88,6 +105,43 @@ class ConfiguracaoCampanhaAniversarioForm(forms.ModelForm):
                 'class': 'form-control',
             }),
             'mensagem_padrao': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 6,
+            }),
+        }
+
+
+class TemplateCampanhaForm(forms.ModelForm):
+
+    class Meta:
+        model = TemplateCampanha
+
+        fields = [
+            'nome',
+            'tipo',
+            'canal',
+            'ativo',
+            'assunto',
+            'mensagem',
+        ]
+
+        widgets = {
+            'nome': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'tipo': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'canal': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'ativo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'assunto': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'mensagem': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 6,
             }),

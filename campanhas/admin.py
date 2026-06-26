@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     CampanhaAniversarioEnvio,
     ConfiguracaoCampanhaAniversario,
+    TemplateCampanha,
 )
 
 
@@ -48,4 +49,31 @@ class ConfiguracaoCampanhaAniversarioAdmin(admin.ModelAdmin):
     search_fields = (
         'matriz__nome',
         'assunto_padrao',
+    )
+
+
+@admin.register(TemplateCampanha)
+class TemplateCampanhaAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'nome',
+        'matriz',
+        'tipo',
+        'canal',
+        'ativo',
+        'atualizado_em',
+    )
+
+    list_filter = (
+        'matriz',
+        'tipo',
+        'canal',
+        'ativo',
+    )
+
+    search_fields = (
+        'nome',
+        'assunto',
+        'mensagem',
+        'matriz__nome',
     )

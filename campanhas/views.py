@@ -1,4 +1,7 @@
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from campanhas.utils import get_template_json_placeholder, get_template_json_url_placeholder
+
 from clientes.models import Cliente
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -6,7 +9,7 @@ from django.shortcuts import render
 from django.db import models
 from core.services import get_contexto_operacional_usuario
 from clientes.selectors import aplicar_busca_clientes
-
+from django.http import JsonResponse
 from clientes.utils import limpar_numero, normalizar_texto
 
 from .selectors import (
@@ -14,6 +17,7 @@ from .selectors import (
     get_historico_envios_aniversario,
     get_fila_envios_aniversario,
     get_configuracao_campanha_aniversario,
+    get_templates_campanhas,
 )
 
 from django.contrib import messages
@@ -22,12 +26,19 @@ from django.shortcuts import redirect
 from .forms import (
     DisparoAniversariantesForm, 
     ConfiguracaoCampanhaAniversarioForm,
+    TemplateCampanhaForm,
 )
 
-from .models import CampanhaAniversarioEnvio
+from .models import ( 
+    CampanhaAniversarioEnvio,
+    TemplateCampanha,
+)
+
 from .services import (
     registrar_disparos_aniversariantes, 
     registrar_reenvio_aniversariante,
+    renderizar_mensagem_template,
+    get_contexto_exemplo_template,
     
 )
 
@@ -105,7 +116,10 @@ def disparar_aniversariantes(request):
 
     
     if request.method == 'POST':
-        form = DisparoAniversariantesForm(request.POST)
+        form = DisparoAniversariantesForm(
+            request.POST,
+            matriz=contexto['matriz']
+        )
 
         if form.is_valid():
 
@@ -126,6 +140,7 @@ def disparar_aniversariantes(request):
                 canais=canais,
                 assunto=form.cleaned_data['assunto'],
                 mensagem=form.cleaned_data['mensagem'],
+                template=form.cleaned_data.get('template'),
             )
 
             messages.success(
@@ -137,6 +152,7 @@ def disparar_aniversariantes(request):
 
     else:
         form = DisparoAniversariantesForm(
+            matriz=contexto['matriz'],
             initial={
                 'assunto': configuracao.assunto_padrao,
                 'mensagem': configuracao.mensagem_padrao,
@@ -146,15 +162,17 @@ def disparar_aniversariantes(request):
             }
         )
 
+    
 
     return render(
         request,
         'campanhas/disparar_aniversariantes.html',
-        
         {
             'form': form,
             'total_clientes': clientes.count(),
             'configuracao': configuracao,
+            'template_json_url': get_template_json_url_placeholder(),
+            'template_json_placeholder': get_template_json_placeholder(),
         }
     )
 
@@ -397,3 +415,138 @@ def configurar_campanha_aniversario(request):
             'form': form,
         }
     )
+
+
+@login_required
+def lista_templates_campanhas(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    templates = get_templates_campanhas(
+        matriz=contexto['matriz']
+    )
+
+    return render(
+        request,
+        'campanhas/templates_campanhas.html',
+        {
+            'templates': templates,
+        }
+    )
+
+
+@login_required
+def criar_template_campanha(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    if request.method == 'POST':
+        form = TemplateCampanhaForm(request.POST)
+
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.matriz = contexto['matriz']
+            template.save()
+
+            messages.success(
+                request,
+                'Template de campanha criado com sucesso.'
+            )
+
+            return redirect('campanhas:lista_templates_campanhas')
+
+    else:
+        form = TemplateCampanhaForm()
+
+    
+    preview = None
+
+    if request.method == 'POST':
+        assunto = request.POST.get('assunto', '')
+        mensagem = request.POST.get('mensagem', '')
+        contexto_preview = get_contexto_exemplo_template()
+
+        preview = {
+            'assunto': renderizar_mensagem_template(
+                texto=assunto,
+                contexto=contexto_preview
+            ),
+            'mensagem': renderizar_mensagem_template(
+                texto=mensagem,
+                contexto=contexto_preview
+            ),
+        }
+
+    return render(
+        request,
+        'campanhas/form_template_campanha.html',
+        {
+            'form': form,
+            'titulo': 'Novo Template de Campanha',
+            'preview': preview,
+        }
+    )
+
+
+@login_required
+def editar_template_campanha(request, template_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    template = get_object_or_404(
+        TemplateCampanha,
+        id=template_id,
+        matriz=contexto['matriz']
+    )
+
+    if request.method == 'POST':
+        form = TemplateCampanhaForm(
+            request.POST,
+            instance=template
+        )
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                'Template de campanha atualizado com sucesso.'
+            )
+
+            return redirect('campanhas:lista_templates_campanhas')
+
+    else:
+        form = TemplateCampanhaForm(
+            instance=template
+        )
+
+    return render(
+        request,
+        'campanhas/form_template_campanha.html',
+        {
+            'form': form,
+            'titulo': 'Editar Template de Campanha',
+            'template': template,
+        }
+    )
+
+
+@login_required
+def detalhe_template_campanha_json(request, template_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    template = get_object_or_404(
+        TemplateCampanha,
+        id=template_id,
+        matriz=contexto['matriz'],
+        ativo=True
+    )
+
+    return JsonResponse({
+        'id': template.id,
+        'nome': template.nome,
+        'canal': template.canal,
+        'assunto': template.assunto,
+        'mensagem': template.mensagem,
+    })

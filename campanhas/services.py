@@ -10,14 +10,35 @@ def registrar_disparos_aniversariantes(
     clientes,
     canais,
     assunto,
-    mensagem
+    mensagem,
+    template=None,
 ):
     envios = []
 
     for cliente in clientes:
 
-        mensagem_personalizada = mensagem.format(
-            nome=cliente.nome
+        mensagem_personalizada = renderizar_mensagem_template(
+            texto=mensagem,
+            contexto={
+                'nome': cliente.nome,
+                'email': cliente.email or '',
+                'telefone': cliente.telefone or '',
+                'loja': '',
+                'saldo': '',
+                'dias': '',
+            }
+        )
+
+        assunto_personalizado = renderizar_mensagem_template(
+            texto=assunto,
+            contexto={
+                'nome': cliente.nome,
+                'email': cliente.email or '',
+                'telefone': cliente.telefone or '',
+                'loja': '',
+                'saldo': '',
+                'dias': '',
+            }
         )
 
         for canal in canais:
@@ -26,8 +47,9 @@ def registrar_disparos_aniversariantes(
                     matriz=matriz,
                     cliente=cliente,
                     canal=canal,
-                    assunto=assunto if canal == CampanhaAniversarioEnvio.CANAL_EMAIL else '',
+                    assunto=assunto_personalizado if canal == CampanhaAniversarioEnvio.CANAL_EMAIL else '',
                     mensagem=mensagem_personalizada,
+                    template=template,
                     status=CampanhaAniversarioEnvio.STATUS_PENDENTE,
                 )
             )
@@ -48,12 +70,28 @@ def registrar_reenvio_aniversariante(
     cliente,
     canais,
     assunto,
-    mensagem
+    mensagem,
+    template=None
 ):
     envios = []
 
-    mensagem_personalizada = mensagem.format(
-        nome=cliente.nome
+    contexto_mensagem = {
+        'nome': cliente.nome,
+        'email': cliente.email or '',
+        'telefone': cliente.telefone or '',
+        'loja': '',
+        'saldo': '',
+        'dias': '',
+    }
+
+    mensagem_personalizada = renderizar_mensagem_template(
+        texto=mensagem,
+        contexto=contexto_mensagem
+    )
+
+    assunto_personalizado = renderizar_mensagem_template(
+        texto=assunto,
+        contexto=contexto_mensagem
     )
 
     for canal in canais:
@@ -62,8 +100,9 @@ def registrar_reenvio_aniversariante(
                 matriz=matriz,
                 cliente=cliente,
                 canal=canal,
-                assunto=assunto if canal == CampanhaAniversarioEnvio.CANAL_EMAIL else '',
+                assunto=assunto_personalizado if canal == CampanhaAniversarioEnvio.CANAL_EMAIL else '',
                 mensagem=mensagem_personalizada,
+                template=template,
                 status=CampanhaAniversarioEnvio.STATUS_PENDENTE,
             )
         )
@@ -75,3 +114,23 @@ def registrar_reenvio_aniversariante(
         )
 
     return len(envios)
+
+def renderizar_mensagem_template(*, texto, contexto):
+    resultado = texto or ''
+
+    for chave, valor in contexto.items():
+        resultado = resultado.replace(
+            '{' + chave + '}',
+            str(valor)
+        )
+
+    return resultado
+
+
+def get_contexto_exemplo_template():
+    return {
+        'nome': 'Alexandre',
+        'saldo': '25,00',
+        'loja': 'Pro Corps',
+        'dias': '7',
+    }
