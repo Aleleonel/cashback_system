@@ -14,6 +14,7 @@ from .selectors import (
     get_historico_envios_aniversario,
     get_fila_envios_aniversario,
     get_configuracao_campanha_aniversario,
+    get_templates_campanhas,
 )
 
 from django.contrib import messages
@@ -22,9 +23,14 @@ from django.shortcuts import redirect
 from .forms import (
     DisparoAniversariantesForm, 
     ConfiguracaoCampanhaAniversarioForm,
+    TemplateCampanhaForm,
 )
 
-from .models import CampanhaAniversarioEnvio
+from .models import ( 
+    CampanhaAniversarioEnvio,
+    TemplateCampanha,
+)
+
 from .services import (
     registrar_disparos_aniversariantes, 
     registrar_reenvio_aniversariante,
@@ -395,5 +401,99 @@ def configurar_campanha_aniversario(request):
         'campanhas/configurar_campanha_aniversario.html',
         {
             'form': form,
+        }
+    )
+
+
+@login_required
+def lista_templates_campanhas(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    templates = get_templates_campanhas(
+        matriz=contexto['matriz']
+    )
+
+    return render(
+        request,
+        'campanhas/templates_campanhas.html',
+        {
+            'templates': templates,
+        }
+    )
+
+
+@login_required
+def criar_template_campanha(request):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    if request.method == 'POST':
+        form = TemplateCampanhaForm(request.POST)
+
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.matriz = contexto['matriz']
+            template.save()
+
+            messages.success(
+                request,
+                'Template de campanha criado com sucesso.'
+            )
+
+            return redirect('campanhas:lista_templates_campanhas')
+
+    else:
+        form = TemplateCampanhaForm()
+
+    return render(
+        request,
+        'campanhas/form_template_campanha.html',
+        {
+            'form': form,
+            'titulo': 'Novo Template de Campanha',
+        }
+    )
+
+
+@login_required
+def editar_template_campanha(request, template_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    template = get_object_or_404(
+        TemplateCampanha,
+        id=template_id,
+        matriz=contexto['matriz']
+    )
+
+    if request.method == 'POST':
+        form = TemplateCampanhaForm(
+            request.POST,
+            instance=template
+        )
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                'Template de campanha atualizado com sucesso.'
+            )
+
+            return redirect('campanhas:lista_templates_campanhas')
+
+    else:
+        form = TemplateCampanhaForm(
+            instance=template
+        )
+
+    return render(
+        request,
+        'campanhas/form_template_campanha.html',
+        {
+            'form': form,
+            'titulo': 'Editar Template de Campanha',
+            'template': template,
         }
     )

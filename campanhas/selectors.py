@@ -5,7 +5,9 @@ from clientes.models import Cliente
 from .models import (
     CampanhaAniversarioEnvio,
     ConfiguracaoCampanhaAniversario,
+    TemplateCampanha,
 )
+
 from django.db.models import Count, Exists, OuterRef, Subquery
 
 
@@ -117,3 +119,11 @@ def get_configuracao_campanha_aniversario(*, matriz):
     )
 
     return configuracao
+
+def get_templates_campanhas(*, matriz):
+
+    return TemplateCampanha.objects.filter(
+        matriz=matriz
+    ).order_by(
+        'nome'
+    )
