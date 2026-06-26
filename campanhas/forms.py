@@ -1,5 +1,9 @@
 from django import forms
-from .models import ConfiguracaoCampanhaAniversario
+
+from .models import (
+    ConfiguracaoCampanhaAniversario,
+    TemplateCampanha,
+)
 
 class DisparoAniversariantesForm(forms.Form):
 
@@ -88,6 +92,43 @@ class ConfiguracaoCampanhaAniversarioForm(forms.ModelForm):
                 'class': 'form-control',
             }),
             'mensagem_padrao': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 6,
+            }),
+        }
+
+
+class TemplateCampanhaForm(forms.ModelForm):
+
+    class Meta:
+        model = TemplateCampanha
+
+        fields = [
+            'nome',
+            'tipo',
+            'canal',
+            'ativo',
+            'assunto',
+            'mensagem',
+        ]
+
+        widgets = {
+            'nome': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'tipo': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'canal': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'ativo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'assunto': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'mensagem': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 6,
             }),

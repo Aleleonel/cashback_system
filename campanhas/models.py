@@ -138,7 +138,8 @@ class ConfiguracaoCampanhaAniversario(models.Model):
         return f'Campanha de aniversário - {self.matriz.nome}'
     
 
-    class TemplateCampanha(models.Model):
+class TemplateCampanha(models.Model):
+        
 
         TIPO_ANIVERSARIO = 'aniversario'
         TIPO_CASHBACK_EXPIRANDO = 'cashback_expirando'
