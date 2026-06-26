@@ -11,6 +11,7 @@ from .views import (
     lista_templates_campanhas,
     criar_template_campanha,
     editar_template_campanha,
+    detalhe_template_campanha_json,
 )
 
 
@@ -69,5 +70,13 @@ urlpatterns = [
         'templates/<int:template_id>/editar/',
         editar_template_campanha,
         name='editar_template_campanha'
-),
+    ),
+
+    path(
+        'templates/<int:template_id>/json/',
+        detalhe_template_campanha_json,
+        name='detalhe_template_campanha_json'
+    ),
+
+    
 ]

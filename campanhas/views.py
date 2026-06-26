@@ -1,4 +1,7 @@
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from campanhas.utils import get_template_json_placeholder, get_template_json_url_placeholder
+
 from clientes.models import Cliente
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -6,7 +9,7 @@ from django.shortcuts import render
 from django.db import models
 from core.services import get_contexto_operacional_usuario
 from clientes.selectors import aplicar_busca_clientes
-
+from django.http import JsonResponse
 from clientes.utils import limpar_numero, normalizar_texto
 
 from .selectors import (
@@ -113,7 +116,10 @@ def disparar_aniversariantes(request):
 
     
     if request.method == 'POST':
-        form = DisparoAniversariantesForm(request.POST)
+        form = DisparoAniversariantesForm(
+            request.POST,
+            matriz=contexto['matriz']
+        )
 
         if form.is_valid():
 
@@ -145,6 +151,7 @@ def disparar_aniversariantes(request):
 
     else:
         form = DisparoAniversariantesForm(
+            matriz=contexto['matriz'],
             initial={
                 'assunto': configuracao.assunto_padrao,
                 'mensagem': configuracao.mensagem_padrao,
@@ -154,15 +161,17 @@ def disparar_aniversariantes(request):
             }
         )
 
+    
 
     return render(
         request,
         'campanhas/disparar_aniversariantes.html',
-        
         {
             'form': form,
             'total_clientes': clientes.count(),
             'configuracao': configuracao,
+            'template_json_url': get_template_json_url_placeholder(),
+            'template_json_placeholder': get_template_json_placeholder(),
         }
     )
 
@@ -519,3 +528,24 @@ def editar_template_campanha(request, template_id):
             'template': template,
         }
     )
+
+
+@login_required
+def detalhe_template_campanha_json(request, template_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    template = get_object_or_404(
+        TemplateCampanha,
+        id=template_id,
+        matriz=contexto['matriz'],
+        ativo=True
+    )
+
+    return JsonResponse({
+        'id': template.id,
+        'nome': template.nome,
+        'canal': template.canal,
+        'assunto': template.assunto,
+        'mensagem': template.mensagem,
+    })
