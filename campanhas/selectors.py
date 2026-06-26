@@ -71,7 +71,8 @@ def get_historico_envios_aniversario(*, matriz):
     return CampanhaAniversarioEnvio.objects.filter(
         matriz=matriz
     ).select_related(
-        'cliente'
+        'cliente',
+        'template',
     ).only(
         'id',
         'cliente__nome',
@@ -80,6 +81,7 @@ def get_historico_envios_aniversario(*, matriz):
         'status',
         'assunto',
         'mensagem',
+        'template__nome',
         'criado_em',
         'enviado_em',
     ).order_by(
@@ -97,6 +99,7 @@ def get_fila_envios_aniversario(*, matriz):
         ]
     ).select_related(
         'cliente'
+        'template',
     ).only(
         'id',
         'cliente__nome',
@@ -104,6 +107,7 @@ def get_fila_envios_aniversario(*, matriz):
         'canal',
         'status',
         'assunto',
+        'template__nome',
         'erro',
         'criado_em',
         'enviado_em',

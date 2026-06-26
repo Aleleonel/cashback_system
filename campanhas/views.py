@@ -140,6 +140,7 @@ def disparar_aniversariantes(request):
                 canais=canais,
                 assunto=form.cleaned_data['assunto'],
                 mensagem=form.cleaned_data['mensagem'],
+                template=form.cleaned_data.get('template'),
             )
 
             messages.success(

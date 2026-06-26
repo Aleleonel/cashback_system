@@ -49,6 +49,14 @@ class CampanhaAniversarioEnvio(models.Model):
         related_name='campanhas_aniversario'
     )
 
+    template = models.ForeignKey(
+        'TemplateCampanha',
+        on_delete=models.SET_NULL,
+        related_name='envios_aniversario',
+        blank=True,
+        null=True
+    )
+
     canal = models.CharField(
         max_length=20,
         choices=CANAL_CHOICES,
