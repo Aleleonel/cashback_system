@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'campanhas',
     'notificacoes',
     'relatorios',
+    'plataforma',
 ]
 
 MIDDLEWARE = [

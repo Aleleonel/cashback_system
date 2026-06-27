@@ -59,6 +59,9 @@ def usuario_tem_permissao(usuario, permissao):
     
     if usuario.is_superuser:
         return True
+    
+    if permissao == PERMISSAO_PLATAFORMA_PAINEL_MASTER:
+        return False
 
     if not getattr(usuario, 'ativo', False):
         return False

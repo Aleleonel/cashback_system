@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                Painel Master
+            </h4>
+            <p class="text-muted mb-0">
+                Controle administrativo da plataforma SaaS.
+            </p>
+        </div>
+
+        <a href="/admin/" class="btn btn-sm btn-dark">
+            Django Admin
+        </a>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Matrizes</small>
+                    <h3 class="mb-0">{{ resumo.total_matrizes }}</h3>
+                    <div class="text-muted small">
+                        Ativas: {{ resumo.matrizes_ativas }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Lojas</small>
+                    <h3 class="mb-0">{{ resumo.total_lojas }}</h3>
+                    <div class="text-muted small">
+                        Ativas: {{ resumo.lojas_ativas }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Usuários</small>
+                    <h3 class="mb-0">{{ resumo.total_usuarios }}</h3>
+                    <div class="text-muted small">
+                        Ativos: {{ resumo.usuarios_ativos }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Clientes</small>
+                    <h3 class="mb-0">{{ resumo.total_clientes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Lançamentos Cashback</small>
+                    <h3 class="mb-0">{{ resumo.total_lancamentos_cashback }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Usos Cashback</small>
+                    <h3 class="mb-0">{{ resumo.total_usos_cashback }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Envios Campanhas</small>
+                    <h3 class="mb-0">{{ resumo.total_envios_campanhas }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <small class="text-muted">Templates Campanhas</small>
+                    <h3 class="mb-0">{{ resumo.total_templates_campanhas }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
