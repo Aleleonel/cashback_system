@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'notificacoes',
     'relatorios',
     'plataforma',
+    'auditoria',
 ]
 
 MIDDLEWARE = [
