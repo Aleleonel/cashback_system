@@ -8,6 +8,8 @@ from core.services import get_contexto_operacional_usuario
 from .forms import NovaCompraForm
 from .services import registrar_compra
 
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
 
 @login_required
 def nova_compra(request):
@@ -55,6 +57,21 @@ def nova_compra(request):
                 messages.success(
                     request,
                     f'Compra registrada. Cashback gerado: R$ {lancamento.valor_cashback}.'
+                )
+
+                registrar_auditoria(
+                    usuario=request.user,
+                    matriz=contexto_operacional['matriz'],
+                    loja=contexto_operacional['loja'],
+                    acao=RegistroAuditoria.ACAO_CRIAR,
+                    recurso='cashback.compra',
+                    recurso_id=lancamento.id,
+                    descricao=(
+                        f'Compra registrada para {lancamento.cliente.nome}. '
+                        f'Valor da compra: R$ {lancamento.valor_compra}. '
+                        f'Cashback gerado: R$ {lancamento.valor_cashback}.'
+                    ),
+                    request=request
                 )
 
                 return redirect('cashback:nova_compra')
