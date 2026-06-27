@@ -21,6 +21,9 @@ from clientes.selectors import aplicar_busca_clientes
 from django.http import JsonResponse
 from clientes.utils import limpar_numero, normalizar_texto
 
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
+
 from .selectors import (
     get_aniversariantes_do_mes,
     get_historico_envios_aniversario,
@@ -151,6 +154,16 @@ def disparar_aniversariantes(request):
                 assunto=form.cleaned_data['assunto'],
                 mensagem=form.cleaned_data['mensagem'],
                 template=form.cleaned_data.get('template'),
+            )
+
+            registrar_auditoria(
+                usuario=request.user,
+                matriz=contexto['matriz'],
+                loja=contexto['loja'],
+                acao=RegistroAuditoria.ACAO_DISPARAR,
+                recurso='campanhas.aniversariantes',
+                descricao=f'{total} envios de campanha de aniversário registrados.',
+                request=request
             )
 
             messages.success(
