@@ -25,6 +25,10 @@
 
             <nav class="nav flex-column gap-1">
 
+                <div class="text-uppercase text-white-50 small mt-2 mb-1">
+                    Operação
+                </div>
+
                 <a href="{% url 'relatorios:dashboard' %}" class="nav-link text-white">
                     <i class="bi bi-speedometer2 me-2"></i>
                     Dashboard
@@ -50,14 +54,23 @@
                     Vouchers
                 </a>
 
+                <div class="text-uppercase text-white-50 small mt-4 mb-1">
+                    Campanhas
+                </div>
+
                 <a href="{% url 'campanhas:aniversariantes_mes' %}" class="nav-link text-white-50">
                     <i class="bi bi-megaphone me-2"></i>
-                    Campanhas
+                    Aniversariantes
                 </a>
 
-                <a href="{% url 'campanhas:configurar_campanha_aniversario' %}" class="nav-link text-white-50">
-                    <i class="bi bi-sliders me-2"></i>
-                    Config. Campanha
+                <a href="{% url 'campanhas:historico_envios' %}" class="nav-link text-white-50">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Histórico
+                </a>
+
+                <a href="{% url 'campanhas:fila_envios' %}" class="nav-link text-white-50">
+                    <i class="bi bi-list-check me-2"></i>
+                    Fila
                 </a>
 
                 <a href="{% url 'campanhas:lista_templates_campanhas' %}" class="nav-link text-white-50">
@@ -65,20 +78,28 @@
                     Templates
                 </a>
 
-                <a href="{% url 'campanhas:historico_envios' %}" class="nav-link text-white-50">
-                    <i class="bi bi-clock-history me-2"></i>
-                    Histórico de Envios
+                <a href="{% url 'campanhas:configurar_campanha_aniversario' %}" class="nav-link text-white-50">
+                    <i class="bi bi-sliders me-2"></i>
+                    Config. Campanha
                 </a>
 
-                <a href="{% url 'campanhas:fila_envios' %}" class="nav-link text-white-50">
-                    <i class="bi bi-inbox me-2"></i>
-                    Fila de Envios
+                {% if request.user.is_superuser %}
+
+                <div class="text-uppercase text-white-50 small mt-4 mb-1">
+                    Plataforma
+                </div>
+
+                <a href="{% url 'plataforma:painel_master' %}" class="nav-link text-warning">
+                    <i class="bi bi-grid-1x2 me-2"></i>
+                    Painel Master
                 </a>
 
-                <a href="#" class="nav-link text-white-50">
-                    <i class="bi bi-bar-chart me-2"></i>
-                    Relatórios
+                <a href="{% url 'auditoria:lista_auditoria' %}" class="nav-link text-warning">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Auditoria
                 </a>
+
+                {% endif %}
 
                 <hr class="border-secondary">
 
