@@ -2,6 +2,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 
+from django.test import RequestFactory
+from django.http import HttpResponse
+from accounts.decorators import require_permission
+
 from accounts.services import (
     PERMISSAO_CAMPANHAS_CONFIGURAR,
     PERMISSAO_CAMPANHAS_DISPARAR,
@@ -131,3 +135,31 @@ class PermissoesUsuarioTest(TestCase):
                 PERMISSAO_PLATAFORMA_PAINEL_MASTER
             )
         )
+    
+    def test_decorator_permite_usuario_com_permissao(self):
+        usuario = self.criar_usuario('master')
+
+        request = RequestFactory().get('/teste/')
+        request.user = usuario
+
+    @require_permission(PERMISSAO_DASHBOARD)
+    def view_teste(request):
+        return HttpResponse('OK')
+
+        response = view_teste(request)
+
+        self.assertEqual(response.status_code, 200)
+
+
+    def test_decorator_bloqueia_usuario_sem_permissao(self):
+        usuario = self.criar_usuario('operador')
+
+        request = RequestFactory().get('/teste/')
+        request.user = usuario
+
+    @require_permission(PERMISSAO_CAMPANHAS_CONFIGURAR)
+    def view_teste(request):
+        return HttpResponse('OK')
+
+        with self.assertRaises(PermissionDenied):
+            view_teste(request)
