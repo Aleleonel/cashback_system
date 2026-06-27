@@ -4,6 +4,15 @@ from campanhas.utils import get_template_json_placeholder, get_template_json_url
 
 from clientes.models import Cliente
 from django.contrib.auth.decorators import login_required
+
+from accounts.decorators import require_permission
+
+from accounts.permissions import (
+    PERMISSAO_CAMPANHAS_DISPARAR,
+    PERMISSAO_CAMPANHAS_CONFIGURAR,
+    PERMISSAO_CAMPANHAS_TEMPLATES,
+)
+
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.db import models
@@ -94,6 +103,7 @@ def aniversariantes_mes(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def disparar_aniversariantes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -379,6 +389,7 @@ def fila_envios(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_CONFIGURAR)
 def configurar_campanha_aniversario(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -418,6 +429,7 @@ def configurar_campanha_aniversario(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def lista_templates_campanhas(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -436,6 +448,7 @@ def lista_templates_campanhas(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def criar_template_campanha(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -489,6 +502,7 @@ def criar_template_campanha(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def editar_template_campanha(request, template_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -532,6 +546,7 @@ def editar_template_campanha(request, template_id):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def detalhe_template_campanha_json(request, template_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
