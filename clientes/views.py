@@ -184,7 +184,19 @@ def criar_cliente(request):
             cliente = form.save(commit=False)
             cliente.matriz = contexto['matriz']
             cliente.loja_cadastro = contexto['loja']
+
             cliente.save()
+
+            registrar_auditoria(
+                usuario=request.user,
+                matriz=contexto['matriz'],
+                loja=contexto['loja'],
+                acao=RegistroAuditoria.ACAO_CRIAR,
+                recurso='clientes.cliente',
+                recurso_id=cliente.id,
+                descricao=f'Cliente criado: {cliente.nome}',
+                request=request
+            )
 
             messages.success(request, 'Cliente cadastrado com sucesso.')
 
@@ -218,7 +230,18 @@ def editar_cliente(request, cliente_id):
         form = ClienteForm(request.POST, instance=cliente)
 
         if form.is_valid():
-            form.save()
+            cliente = form.save()
+
+            registrar_auditoria(
+                usuario=request.user,
+                matriz=contexto['matriz'],
+                loja=contexto['loja'],
+                acao=RegistroAuditoria.ACAO_EDITAR,
+                recurso='clientes.cliente',
+                recurso_id=cliente.id,
+                descricao=f'Cliente editado: {cliente.nome}',
+                request=request
+            )
 
             messages.success(request, 'Cliente atualizado com sucesso.')
 
