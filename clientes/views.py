@@ -36,6 +36,9 @@ from .selectors import (
     get_cliente_por_cpf,
 )
 
+from accounts.decorators import require_permission
+from accounts.permissions import PERMISSAO_CLIENTES_IMPORTAR
+
 from django.core.paginator import Paginator
 
 
@@ -232,6 +235,7 @@ def editar_cliente(request, cliente_id):
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def importar_clientes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -276,6 +280,7 @@ def importar_clientes(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def confirmar_importacao_clientes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -304,6 +309,7 @@ def confirmar_importacao_clientes(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def baixar_modelo_importacao_clientes(request):
 
     workbook = Workbook()
