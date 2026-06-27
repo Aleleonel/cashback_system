@@ -6,15 +6,19 @@ from django.test import RequestFactory
 from django.http import HttpResponse
 from accounts.decorators import require_permission
 
-from accounts.services import (
+from accounts.permissions import (
     PERMISSAO_CAMPANHAS_CONFIGURAR,
     PERMISSAO_CAMPANHAS_DISPARAR,
     PERMISSAO_CLIENTES_IMPORTAR,
     PERMISSAO_DASHBOARD,
     PERMISSAO_PLATAFORMA_PAINEL_MASTER,
+)
+
+from accounts.services import (
     usuario_tem_permissao,
     exigir_permissao,
 )
+
 from empresas.models import Matriz
 
 
