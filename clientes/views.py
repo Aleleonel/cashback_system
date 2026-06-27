@@ -7,6 +7,9 @@ from io import BytesIO
 from django.http import HttpResponse
 from openpyxl import Workbook
 
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
+
 from cashback.selectors import (
     get_extrato_cliente,
     get_saldo_disponivel_cliente,
@@ -296,6 +299,20 @@ def confirmar_importacao_clientes(request):
         matriz=contexto['matriz'],
         loja=contexto['loja'],
         linhas=linhas
+    )
+    
+    registrar_auditoria(
+        usuario=request.user,
+        matriz=contexto['matriz'],
+        loja=contexto['loja'],
+        acao=RegistroAuditoria.ACAO_IMPORTAR,
+        recurso='clientes.importacao',
+        descricao=(
+            f"Importação de clientes concluída. "
+            f"Criados: {resultado['criados']}. "
+            f"Atualizados: {resultado['atualizados']}."
+        ),
+        request=request
     )
 
     del request.session['importacao_clientes_linhas']
