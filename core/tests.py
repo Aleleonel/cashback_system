@@ -1,3 +1,7 @@
-from django.test import TestCase
+from django.test import SimpleTestCase
 
-# Create your tests here.
+
+class SanityTest(SimpleTestCase):
+
+    def test_ambiente_de_testes_funciona(self):
+        self.assertEqual(1 + 1, 2)
