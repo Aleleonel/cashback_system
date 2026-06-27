@@ -22,12 +22,23 @@ urlpatterns = [
 
     path(
         'logout/',
-        LogoutView.as_view(),
+        LogoutView.as_view(
+
+        ),
         name='logout'
     ),
 
     path(
         '',
-        include('plataforma.urls')
+        include(
+        'plataforma.urls'
+        )
+    ),
+
+    path(
+        '',
+        include(
+        'auditoria.urls'
+        )
     ),
 ]
