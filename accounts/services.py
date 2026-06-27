@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 
-
+PERMISSAO_PLATAFORMA_PAINEL_MASTER = 'plataforma.painel_master'
 PERMISSAO_DASHBOARD = 'dashboard.visualizar'
 PERMISSAO_CLIENTES_VISUALIZAR = 'clientes.visualizar'
 PERMISSAO_CLIENTES_CRIAR = 'clientes.criar'
@@ -29,6 +29,7 @@ PERMISSOES_POR_PERFIL = {
         PERMISSAO_CAMPANHAS_DISPARAR,
         PERMISSAO_CAMPANHAS_CONFIGURAR,
         PERMISSAO_CAMPANHAS_TEMPLATES,
+        
     },
     'admin_loja': {
         PERMISSAO_DASHBOARD,
@@ -55,6 +56,9 @@ PERMISSOES_POR_PERFIL = {
 def usuario_tem_permissao(usuario, permissao):
     if not usuario.is_authenticated:
         return False
+    
+    if usuario.is_superuser:
+        return True
 
     if not getattr(usuario, 'ativo', False):
         return False

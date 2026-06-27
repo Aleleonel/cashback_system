@@ -7,6 +7,7 @@ from accounts.services import (
     PERMISSAO_CAMPANHAS_DISPARAR,
     PERMISSAO_CLIENTES_IMPORTAR,
     PERMISSAO_DASHBOARD,
+    PERMISSAO_PLATAFORMA_PAINEL_MASTER,
     usuario_tem_permissao,
     exigir_permissao,
 )
@@ -99,3 +100,34 @@ class PermissoesUsuarioTest(TestCase):
                 usuario,
                 PERMISSAO_CAMPANHAS_CONFIGURAR
             )
+
+    def test_superuser_tem_acesso_total(self):
+        usuario = self.User.objects.create_superuser(
+            username='superuser',
+            password='123456'
+        )
+
+        self.assertTrue(
+            usuario_tem_permissao(
+                usuario,
+                PERMISSAO_PLATAFORMA_PAINEL_MASTER
+            )
+        )
+
+        self.assertTrue(
+            usuario_tem_permissao(
+                usuario,
+                PERMISSAO_CAMPANHAS_CONFIGURAR
+            )
+        )
+
+
+    def test_usuario_master_da_matriz_nao_acessa_painel_master(self):
+        usuario = self.criar_usuario('master')
+
+        self.assertFalse(
+            usuario_tem_permissao(
+                usuario,
+                PERMISSAO_PLATAFORMA_PAINEL_MASTER
+            )
+        )
