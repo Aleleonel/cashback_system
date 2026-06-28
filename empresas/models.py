@@ -28,8 +28,6 @@ class Matriz(models.Model):
         db_index=True
     )
 
-    ativa = models.BooleanField(default=True)
-
     status = models.CharField(
         max_length=20,
         choices=StatusMatriz.choices,
@@ -45,7 +43,6 @@ class Matriz(models.Model):
         indexes = [
             models.Index(fields=['nome']),
             models.Index(fields=['status']),
-            models.Index(fields=['ativa', 'status']),
         ]
 
     def __str__(self):
