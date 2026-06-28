@@ -17,9 +17,10 @@
                 </div>
             </div>
 
-            <a href="#" class="btn btn-sm btn-dark">
+            <a href="{% url 'plataforma:criar_matriz' %}" class="btn btn-sm btn-dark">
                 Nova Matriz
             </a>
+
         </div>
 
         <div class="card-body border-bottom">
@@ -90,9 +91,12 @@
                         <td>{{ matriz.total_usuarios }}</td>
                         <td>{{ matriz.criada_em|date:"d/m/Y" }}</td>
                         <td class="text-end">
-                            <a href="#" class="btn btn-sm btn-outline-dark">
+
+                            <a href="{% url 'plataforma:editar_matriz' matriz.id %}"
+                                class="btn btn-sm btn-outline-dark">
                                 Editar
                             </a>
+
                         </td>
                     </tr>
 
