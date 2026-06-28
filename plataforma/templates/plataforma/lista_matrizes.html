@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>
+                    <i class="bi bi-building me-2"></i>
+                    Matrizes
+                </strong>
+                <div class="text-muted small">
+                    Empresas cadastradas na plataforma.
+                </div>
+            </div>
+
+            <a href="#" class="btn btn-sm btn-dark">
+                Nova Matriz
+            </a>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-5">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control" placeholder="Nome ou CNPJ">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        {% for item in status_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'plataforma:lista_matrizes' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>CNPJ</th>
+                        <th>Status</th>
+                        <th>Lojas</th>
+                        <th>Usuários</th>
+                        <th>Criada em</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for matriz in matrizes %}
+
+                    <tr>
+                        <td>{{ matriz.nome }}</td>
+                        <td>{{ matriz.cnpj|default:"-" }}</td>
+                        <td>
+                            {% if matriz.ativa %}
+                            <span class="badge bg-success">Ativa</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativa</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ matriz.total_lojas }}</td>
+                        <td>{{ matriz.total_usuarios }}</td>
+                        <td>{{ matriz.criada_em|date:"d/m/Y" }}</td>
+                        <td class="text-end">
+                            <a href="#" class="btn btn-sm btn-outline-dark">
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhuma matriz encontrada.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
