@@ -21,17 +21,38 @@ class Matriz(models.Model):
         unique=True,
         db_index=True
     )
+    
+    criada_em = models.DateTimeField(auto_now_add=True)
+    atualizada_em = models.DateTimeField(auto_now=True)
+
+    STATUS_IMPLANTACAO = 'implantacao'
+    STATUS_ATIVA = 'ativa'
+    STATUS_SUSPENSA = 'suspensa'
+    STATUS_BLOQUEADA = 'bloqueada'
+
+    STATUS_CHOICES = [
+        (STATUS_IMPLANTACAO, 'Em implantação'),
+        (STATUS_ATIVA, 'Ativa'),
+        (STATUS_SUSPENSA, 'Suspensa'),
+        (STATUS_BLOQUEADA, 'Bloqueada'),
+    ]
 
     ativa = models.BooleanField(default=True)
 
-    criada_em = models.DateTimeField(auto_now_add=True)
-    atualizada_em = models.DateTimeField(auto_now=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_ATIVA,
+        db_index=True
+    )
+
 
     class Meta:
         ordering = ['nome']
         indexes = [
             models.Index(fields=['nome']),
-            models.Index(fields=['ativa']),
+            models.Index(fields=['status']),
+            models.Index(fields=['ativa', 'status']),
         ]
 
     def __str__(self):

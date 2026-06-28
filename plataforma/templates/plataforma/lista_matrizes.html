@@ -80,13 +80,22 @@
                     <tr>
                         <td>{{ matriz.nome }}</td>
                         <td>{{ matriz.cnpj|default:"-" }}</td>
+
                         <td>
-                            {% if matriz.ativa %}
+                            {% if matriz.status == 'ativa' %}
                             <span class="badge bg-success">Ativa</span>
+                            {% elif matriz.status == 'implantacao' %}
+                            <span class="badge bg-info text-dark">Em implantação</span>
+                            {% elif matriz.status == 'suspensa' %}
+                            <span class="badge bg-warning text-dark">Suspensa</span>
+                            {% elif matriz.status == 'bloqueada' %}
+                            <span class="badge bg-danger">Bloqueada</span>
                             {% else %}
                             <span class="badge bg-secondary">Inativa</span>
                             {% endif %}
                         </td>
+
+
                         <td>{{ matriz.total_lojas }}</td>
                         <td>{{ matriz.total_usuarios }}</td>
                         <td>{{ matriz.criada_em|date:"d/m/Y" }}</td>

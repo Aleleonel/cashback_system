@@ -12,6 +12,7 @@ class MatrizForm(forms.ModelForm):
             'nome',
             'cnpj',
             'ativa',
+            'status',
         ]
 
         widgets = {
@@ -23,5 +24,9 @@ class MatrizForm(forms.ModelForm):
             }),
             'ativa': forms.CheckboxInput(attrs={
                 'class': 'form-check-input',
+            }),
+
+            'status': forms.Select(attrs={
+                'class': 'form-select',
             }),
         }
