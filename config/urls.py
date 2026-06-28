@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LogoutView
+from accounts.views import CashbackLoginView
 
 
 urlpatterns = [
@@ -14,9 +15,7 @@ urlpatterns = [
     
     path(
         'login/',
-        LoginView.as_view(
-            template_name='registration/login.html'
-        ),
+        CashbackLoginView.as_view(),
         name='login'
     ),
 
