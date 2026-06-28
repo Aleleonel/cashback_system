@@ -3,6 +3,7 @@ from accounts.decorators import require_permission
 from .selectors import (
     get_resumo_painel_master, 
     get_matrizes_plataforma,
+    get_lojas_plataforma,
 )
 
 from django.core.paginator import Paginator
@@ -212,3 +213,72 @@ def alternar_status_matriz(request, matriz_id):
     )
 
     return redirect('plataforma:lista_matrizes')
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def lista_lojas(request):
+
+    get_contexto_plataforma(request.user)
+
+    busca = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()
+    matriz_id = request.GET.get('matriz', '').strip()
+
+    lojas = get_lojas_plataforma(
+        busca=busca,
+        status=status,
+        matriz_id=matriz_id
+    )
+
+    matrizes = Matriz.objects.filter(
+        ativa=True
+    ).order_by(
+        'nome'
+    )
+
+    paginator = Paginator(lojas, 50)
+
+    page = request.GET.get('page')
+
+    lojas = paginator.get_page(page)
+
+    status_opcoes = [
+        {
+            'valor': '',
+            'nome': 'Todas',
+            'selecionado': status == '',
+        },
+        {
+            'valor': 'ativas',
+            'nome': 'Ativas',
+            'selecionado': status == 'ativas',
+        },
+        {
+            'valor': 'inativas',
+            'nome': 'Inativas',
+            'selecionado': status == 'inativas',
+        },
+    ]
+
+    matrizes_opcoes = [
+        {
+            'valor': matriz.id,
+            'nome': matriz.nome,
+            'selecionado': str(matriz.id) == matriz_id,
+        }
+        for matriz in matrizes
+    ]
+
+    return render(
+        request,
+        'plataforma/lista_lojas.html',
+        {
+            'lojas': lojas,
+            'busca': busca,
+            'status': status,
+            'matriz_id': matriz_id,
+            'status_opcoes': status_opcoes,
+            'matrizes_opcoes': matrizes_opcoes,
+        }
+    )

@@ -50,3 +50,37 @@ def get_matrizes_plataforma(*, busca='', status=''):
         )
 
     return matrizes
+
+def get_lojas_plataforma(*, busca='', status='', matriz_id=''):
+
+    lojas = Loja.objects.select_related(
+        'matriz'
+    ).order_by(
+        'matriz__nome',
+        'nome'
+    )
+
+    if busca:
+        lojas = lojas.filter(
+            Q(nome__icontains=busca) |
+            Q(cnpj__icontains=busca) |
+            Q(telefone__icontains=busca) |
+            Q(matriz__nome__icontains=busca)
+        )
+
+    if status == 'ativas':
+        lojas = lojas.filter(
+            ativa=True
+        )
+
+    if status == 'inativas':
+        lojas = lojas.filter(
+            ativa=False
+        )
+
+    if matriz_id:
+        lojas = lojas.filter(
+            matriz_id=matriz_id
+        )
+
+    return lojas

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>
+                    <i class="bi bi-shop me-2"></i>
+                    Lojas
+                </strong>
+                <div class="text-muted small">
+                    Unidades cadastradas nas matrizes da plataforma.
+                </div>
+            </div>
+
+            <a href="#" class="btn btn-sm btn-dark">
+                Nova Loja
+            </a>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Nome, CNPJ, telefone ou matriz">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Matriz</label>
+                    <select name="matriz" class="form-select">
+                        <option value="">Todas</option>
+
+                        {% for item in matrizes_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        {% for item in status_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'plataforma:lista_lojas' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Matriz</th>
+                        <th>CNPJ</th>
+                        <th>Telefone</th>
+                        <th>Status</th>
+                        <th>Criada em</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for loja in lojas %}
+
+                    <tr>
+                        <td>{{ loja.nome }}</td>
+                        <td>{{ loja.matriz.nome }}</td>
+                        <td>{{ loja.cnpj|default:"-" }}</td>
+                        <td>{{ loja.telefone|default:"-" }}</td>
+                        <td>
+                            {% if loja.ativa %}
+                            <span class="badge bg-success">Ativa</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativa</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ loja.criada_em|date:"d/m/Y" }}</td>
+                        <td class="text-end">
+                            <a href="#" class="btn btn-sm btn-outline-dark">
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhuma loja encontrada.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
