@@ -61,14 +61,24 @@ def lista_matrizes(request):
             'selecionado': status == '',
         },
         {
-            'valor': 'ativas',
-            'nome': 'Ativas',
-            'selecionado': status == 'ativas',
+            'valor': Matriz.StatusMatriz.IMPLANTACAO,
+            'nome': 'Em implantação',
+            'selecionado': status == Matriz.StatusMatriz.IMPLANTACAO,
         },
         {
-            'valor': 'inativas',
-            'nome': 'Inativas',
-            'selecionado': status == 'inativas',
+            'valor': Matriz.StatusMatriz.ATIVA,
+            'nome': 'Ativas',
+            'selecionado': status == Matriz.StatusMatriz.ATIVA,
+        },
+        {
+            'valor': Matriz.StatusMatriz.SUSPENSA,
+            'nome': 'Suspensas',
+            'selecionado': status == Matriz.StatusMatriz.SUSPENSA,
+        },
+        {
+            'valor': Matriz.StatusMatriz.BLOQUEADA,
+            'nome': 'Bloqueadas',
+            'selecionado': status == Matriz.StatusMatriz.BLOQUEADA,
         },
     ]
 
@@ -191,10 +201,14 @@ def alternar_status_matriz(request, matriz_id):
         id=matriz_id
     )
 
-    matriz.ativa = not matriz.ativa
-    matriz.save(update_fields=['ativa'])
+    if matriz.status == Matriz.StatusMatriz.ATIVA:
+        matriz.status = Matriz.StatusMatriz.SUSPENSA
+        status = 'suspensa'
+    else:
+        matriz.status = Matriz.StatusMatriz.ATIVA
+        status = 'ativada'
 
-    status = 'ativada' if matriz.ativa else 'inativada'
+    matriz.save(update_fields=['status'])
 
     registrar_auditoria(
         usuario=contexto['usuario'],
@@ -232,7 +246,7 @@ def lista_lojas(request):
     )
 
     matrizes = Matriz.objects.filter(
-        ativa=True
+        status=Matriz.StatusMatriz.ATIVA
     ).order_by(
         'nome'
     )

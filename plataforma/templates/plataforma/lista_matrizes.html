@@ -113,9 +113,9 @@
                                 <form method="post" action="{% url 'plataforma:alternar_status_matriz' matriz.id %}">
                                     {% csrf_token %}
 
-                                    {% if matriz.ativa %}
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                        Inativar
+                                    {% if matriz.status == 'ativa' %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Suspender
                                     </button>
                                     {% else %}
                                     <button type="submit" class="btn btn-sm btn-outline-success">

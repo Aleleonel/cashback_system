@@ -11,7 +11,6 @@ class MatrizForm(forms.ModelForm):
         fields = [
             'nome',
             'cnpj',
-            'ativa',
             'status',
         ]
 
@@ -22,10 +21,6 @@ class MatrizForm(forms.ModelForm):
             'cnpj': forms.TextInput(attrs={
                 'class': 'form-control',
             }),
-            'ativa': forms.CheckboxInput(attrs={
-                'class': 'form-check-input',
-            }),
-
             'status': forms.Select(attrs={
                 'class': 'form-select',
             }),
