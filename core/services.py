@@ -37,3 +37,15 @@ def garantir_configuracao_sistema(*, matriz):
     )
 
     return configuracao
+
+def get_contexto_plataforma(usuario):
+
+    if not usuario.is_authenticated:
+        raise PermissionDenied('Usuário não autenticado.')
+
+    if not usuario.is_superuser:
+        raise PermissionDenied('Acesso exclusivo da plataforma.')
+
+    return {
+        'usuario': usuario,
+    }

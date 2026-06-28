@@ -5,6 +5,7 @@ from django.test import TestCase
 from core.services import get_contexto_operacional_usuario
 from empresas.models import Loja, Matriz
 
+from core.services import get_contexto_plataforma
 
 class ContextoOperacionalUsuarioTest(TestCase):
 
@@ -69,4 +70,43 @@ class ContextoOperacionalUsuarioTest(TestCase):
         self.assertEqual(
             contexto['loja'],
             self.loja
+        )
+        
+
+class ContextoPlataformaTest(TestCase):
+
+    def setUp(self):
+        self.User = get_user_model()
+
+    def test_usuario_nao_autenticado_nao_acessa_contexto_plataforma(self):
+
+        class UsuarioAnonimo:
+            is_authenticated = False
+            is_superuser = False
+
+        with self.assertRaises(PermissionDenied):
+            get_contexto_plataforma(
+                UsuarioAnonimo()
+            )
+
+    def test_usuario_comum_nao_acessa_contexto_plataforma(self):
+        usuario = self.User.objects.create_user(
+            username='usuario_comum',
+            password='123456'
+        )
+
+        with self.assertRaises(PermissionDenied):
+            get_contexto_plataforma(usuario)
+
+    def test_superuser_acessa_contexto_plataforma(self):
+        usuario = self.User.objects.create_superuser(
+            username='superuser_contexto',
+            password='123456'
+        )
+
+        contexto = get_contexto_plataforma(usuario)
+
+        self.assertEqual(
+            contexto['usuario'],
+            usuario
         )
