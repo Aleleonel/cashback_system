@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ui_tags %}
 
 {% block content %}
 
@@ -90,7 +91,11 @@
                         <td>{{ registro.matriz|default:"-" }}</td>
                         <td>{{ registro.loja|default:"-" }}</td>
                         <td>
-                            <span class="badge bg-dark">
+                            {% auditoria_badge_class registro.acao as badge_class %}
+                            {% auditoria_icone registro.acao as icone_acao %}
+
+                            <span class="badge {{ badge_class }}">
+                                <i class="bi {{ icone_acao }} me-1"></i>
                                 {{ registro.get_acao_display }}
                             </span>
                         </td>
