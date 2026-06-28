@@ -5,6 +5,12 @@ from django.db import models
 
 class Matriz(models.Model):
 
+    class StatusMatriz(models.TextChoices):
+        IMPLANTACAO = 'implantacao', 'Em implantação'
+        ATIVA = 'ativa', 'Ativa'
+        SUSPENSA = 'suspensa', 'Suspensa'
+        BLOQUEADA = 'bloqueada', 'Bloqueada'
+
     uuid = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
@@ -21,31 +27,18 @@ class Matriz(models.Model):
         unique=True,
         db_index=True
     )
-    
-    criada_em = models.DateTimeField(auto_now_add=True)
-    atualizada_em = models.DateTimeField(auto_now=True)
-
-    STATUS_IMPLANTACAO = 'implantacao'
-    STATUS_ATIVA = 'ativa'
-    STATUS_SUSPENSA = 'suspensa'
-    STATUS_BLOQUEADA = 'bloqueada'
-
-    STATUS_CHOICES = [
-        (STATUS_IMPLANTACAO, 'Em implantação'),
-        (STATUS_ATIVA, 'Ativa'),
-        (STATUS_SUSPENSA, 'Suspensa'),
-        (STATUS_BLOQUEADA, 'Bloqueada'),
-    ]
 
     ativa = models.BooleanField(default=True)
 
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default=STATUS_ATIVA,
+        choices=StatusMatriz.choices,
+        default=StatusMatriz.ATIVA,
         db_index=True
     )
 
+    criada_em = models.DateTimeField(auto_now_add=True)
+    atualizada_em = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['nome']

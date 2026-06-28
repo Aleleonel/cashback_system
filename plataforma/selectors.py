@@ -1,17 +1,19 @@
+from django.db.models import Count, Q
+
 from accounts.models import Usuario
 from campanhas.models import CampanhaAniversarioEnvio, TemplateCampanha
 from cashback.models import LancamentoCashback, UsoCashback
 from clientes.models import Cliente
 from empresas.models import Loja, Matriz
-from django.db.models import Count, Q
-
 
 
 def get_resumo_painel_master():
 
     return {
         'total_matrizes': Matriz.objects.count(),
-        'matrizes_ativas': Matriz.objects.filter(ativa=True).count(),
+        'matrizes_ativas': Matriz.objects.filter(
+            status=Matriz.StatusMatriz.ATIVA
+        ).count(),
         'total_lojas': Loja.objects.count(),
         'lojas_ativas': Loja.objects.filter(ativa=True).count(),
         'total_usuarios': Usuario.objects.count(),
@@ -39,17 +41,13 @@ def get_matrizes_plataforma(*, busca='', status=''):
             Q(cnpj__icontains=busca)
         )
 
-    if status == 'ativas':
+    if status:
         matrizes = matrizes.filter(
-            ativa=True
-        )
-
-    if status == 'inativas':
-        matrizes = matrizes.filter(
-            ativa=False
+            status=status
         )
 
     return matrizes
+
 
 def get_lojas_plataforma(*, busca='', status='', matriz_id=''):
 
