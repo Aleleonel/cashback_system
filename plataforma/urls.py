@@ -5,6 +5,7 @@ from .views import (
     lista_matrizes,
     criar_matriz,
     editar_matriz,
+    alternar_status_matriz,
 )
 
 app_name = 'plataforma'
@@ -33,5 +34,11 @@ urlpatterns = [
         'painel-master/matrizes/<int:matriz_id>/editar/',
         editar_matriz,
         name='editar_matriz'
+    ),
+
+    path(
+        'painel-master/matrizes/<int:matriz_id>/status/',
+        alternar_status_matriz,
+        name='alternar_status_matriz'
     ),
 ]

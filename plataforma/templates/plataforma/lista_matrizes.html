@@ -90,14 +90,36 @@
                         <td>{{ matriz.total_lojas }}</td>
                         <td>{{ matriz.total_usuarios }}</td>
                         <td>{{ matriz.criada_em|date:"d/m/Y" }}</td>
+
+
                         <td class="text-end">
 
-                            <a href="{% url 'plataforma:editar_matriz' matriz.id %}"
-                                class="btn btn-sm btn-outline-dark">
-                                Editar
-                            </a>
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <a href="{% url 'plataforma:editar_matriz' matriz.id %}"
+                                    class="btn btn-sm btn-outline-dark">
+                                    Editar
+                                </a>
+
+                                <form method="post" action="{% url 'plataforma:alternar_status_matriz' matriz.id %}">
+                                    {% csrf_token %}
+
+                                    {% if matriz.ativa %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        Inativar
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Ativar
+                                    </button>
+                                    {% endif %}
+                                </form>
+
+                            </div>
 
                         </td>
+
+
                     </tr>
 
                     {% empty %}

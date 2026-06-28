@@ -178,3 +178,37 @@ def editar_matriz(request, matriz_id):
             'matriz': matriz,
         }
     )
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def alternar_status_matriz(request, matriz_id):
+
+    contexto = get_contexto_plataforma(request.user)
+
+    matriz = get_object_or_404(
+        Matriz,
+        id=matriz_id
+    )
+
+    matriz.ativa = not matriz.ativa
+    matriz.save(update_fields=['ativa'])
+
+    status = 'ativada' if matriz.ativa else 'inativada'
+
+    registrar_auditoria(
+        usuario=contexto['usuario'],
+        matriz=matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='plataforma.matriz',
+        recurso_id=matriz.id,
+        descricao=f'Matriz {status}: {matriz.nome}',
+        request=request
+    )
+
+    messages.success(
+        request,
+        f'Matriz {status} com sucesso.'
+    )
+
+    return redirect('plataforma:lista_matrizes')
