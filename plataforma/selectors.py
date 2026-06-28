@@ -4,6 +4,7 @@ from accounts.models import Usuario
 from campanhas.models import CampanhaAniversarioEnvio, TemplateCampanha
 from cashback.models import LancamentoCashback, UsoCashback
 from clientes.models import Cliente
+from core.choices import StatusOperacional
 from empresas.models import Loja, Matriz
 
 
@@ -12,7 +13,7 @@ def get_resumo_painel_master():
     return {
         'total_matrizes': Matriz.objects.count(),
         'matrizes_ativas': Matriz.objects.filter(
-            status=Matriz.StatusMatriz.ATIVA
+            status=StatusOperacional.ATIVA
         ).count(),
         'total_lojas': Loja.objects.count(),
         'lojas_ativas': Loja.objects.filter(ativa=True).count(),

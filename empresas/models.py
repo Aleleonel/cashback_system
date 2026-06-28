@@ -1,16 +1,11 @@
 import uuid
 
 from django.db import models
-
+from core.choices import StatusOperacional
 
 class Matriz(models.Model):
 
-    class StatusMatriz(models.TextChoices):
-        IMPLANTACAO = 'implantacao', 'Em implantação'
-        ATIVA = 'ativa', 'Ativa'
-        SUSPENSA = 'suspensa', 'Suspensa'
-        BLOQUEADA = 'bloqueada', 'Bloqueada'
-
+    
     uuid = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
@@ -30,8 +25,8 @@ class Matriz(models.Model):
 
     status = models.CharField(
         max_length=20,
-        choices=StatusMatriz.choices,
-        default=StatusMatriz.ATIVA,
+        choices=StatusOperacional.choices,
+        default=StatusOperacional.ATIVA,
         db_index=True
     )
 

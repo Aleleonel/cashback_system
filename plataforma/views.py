@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from accounts.decorators import require_permission
+from core.choices import StatusOperacional
 from .selectors import (
     get_resumo_painel_master, 
     get_matrizes_plataforma,
@@ -61,24 +62,24 @@ def lista_matrizes(request):
             'selecionado': status == '',
         },
         {
-            'valor': Matriz.StatusMatriz.IMPLANTACAO,
+            'valor': StatusOperacional.IMPLANTACAO,
             'nome': 'Em implantação',
-            'selecionado': status == Matriz.StatusMatriz.IMPLANTACAO,
+            'selecionado': status == StatusOperacional.IMPLANTACAO,
         },
         {
-            'valor': Matriz.StatusMatriz.ATIVA,
+            'valor': StatusOperacional.ATIVA,
             'nome': 'Ativas',
-            'selecionado': status == Matriz.StatusMatriz.ATIVA,
+            'selecionado': status == StatusOperacional.ATIVA,
         },
         {
-            'valor': Matriz.StatusMatriz.SUSPENSA,
+            'valor': StatusOperacional.SUSPENSA,
             'nome': 'Suspensas',
-            'selecionado': status == Matriz.StatusMatriz.SUSPENSA,
+            'selecionado': status == StatusOperacional.SUSPENSA,
         },
         {
-            'valor': Matriz.StatusMatriz.BLOQUEADA,
+            'valor': StatusOperacional.BLOQUEADA,
             'nome': 'Bloqueadas',
-            'selecionado': status == Matriz.StatusMatriz.BLOQUEADA,
+            'selecionado': status == StatusOperacional.BLOQUEADA,
         },
     ]
 
@@ -201,11 +202,11 @@ def alternar_status_matriz(request, matriz_id):
         id=matriz_id
     )
 
-    if matriz.status == Matriz.StatusMatriz.ATIVA:
-        matriz.status = Matriz.StatusMatriz.SUSPENSA
+    if matriz.status == StatusOperacional.ATIVA:
+        matriz.status = StatusOperacional.SUSPENSA
         status = 'suspensa'
     else:
-        matriz.status = Matriz.StatusMatriz.ATIVA
+        matriz.status = StatusOperacional.ATIVA
         status = 'ativada'
 
     matriz.save(update_fields=['status'])
@@ -246,7 +247,7 @@ def lista_lojas(request):
     )
 
     matrizes = Matriz.objects.filter(
-        status=Matriz.StatusMatriz.ATIVA
+        status=StatusOperacional.ATIVA
     ).order_by(
         'nome'
     )
