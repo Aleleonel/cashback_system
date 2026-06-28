@@ -16,6 +16,53 @@
             </div>
         </div>
 
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Usuário, matriz, recurso, IP">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Ação</label>
+                    <select name="acao" class="form-select">
+                        <option value="">Todas</option>
+
+                        {% for item in acoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Data inicial</label>
+                    <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Data final</label>
+                    <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark w-100">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'auditoria:lista_auditoria' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
         <div class="table-responsive">
 
             <table class="table table-hover mb-0">
@@ -77,7 +124,8 @@
 
                     {% if registros.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ registros.previous_page_number }}">
+                        <a class="page-link"
+                            href="?page={{ registros.previous_page_number }}&q={{ busca }}&acao={{ acao }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}">
                             Anterior
                         </a>
                     </li>
@@ -91,7 +139,8 @@
 
                     {% if registros.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ registros.next_page_number }}">
+                        <a class="page-link"
+                            href="?page={{ registros.next_page_number }}&q={{ busca }}&acao={{ acao }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}">
                             Próxima
                         </a>
                     </li>
