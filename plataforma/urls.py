@@ -11,6 +11,9 @@ from .views import (
     nova_empresa_loja,
     nova_empresa_admin,
     nova_empresa_revisao,
+    criar_loja,
+    editar_loja,
+    alternar_status_loja,
 )
 
 app_name = 'plataforma'
@@ -51,6 +54,24 @@ urlpatterns = [
         'painel-master/lojas/',
         lista_lojas,
         name='lista_lojas'
+    ),
+
+    path(
+        'painel-master/lojas/nova/',
+        criar_loja,
+        name='criar_loja'
+    ),
+
+    path(
+        'painel-master/lojas/<int:loja_id>/editar/',
+        editar_loja,
+        name='editar_loja'
+    ),
+
+    path(
+        'painel-master/lojas/<int:loja_id>/status/',
+        alternar_status_loja,
+        name='alternar_status_loja'
     ),
 
     path(

@@ -7,6 +7,7 @@
     <div class="card shadow-sm border-0">
 
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
+
             <div>
                 <strong>
                     <i class="bi bi-shop me-2"></i>
@@ -17,9 +18,10 @@
                 </div>
             </div>
 
-            <a href="#" class="btn btn-sm btn-dark">
+            <a href="{% url 'plataforma:criar_loja' %}" class="btn btn-sm btn-dark">
                 Nova Loja
             </a>
+
         </div>
 
         <div class="card-body border-bottom">
@@ -111,11 +113,34 @@
                             {% endif %}
                         </td>
                         <td>{{ loja.criada_em|date:"d/m/Y" }}</td>
+
                         <td class="text-end">
-                            <a href="#" class="btn btn-sm btn-outline-dark">
-                                Editar
-                            </a>
+
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <a href="{% url 'plataforma:editar_loja' loja.id %}"
+                                    class="btn btn-sm btn-outline-dark">
+                                    Editar
+                                </a>
+
+                                <form method="post" action="{% url 'plataforma:alternar_status_loja' loja.id %}">
+                                    {% csrf_token %}
+
+                                    {% if loja.status == 'ativa' %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Suspender
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Ativar
+                                    </button>
+                                    {% endif %}
+                                </form>
+
+                            </div>
+
                         </td>
+
                     </tr>
 
                     {% empty %}

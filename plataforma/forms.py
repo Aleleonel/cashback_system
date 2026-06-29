@@ -1,6 +1,6 @@
 from django import forms
-
-from empresas.models import Matriz
+from empresas.models import Loja, Matriz
+from django.contrib.auth import get_user_model
 
 
 class MatrizForm(forms.ModelForm):
@@ -26,8 +26,59 @@ class MatrizForm(forms.ModelForm):
             }),
         }
 
+class LojaForm(forms.ModelForm):
 
-from django.contrib.auth import get_user_model
+    class Meta:
+        model = Loja
+
+        fields = [
+            'matriz',
+            'nome',
+            'cnpj',
+            'telefone',
+            'status',
+        ]
+
+        widgets = {
+            'matriz': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'nome': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'cnpj': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'telefone': forms.TextInput(attrs={
+                'class': 'form-control',
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+        }
+
+    def clean_cnpj(self):
+        cnpj = self.cleaned_data.get('cnpj')
+        matriz = self.cleaned_data.get('matriz')
+
+        if not cnpj or not matriz:
+            return cnpj
+
+        lojas = Loja.objects.filter(
+            matriz=matriz,
+            cnpj=cnpj
+        )
+
+        if self.instance and self.instance.pk:
+            lojas = lojas.exclude(pk=self.instance.pk)
+
+        if lojas.exists():
+            raise forms.ValidationError(
+                'Já existe uma loja cadastrada com este CNPJ nesta matriz.'
+            )
+
+        return cnpj
+
 
 
 class WizardMatrizForm(forms.Form):

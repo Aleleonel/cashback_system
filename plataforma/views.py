@@ -12,7 +12,13 @@ from django.core.paginator import Paginator
 
 from core.services import get_contexto_plataforma
 from auditoria.services import registrar_auditoria
-from .services import implantar_empresa
+
+from .services import (
+    alternar_status_loja_plataforma,
+    criar_loja_plataforma,
+    editar_loja_plataforma,
+    implantar_empresa,
+)
 
 
 from django.contrib import messages
@@ -20,7 +26,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from accounts.permissions import PERMISSAO_PLATAFORMA_PAINEL_MASTER
 from auditoria.models import RegistroAuditoria
 
-from empresas.models import Matriz
+from empresas.models import Loja, Matriz
 
 from .wizard import (
     get_dados_wizard_nova_empresa,
@@ -32,6 +38,7 @@ from .wizard import (
 
 
 from .forms import (
+    LojaForm,
     MatrizForm,
     WizardAdminForm,
     WizardLojaForm,
@@ -330,6 +337,113 @@ def lista_lojas(request):
             'matrizes_opcoes': matrizes_opcoes,
         }
     )
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def criar_loja(request):
+
+    contexto = get_contexto_plataforma(request.user)
+
+    if request.method == 'POST':
+        form = LojaForm(request.POST)
+
+        if form.is_valid():
+            criar_loja_plataforma(
+                dados=form.cleaned_data,
+                usuario_executor=contexto['usuario'],
+                request=request
+            )
+
+            messages.success(
+                request,
+                'Loja criada com sucesso.'
+            )
+
+            return redirect('plataforma:lista_lojas')
+
+    else:
+        form = LojaForm()
+
+    return render(
+        request,
+        'plataforma/form_loja.html',
+        {
+            'form': form,
+            'titulo': 'Nova Loja',
+        }
+    )
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def editar_loja(request, loja_id):
+
+    contexto = get_contexto_plataforma(request.user)
+
+    loja = get_object_or_404(
+        Loja.objects.select_related('matriz'),
+        id=loja_id
+    )
+
+    if request.method == 'POST':
+        form = LojaForm(
+            request.POST,
+            instance=loja
+        )
+
+        if form.is_valid():
+            editar_loja_plataforma(
+                loja=loja,
+                dados=form.cleaned_data,
+                usuario_executor=contexto['usuario'],
+                request=request
+            )
+
+            messages.success(
+                request,
+                'Loja atualizada com sucesso.'
+            )
+
+            return redirect('plataforma:lista_lojas')
+
+    else:
+        form = LojaForm(
+            instance=loja
+        )
+
+    return render(
+        request,
+        'plataforma/form_loja.html',
+        {
+            'form': form,
+            'titulo': 'Editar Loja',
+            'loja': loja,
+        }
+    )
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def alternar_status_loja(request, loja_id):
+
+    contexto = get_contexto_plataforma(request.user)
+
+    loja = get_object_or_404(
+        Loja.objects.select_related('matriz'),
+        id=loja_id
+    )
+
+    alternar_status_loja_plataforma(
+        loja=loja,
+        usuario_executor=contexto['usuario'],
+        request=request
+    )
+
+    messages.success(
+        request,
+        'Status da loja atualizado com sucesso.'
+    )
+
+    return redirect('plataforma:lista_lojas')
 
 
 @login_required
