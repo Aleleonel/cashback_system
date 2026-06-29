@@ -91,6 +91,21 @@ class WizardLojaForm(forms.Form):
         })
     )
 
+    def clean_cnpj(self):
+        cnpj = self.cleaned_data.get('cnpj')
+
+        if not cnpj:
+            return cnpj
+
+        from empresas.models import Loja
+
+        if Loja.objects.filter(cnpj=cnpj).exists():
+            raise forms.ValidationError(
+                'Já existe uma loja cadastrada com este CNPJ.'
+            )
+
+        return cnpj
+
 
 class WizardAdminForm(forms.Form):
 

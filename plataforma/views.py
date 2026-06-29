@@ -26,6 +26,8 @@ from .wizard import (
     get_dados_wizard_nova_empresa,
     limpar_wizard_nova_empresa,
     salvar_dados_wizard_nova_empresa,
+    get_senha_admin_wizard,
+    salvar_senha_admin_wizard,
 )
 
 
@@ -421,13 +423,20 @@ def nova_empresa_admin(request):
         form = WizardAdminForm(request.POST)
 
         if form.is_valid():
-            salvar_dados_wizard_nova_empresa(
-                request,
-                'admin',
-                form.cleaned_data
+           dados_admin = form.cleaned_data.copy()
+           senha_admin = dados_admin.pop('password')
+           salvar_dados_wizard_nova_empresa(               
+               request,
+               'admin',
+                dados_admin
+
+            )
+           salvar_senha_admin_wizard(               
+               request,
+               senha_admin
             )
 
-            return redirect('plataforma:nova_empresa_revisao')
+        return redirect('plataforma:nova_empresa_revisao')
 
     else:
         form = WizardAdminForm(
@@ -472,21 +481,34 @@ def nova_empresa_revisao(request):
             )
 
             return redirect('plataforma:nova_empresa_matriz')
+        
+        senha_admin = get_senha_admin_wizard(request)
+
+        if not senha_admin:
+            messages.error(
+                request,
+                'Senha do administrador não encontrada. Informe novamente os dados do administrador.'
+            )
+
+            return redirect('plataforma:nova_empresa_admin')
 
         resultado = implantar_empresa(
             dados_matriz=dados_wizard['matriz'],
             dados_loja=dados_wizard['loja'],
-            dados_admin=dados_wizard['admin'],
+            dados_admin={
+                **dados_wizard['admin'],
+                'password': senha_admin,
+            },
             usuario_executor=contexto['usuario'],
             request=request
-        )
-
-        limpar_wizard_nova_empresa(request)
+        )        
 
         messages.success(
             request,
             f"Empresa {resultado['matriz'].nome} implantada com sucesso."
         )
+
+        limpar_wizard_nova_empresa(request)
 
         return redirect('plataforma:lista_matrizes')
 
