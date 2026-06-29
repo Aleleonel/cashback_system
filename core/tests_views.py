@@ -35,6 +35,9 @@ class ViewsProtegidasTest(TestCase):
             matriz=self.matriz
         )
 
+        self.usuario.perfil = self.User.PERFIL_MASTER
+        self.usuario.save()
+
         self.usuario.lojas.add(self.loja)
 
     def test_dashboard_exige_login(self):

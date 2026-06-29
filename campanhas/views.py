@@ -56,6 +56,7 @@ from .services import (
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def aniversariantes_mes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -200,6 +201,7 @@ def disparar_aniversariantes(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def reenviar_aniversariante(request, cliente_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -255,6 +257,7 @@ def reenviar_aniversariante(request, cliente_id):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def historico_envios(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -331,6 +334,7 @@ def historico_envios(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def fila_envios(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
