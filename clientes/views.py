@@ -40,12 +40,19 @@ from .selectors import (
 )
 
 from accounts.decorators import require_permission
-from accounts.permissions import PERMISSAO_CLIENTES_IMPORTAR
+
+from accounts.permissions import (
+    PERMISSAO_CLIENTES_CRIAR,
+    PERMISSAO_CLIENTES_EDITAR,
+    PERMISSAO_CLIENTES_IMPORTAR,
+    PERMISSAO_CLIENTES_VISUALIZAR,
+)
 
 from django.core.paginator import Paginator
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
 def buscar_cliente_cpf(request):
 
     cpf = request.GET.get('cpf')
@@ -91,6 +98,7 @@ def buscar_cliente_cpf(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
 def extrato_cliente(request, cliente_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -126,6 +134,7 @@ def extrato_cliente(request, cliente_id):
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
 def lista_clientes(request):
 
     contexto = get_contexto_operacional_usuario(
@@ -173,6 +182,7 @@ def lista_clientes(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_CRIAR)
 def criar_cliente(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -216,6 +226,7 @@ def criar_cliente(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_EDITAR)
 def editar_cliente(request, cliente_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
