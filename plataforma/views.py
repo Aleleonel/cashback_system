@@ -22,6 +22,12 @@ from auditoria.models import RegistroAuditoria
 
 from empresas.models import Matriz
 
+from .wizard import (
+    get_dados_wizard_nova_empresa,
+    limpar_wizard_nova_empresa,
+    salvar_dados_wizard_nova_empresa,
+)
+
 
 from .forms import (
     MatrizForm,
@@ -323,27 +329,6 @@ def lista_lojas(request):
         }
     )
 
-SESSAO_NOVA_EMPRESA = 'wizard_nova_empresa'
-
-
-def get_dados_wizard_nova_empresa(request):
-
-    return request.session.get(
-        SESSAO_NOVA_EMPRESA,
-        {}
-    )
-
-
-def salvar_dados_wizard_nova_empresa(request, chave, dados):
-
-    dados_wizard = get_dados_wizard_nova_empresa(request)
-
-    dados_wizard[chave] = dados
-
-    request.session[SESSAO_NOVA_EMPRESA] = dados_wizard
-
-    request.session.modified = True
-
 
 @login_required
 @require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
@@ -477,6 +462,17 @@ def nova_empresa_revisao(request):
         return redirect('plataforma:nova_empresa_admin')
 
     if request.method == 'POST':
+
+        cnpj_matriz = dados_wizard['matriz'].get('cnpj')
+
+        if cnpj_matriz and Matriz.objects.filter(cnpj=cnpj_matriz).exists():
+            messages.error(
+                request,
+                'Já existe uma matriz cadastrada com este CNPJ.'
+            )
+
+            return redirect('plataforma:nova_empresa_matriz')
+
         resultado = implantar_empresa(
             dados_matriz=dados_wizard['matriz'],
             dados_loja=dados_wizard['loja'],
@@ -485,8 +481,7 @@ def nova_empresa_revisao(request):
             request=request
         )
 
-        if SESSAO_NOVA_EMPRESA in request.session:
-            del request.session[SESSAO_NOVA_EMPRESA]
+        limpar_wizard_nova_empresa(request)
 
         messages.success(
             request,

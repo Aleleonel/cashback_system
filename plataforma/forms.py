@@ -48,6 +48,19 @@ class WizardMatrizForm(forms.Form):
             'class': 'form-control',
         })
     )
+    
+    def clean_cnpj(self):
+        cnpj = self.cleaned_data.get('cnpj')
+
+        if not cnpj:
+            return cnpj
+
+        if Matriz.objects.filter(cnpj=cnpj).exists():
+            raise forms.ValidationError(
+                'Já existe uma matriz cadastrada com este CNPJ.'
+            )
+
+        return cnpj
 
 
 class WizardLojaForm(forms.Form):
