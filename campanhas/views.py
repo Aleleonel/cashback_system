@@ -51,6 +51,7 @@ from .services import (
     registrar_reenvio_aniversariante,
     renderizar_mensagem_template,
     get_contexto_exemplo_template,
+    processar_envio_campanha_aniversario,
     
 )
 
@@ -404,6 +405,44 @@ def fila_envios(request):
             'status_choices': status_formatados,
         }
     )
+
+@login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
+def processar_envio_aniversariante(request, envio_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    envio = get_object_or_404(
+        CampanhaAniversarioEnvio.objects.select_related(
+            'cliente',
+            'matriz'
+        ),
+        id=envio_id,
+        matriz=contexto['matriz']
+    )
+
+    processar_envio_campanha_aniversario(
+        envio=envio
+    )
+
+    registrar_auditoria(
+        usuario=request.user,
+        matriz=contexto['matriz'],
+        loja=contexto['loja'],
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='campanhas.envio_aniversario',
+        recurso_id=envio.id,
+        descricao=f'Envio processado para {envio.cliente.nome}. Status: {envio.status}.',
+        request=request
+    )
+
+    messages.success(
+        request,
+        'Envio processado com sucesso.'
+    )
+
+    return redirect('campanhas:fila_envios')
+
 
 @login_required
 @require_permission(PERMISSAO_CAMPANHAS_CONFIGURAR)

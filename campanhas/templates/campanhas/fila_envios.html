@@ -73,6 +73,7 @@
                         <th>Assunto</th>
                         <th>Erro</th>
                         <th>Template</th>
+                        <th></th>
                     </tr>
                 </thead>
 
@@ -107,12 +108,23 @@
                             -
                             {% endif %}
                         </td>
+
+                        <td class="text-end">
+                            <form method="post" action="{% url 'campanhas:processar_envio_aniversariante' envio.id %}">
+                                {% csrf_token %}
+
+                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                    Processar
+                                </button>
+                            </form>
+                        </td>
+
                     </tr>
 
                     {% empty %}
 
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             Nenhum envio na fila.
                         </td>
                     </tr>

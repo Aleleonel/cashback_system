@@ -12,6 +12,7 @@ from .views import (
     criar_template_campanha,
     editar_template_campanha,
     detalhe_template_campanha_json,
+    processar_envio_aniversariante,
 )
 
 
@@ -46,6 +47,12 @@ urlpatterns = [
         'fila/',
         fila_envios,
         name='fila_envios'
+    ),
+
+    path(
+        'fila/<int:envio_id>/processar/',
+        processar_envio_aniversariante,
+        name='processar_envio_aniversariante'
     ),
     
     path(
