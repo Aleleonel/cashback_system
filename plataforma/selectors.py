@@ -16,7 +16,9 @@ def get_resumo_painel_master():
             status=StatusOperacional.ATIVA
         ).count(),
         'total_lojas': Loja.objects.count(),
-        'lojas_ativas': Loja.objects.filter(ativa=True).count(),
+        'lojas_ativas': Loja.objects.filter(            
+            status=StatusOperacional.ATIVA
+        ).count(),
         'total_usuarios': Usuario.objects.count(),
         'usuarios_ativos': Usuario.objects.filter(ativo=True).count(),
         'total_clientes': Cliente.objects.count(),
@@ -67,14 +69,9 @@ def get_lojas_plataforma(*, busca='', status='', matriz_id=''):
             Q(matriz__nome__icontains=busca)
         )
 
-    if status == 'ativas':
+    if status:
         lojas = lojas.filter(
-            ativa=True
-        )
-
-    if status == 'inativas':
-        lojas = lojas.filter(
-            ativa=False
+            status=status
         )
 
     if matriz_id:

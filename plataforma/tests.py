@@ -3,6 +3,7 @@ from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from django.urls import reverse
 
+from core.choices import StatusOperacional
 from empresas.models import Loja, Matriz
 
 
@@ -18,7 +19,7 @@ class PainelMasterTest(TestCase):
         self.loja = Loja.objects.create(
             matriz=self.matriz,
             nome='Loja Teste',
-            ativa=True
+            status=StatusOperacional.ATIVA,
         )
 
         self.usuario_matriz = self.User.objects.create_user(

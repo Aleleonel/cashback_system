@@ -1,4 +1,6 @@
 from django.core.exceptions import PermissionDenied, ValidationError
+
+from core.choices import StatusOperacional
 from .models import ConfiguracaoSistema
 
 
@@ -9,7 +11,7 @@ def get_contexto_operacional_usuario(usuario):
     if not usuario.matriz:
         raise ValidationError('Usuário não está vinculado a uma matriz.')
 
-    lojas = usuario.lojas.filter(ativa=True)
+    lojas = usuario.lojas.filter(status=StatusOperacional.ATIVA,)
 
     if not lojas.exists():
         raise ValidationError('Usuário não está vinculado a nenhuma loja ativa.')

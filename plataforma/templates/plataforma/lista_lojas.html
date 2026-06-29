@@ -96,10 +96,18 @@
                         <td>{{ loja.cnpj|default:"-" }}</td>
                         <td>{{ loja.telefone|default:"-" }}</td>
                         <td>
-                            {% if loja.ativa %}
+                            {% if loja.status == 'ativa' %}
                             <span class="badge bg-success">Ativa</span>
+                            {% elif loja.status == 'implantacao' %}
+                            <span class="badge bg-info text-dark">Em implantação</span>
+                            {% elif loja.status == 'suspensa' %}
+                            <span class="badge bg-warning text-dark">Suspensa</span>
+                            {% elif loja.status == 'bloqueada' %}
+                            <span class="badge bg-danger">Bloqueada</span>
+                            {% elif loja.status == 'encerrada' %}
+                            <span class="badge bg-secondary">Encerrada</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inativa</span>
+                            <span class="badge bg-secondary">-</span>
                             {% endif %}
                         </td>
                         <td>{{ loja.criada_em|date:"d/m/Y" }}</td>

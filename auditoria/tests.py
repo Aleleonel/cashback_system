@@ -3,6 +3,7 @@ from django.test import RequestFactory, TestCase
 
 from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
+from core.choices import StatusOperacional
 from empresas.models import Loja, Matriz
 
 
@@ -18,7 +19,7 @@ class RegistroAuditoriaTest(TestCase):
         self.loja = Loja.objects.create(
             matriz=self.matriz,
             nome='Loja Teste',
-            ativa=True
+            status=StatusOperacional.ATIVA,
         )
 
         self.usuario = self.User.objects.create_user(

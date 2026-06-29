@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import TestCase
 
+from core.choices import StatusOperacional
 from core.services import get_contexto_operacional_usuario
 from empresas.models import Loja, Matriz
 
@@ -19,7 +20,7 @@ class ContextoOperacionalUsuarioTest(TestCase):
         self.loja = Loja.objects.create(
             matriz=self.matriz,
             nome='Loja Teste',
-            ativa=True
+            status=StatusOperacional.ATIVA,
         )
 
     def test_usuario_nao_autenticado_gera_permission_denied(self):

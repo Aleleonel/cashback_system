@@ -26,6 +26,22 @@ class MatrizAdmin(admin.ModelAdmin):
 
 @admin.register(Loja)
 class LojaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'matriz', 'cnpj', 'telefone', 'ativa',)
-    search_fields = ('nome', 'cnpj', 'matriz__nome',)
-    list_filter = ('ativa', 'matriz',)
+
+    list_display = (
+        'nome',
+        'matriz',
+        'cnpj',
+        'telefone',
+        'status',
+    )
+
+    search_fields = (
+        'nome',
+        'cnpj',
+        'matriz__nome',
+    )
+
+    list_filter = (
+        'status',
+        'matriz',
+    )

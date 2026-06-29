@@ -265,14 +265,29 @@ def lista_lojas(request):
             'selecionado': status == '',
         },
         {
-            'valor': 'ativas',
-            'nome': 'Ativas',
-            'selecionado': status == 'ativas',
+            'valor': StatusOperacional.IMPLANTACAO,
+            'nome': 'Em implantação',
+            'selecionado': status == StatusOperacional.IMPLANTACAO,
         },
         {
-            'valor': 'inativas',
-            'nome': 'Inativas',
-            'selecionado': status == 'inativas',
+            'valor': StatusOperacional.ATIVA,
+            'nome': 'Ativas',
+            'selecionado': status == StatusOperacional.ATIVA,
+        },
+        {
+            'valor': StatusOperacional.SUSPENSA,
+            'nome': 'Suspensas',
+            'selecionado': status == StatusOperacional.SUSPENSA,
+        },
+        {
+            'valor': StatusOperacional.BLOQUEADA,
+            'nome': 'Bloqueadas',
+            'selecionado': status == StatusOperacional.BLOQUEADA,
+        },
+        {
+            'valor': StatusOperacional.ENCERRADA,
+            'nome': 'Encerradas',
+            'selecionado': status == StatusOperacional.ENCERRADA,
         },
     ]
 

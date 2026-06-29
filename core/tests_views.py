@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from core.choices import StatusOperacional
 from empresas.models import Loja, Matriz
 
 
@@ -17,7 +18,7 @@ class ViewsProtegidasTest(TestCase):
         self.loja = Loja.objects.create(
             matriz=self.matriz,
             nome='Loja Teste',
-            ativa=True
+            status=StatusOperacional.ATIVA,
         )
 
         self.usuario = self.User.objects.create_user(
