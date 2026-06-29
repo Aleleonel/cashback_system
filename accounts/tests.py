@@ -57,10 +57,15 @@ class PermissoesUsuarioTest(TestCase):
             )
         )
 
-    def test_admin_loja_nao_configura_campanha(self):
-        usuario = self.criar_usuario('admin_loja')
+    def test_admin_loja_configura_campanha(self):
+        usuario = self.User.objects.create_user(
+            username='admin_loja_campanha',
+            password='123456',
+            perfil=self.User.PERFIL_ADMIN_LOJA,
+            ativo=True
+        )
 
-        self.assertFalse(
+        self.assertTrue(
             usuario_tem_permissao(
                 usuario,
                 PERMISSAO_CAMPANHAS_CONFIGURAR

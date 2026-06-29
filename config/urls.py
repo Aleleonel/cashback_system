@@ -40,4 +40,6 @@ urlpatterns = [
         'auditoria.urls'
         )
     ),
+
+    path('', include('accounts.urls')),
 ]
