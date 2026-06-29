@@ -9,7 +9,15 @@ from empresas.models import Loja, Matriz
 class ViewsProtegidasTest(TestCase):
 
     def setUp(self):
+
         self.User = get_user_model()
+        
+        self.superuser = self.User.objects.create_superuser(
+            username='superuser_views',
+            password='123456'
+        )
+
+        
 
         self.matriz = Matriz.objects.create(
             nome='Matriz Teste'
@@ -130,3 +138,43 @@ class ViewsProtegidasTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+    
+    def test_superuser_nao_acessa_dashboard_operacional(self):
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(
+            reverse('relatorios:dashboard')
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+
+    def test_superuser_nao_acessa_clientes_operacional(self):
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(
+            reverse('clientes:lista_clientes')
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+
+    def test_superuser_nao_acessa_nova_compra_operacional(self):
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(
+            reverse('cashback:nova_compra')
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+
+    def test_superuser_nao_acessa_aniversariantes_operacional(self):
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(
+            reverse('campanhas:aniversariantes_mes')
+        )
+
+        self.assertEqual(response.status_code, 403)
