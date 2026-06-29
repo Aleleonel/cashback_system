@@ -7,6 +7,10 @@ from .views import (
     editar_matriz,
     alternar_status_matriz,
     lista_lojas,
+    nova_empresa_matriz,
+    nova_empresa_loja,
+    nova_empresa_admin,
+    nova_empresa_revisao,
 )
 
 app_name = 'plataforma'
@@ -47,5 +51,29 @@ urlpatterns = [
         'painel-master/lojas/',
         lista_lojas,
         name='lista_lojas'
+    ),
+
+    path(
+        'painel-master/nova-empresa/',
+        nova_empresa_matriz,
+        name='nova_empresa_matriz'
+    ),
+
+    path(
+        'painel-master/nova-empresa/loja/',
+        nova_empresa_loja,
+        name='nova_empresa_loja'
+    ),
+
+    path(
+        'painel-master/nova-empresa/admin/',
+        nova_empresa_admin,
+        name='nova_empresa_admin'
+    ),
+
+    path(
+        'painel-master/nova-empresa/revisao/',
+        nova_empresa_revisao,
+        name='nova_empresa_revisao'
     ),
 ]

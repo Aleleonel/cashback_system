@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>Nova Empresa — Etapa 4 de 4</strong>
+            <div class="text-muted small">Revise os dados antes da implantação.</div>
+        </div>
+
+        <div class="card-body">
+
+            <h6>Empresa</h6>
+            <p class="mb-1"><strong>Nome:</strong> {{ dados.matriz.nome }}</p>
+            <p><strong>CNPJ:</strong> {{ dados.matriz.cnpj|default:"-" }}</p>
+
+            <hr>
+
+            <h6>Loja Principal</h6>
+            <p class="mb-1"><strong>Nome:</strong> {{ dados.loja.nome }}</p>
+            <p class="mb-1"><strong>CNPJ:</strong> {{ dados.loja.cnpj|default:"-" }}</p>
+            <p><strong>Telefone:</strong> {{ dados.loja.telefone|default:"-" }}</p>
+
+            <hr>
+
+            <h6>Administrador</h6>
+            <p class="mb-1"><strong>Nome:</strong> {{ dados.admin.first_name|default:"-" }}</p>
+            <p class="mb-1"><strong>Usuário:</strong> {{ dados.admin.username }}</p>
+            <p><strong>E-mail:</strong> {{ dados.admin.email|default:"-" }}</p>
+
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'plataforma:nova_empresa_admin' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-success">
+                        Implantar Empresa
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

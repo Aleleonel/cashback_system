@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from accounts.decorators import require_permission
 from core.choices import StatusOperacional
+
 from .selectors import (
     get_resumo_painel_master, 
     get_matrizes_plataforma,
@@ -8,17 +9,26 @@ from .selectors import (
 )
 
 from django.core.paginator import Paginator
+
 from core.services import get_contexto_plataforma
+from auditoria.services import registrar_auditoria
+from .services import implantar_empresa
 
 
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from accounts.permissions import PERMISSAO_PLATAFORMA_PAINEL_MASTER
 from auditoria.models import RegistroAuditoria
-from auditoria.services import registrar_auditoria
-from empresas.models import Matriz
-from .forms import MatrizForm
 
+from empresas.models import Matriz
+
+
+from .forms import (
+    MatrizForm,
+    WizardAdminForm,
+    WizardLojaForm,
+    WizardMatrizForm,
+)
 
 @login_required
 @require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
@@ -310,5 +320,186 @@ def lista_lojas(request):
             'matriz_id': matriz_id,
             'status_opcoes': status_opcoes,
             'matrizes_opcoes': matrizes_opcoes,
+        }
+    )
+
+SESSAO_NOVA_EMPRESA = 'wizard_nova_empresa'
+
+
+def get_dados_wizard_nova_empresa(request):
+
+    return request.session.get(
+        SESSAO_NOVA_EMPRESA,
+        {}
+    )
+
+
+def salvar_dados_wizard_nova_empresa(request, chave, dados):
+
+    dados_wizard = get_dados_wizard_nova_empresa(request)
+
+    dados_wizard[chave] = dados
+
+    request.session[SESSAO_NOVA_EMPRESA] = dados_wizard
+
+    request.session.modified = True
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def nova_empresa_matriz(request):
+
+    get_contexto_plataforma(request.user)
+
+    dados_wizard = get_dados_wizard_nova_empresa(request)
+
+    if request.method == 'POST':
+        form = WizardMatrizForm(request.POST)
+
+        if form.is_valid():
+            salvar_dados_wizard_nova_empresa(
+                request,
+                'matriz',
+                form.cleaned_data
+            )
+
+            return redirect('plataforma:nova_empresa_loja')
+
+    else:
+        form = WizardMatrizForm(
+            initial=dados_wizard.get('matriz')
+        )
+
+    return render(
+        request,
+        'plataforma/wizard/matriz.html',
+        {
+            'form': form,
+            'etapa': 1,
+        }
+    )
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def nova_empresa_loja(request):
+
+    get_contexto_plataforma(request.user)
+
+    dados_wizard = get_dados_wizard_nova_empresa(request)
+
+    if 'matriz' not in dados_wizard:
+        return redirect('plataforma:nova_empresa_matriz')
+
+    if request.method == 'POST':
+        form = WizardLojaForm(request.POST)
+
+        if form.is_valid():
+            salvar_dados_wizard_nova_empresa(
+                request,
+                'loja',
+                form.cleaned_data
+            )
+
+            return redirect('plataforma:nova_empresa_admin')
+
+    else:
+        form = WizardLojaForm(
+            initial=dados_wizard.get('loja')
+        )
+
+    return render(
+        request,
+        'plataforma/wizard/loja.html',
+        {
+            'form': form,
+            'etapa': 2,
+        }
+    )
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def nova_empresa_admin(request):
+
+    get_contexto_plataforma(request.user)
+
+    dados_wizard = get_dados_wizard_nova_empresa(request)
+
+    if 'matriz' not in dados_wizard:
+        return redirect('plataforma:nova_empresa_matriz')
+
+    if 'loja' not in dados_wizard:
+        return redirect('plataforma:nova_empresa_loja')
+
+    if request.method == 'POST':
+        form = WizardAdminForm(request.POST)
+
+        if form.is_valid():
+            salvar_dados_wizard_nova_empresa(
+                request,
+                'admin',
+                form.cleaned_data
+            )
+
+            return redirect('plataforma:nova_empresa_revisao')
+
+    else:
+        form = WizardAdminForm(
+            initial=dados_wizard.get('admin')
+        )
+
+    return render(
+        request,
+        'plataforma/wizard/admin.html',
+        {
+            'form': form,
+            'etapa': 3,
+        }
+    )
+
+
+@login_required
+@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+def nova_empresa_revisao(request):
+
+    contexto = get_contexto_plataforma(request.user)
+
+    dados_wizard = get_dados_wizard_nova_empresa(request)
+
+    if 'matriz' not in dados_wizard:
+        return redirect('plataforma:nova_empresa_matriz')
+
+    if 'loja' not in dados_wizard:
+        return redirect('plataforma:nova_empresa_loja')
+
+    if 'admin' not in dados_wizard:
+        return redirect('plataforma:nova_empresa_admin')
+
+    if request.method == 'POST':
+        resultado = implantar_empresa(
+            dados_matriz=dados_wizard['matriz'],
+            dados_loja=dados_wizard['loja'],
+            dados_admin=dados_wizard['admin'],
+            usuario_executor=contexto['usuario'],
+            request=request
+        )
+
+        if SESSAO_NOVA_EMPRESA in request.session:
+            del request.session[SESSAO_NOVA_EMPRESA]
+
+        messages.success(
+            request,
+            f"Empresa {resultado['matriz'].nome} implantada com sucesso."
+        )
+
+        return redirect('plataforma:lista_matrizes')
+
+    return render(
+        request,
+        'plataforma/wizard/revisao.html',
+        {
+            'dados': dados_wizard,
+            'etapa': 4,
         }
     )
