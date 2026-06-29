@@ -11,7 +11,11 @@ from .services import registrar_compra
 from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 
+from accounts.decorators import require_permission
+from accounts.permissions import PERMISSAO_CASHBACK_NOVA_COMPRA
+
 @login_required
+@require_permission(PERMISSAO_CASHBACK_NOVA_COMPRA)
 def nova_compra(request):
 
     try:
