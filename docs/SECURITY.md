@@ -135,3 +135,19 @@ Antes de cada release verificar:
 - auditoria;
 - testes;
 - consultas protegidas.
+
+## Auditoria de acesso negado
+
+O decorator `require_permission` registra auditoria quando um usuário autenticado tenta acessar uma funcionalidade sem permissão.
+
+Registro gerado:
+
+- usuário;
+- matriz, quando existir;
+- permissão exigida;
+- view bloqueada;
+- IP;
+- User-Agent;
+- data e hora.
+
+Esse comportamento fortalece a rastreabilidade e apoia os requisitos de segurança e LGPD.
