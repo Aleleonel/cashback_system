@@ -72,7 +72,15 @@ class ContextoOperacionalUsuarioTest(TestCase):
             contexto['loja'],
             self.loja
         )
-        
+    
+    def test_superuser_nao_acessa_contexto_operacional(self):
+        usuario = self.User.objects.create_superuser(
+            username='superuser_operacional',
+            password='123456'
+        )
+
+        with self.assertRaises(PermissionDenied):
+            get_contexto_operacional_usuario(usuario)
 
 class ContextoPlataformaTest(TestCase):
 

@@ -1,12 +1,18 @@
 from django.core.exceptions import PermissionDenied, ValidationError
 
 from core.choices import StatusOperacional
+
 from .models import ConfiguracaoSistema
 
 
 def get_contexto_operacional_usuario(usuario):
     if not usuario.is_authenticated:
         raise PermissionDenied('Usuário não autenticado.')
+    
+    if usuario.is_superuser:
+        raise PermissionDenied(
+            'Superusuário não possui contexto operacional.'
+        )
 
     if not usuario.matriz:
         raise ValidationError('Usuário não está vinculado a uma matriz.')
