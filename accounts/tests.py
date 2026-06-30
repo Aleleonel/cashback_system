@@ -6,6 +6,8 @@ from django.test import RequestFactory
 from django.http import HttpResponse
 from accounts.decorators import require_permission
 
+from .models import PermissaoUsuario
+
 from accounts.permissions import (
     PERMISSAO_CAMPANHAS_CONFIGURAR,
     PERMISSAO_CAMPANHAS_DISPARAR,
@@ -172,3 +174,24 @@ class PermissoesUsuarioTest(TestCase):
 
         with self.assertRaises(PermissionDenied):
             view_teste(request)
+
+
+    def test_operador_com_permissao_extra_configura_campanha(self):
+        usuario = self.User.objects.create_user(
+            username='operador_extra_campanha',
+            password='123456',
+            perfil=self.User.PERFIL_OPERADOR,
+            ativo=True
+        )
+
+        PermissaoUsuario.objects.create(
+            usuario=usuario,
+            permissao=PERMISSAO_CAMPANHAS_CONFIGURAR
+        )
+
+        self.assertTrue(
+            usuario_tem_permissao(
+                usuario,
+                PERMISSAO_CAMPANHAS_CONFIGURAR
+            )
+        )

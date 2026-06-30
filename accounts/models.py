@@ -79,3 +79,34 @@ class Usuario(AbstractUser):
 
     def is_operador(self):
         return self.perfil == self.PERFIL_OPERADOR
+
+
+class PermissaoUsuario(models.Model):
+
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='permissoes_extras'
+    )
+
+    permissao = models.CharField(
+        max_length=100,
+        db_index=True
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['permissao']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['usuario', 'permissao'],
+                name='uq_usuario_permissao'
+            )
+        ]
+        indexes = [
+            models.Index(fields=['usuario', 'permissao']),
+        ]
+
+    def __str__(self):
+        return f'{self.usuario.username} - {self.permissao}'

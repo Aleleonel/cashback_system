@@ -24,7 +24,12 @@ def usuario_tem_permissao(usuario, permissao):
         set()
     )
 
-    return permissao in permissoes
+    if permissao in permissoes:
+        return True
+
+    return usuario.permissoes_extras.filter(
+        permissao=permissao
+    ).exists()
 
 
 def exigir_permissao(usuario, permissao):
