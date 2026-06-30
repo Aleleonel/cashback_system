@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-shield-check me-2"></i>
+                Auditoria da Minha Empresa
+            </strong>
+            <div class="text-muted small">
+                Registros relacionados à sua matriz e lojas.
+            </div>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-6">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control" placeholder="Descrição">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Ação</label>
+                    <select name="acao" class="form-select">
+                        <option value="">Todas</option>
+
+                        {% for item in acoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'empresa:auditoria' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Usuário</th>
+                        <th>Loja</th>
+                        <th>Ação</th>
+                        <th>Recurso</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for registro in registros %}
+
+                    <tr>
+                        <td>{{ registro.criado_em|date:"d/m/Y H:i" }}</td>
+                        <td>{{ registro.usuario.username|default:"-" }}</td>
+                        <td>{{ registro.loja.nome|default:"-" }}</td>
+                        <td>{{ registro.get_acao_display }}</td>
+                        <td>{{ registro.recurso|default:"-" }}</td>
+                        <td>{{ registro.descricao|default:"-" }}</td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

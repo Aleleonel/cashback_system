@@ -42,4 +42,6 @@ urlpatterns = [
     ),
 
     path('', include('accounts.urls')),
+
+    path('empresa/', include('empresa.urls')),
 ]

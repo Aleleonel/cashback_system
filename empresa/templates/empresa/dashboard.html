@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-building-gear me-2"></i>
+                Minha Empresa
+            </strong>
+            <div class="text-muted small">
+                Administração da matriz {{ matriz.nome }}.
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small">Lojas</div>
+                    <h3>{{ resumo.total_lojas }}</h3>
+                    <div class="small text-muted">
+                        Ativas: {{ resumo.lojas_ativas }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small">Usuários ativos</div>
+                    <h3>{{ resumo.usuarios_ativos }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small">Clientes ativos</div>
+                    <h3>{{ resumo.total_clientes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small">Lançamentos de Cashback</div>
+                    <h3>{{ resumo.total_lancamentos_cashback }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small">Envios de Campanhas</div>
+                    <h3>{{ resumo.total_envios_campanhas }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
