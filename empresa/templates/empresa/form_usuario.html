@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-person-gear me-2"></i>
+                {{ titulo }}
+            </strong>
+            <div class="text-muted small">
+                Cadastro de usuários da sua empresa.
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        {{ form.first_name.label_tag }}
+                        {{ form.first_name }}
+                        {{ form.first_name.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.username.label_tag }}
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.telefone.label_tag }}
+                        {{ form.telefone }}
+                        {{ form.telefone.errors }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.password.label_tag }}
+                        {{ form.password }}
+                        {{ form.password.errors }}
+
+                        {% if usuario_obj %}
+                        <div class="form-text">
+                            Deixe em branco para manter a senha atual.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.perfil.label_tag }}
+                        {{ form.perfil }}
+                        {{ form.perfil.errors }}
+                    </div>
+
+                    <div class="col-md-8">
+                        {{ form.lojas.label_tag }}
+                        {{ form.lojas }}
+                        {{ form.lojas.errors }}
+                        <div class="form-text">
+                            Segure CTRL para selecionar mais de uma loja.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            {{ form.ativo }}
+                            {{ form.ativo.label_tag }}
+                            {{ form.ativo.errors }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'empresa:lista_usuarios' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Salvar Usuário
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

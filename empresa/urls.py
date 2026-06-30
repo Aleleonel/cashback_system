@@ -8,6 +8,11 @@ from .views import (
     editar_loja_empresa_view,
     alternar_status_loja_empresa_view,
     configurar_cashback_empresa,
+
+    lista_usuarios_empresa,
+    criar_usuario_empresa_view,
+    editar_usuario_empresa_view,
+    alternar_status_usuario_empresa_view,
 )
 
 app_name = 'empresa'
@@ -53,5 +58,29 @@ urlpatterns = [
         'configuracoes/cashback/',
         configurar_cashback_empresa,
         name='configurar_cashback'
+    ),
+    
+    path(
+        'usuarios/',
+        lista_usuarios_empresa,
+        name='lista_usuarios'
+    ),
+
+    path(
+        'usuarios/novo/',
+        criar_usuario_empresa_view,
+        name='criar_usuario'
+    ),
+
+    path(
+        'usuarios/<int:usuario_id>/editar/',
+        editar_usuario_empresa_view,
+        name='editar_usuario'
+    ),
+
+    path(
+        'usuarios/<int:usuario_id>/status/',
+        alternar_status_usuario_empresa_view,
+        name='alternar_status_usuario'
     ),
 ]

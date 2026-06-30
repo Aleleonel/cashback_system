@@ -65,3 +65,49 @@ def get_lojas_empresa(
         )
 
     return lojas
+
+from django.contrib.auth import get_user_model
+
+
+def get_usuarios_empresa(
+    *,
+    matriz,
+    busca='',
+    perfil='',
+    status=''
+):
+
+    User = get_user_model()
+
+    usuarios = User.objects.filter(
+        matriz=matriz
+    ).prefetch_related(
+        'lojas'
+    ).order_by(
+        'username'
+    )
+
+    if busca:
+        usuarios = usuarios.filter(
+            Q(username__icontains=busca) |
+            Q(first_name__icontains=busca) |
+            Q(email__icontains=busca) |
+            Q(telefone__icontains=busca)
+        )
+
+    if perfil:
+        usuarios = usuarios.filter(
+            perfil=perfil
+        )
+
+    if status == 'ativos':
+        usuarios = usuarios.filter(
+            ativo=True
+        )
+
+    if status == 'inativos':
+        usuarios = usuarios.filter(
+            ativo=False
+        )
+
+    return usuarios

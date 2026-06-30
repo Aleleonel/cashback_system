@@ -143,3 +143,122 @@ def atualizar_configuracao_cashback_empresa(
     )
 
     return configuracao
+
+def criar_usuario_empresa(
+    *,
+    matriz,
+    dados,
+    usuario_executor,
+    request=None
+):
+
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+
+    usuario = User.objects.create_user(
+        username=dados['username'],
+        email=dados.get('email') or '',
+        password=dados['password'],
+        first_name=dados.get('first_name') or '',
+        telefone=dados.get('telefone') or None,
+        perfil=dados['perfil'],
+        matriz=matriz,
+        ativo=dados.get('ativo', True),
+    )
+
+    usuario.lojas.set(dados['lojas'])
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_CRIAR,
+        recurso='empresa.usuario',
+        recurso_id=usuario.id,
+        descricao=f'Usuário criado pela empresa: {usuario.username}',
+        request=request
+    )
+
+    return usuario
+
+
+def editar_usuario_empresa(
+    *,
+    usuario,
+    dados,
+    usuario_executor,
+    request=None
+):
+
+    usuario.username = dados['username']
+    usuario.email = dados.get('email') or ''
+    usuario.first_name = dados.get('first_name') or ''
+    usuario.telefone = dados.get('telefone') or None
+    usuario.perfil = dados['perfil']
+    usuario.ativo = dados.get('ativo', False)
+
+    senha = dados.get('password')
+
+    if senha:
+        usuario.set_password(senha)
+
+    usuario.save(
+        update_fields=[
+            'username',
+            'email',
+            'first_name',
+            'telefone',
+            'perfil',
+            'ativo',
+            'password',
+            'atualizado_em',
+        ]
+    )
+
+    usuario.lojas.set(dados['lojas'])
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=usuario.matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='empresa.usuario',
+        recurso_id=usuario.id,
+        descricao=f'Usuário editado pela empresa: {usuario.username}',
+        request=request
+    )
+
+    return usuario
+
+
+def alternar_status_usuario_empresa(
+    *,
+    usuario,
+    usuario_executor,
+    request=None
+):
+
+    usuario.ativo = not usuario.ativo
+
+    usuario.save(
+        update_fields=[
+            'ativo',
+            'atualizado_em',
+        ]
+    )
+
+    status = 'ativado' if usuario.ativo else 'inativado'
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=usuario.matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='empresa.usuario',
+        recurso_id=usuario.id,
+        descricao=f'Usuário {status} pela empresa: {usuario.username}',
+        request=request
+    )
+
+    return usuario
