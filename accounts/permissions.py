@@ -4,6 +4,12 @@
 
 PERMISSAO_PLATAFORMA_PAINEL_MASTER = 'plataforma.painel_master'
 
+# ==========================================================
+# MINHA EMPRESA
+# ==========================================================
+
+PERMISSAO_EMPRESA_LOJAS_GERENCIAR = 'empresa.lojas_gerenciar'
+
 
 # ==========================================================
 # DASHBOARD / RELATORIOS
@@ -45,6 +51,10 @@ PERMISSAO_CAMPANHAS_TEMPLATES = 'campanhas.templates'
 # GRUPOS DE PERMISSOES
 # ==========================================================
 
+PERMISSOES_EMPRESA = {
+    PERMISSAO_EMPRESA_LOJAS_GERENCIAR,
+}
+
 PERMISSOES_CLIENTES = {
     PERMISSAO_CLIENTES_VISUALIZAR,
     PERMISSAO_CLIENTES_CRIAR,
@@ -80,10 +90,13 @@ PERMISSOES_POR_PERFIL = {
         | PERMISSOES_CASHBACK
         | PERMISSOES_CAMPANHAS
         | PERMISSOES_RELATORIOS
+        | PERMISSOES_EMPRESA
+        
     ),
 
     'admin_loja': (
         PERMISSOES_CLIENTES
+        | PERMISSOES_EMPRESA
         | PERMISSOES_CASHBACK
         | {
             PERMISSAO_CAMPANHAS_VISUALIZAR,

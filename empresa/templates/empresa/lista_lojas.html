@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>
+                    <i class="bi bi-shop me-2"></i>
+                    Lojas da Minha Empresa
+                </strong>
+                <div class="text-muted small">
+                    Unidades vinculadas à sua matriz.
+                </div>
+            </div>
+
+            <a href="{% url 'empresa:criar_loja' %}" class="btn btn-sm btn-dark">
+                Nova Loja
+            </a>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-5">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Nome, CNPJ ou telefone">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        {% for item in status_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'empresa:lista_lojas' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>CNPJ</th>
+                        <th>Telefone</th>
+                        <th>Status</th>
+                        <th>Criada em</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for loja in lojas %}
+
+                    <tr>
+                        <td>{{ loja.nome }}</td>
+                        <td>{{ loja.cnpj|default:"-" }}</td>
+                        <td>{{ loja.telefone|default:"-" }}</td>
+                        <td>
+                            {% if loja.status == 'ativa' %}
+                            <span class="badge bg-success">Ativa</span>
+                            {% elif loja.status == 'implantacao' %}
+                            <span class="badge bg-info text-dark">Em implantação</span>
+                            {% elif loja.status == 'suspensa' %}
+                            <span class="badge bg-warning text-dark">Suspensa</span>
+                            {% elif loja.status == 'bloqueada' %}
+                            <span class="badge bg-danger">Bloqueada</span>
+                            {% elif loja.status == 'encerrada' %}
+                            <span class="badge bg-secondary">Encerrada</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ loja.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ loja.criada_em|date:"d/m/Y" }}</td>
+                        <td class="text-end">
+
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <a href="{% url 'empresa:editar_loja' loja.id %}" class="btn btn-sm btn-outline-dark">
+                                    Editar
+                                </a>
+
+                                <form method="post" action="{% url 'empresa:alternar_status_loja' loja.id %}">
+                                    {% csrf_token %}
+
+                                    {% if loja.status == 'ativa' %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Suspender
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Ativar
+                                    </button>
+                                    {% endif %}
+                                </form>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Nenhuma loja encontrada.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
