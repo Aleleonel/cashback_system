@@ -56,11 +56,35 @@
             Operação
         </div>
 
+        {% if pode_ver_dashboard %}
         <a href="{% url 'relatorios:dashboard' %}" class="nav-link text-white">
             <i class="bi bi-speedometer2 me-2"></i>
             Dashboard
         </a>
+        {% endif %}
 
+        {% if pode_nova_compra %}
+        <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
+            <i class="bi bi-cart-plus me-2"></i>
+            Nova Compra
+        </a>
+        {% endif %}
+
+        {% if pode_ver_clientes %}
+        <a href="{% url 'clientes:lista_clientes' %}" class="nav-link text-white">
+            <i class="bi bi-people me-2"></i>
+            Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_importar_clientes %}
+        <a href="{% url 'clientes:importar_clientes' %}" class="nav-link text-white-50">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+            Importar Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
         <div class="text-uppercase text-white-50 small mt-4 mb-1">
             Minha Empresa
         </div>
@@ -69,51 +93,43 @@
             <i class="bi bi-building-gear me-2"></i>
             Painel da Empresa
         </a>
+        {% endif %}
 
+        {% if pode_empresa_lojas %}
         <a href="{% url 'empresa:lista_lojas' %}" class="nav-link text-white-50">
             <i class="bi bi-shop me-2"></i>
             Lojas
         </a>
+        {% endif %}
 
-        <a href="{% url 'empresa:configurar_cashback' %}" class="nav-link text-white-50">
-            <i class="bi bi-cash-coin me-2"></i>
-            Config. Cashback
-        </a>
-
+        {% if pode_empresa_usuarios %}
         <a href="{% url 'empresa:lista_usuarios' %}" class="nav-link text-white-50">
             <i class="bi bi-people me-2"></i>
             Usuários
         </a>
+        {% endif %}
 
+        {% if pode_empresa_cashback %}
+        <a href="{% url 'empresa:configurar_cashback' %}" class="nav-link text-white-50">
+            <i class="bi bi-cash-coin me-2"></i>
+            Config. Cashback
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
         <a href="{% url 'empresa:auditoria' %}" class="nav-link text-white-50">
             <i class="bi bi-shield-check me-2"></i>
             Auditoria
         </a>
+        {% endif %}
 
-        <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
-            <i class="bi bi-cart-plus me-2"></i>
-            Nova Compra
-        </a>
-
-        <a href="{% url 'clientes:lista_clientes' %}" class="nav-link text-white">
-            <i class="bi bi-people me-2"></i>
-            Clientes
-        </a>
-
-        <a href="{% url 'clientes:importar_clientes' %}" class="nav-link text-white-50">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
-            Importar Clientes
-        </a>
-
-        <a href="#" class="nav-link text-white-50">
-            <i class="bi bi-ticket-perforated me-2"></i>
-            Vouchers
-        </a>
-
+        {% if pode_ver_campanhas or pode_configurar_campanhas or pode_templates_campanhas %}
         <div class="text-uppercase text-white-50 small mt-4 mb-1">
             Campanhas
         </div>
+        {% endif %}
 
+        {% if pode_ver_campanhas %}
         <a href="{% url 'campanhas:aniversariantes_mes' %}" class="nav-link text-white-50">
             <i class="bi bi-megaphone me-2"></i>
             Aniversariantes
@@ -128,16 +144,21 @@
             <i class="bi bi-list-check me-2"></i>
             Fila
         </a>
+        {% endif %}
 
+        {% if pode_templates_campanhas %}
         <a href="{% url 'campanhas:lista_templates_campanhas' %}" class="nav-link text-white-50">
             <i class="bi bi-layout-text-window-reverse me-2"></i>
             Templates
         </a>
+        {% endif %}
 
+        {% if pode_configurar_campanhas %}
         <a href="{% url 'campanhas:configurar_campanha_aniversario' %}" class="nav-link text-white-50">
             <i class="bi bi-sliders me-2"></i>
             Config. Campanha
         </a>
+        {% endif %}
 
         {% endif %}
 
