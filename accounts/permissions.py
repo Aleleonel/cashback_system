@@ -9,7 +9,7 @@ PERMISSAO_PLATAFORMA_PAINEL_MASTER = 'plataforma.painel_master'
 # ==========================================================
 
 PERMISSAO_EMPRESA_LOJAS_GERENCIAR = 'empresa.lojas_gerenciar'
-
+PERMISSAO_EMPRESA_CONFIGURAR_CASHBACK = 'empresa.configurar_cashback'
 
 # ==========================================================
 # DASHBOARD / RELATORIOS
@@ -53,6 +53,7 @@ PERMISSAO_CAMPANHAS_TEMPLATES = 'campanhas.templates'
 
 PERMISSOES_EMPRESA = {
     PERMISSAO_EMPRESA_LOJAS_GERENCIAR,
+    PERMISSAO_EMPRESA_CONFIGURAR_CASHBACK,
 }
 
 PERMISSOES_CLIENTES = {

@@ -7,6 +7,7 @@ from .views import (
     criar_loja_empresa_view,
     editar_loja_empresa_view,
     alternar_status_loja_empresa_view,
+    configurar_cashback_empresa,
 )
 
 app_name = 'empresa'
@@ -46,5 +47,11 @@ urlpatterns = [
         'lojas/<int:loja_id>/status/',
         alternar_status_loja_empresa_view,
         name='alternar_status_loja'
+    ),
+
+    path(
+        'configuracoes/cashback/',
+        configurar_cashback_empresa,
+        name='configurar_cashback'
     ),
 ]

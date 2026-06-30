@@ -1,5 +1,6 @@
 from django import forms
 
+from core.models import ConfiguracaoSistema
 from core.choices import StatusOperacional
 from empresas.models import Loja
 
@@ -47,3 +48,37 @@ class LojaEmpresaForm(forms.ModelForm):
             )
 
         return cnpj
+    
+
+class ConfiguracaoCashbackEmpresaForm(forms.ModelForm):
+
+    class Meta:
+        model = ConfiguracaoSistema
+
+        fields = [
+            'percentual_cashback',
+            'dias_liberacao',
+            'dias_expiracao',
+            'valor_minimo_compra',
+            'enviar_email_saldo',
+        ]
+
+        widgets = {
+            'percentual_cashback': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+            }),
+            'dias_liberacao': forms.NumberInput(attrs={
+                'class': 'form-control',
+            }),
+            'dias_expiracao': forms.NumberInput(attrs={
+                'class': 'form-control',
+            }),
+            'valor_minimo_compra': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+            }),
+            'enviar_email_saldo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+        }

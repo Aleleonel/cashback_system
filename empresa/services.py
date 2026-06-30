@@ -2,7 +2,7 @@ from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 from core.choices import StatusOperacional
 from empresas.models import Loja
-
+from core.models import ConfiguracaoSistema
 
 def criar_loja_empresa(
     *,
@@ -104,3 +104,42 @@ def alternar_status_loja_empresa(
     )
 
     return loja
+
+
+def atualizar_configuracao_cashback_empresa(
+    *,
+    configuracao,
+    dados,
+    usuario_executor,
+    request=None
+):
+
+    configuracao.percentual_cashback = dados['percentual_cashback']
+    configuracao.dias_liberacao = dados['dias_liberacao']
+    configuracao.dias_expiracao = dados['dias_expiracao']
+    configuracao.valor_minimo_compra = dados['valor_minimo_compra']
+    configuracao.enviar_email_saldo = dados['enviar_email_saldo']
+
+    configuracao.save(
+        update_fields=[
+            'percentual_cashback',
+            'dias_liberacao',
+            'dias_expiracao',
+            'valor_minimo_compra',
+            'enviar_email_saldo',
+            'atualizado_em',
+        ]
+    )
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=configuracao.matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='empresa.configuracao_cashback',
+        recurso_id=configuracao.id,
+        descricao='Configuração de cashback atualizada pela empresa.',
+        request=request
+    )
+
+    return configuracao

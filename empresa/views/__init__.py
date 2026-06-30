@@ -1,5 +1,7 @@
 from .dashboard import dashboard_empresa
 from .auditoria import auditoria_empresa
+from .configuracoes import configurar_cashback_empresa
+
 
 from .lojas import (
     lista_lojas_empresa,
