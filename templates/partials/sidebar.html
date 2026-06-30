@@ -61,6 +61,25 @@
             Dashboard
         </a>
 
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Minha Empresa
+        </div>
+
+        <a href="{% url 'empresa:dashboard' %}" class="nav-link text-white-50">
+            <i class="bi bi-building-gear me-2"></i>
+            Painel da Empresa
+        </a>
+
+        <a href="{% url 'empresa:lista_lojas' %}" class="nav-link text-white-50">
+            <i class="bi bi-shop me-2"></i>
+            Lojas
+        </a>
+
+        <a href="{% url 'empresa:auditoria' %}" class="nav-link text-white-50">
+            <i class="bi bi-shield-check me-2"></i>
+            Auditoria
+        </a>
+
         <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
             <i class="bi bi-cart-plus me-2"></i>
             Nova Compra
