@@ -1,0 +1,200 @@
+import secrets
+import string
+
+from django.db import transaction
+from django.utils import timezone
+
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
+
+from .models import Voucher
+
+
+# ==========================================================
+# GERAÇÃO DE CÓDIGO
+# ==========================================================
+
+CARACTERES_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+
+def gerar_codigo_voucher():
+
+    ano = timezone.localdate().strftime('%y')
+
+    while True:
+
+        codigo = (
+            f'VCH-{ano}-'
+            f'{"".join(secrets.choice(CARACTERES_CODIGO) for _ in range(6))}'
+        )
+
+        if not Voucher.objects.filter(codigo=codigo).exists():
+            return codigo
+
+
+# ==========================================================
+# CRUD
+# ==========================================================
+
+@transaction.atomic
+def criar_voucher(
+    *,
+    matriz,
+    dados,
+    usuario_executor,
+    request=None,
+):
+
+    voucher = Voucher.objects.create(
+        matriz=matriz,
+        cliente=dados.get('cliente'),
+        codigo=gerar_codigo_voucher(),
+        nome=dados['nome'],
+        descricao=dados.get('descricao', ''),
+        tipo=dados['tipo'],
+        origem=Voucher.Origem.MANUAL,
+        valor=dados.get('valor'),
+        percentual=dados.get('percentual'),
+        data_inicio=dados['data_inicio'],
+        data_fim=dados['data_fim'],
+        uso_unico_por_cliente=dados['uso_unico_por_cliente'],
+        limite_utilizacao=dados['limite_utilizacao'],
+    )
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_CRIAR,
+        recurso='voucher',
+        recurso_id=voucher.id,
+        descricao=f'Voucher criado: {voucher.codigo}',
+        request=request,
+    )
+
+    return voucher
+
+
+@transaction.atomic
+def editar_voucher(
+    *,
+    voucher,
+    dados,
+    usuario_executor,
+    request=None,
+):
+
+    voucher.cliente = dados.get('cliente')
+    voucher.nome = dados['nome']
+    voucher.descricao = dados.get('descricao', '')
+    voucher.tipo = dados['tipo']
+    voucher.valor = dados.get('valor')
+    voucher.percentual = dados.get('percentual')
+    voucher.data_inicio = dados['data_inicio']
+    voucher.data_fim = dados['data_fim']
+    voucher.uso_unico_por_cliente = dados['uso_unico_por_cliente']
+    voucher.limite_utilizacao = dados['limite_utilizacao']
+
+    voucher.save()
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=voucher.matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='voucher',
+        recurso_id=voucher.id,
+        descricao=f'Voucher alterado: {voucher.codigo}',
+        request=request,
+    )
+
+    return voucher
+
+
+# ==========================================================
+# STATUS
+# ==========================================================
+
+@transaction.atomic
+def ativar_voucher(
+    *,
+    voucher,
+    usuario_executor,
+    request=None,
+):
+
+    voucher.status = Voucher.Status.ATIVO
+    voucher.save(update_fields=['status'])
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=voucher.matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='voucher',
+        recurso_id=voucher.id,
+        descricao=f'Voucher ativado: {voucher.codigo}',
+        request=request,
+    )
+
+
+@transaction.atomic
+def inativar_voucher(
+    *,
+    voucher,
+    usuario_executor,
+    request=None,
+):
+
+    voucher.status = Voucher.Status.INATIVO
+    voucher.save(update_fields=['status'])
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=voucher.matriz,
+        loja=None,
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='voucher',
+        recurso_id=voucher.id,
+        descricao=f'Voucher inativado: {voucher.codigo}',
+        request=request,
+    )
+
+
+# ==========================================================
+# VALIDAÇÃO
+# ==========================================================
+
+def validar_voucher(*, voucher):
+
+    if not voucher.esta_ativo:
+        return False, 'Voucher inativo.'
+
+    if voucher.ainda_nao_iniciado:
+        return False, 'Voucher ainda não está vigente.'
+
+    if voucher.esta_expirado:
+        return False, 'Voucher expirado.'
+
+    if voucher.esta_esgotado:
+        return False, 'Voucher sem utilizações disponíveis.'
+
+    return True, ''
+
+
+# ==========================================================
+# UTILIZAÇÃO
+# ==========================================================
+
+def utilizar_voucher():
+    """
+    Implementação prevista para Sprint 16C.
+    """
+    raise NotImplementedError()
+
+
+def cancelar_utilizacao():
+    """
+    Implementação prevista para Sprint 16C.
+    """
+    raise NotImplementedError()

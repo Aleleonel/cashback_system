@@ -139,3 +139,250 @@ class VoucherModelTest(TestCase):
         self.assertEqual(uso.voucher, voucher)
         self.assertEqual(uso.cliente, self.cliente)
         self.assertEqual(uso.valor_desconto, Decimal('15.00'))
+
+
+from vouchers.services import (
+    gerar_codigo_voucher,
+    criar_voucher,
+    editar_voucher,
+    inativar_voucher,
+    ativar_voucher,
+    validar_voucher,
+)
+from vouchers.selectors import (
+    get_vouchers,
+    get_vouchers_ativos,
+)
+
+class VoucherServiceSelectorTest(TestCase):
+
+    def setUp(self):
+        self.matriz = Matriz.objects.create(
+            nome='Matriz Services'
+        )
+
+        self.loja = Loja.objects.create(
+            matriz=self.matriz,
+            nome='Loja Services'
+        )
+
+        self.User = get_user_model()
+
+        self.usuario = self.User.objects.create_user(
+            username='usuario_services',
+            password='123456',
+            matriz=self.matriz
+        )
+
+        self.usuario.lojas.add(self.loja)
+
+    def test_gerar_codigo_voucher(self):
+        codigo = gerar_codigo_voucher()
+
+        self.assertTrue(codigo.startswith('VCH-'))
+        self.assertEqual(len(codigo), 13)
+
+    def test_criar_voucher(self):
+        hoje = timezone.localdate()
+
+        voucher = criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Service',
+                'descricao': 'Teste service',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('20.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        self.assertIsNotNone(voucher.codigo)
+        self.assertEqual(voucher.matriz, self.matriz)
+        self.assertEqual(voucher.valor, Decimal('20.00'))
+
+    def test_editar_voucher(self):
+        hoje = timezone.localdate()
+
+        voucher = criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Original',
+                'descricao': '',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('10.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        editar_voucher(
+            voucher=voucher,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Editado',
+                'descricao': 'Alterado',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('15.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=20),
+                'uso_unico_por_cliente': False,
+                'limite_utilizacao': 10,
+            },
+            usuario_executor=self.usuario
+        )
+
+        voucher.refresh_from_db()
+
+        self.assertEqual(voucher.nome, 'Voucher Editado')
+        self.assertEqual(voucher.valor, Decimal('15.00'))
+        self.assertEqual(voucher.limite_utilizacao, 10)
+
+    def test_ativar_inativar_voucher(self):
+        hoje = timezone.localdate()
+
+        voucher = criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Status',
+                'descricao': '',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('10.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        inativar_voucher(
+            voucher=voucher,
+            usuario_executor=self.usuario
+        )
+
+        voucher.refresh_from_db()
+        self.assertEqual(voucher.status, Voucher.Status.INATIVO)
+
+        ativar_voucher(
+            voucher=voucher,
+            usuario_executor=self.usuario
+        )
+
+        voucher.refresh_from_db()
+        self.assertEqual(voucher.status, Voucher.Status.ATIVO)
+
+    def test_validar_voucher(self):
+        hoje = timezone.localdate()
+
+        voucher = criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Validação',
+                'descricao': '',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('10.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        valido, mensagem = validar_voucher(
+            voucher=voucher
+        )
+
+        self.assertTrue(valido)
+        self.assertEqual(mensagem, '')
+
+    def test_get_vouchers_por_matriz(self):
+        hoje = timezone.localdate()
+
+        criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Selector',
+                'descricao': '',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('10.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        vouchers = get_vouchers(
+            matriz=self.matriz
+        )
+
+        self.assertEqual(vouchers.count(), 1)
+
+    def test_get_vouchers_ativos(self):
+        hoje = timezone.localdate()
+
+        ativo = criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Ativo',
+                'descricao': '',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('10.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        inativo = criar_voucher(
+            matriz=self.matriz,
+            dados={
+                'cliente': None,
+                'nome': 'Voucher Inativo',
+                'descricao': '',
+                'tipo': Voucher.Tipo.VALOR_FIXO,
+                'valor': Decimal('10.00'),
+                'percentual': None,
+                'data_inicio': hoje,
+                'data_fim': hoje + timedelta(days=10),
+                'uso_unico_por_cliente': True,
+                'limite_utilizacao': 5,
+            },
+            usuario_executor=self.usuario
+        )
+
+        inativar_voucher(
+            voucher=inativo,
+            usuario_executor=self.usuario
+        )
+
+        vouchers = get_vouchers_ativos(
+            matriz=self.matriz
+        )
+
+        self.assertIn(ativo, vouchers)
+        self.assertNotIn(inativo, vouchers)
