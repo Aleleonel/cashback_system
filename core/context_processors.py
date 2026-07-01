@@ -9,6 +9,7 @@ from accounts.permissions import (
     PERMISSAO_EMPRESA_LOJAS_GERENCIAR,
     PERMISSAO_EMPRESA_USUARIOS_GERENCIAR,
     PERMISSAO_RELATORIOS_DASHBOARD,
+    PERMISSAO_VOUCHERS_GERENCIAR,
 )
 from accounts.services import usuario_tem_permissao
 
@@ -33,4 +34,5 @@ def menu_permissoes(request):
         'pode_empresa_lojas': usuario_tem_permissao(usuario, PERMISSAO_EMPRESA_LOJAS_GERENCIAR),
         'pode_empresa_usuarios': usuario_tem_permissao(usuario, PERMISSAO_EMPRESA_USUARIOS_GERENCIAR),
         'pode_empresa_cashback': usuario_tem_permissao(usuario, PERMISSAO_EMPRESA_CONFIGURAR_CASHBACK),
+        'pode_gerenciar_vouchers': usuario_tem_permissao(usuario, PERMISSAO_VOUCHERS_GERENCIAR),
     }

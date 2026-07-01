@@ -123,3 +123,62 @@ O Wizard cria:
 A implantacao deve ser transacional com transaction.atomic().
 
 Se uma etapa falhar, nada deve ser persistido parcialmente.
+
+
+# Sprint 15
+
+## Organização
+
+empresa/
+
+    views/
+        dashboard.py
+        lojas.py
+        usuarios.py
+        auditoria.py
+        configuracoes.py
+
+templates/
+
+    partials/
+        sidebar.html
+        navbar.html
+
+---
+
+## Princípios
+
+Cada funcionalidade segue o padrão:
+
+Permissão
+→ Selector
+→ Service
+→ View
+→ Template
+→ Sidebar
+→ Auditoria
+→ Testes
+
+---
+
+## Decisões arquiteturais
+
+- Sidebar controlada por permissões.
+- Serviços responsáveis por regras de negócio.
+- Selectors responsáveis por consultas.
+- Auditoria desacoplada das views.
+- Permissões extras desacopladas do perfil.
+- Componentização de templates.
+
+---
+
+## Melhorias registradas
+
+Para versões futuras:
+
+- Separação de ConfiguracaoSistema em módulos.
+- Sidebar construída dinamicamente.
+- Sistema de plugins.
+- Jobs assíncronos.
+- Cache.
+- API pública.

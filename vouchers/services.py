@@ -7,8 +7,10 @@ from django.utils import timezone
 from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 
-from .models import Voucher
-
+from .models import (
+    Voucher, 
+    VoucherLoja,
+)
 
 # ==========================================================
 # GERAÇÃO DE CÓDIGO
@@ -61,6 +63,18 @@ def criar_voucher(
         limite_utilizacao=dados['limite_utilizacao'],
     )
 
+    lojas = dados.get('lojas')
+
+    if lojas:
+        VoucherLoja.objects.bulk_create([
+            VoucherLoja(
+                voucher=voucher,
+                loja=loja
+            )
+            for loja in lojas
+        ])
+
+
     registrar_auditoria(
         usuario=usuario_executor,
         matriz=matriz,
@@ -96,6 +110,19 @@ def editar_voucher(
     voucher.limite_utilizacao = dados['limite_utilizacao']
 
     voucher.save()
+
+    lojas = dados.get('lojas')
+
+    voucher.lojas_permitidas.all().delete()
+
+    if lojas:
+        VoucherLoja.objects.bulk_create([
+            VoucherLoja(
+                voucher=voucher,
+                loja=loja
+            )
+            for loja in lojas
+        ])
 
     registrar_auditoria(
         usuario=usuario_executor,

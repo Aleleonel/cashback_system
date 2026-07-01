@@ -151,3 +151,27 @@ Registro gerado:
 - data e hora.
 
 Esse comportamento fortalece a rastreabilidade e apoia os requisitos de segurança e LGPD.
+
+
+# Atualização - Sprint 15
+
+## RBAC
+
+O sistema utiliza RBAC híbrido.
+
+Cada usuário possui:
+
+- Perfil base.
+- Permissões adicionais.
+
+Permissões efetivas:
+
+Superuser
+    ↓
+Perfil
+    ↓
+Permissões extras
+
+As permissões extras nunca removem permissões do perfil; apenas adicionam novas capacidades.
+
+Toda alteração de permissões gera registro de auditoria.
