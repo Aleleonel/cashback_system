@@ -118,3 +118,32 @@ PERMISSOES_POR_PERFIL = {
         PERMISSAO_CASHBACK_EXTRATO,
     },
 }
+
+def get_permissoes_extras_disponiveis():
+    return [
+        {
+            'codigo': PERMISSAO_CAMPANHAS_VISUALIZAR,
+            'nome': 'Campanhas: visualizar',
+            'grupo': 'Campanhas',
+        },
+        {
+            'codigo': PERMISSAO_CAMPANHAS_DISPARAR,
+            'nome': 'Campanhas: disparar',
+            'grupo': 'Campanhas',
+        },
+        {
+            'codigo': PERMISSAO_CAMPANHAS_TEMPLATES,
+            'nome': 'Campanhas: templates',
+            'grupo': 'Campanhas',
+        },
+        {
+            'codigo': PERMISSAO_CAMPANHAS_CONFIGURAR,
+            'nome': 'Campanhas: configurar',
+            'grupo': 'Campanhas',
+        },
+        {
+            'codigo': PERMISSAO_CLIENTES_IMPORTAR,
+            'nome': 'Clientes: importar',
+            'grupo': 'Clientes',
+        },
+    ]

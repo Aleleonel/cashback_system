@@ -170,6 +170,12 @@ def editar_usuario_empresa_view(request, usuario_id):
                 'perfil': usuario.perfil,
                 'lojas': usuario.lojas.all(),
                 'ativo': usuario.ativo,
+                'permissoes_extras': list(
+                    usuario.permissoes_extras.values_list(
+                        'permissao',
+                        flat=True
+                    )
+                ),
             }
         )
 

@@ -3,6 +3,9 @@ from auditoria.services import registrar_auditoria
 from core.choices import StatusOperacional
 from empresas.models import Loja
 from core.models import ConfiguracaoSistema
+from accounts.models import PermissaoUsuario
+from django.contrib.auth import get_user_model
+
 
 def criar_loja_empresa(
     *,
@@ -152,7 +155,6 @@ def criar_usuario_empresa(
     request=None
 ):
 
-    from django.contrib.auth import get_user_model
 
     User = get_user_model()
 
@@ -168,6 +170,13 @@ def criar_usuario_empresa(
     )
 
     usuario.lojas.set(dados['lojas'])
+
+    sincronizar_permissoes_extras_usuario_empresa(
+        usuario=usuario,
+        permissoes=dados.get('permissoes_extras'),
+        usuario_executor=usuario_executor,
+        request=request
+    )
 
     registrar_auditoria(
         usuario=usuario_executor,
@@ -218,6 +227,13 @@ def editar_usuario_empresa(
 
     usuario.lojas.set(dados['lojas'])
 
+    sincronizar_permissoes_extras_usuario_empresa(
+        usuario=usuario,
+        permissoes=dados.get('permissoes_extras'),
+        usuario_executor=usuario_executor,
+        request=request
+    )
+
     registrar_auditoria(
         usuario=usuario_executor,
         matriz=usuario.matriz,
@@ -262,3 +278,51 @@ def alternar_status_usuario_empresa(
     )
 
     return usuario
+
+
+def sincronizar_permissoes_extras_usuario_empresa(
+    *,
+    usuario,
+    permissoes,
+    usuario_executor,
+    request=None
+):
+
+    permissoes = set(permissoes or [])
+
+    atuais = set(
+        usuario.permissoes_extras.values_list(
+            'permissao',
+            flat=True
+        )
+    )
+
+    adicionar = permissoes - atuais
+    remover = atuais - permissoes
+
+    for permissao in adicionar:
+        PermissaoUsuario.objects.create(
+            usuario=usuario,
+            permissao=permissao
+        )
+
+    if remover:
+        usuario.permissoes_extras.filter(
+            permissao__in=remover
+        ).delete()
+
+    if adicionar or remover:
+        registrar_auditoria(
+            usuario=usuario_executor,
+            matriz=usuario.matriz,
+            loja=None,
+            acao=RegistroAuditoria.ACAO_EDITAR,
+            recurso='empresa.usuario.permissoes',
+            recurso_id=usuario.id,
+            descricao=(
+                f'Permissões extras atualizadas para {usuario.username}. '
+                f'Adicionadas: {", ".join(sorted(adicionar)) or "-"}. '
+                f'Removidas: {", ".join(sorted(remover)) or "-"}.'
+            ),
+            request=request
+        )

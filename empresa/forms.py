@@ -3,7 +3,7 @@ from django import forms
 from core.models import ConfiguracaoSistema
 from core.choices import StatusOperacional
 from empresas.models import Loja
-
+from accounts.permissions import get_permissoes_extras_disponiveis
 from django.contrib.auth import get_user_model
 
 
@@ -139,6 +139,13 @@ class UsuarioEmpresaForm(forms.Form):
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
 
+    permissoes_extras = forms.MultipleChoiceField(
+        label='Permissões extras',
+        required=False,
+        choices=[],
+        widget=forms.CheckboxSelectMultiple()
+    )
+
     def __init__(self, *args, matriz=None, usuario=None, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -148,6 +155,16 @@ class UsuarioEmpresaForm(forms.Form):
         self.fields['lojas'].queryset = Loja.objects.filter(
             matriz=matriz
         ).order_by('nome')
+
+        permissoes_disponiveis = get_permissoes_extras_disponiveis()
+
+        self.fields['permissoes_extras'].choices = [
+            (
+                item['codigo'],
+                f"{item['grupo']} - {item['nome']}"
+            )
+            for item in permissoes_disponiveis
+        ]
 
         if not usuario:
             self.fields['password'].required = True
