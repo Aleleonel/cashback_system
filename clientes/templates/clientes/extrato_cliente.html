@@ -15,7 +15,7 @@
             <p class="mb-1"><strong>Loja cadastro:</strong> {{ cliente.loja_cadastro.nome }}</p>
 
             <div class="alert alert-success mt-3 mb-0">
-                <strong>Saldo disponível:</strong> R$ {{ saldo }}
+                <strong>Saldo disponível:</strong> R$ {{ saldo|floatformat:2 }}
             </div>
         </div>
     </div>
@@ -46,11 +46,11 @@
                     <tr>
                         <td>{{ item.data_compra|date:"d/m/Y" }}</td>
                         <td>{{ item.loja.nome }}</td>
-                        <td>R$ {{ item.valor_compra }}</td>
+                        <td>R$ {{ item.valor_compra|floatformat:2 }}</td>
                         <td>{{ item.percentual_cashback }}%</td>
-                        <td>R$ {{ item.valor_cashback }}</td>
-                        <td>R$ {{ item.valor_utilizado }}</td>
-                        <td>R$ {{ item.valor_restante }}</td>
+                        <td>R$ {{ item.valor_cashback|floatformat:2 }}</td>
+                        <td>R$ {{ item.valor_utilizado|floatformat:2 }}</td>
+                        <td>R$ {{ item.valor_restante|floatformat:2 }}</td>
                         <td>{{ item.data_liberacao|date:"d/m/Y" }}</td>
                         <td>{{ item.data_expiracao|date:"d/m/Y" }}</td>
                     </tr>

@@ -9,6 +9,7 @@
     const statusBox = document.getElementById('cliente-status');
     const saldoCard = document.getElementById('saldo-card');
     const saldoDisponivel = document.getElementById('saldo-disponivel');
+    const usarSaldoTotalBtn = document.getElementById('usar-saldo-total');
 
     let saldoAtual = 0;
 
@@ -71,6 +72,32 @@
         saldoAtual = 0;
         saldoDisponivel.innerText = 'R$ 0,00';
         saldoCard.classList.add('d-none');
+    }
+    if (usarSaldoTotalBtn) {
+        usarSaldoTotalBtn.addEventListener('click', function () {
+            if (saldoAtual <= 0) {
+                mostrarStatus(
+                    'warning',
+                    'Este cliente não possui cashback disponível para uso.'
+                );
+                return;
+            }
+
+            const valorFormatado = saldoAtual.toFixed(2).replace('.', ',');
+
+            const confirmar = confirm(
+                `Deseja realmente usar R$ ${valorFormatado} de cashback nesta compra?`
+            );
+
+            if (confirmar) {
+                cashbackUsadoInput.value = saldoAtual.toFixed(2);
+
+                mostrarStatus(
+                    'success',
+                    `Cashback de R$ ${valorFormatado} aplicado nesta compra.`
+                );
+            }
+        });
     }
 
     cpfInput.addEventListener('input', function () {

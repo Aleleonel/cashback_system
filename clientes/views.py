@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
@@ -81,6 +83,7 @@ def buscar_cliente_cpf(request):
         matriz=contexto['matriz'],
         cliente=cliente
     )
+    saldo_disponivel = saldo_disponivel.quantize(Decimal('0.01'))
 
     return JsonResponse({
         'encontrado': True,
