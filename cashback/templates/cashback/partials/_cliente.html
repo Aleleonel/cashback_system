@@ -1,0 +1,41 @@
+<div id="cliente-status" class="alert d-none mb-3"></div>
+
+<div class="row g-3">
+
+    <div class="col-md-6">
+        {{ form.cpf.label_tag }}
+        {{ form.cpf }}
+        {{ form.cpf.errors }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form.nome.label_tag }}
+        {{ form.nome }}
+        {{ form.nome.errors }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form.telefone.label_tag }}
+        {{ form.telefone }}
+        {{ form.telefone.errors }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form.email.label_tag }}
+        {{ form.email }}
+        {{ form.email.errors }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form.data_nascimento.label_tag }}
+        {{ form.data_nascimento }}
+        {{ form.data_nascimento.errors }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form.valor_compra.label_tag }}
+        {{ form.valor_compra }}
+        {{ form.valor_compra.errors }}
+    </div>
+
+</div>

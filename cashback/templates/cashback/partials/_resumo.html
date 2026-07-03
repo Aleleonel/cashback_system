@@ -1,0 +1,47 @@
+<div class="row g-3">
+
+    <div class="col-12">
+
+        {{ form.observacao.label_tag }}
+
+        {{ form.observacao }}
+
+        {{ form.observacao.errors }}
+
+    </div>
+
+    <div class="col-md-6">
+
+        <div class="form-check mt-2">
+
+            {{ form.aceita_email }}
+
+            {{ form.aceita_email.label_tag }}
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6">
+
+        <div class="form-check mt-2">
+
+            {{ form.aceita_sms }}
+
+            {{ form.aceita_sms.label_tag }}
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="d-flex justify-content-end mt-4">
+
+    <button type="submit" class="btn btn-dark" {% if bloquear_formulario %}disabled{% endif %}>
+
+        Registrar compra
+
+    </button>
+
+</div>

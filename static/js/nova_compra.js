@@ -11,7 +11,80 @@
     const saldoDisponivel = document.getElementById('saldo-disponivel');
     const usarSaldoTotalBtn = document.getElementById('usar-saldo-total');
 
+    const valorCompraInput = document.getElementById('id_valor_compra');
+
+    const motorCard = document.getElementById('motor-beneficios-card');
+    const mbCashback = document.getElementById('mb-cashback');
+    const mbVoucher = document.getElementById('mb-voucher');
+    const mbDescontoVoucher = document.getElementById('mb-desconto-voucher');
+    const mbCashbackSugerido = document.getElementById('mb-cashback-sugerido');
+    const mbValorFinal = document.getElementById('mb-valor-final');
+
+    function esconderMotorBeneficios() {
+
+        if (!motorCard) {
+            return;
+        }
+
+        motorCard.classList.add('d-none');
+
+        mbCashback.innerText = 'R$ 0,00';
+        mbVoucher.innerText = 'Nenhum';
+        mbDescontoVoucher.innerText = 'R$ 0,00';
+        mbCashbackSugerido.innerText = 'R$ 0,00';
+        mbValorFinal.innerText = 'R$ 0,00';
+    }
+
     let saldoAtual = 0;
+
+    function atualizarMotorBeneficios(cpf, valorCompra) {
+
+        if (!motorCard) {
+            return;
+        }
+
+        if (!valorCompra || Number(valorCompra) <= 0) {
+            esconderMotorBeneficios();
+            return;
+        }
+
+        fetch(`/beneficios/simular/?cpf=${cpf}&valor_compra=${valorCompra}`)
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                if (!data.ok) {
+                    esconderMotorBeneficios();
+                    return;
+                }
+
+                motorCard.classList.remove('d-none');
+
+                mbCashback.innerText =
+                    'R$ ' + Number(data.cashback_disponivel).toFixed(2);
+
+                mbVoucher.innerText =
+                    data.voucher ? data.voucher.nome : 'Nenhum';
+
+                mbDescontoVoucher.innerText =
+                    'R$ ' + Number(data.desconto_voucher).toFixed(2);
+
+                mbCashbackSugerido.innerText =
+                    'R$ ' + Number(data.cashback_sugerido).toFixed(2);
+
+                mbValorFinal.innerText =
+                    'R$ ' + Number(data.valor_final).toFixed(2);
+
+            })
+
+            .catch(() => {
+
+                esconderMotorBeneficios();
+
+            });
+
+    }
 
     function somenteNumeros(valor) {
         return valor.replace(/\D/g, '');
@@ -118,6 +191,7 @@
         if (cpf.length < 11) {
             esconderStatus();
             esconderSaldo();
+            esconderMotorBeneficios();
             return;
         }
 
@@ -132,12 +206,23 @@
 
                     mostrarSaldo(data.saldo_disponivel);
 
+                    if (valorCompraInput.value) {
+
+                        atualizarMotorBeneficios(
+                            cpf,
+                            valorCompraInput.value
+                        );
+
+                    }
+
                     mostrarStatus(
                         'success',
                         'Cliente encontrado. Dados preenchidos automaticamente.'
                     );
                 } else {
                     esconderSaldo();
+
+                    esconderMotorBeneficios();
 
                     mostrarStatus(
                         'warning',
@@ -147,6 +232,8 @@
             })
             .catch(() => {
                 esconderSaldo();
+
+                esconderMotorBeneficios();
 
                 mostrarStatus(
                     'danger',
@@ -166,5 +253,21 @@
                 'O cashback utilizado não pode ser maior que o saldo disponível.'
             );
         }
+    });
+
+    valorCompraInput.addEventListener('input', function () {
+
+        const cpf = somenteNumeros(cpfInput.value);
+
+        if (cpf.length !== 11) {
+            esconderMotorBeneficios();
+            return;
+        }
+
+        atualizarMotorBeneficios(
+            cpf,
+            valorCompraInput.value
+        );
+
     });
 });

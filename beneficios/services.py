@@ -1,7 +1,11 @@
 from decimal import Decimal
 
-from .selectors import get_cashback_disponivel, get_vouchers_disponiveis
+from .selectors import (
+    get_cashback_disponivel,
+    get_vouchers_disponiveis,
+)
 
+from vouchers.services import validar_voucher
 
 def calcular_desconto_voucher(
     *,
@@ -93,6 +97,46 @@ def get_melhor_voucher(
     return melhor_voucher
 
 
+def selecionar_voucher_recomendado(
+    *,
+    matriz,
+    cliente,
+    valor_compra,
+):
+    """
+    Seleciona o voucher recomendado conforme a política do sistema.
+
+    Ordem atual:
+
+    1 - Voucher que vence primeiro.
+    2 - Maior desconto.
+    3 - Voucher mais antigo.
+
+    Esta política poderá ser configurável futuramente.
+    """
+
+    vouchers = get_vouchers_disponiveis(
+        matriz=matriz,
+        cliente=cliente
+    )
+
+    if not vouchers:
+        return None
+
+    vouchers = sorted(
+        vouchers,
+        key=lambda voucher: (
+            voucher.data_fim,
+            -calcular_desconto_voucher(
+                voucher=voucher,
+                valor_compra=valor_compra
+            ),
+            voucher.criado_em,
+        )
+    )
+
+    return vouchers[0]
+
 def simular_beneficios(
     *,
     matriz,
@@ -107,29 +151,15 @@ def simular_beneficios(
         cliente=cliente
     )
 
-    vouchers = get_vouchers_disponiveis(
+    voucher_recomendado = selecionar_voucher_recomendado(
         matriz=matriz,
-        cliente=cliente
+        cliente=cliente,
+        valor_compra=valor_compra
     )
 
-    voucher_recomendado = None
     desconto_voucher = Decimal('0.00')
 
-    vouchers_ordenados = sorted(
-        vouchers,
-        key=lambda voucher: (
-            voucher.data_fim,
-            -calcular_desconto_voucher(
-                voucher=voucher,
-                valor_compra=valor_compra
-            ),
-            voucher.criado_em
-        )
-    )
-
-    if vouchers_ordenados:
-        voucher_recomendado = vouchers_ordenados[0]
-
+    if voucher_recomendado:
         desconto_voucher = calcular_desconto_voucher(
             voucher=voucher_recomendado,
             valor_compra=valor_compra
@@ -137,9 +167,10 @@ def simular_beneficios(
 
     valor_restante = valor_compra - desconto_voucher
 
-    cashback_sugerido = min(
-        cashback_disponivel,
-        valor_restante
+    cashback_sugerido = calcular_cashback_sugerido(
+        matriz=matriz,
+        cliente=cliente,
+        valor_restante=valor_restante
     )
 
     total_desconto = desconto_voucher + cashback_sugerido
@@ -157,4 +188,81 @@ def simular_beneficios(
         'cashback_sugerido': cashback_sugerido,
         'total_desconto': total_desconto,
         'valor_final': valor_final,
+    }
+
+def calcular_cashback_sugerido(
+    *,
+    matriz,
+    cliente,
+    valor_restante,
+):
+    """
+    Sugere quanto de cashback utilizar.
+
+    A sugestão nunca ultrapassa:
+
+    - saldo disponível
+    - valor restante da compra
+    """
+
+    saldo = get_cashback_disponivel(
+        matriz=matriz,
+        cliente=cliente
+    )
+
+    return min(
+        saldo,
+        valor_restante
+    )
+
+def validar_voucher_para_compra(
+    *,
+    matriz,
+    cliente,
+    codigo,
+    valor_compra,
+):
+    """
+    Valida um voucher informado pelo operador.
+    Não altera nenhuma informação no banco.
+    """
+
+    voucher = get_voucher_por_codigo(
+        matriz=matriz,
+        codigo=codigo,
+    )
+
+    if voucher is None:
+
+        return {
+            "ok": False,
+            "mensagem": "Voucher não encontrado."
+        }
+
+    valido, mensagem = validar_voucher(
+        voucher=voucher
+    )
+
+    if not valido:
+
+        return {
+            "ok": False,
+            "mensagem": mensagem,
+        }
+
+    desconto = calcular_desconto_voucher(
+        voucher=voucher,
+        valor_compra=valor_compra,
+    )
+
+    return {
+
+        "ok": True,
+
+        "voucher": voucher,
+
+        "desconto": desconto,
+
+        "mensagem": "Voucher válido."
+
     }

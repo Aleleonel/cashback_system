@@ -3,6 +3,7 @@ from decimal import Decimal
 from cashback.selectors import get_saldo_disponivel_cliente
 from vouchers.selectors import get_vouchers_cliente
 from vouchers.services import validar_voucher
+from vouchers.models import Voucher
 
 
 def get_cashback_disponivel(
@@ -69,3 +70,21 @@ def get_resumo_beneficios(
         'total_vouchers_valor_fixo': total_vouchers,
         'total_beneficios_estimado': cashback + total_vouchers,
     }
+
+def get_voucher_por_codigo(
+    *,
+    matriz,
+    codigo,
+):
+    """
+    Localiza um voucher pelo código dentro da matriz.
+    """
+
+    return (
+        Voucher.objects
+        .filter(
+            matriz=matriz,
+            codigo=codigo.strip().upper(),
+        )
+        .first()
+    )

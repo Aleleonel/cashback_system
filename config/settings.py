@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'plataforma',
     'auditoria',
     'empresa',
+    'beneficios',
 ]
 
 MIDDLEWARE = [

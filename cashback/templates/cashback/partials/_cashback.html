@@ -1,0 +1,47 @@
+<div id="saldo-card" class="card border-success mt-4 mb-4 d-none">
+
+    <div class="card-body">
+
+        <h6 class="text-muted mb-1">
+            Cashback disponível para uso
+        </h6>
+
+        <h3 class="text-success mb-3" id="saldo-disponivel">
+            R$ 0,00
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6">
+
+                <label class="form-label fw-semibold" for="{{ form.valor_cashback_usado.id_for_label }}">
+
+                    Valor de Cashback
+
+                </label>
+
+                {{ form.valor_cashback_usado }}
+
+                {{ form.valor_cashback_usado.errors }}
+
+                <div class="form-text">
+                    Informe quanto do saldo será utilizado.
+                </div>
+
+            </div>
+
+            <div class="col-md-6 d-flex align-items-end">
+
+                <button type="button" id="usar-saldo-total" class="btn btn-outline-success">
+
+                    Usar saldo disponível
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
