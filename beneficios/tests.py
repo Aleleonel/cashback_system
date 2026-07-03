@@ -10,6 +10,7 @@ from beneficios.services import (
     calcular_desconto_voucher,
     get_melhor_voucher,
     simular_compra,
+    simular_beneficios,
 )
 from clientes.models import Cliente
 from empresas.models import Loja, Matriz
@@ -192,3 +193,64 @@ class MotorBeneficiosTest(TestCase):
         )
 
         self.assertEqual(melhor, voucher_maior)
+    
+    def test_simular_beneficios_recomenda_voucher_que_vence_primeiro(self):
+        LancamentoCashback.objects.create(
+            matriz=self.matriz,
+            loja=self.loja,
+            cliente=self.cliente,
+            valor_compra=Decimal('100.00'),
+            percentual_cashback=Decimal('10.00'),
+            valor_cashback=Decimal('10.00'),
+            valor_utilizado=Decimal('0.00'),
+            data_liberacao=self.hoje,
+            data_expiracao=self.hoje + timedelta(days=10)
+        )
+
+        voucher_vence_depois = Voucher.objects.create(
+            matriz=self.matriz,
+            codigo='VCH-TESTE-07',
+            nome='Voucher Vence Depois',
+            tipo=Voucher.Tipo.VALOR_FIXO,
+            valor=Decimal('50.00'),
+            data_inicio=self.hoje,
+            data_fim=self.hoje + timedelta(days=10),
+            limite_utilizacao=1
+        )
+
+        voucher_vence_primeiro = Voucher.objects.create(
+            matriz=self.matriz,
+            codigo='VCH-TESTE-08',
+            nome='Voucher Vence Primeiro',
+            tipo=Voucher.Tipo.VALOR_FIXO,
+            valor=Decimal('20.00'),
+            data_inicio=self.hoje,
+            data_fim=self.hoje + timedelta(days=1),
+            limite_utilizacao=1
+        )
+
+        simulacao = simular_beneficios(
+            matriz=self.matriz,
+            cliente=self.cliente,
+            valor_compra=Decimal('100.00')
+        )
+
+        self.assertEqual(
+            simulacao['voucher_recomendado'],
+            voucher_vence_primeiro
+        )
+
+        self.assertEqual(
+            simulacao['desconto_voucher'],
+            Decimal('20.00')
+        )
+
+        self.assertEqual(
+            simulacao['cashback_sugerido'],
+            Decimal('10.00')
+        )
+
+        self.assertEqual(
+            simulacao['valor_final'],
+            Decimal('70.00')
+        )

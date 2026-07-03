@@ -91,3 +91,70 @@ def get_melhor_voucher(
             melhor_voucher = voucher
 
     return melhor_voucher
+
+
+def simular_beneficios(
+    *,
+    matriz,
+    cliente,
+    valor_compra,
+):
+
+    valor_compra = Decimal(valor_compra)
+
+    cashback_disponivel = get_cashback_disponivel(
+        matriz=matriz,
+        cliente=cliente
+    )
+
+    vouchers = get_vouchers_disponiveis(
+        matriz=matriz,
+        cliente=cliente
+    )
+
+    voucher_recomendado = None
+    desconto_voucher = Decimal('0.00')
+
+    vouchers_ordenados = sorted(
+        vouchers,
+        key=lambda voucher: (
+            voucher.data_fim,
+            -calcular_desconto_voucher(
+                voucher=voucher,
+                valor_compra=valor_compra
+            ),
+            voucher.criado_em
+        )
+    )
+
+    if vouchers_ordenados:
+        voucher_recomendado = vouchers_ordenados[0]
+
+        desconto_voucher = calcular_desconto_voucher(
+            voucher=voucher_recomendado,
+            valor_compra=valor_compra
+        )
+
+    valor_restante = valor_compra - desconto_voucher
+
+    cashback_sugerido = min(
+        cashback_disponivel,
+        valor_restante
+    )
+
+    total_desconto = desconto_voucher + cashback_sugerido
+
+    if total_desconto > valor_compra:
+        total_desconto = valor_compra
+
+    valor_final = valor_compra - total_desconto
+
+    return {
+        'valor_compra': valor_compra,
+        'cashback_disponivel': cashback_disponivel,
+        'voucher_recomendado': voucher_recomendado,
+        'desconto_voucher': desconto_voucher,
+        'cashback_sugerido': cashback_sugerido,
+        'total_desconto': total_desconto,
+        'valor_final': valor_final,
+    }
