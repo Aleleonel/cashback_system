@@ -50,3 +50,23 @@
 - Separação de navbar e sidebar em componentes reutilizáveis.
 - Organização das views da empresa por responsabilidade.
 - Organização dos serviços da empresa.
+
+- Cria estrutura padrão para JavaScript por módulo.
+- Cria estrutura padrão para CSS por módulo.
+- Adiciona diretórios shared para reutilização de código.
+- Prepara arquitetura frontend para modularização.
+- Nenhuma alteração funcional.
+
+## Sprint 17.6
+
+### Arquitetura Frontend
+
+- Padronizada estrutura de assets JavaScript.
+- Padronizada estrutura de assets CSS.
+- Criado diretório shared para componentes reutilizáveis.
+- Criada estrutura modular por aplicação.
+- Preparação para modularização completa do frontend.
+
+Status:
+- Sem alterações funcionais.
+- Compatibilidade total com a implementação atual.

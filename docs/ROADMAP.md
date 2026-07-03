@@ -39,3 +39,10 @@ Objetivos futuros:
 - Clonagem de perfis.
 - Exportação de permissões.
 - Auditoria de concessões.
+
+### Arquitetura Frontend
+
+- [x] Estrutura modular JavaScript
+- [x] Estrutura modular CSS
+- [x] Diretório shared
+- [ ] Modularização completa da Nova Compra
