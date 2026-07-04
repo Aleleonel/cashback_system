@@ -53,10 +53,12 @@ def validar_voucher_view(request):
 
     resultado = validar_voucher_para_compra(
         matriz=contexto['matriz'],
+        loja=contexto['loja'],
         cliente=cliente,
         codigo=codigo,
         valor_compra=valor_compra
     )
+
 
     if not resultado['ok']:
         return JsonResponse(resultado)
@@ -65,6 +67,8 @@ def validar_voucher_view(request):
 
     return JsonResponse({
         'ok': True,
+        'id': voucher.id,
+        'codigo': voucher.codigo,
         'nome': voucher.nome,
         'tipo': voucher.get_tipo_display(),
         'desconto': float(resultado['desconto']),

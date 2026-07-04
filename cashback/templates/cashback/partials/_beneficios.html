@@ -1,15 +1,10 @@
 <div id="motor-beneficios-card" class="card border-primary mb-4 d-none">
 
     <div class="card-header bg-primary text-white">
-
         <strong>
-
             <i class="bi bi-stars me-2"></i>
-
             Benefícios da Compra
-
         </strong>
-
     </div>
 
     <div class="card-body">
@@ -17,34 +12,63 @@
         <div class="row">
 
             <div class="col-md-6">
-
-                <small class="text-muted">
-
-                    Cashback disponível
-
-                </small>
-
-                <h5 id="mb-cashback">
-
-                    R$ 0,00
-
-                </h5>
-
+                <small class="text-muted">Cashback disponível</small>
+                <h5 id="mb-cashback">R$ 0,00</h5>
             </div>
 
             <div class="col-md-6">
+                <small class="text-muted">Cashback sugerido</small>
+                <h5 id="mb-cashback-sugerido">R$ 0,00</h5>
+            </div>
 
-                <small class="text-muted">
+        </div>
 
-                    Voucher
+        <hr>
 
-                </small>
+        <div class="mb-3">
 
-                <h5 id="mb-voucher">
+            <label for="codigo-voucher" class="form-label fw-semibold">
+                Código do Voucher
+            </label>
 
-                    Nenhum
+            <div class="input-group">
+                <input type="text" id="codigo-voucher" class="form-control" placeholder="Digite o código do voucher">
 
-                </h5>
+                <button type="button" id="validar-voucher-btn" class="btn btn-outline-primary">
+                    Validar Voucher
+                </button>
+            </div>
+
+            <div id="voucher-status" class="alert d-none mt-3 mb-0"></div>
+
+            <div id="voucher-info" class="border rounded p-3 mt-3 d-none bg-light">
+
+                <div class="row">
+
+                    <div class="col-md-4">
+                        <small class="text-muted">Voucher</small>
+                        <h6 id="voucher-nome">-</h6>
+                    </div>
+
+                    <div class="col-md-4">
+                        <small class="text-muted">Tipo</small>
+                        <h6 id="voucher-tipo">-</h6>
+                    </div>
+
+                    <div class="col-md-4">
+                        <small class="text-muted">Desconto</small>
+                        <h6 class="text-success" id="voucher-desconto">R$ 0,00</h6>
+                    </div>
+
+                </div>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="aplicar-voucher">
+
+                    <label class="form-check-label" for="aplicar-voucher">
+                        Aplicar Voucher
+                    </label>
+                </div>
 
             </div>
 
@@ -54,80 +78,26 @@
 
         <div class="row">
 
-            <div class="col-md-4">
-
-                <small class="text-muted">
-
-                    Desconto Voucher
-
-                </small>
-
-                <h5 id="mb-desconto-voucher">
-
-                    R$ 0,00
-
-                </h5>
-
+            <div class="col-md-6">
+                <small class="text-muted">Total de desconto estimado</small>
+                <h5 id="mb-total-desconto">R$ 0,00</h5>
             </div>
 
-            <div class="col-md-4">
-
-                <small class="text-muted">
-
-                    Cashback sugerido
-
-                </small>
-
-                <h5 id="mb-cashback-sugerido">
-
-                    R$ 0,00
-
-                </h5>
-
-            </div>
-
-            <div class="col-md-4">
-
-                <small class="text-muted">
-
-                    Valor Final
-
-                </small>
-
+            <div class="col-md-6">
+                <small class="text-muted">Valor Final estimado</small>
                 <h4 class="text-success" id="mb-valor-final">
-
                     R$ 0,00
-
                 </h4>
-
             </div>
 
         </div>
 
-        <hr>
-
-        <div class="form-check">
-
-            <input class="form-check-input" type="checkbox" id="aplicar-voucher">
-
-            <label class="form-check-label" for="aplicar-voucher">
-
-                Aplicar Voucher
-
-            </label>
-
-        </div>
-
-        <div class="form-check mt-2">
-
+        <div class="form-check mt-3">
             <input class="form-check-input" type="checkbox" id="aplicar-cashback">
 
             <label class="form-check-label" for="aplicar-cashback">
-
                 Aplicar Cashback
-
             </label>
-
         </div>
 
     </div>

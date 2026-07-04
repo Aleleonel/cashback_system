@@ -20,6 +20,15 @@
     const mbCashbackSugerido = document.getElementById('mb-cashback-sugerido');
     const mbValorFinal = document.getElementById('mb-valor-final');
 
+    const codigoVoucherInput = document.getElementById('codigo-voucher');
+    const validarVoucherBtn = document.getElementById('validar-voucher-btn');
+    const voucherStatus = document.getElementById('voucher-status');
+    const voucherInfo = document.getElementById('voucher-info');
+    const voucherNome = document.getElementById('voucher-nome');
+    const voucherTipo = document.getElementById('voucher-tipo');
+    const voucherDesconto = document.getElementById('voucher-desconto');
+    const mbTotalDesconto = document.getElementById('mb-total-desconto');
+
     function esconderMotorBeneficios() {
 
         if (!motorCard) {
@@ -73,6 +82,11 @@
                 mbCashbackSugerido.innerText =
                     'R$ ' + Number(data.cashback_sugerido).toFixed(2);
 
+                if (mbTotalDesconto) {
+                    mbTotalDesconto.innerText =
+                        'R$ ' + Number(data.total_desconto || 0).toFixed(2);
+                }
+
                 mbValorFinal.innerText =
                     'R$ ' + Number(data.valor_final).toFixed(2);
 
@@ -84,6 +98,103 @@
 
             });
 
+    }
+
+    function mostrarVoucherStatus(tipo, texto) {
+        if (!voucherStatus) {
+            return;
+        }
+
+        voucherStatus.className = 'alert mt-3 mb-0 alert-' + tipo;
+        voucherStatus.textContent = texto;
+        voucherStatus.classList.remove('d-none');
+    }
+
+    function esconderVoucherInfo() {
+        if (voucherInfo) {
+            voucherInfo.classList.add('d-none');
+        }
+
+        if (voucherNome) {
+            voucherNome.innerText = '-';
+        }
+
+        if (voucherTipo) {
+            voucherTipo.innerText = '-';
+        }
+
+        if (voucherDesconto) {
+            voucherDesconto.innerText = 'R$ 0,00';
+        }
+
+        const aplicarVoucher = document.getElementById('aplicar-voucher');
+
+        if (aplicarVoucher) {
+            aplicarVoucher.checked = false;
+        }
+    }
+
+    function validarVoucher() {
+        const cpf = somenteNumeros(cpfInput.value);
+        const codigo = codigoVoucherInput.value.trim();
+        const valorCompra = valorCompraInput.value || '0';
+
+        esconderVoucherInfo();
+
+        if (cpf.length !== 11) {
+            mostrarVoucherStatus(
+                'warning',
+                'Informe um CPF válido antes de validar o voucher.'
+            );
+            return;
+        }
+
+        if (!codigo) {
+            mostrarVoucherStatus(
+                'warning',
+                'Informe o código do voucher.'
+            );
+            return;
+        }
+
+        if (!valorCompra || Number(valorCompra) <= 0) {
+            mostrarVoucherStatus(
+                'warning',
+                'Informe o valor da compra antes de validar o voucher.'
+            );
+            return;
+        }
+
+        fetch(
+            `/beneficios/validar-voucher/?cpf=${cpf}&codigo=${encodeURIComponent(codigo)}&valor_compra=${valorCompra}`
+        )
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    mostrarVoucherStatus(
+                        'danger',
+                        data.mensagem || 'Voucher inválido.'
+                    );
+                    return;
+                }
+
+                mostrarVoucherStatus(
+                    'success',
+                    data.mensagem || 'Voucher válido.'
+                );
+
+                voucherInfo.classList.remove('d-none');
+                voucherNome.innerText = data.nome || '-';
+                voucherTipo.innerText = data.tipo || '-';
+                voucherDesconto.innerText =
+                    'R$ ' + Number(data.desconto || 0).toFixed(2);
+            })
+            .catch(() => {
+                mostrarVoucherStatus(
+                    'danger',
+                    'Erro ao validar voucher. Tente novamente.'
+                );
+            });
     }
 
     function somenteNumeros(valor) {
@@ -270,4 +381,21 @@
         );
 
     });
+
+    if (validarVoucherBtn) {
+        validarVoucherBtn.addEventListener('click', function () {
+            validarVoucher();
+        });
+    }
+
+    if (codigoVoucherInput) {
+        codigoVoucherInput.addEventListener('input', function () {
+            esconderVoucherInfo();
+
+            if (voucherStatus) {
+                voucherStatus.classList.add('d-none');
+                voucherStatus.textContent = '';
+            }
+        });
+    }
 });

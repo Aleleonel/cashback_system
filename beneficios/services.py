@@ -3,6 +3,7 @@ from decimal import Decimal
 from .selectors import (
     get_cashback_disponivel,
     get_vouchers_disponiveis,
+    get_voucher_por_codigo,
 )
 
 from vouchers.services import validar_voucher
@@ -218,25 +219,20 @@ def calcular_cashback_sugerido(
 def validar_voucher_para_compra(
     *,
     matriz,
+    loja,
     cliente,
     codigo,
     valor_compra,
 ):
-    """
-    Valida um voucher informado pelo operador.
-    Não altera nenhuma informação no banco.
-    """
-
     voucher = get_voucher_por_codigo(
         matriz=matriz,
         codigo=codigo,
     )
 
     if voucher is None:
-
         return {
-            "ok": False,
-            "mensagem": "Voucher não encontrado."
+            'ok': False,
+            'mensagem': 'Voucher não encontrado.'
         }
 
     valido, mensagem = validar_voucher(
@@ -244,11 +240,29 @@ def validar_voucher_para_compra(
     )
 
     if not valido:
-
         return {
-            "ok": False,
-            "mensagem": mensagem,
+            'ok': False,
+            'mensagem': mensagem,
         }
+
+    if voucher.cliente and voucher.cliente != cliente:
+        return {
+            'ok': False,
+            'mensagem': 'Este voucher não pertence a este cliente.'
+        }
+
+    lojas_permitidas = voucher.lojas_permitidas.all()
+
+    if lojas_permitidas.exists():
+        permitido = lojas_permitidas.filter(
+            loja=loja
+        ).exists()
+
+        if not permitido:
+            return {
+                'ok': False,
+                'mensagem': 'Este voucher não é válido para esta loja.'
+            }
 
     desconto = calcular_desconto_voucher(
         voucher=voucher,
@@ -256,13 +270,8 @@ def validar_voucher_para_compra(
     )
 
     return {
-
-        "ok": True,
-
-        "voucher": voucher,
-
-        "desconto": desconto,
-
-        "mensagem": "Voucher válido."
-
+        'ok': True,
+        'voucher': voucher,
+        'desconto': desconto,
+        'mensagem': 'Voucher válido.'
     }
