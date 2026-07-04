@@ -38,6 +38,7 @@ def garantir_configuracao_sistema(*, matriz):
             'dias_liberacao': 7,
             'dias_expiracao': 45,
             'valor_minimo_compra': 0,
+            'percentual_maximo_beneficio': 30,
             'enviar_email_saldo': True,
             'enviar_email_aniversario': True,
             'enviar_sms_aniversario': False,

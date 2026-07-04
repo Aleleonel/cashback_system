@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
+from cashback.models import LancamentoCashback
+
 from clientes.models import Cliente
 from empresas.models import Loja, Matriz
 from vouchers.models import UsoVoucher, Voucher, VoucherLoja
@@ -147,6 +149,7 @@ from vouchers.services import (
     editar_voucher,
     inativar_voucher,
     ativar_voucher,
+    registrar_uso_voucher,
     validar_voucher,
 )
 from vouchers.selectors import (
@@ -164,6 +167,13 @@ class VoucherServiceSelectorTest(TestCase):
         self.loja = Loja.objects.create(
             matriz=self.matriz,
             nome='Loja Services'
+        )
+
+        self.cliente = Cliente.objects.create(
+            matriz=self.matriz,
+            loja_cadastro=self.loja,
+            nome='Cliente Services',
+            cpf='98765432100'
         )
 
         self.User = get_user_model()
@@ -386,3 +396,50 @@ class VoucherServiceSelectorTest(TestCase):
 
         self.assertIn(ativo, vouchers)
         self.assertNotIn(inativo, vouchers)
+
+
+    def test_registrar_uso_voucher_atualiza_historico_e_contador(self):
+        hoje = timezone.localdate()
+
+        voucher = Voucher.objects.create(
+            matriz=self.matriz,
+            codigo='VCH-USO-01',
+            nome='Voucher Uso Oficial',
+            tipo=Voucher.Tipo.VALOR_FIXO,
+            valor=Decimal('20.00'),
+            data_inicio=hoje,
+            data_fim=hoje + timedelta(days=10),
+            limite_utilizacao=2,
+            total_utilizado=0
+        )
+
+        compra = LancamentoCashback.objects.create(
+            matriz=self.matriz,
+            loja=self.loja,
+            cliente=self.cliente,
+            valor_compra=Decimal('100.00'),
+            percentual_cashback=Decimal('5.00'),
+            valor_cashback=Decimal('5.00'),
+            valor_utilizado=Decimal('0.00'),
+            data_liberacao=hoje,
+            data_expiracao=hoje + timedelta(days=30),
+        )
+
+        uso = registrar_uso_voucher(
+            matriz=self.matriz,
+            loja=self.loja,
+            cliente=self.cliente,
+            voucher=voucher,
+            usuario=self.usuario,
+            compra=compra,
+            valor_compra=Decimal('100.00'),
+            valor_desconto=Decimal('20.00'),
+            observacao='Teste de uso oficial.'
+        )
+
+        voucher.refresh_from_db()
+
+        self.assertEqual(voucher.total_utilizado, 1)
+        self.assertEqual(voucher.usos.count(), 1)
+        self.assertEqual(uso.compra, compra)
+        self.assertEqual(uso.valor_desconto, Decimal('20.00'))

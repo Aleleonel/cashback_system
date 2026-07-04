@@ -245,11 +245,7 @@ def validar_voucher_para_compra(
             'mensagem': mensagem,
         }
 
-    if voucher.cliente and voucher.cliente != cliente:
-        return {
-            'ok': False,
-            'mensagem': 'Este voucher não pertence a este cliente.'
-        }
+    
 
     lojas_permitidas = voucher.lojas_permitidas.all()
 
