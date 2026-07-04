@@ -1,8 +1,13 @@
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from cashback.services.compra import registrar_compra
-from beneficios.services import validar_voucher_para_compra
+from cashback.services.validacoes import (
+    validar_limite_beneficios,
+    validar_voucher_pre_venda,
+)
 from vouchers.services import registrar_uso_voucher
 
 
@@ -25,6 +30,35 @@ def registrar_venda(
     aceita_sms=False,
     observacao='',
 ):
+    valor_compra = Decimal(valor_compra)
+    valor_cashback_usado = Decimal(valor_cashback_usado or 0)
+
+    voucher_validado = None
+    desconto_voucher = Decimal('0.00')
+
+    if aplicar_voucher:
+        if not codigo_voucher:
+            raise ValidationError(
+                'Informe o código do voucher para aplicar o benefício.'
+            )
+
+        resultado_voucher = validar_voucher_pre_venda(
+            matriz=matriz,
+            loja=loja,
+            codigo_voucher=codigo_voucher,
+            valor_compra=valor_compra,
+        )
+
+        voucher_validado = resultado_voucher['voucher']
+        desconto_voucher = resultado_voucher['desconto']
+
+    validar_limite_beneficios(
+        matriz=matriz,
+        valor_compra=valor_compra,
+        valor_cashback_usado=valor_cashback_usado,
+        valor_desconto_voucher=desconto_voucher,
+    )
+
     lancamento = registrar_compra(
         matriz=matriz,
         loja=loja,
@@ -43,35 +77,25 @@ def registrar_venda(
     uso_voucher = None
 
     if aplicar_voucher:
-        if not codigo_voucher:
-            raise ValidationError(
-                'Informe o código do voucher para aplicar o benefício.'
-            )
-
-        resultado = validar_voucher_para_compra(
-            matriz=matriz,
-            loja=loja,
-            cliente=lancamento.cliente,
-            codigo=codigo_voucher,
-            valor_compra=valor_compra,
-        )
-
-        if not resultado['ok']:
-            raise ValidationError(resultado['mensagem'])
-
         uso_voucher = registrar_uso_voucher(
             matriz=matriz,
             loja=loja,
             cliente=lancamento.cliente,
-            voucher=resultado['voucher'],
+            voucher=voucher_validado,
             usuario=usuario,
             compra=lancamento,
             valor_compra=valor_compra,
-            valor_desconto=resultado['desconto'],
+            valor_desconto=desconto_voucher,
             observacao='Uso de voucher na compra atual.',
         )
 
     return {
-        'lancamento': lancamento,
+        'compra': lancamento,
+        'cliente': lancamento.cliente,
         'uso_voucher': uso_voucher,
+        'beneficios': {
+            'cashback_usado': valor_cashback_usado,
+            'voucher': voucher_validado,
+            'desconto_voucher': desconto_voucher,
+        }
     }
