@@ -236,7 +236,7 @@ class MotorBeneficiosTest(TestCase):
         )
 
         self.assertEqual(
-            simulacao['voucher_recomendado'],
+            simulacao['voucher_sugerido'],
             voucher_vence_primeiro
         )
 

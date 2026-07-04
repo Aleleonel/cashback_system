@@ -51,7 +51,7 @@ def simular_beneficios_view(request):
             valor_compra=valor
         )
 
-        voucher = simulacao['voucher_recomendado']
+        voucher = simulacao['voucher_sugerido']
 
         return JsonResponse({
             'ok': True,

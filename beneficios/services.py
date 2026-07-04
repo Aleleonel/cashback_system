@@ -152,7 +152,7 @@ def simular_beneficios(
         cliente=cliente
     )
 
-    voucher_recomendado = selecionar_voucher_recomendado(
+    voucher_sugerido = selecionar_voucher_recomendado(
         matriz=matriz,
         cliente=cliente,
         valor_compra=valor_compra
@@ -160,9 +160,9 @@ def simular_beneficios(
 
     desconto_voucher = Decimal('0.00')
 
-    if voucher_recomendado:
+    if voucher_sugerido:
         desconto_voucher = calcular_desconto_voucher(
-            voucher=voucher_recomendado,
+            voucher=voucher_sugerido,
             valor_compra=valor_compra
         )
 
@@ -184,7 +184,7 @@ def simular_beneficios(
     return {
         'valor_compra': valor_compra,
         'cashback_disponivel': cashback_disponivel,
-        'voucher_recomendado': voucher_recomendado,
+        'voucher_sugerido': voucher_sugerido,
         'desconto_voucher': desconto_voucher,
         'cashback_sugerido': cashback_sugerido,
         'total_desconto': total_desconto,
