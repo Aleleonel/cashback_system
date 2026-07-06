@@ -36,6 +36,22 @@
 
 </div>
 
+{% if messages %}
+
+<div class="mt-4">
+
+    {% for message in messages %}
+
+    <div class="alert alert-{{ message.tags }} mb-2">
+        {{ message }}
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
 <div class="d-flex justify-content-end gap-2 mt-4">
 
     <button type="button" id="cancelar-compra" class="btn btn-outline-secondary">
