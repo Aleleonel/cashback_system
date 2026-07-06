@@ -34,14 +34,34 @@ class LancamentoCashback(models.Model):
         related_name='lancamentos_cashback'
     )
 
-    valor_compra = models.DecimalField(max_digits=10, decimal_places=2)
-    percentual_cashback = models.DecimalField(max_digits=5, decimal_places=2)
-    valor_cashback = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    valor_base_cashback = models.DecimalField(max_digits=10, decimal_places=2,)
+    valor_compra = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    valor_base_cashback = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    percentual_cashback = models.DecimalField(
+        max_digits=5,
+        decimal_places=2
+    )
+
+    valor_cashback = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
 
     valor_utilizado = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0
+        default=0,
     )
 
     data_compra = models.DateField(default=timezone.localdate)

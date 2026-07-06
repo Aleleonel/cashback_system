@@ -36,6 +36,11 @@ def validar_limite_beneficios(
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
     valor_desconto_voucher = Decimal(valor_desconto_voucher or 0)
 
+    if valor_cashback_usado > 0 and valor_desconto_voucher > 0:
+        raise ValidationError(
+            'Não é permitido usar cashback e voucher na mesma compra. Escolha apenas um benefício.'
+        )
+
     total_beneficios = valor_cashback_usado + valor_desconto_voucher
 
     limite = calcular_limite_maximo_beneficios(

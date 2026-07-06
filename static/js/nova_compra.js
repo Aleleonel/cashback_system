@@ -28,7 +28,10 @@
     const voucherTipo = document.getElementById('voucher-tipo');
     const voucherDesconto = document.getElementById('voucher-desconto');
 
-    const aplicarVoucherInput = document.getElementById('aplicar-voucher');
+    const aplicarVoucherInput =
+        document.getElementById('aplicar-voucher') ||
+        document.getElementById('id_aplicar_voucher');
+
     const aplicarCashbackInput = document.getElementById('aplicar-cashback');
 
     let saldoAtual = 0;
@@ -73,26 +76,46 @@
     }
 
     function mostrarStatus(tipo, texto) {
+        if (!statusBox) {
+            return;
+        }
+
         statusBox.className = 'alert mb-3 alert-' + tipo;
         statusBox.textContent = texto;
         statusBox.classList.remove('d-none');
     }
 
     function esconderStatus() {
+        if (!statusBox) {
+            return;
+        }
+
         statusBox.classList.add('d-none');
         statusBox.textContent = '';
     }
 
     function mostrarSaldo(valor) {
         saldoAtual = parseFloat(valor || 0);
-        saldoDisponivel.innerText = 'R$ ' + saldoAtual.toFixed(2);
-        saldoCard.classList.remove('d-none');
+
+        if (saldoDisponivel) {
+            saldoDisponivel.innerText = 'R$ ' + saldoAtual.toFixed(2);
+        }
+
+        if (saldoCard) {
+            saldoCard.classList.remove('d-none');
+        }
     }
 
     function esconderSaldo() {
         saldoAtual = 0;
-        saldoDisponivel.innerText = 'R$ 0,00';
-        saldoCard.classList.add('d-none');
+
+        if (saldoDisponivel) {
+            saldoDisponivel.innerText = 'R$ 0,00';
+        }
+
+        if (saldoCard) {
+            saldoCard.classList.add('d-none');
+        }
     }
 
     function esconderMotorBeneficios() {
@@ -104,12 +127,29 @@
 
         motorCard.classList.add('d-none');
 
-        if (mbCashback) mbCashback.innerText = 'R$ 0,00';
-        if (mbVoucher) mbVoucher.innerText = 'Nenhum';
-        if (mbDescontoVoucher) mbDescontoVoucher.innerText = 'R$ 0,00';
-        if (mbCashbackSugerido) mbCashbackSugerido.innerText = 'R$ 0,00';
-        if (mbTotalDesconto) mbTotalDesconto.innerText = 'R$ 0,00';
-        if (mbValorFinal) mbValorFinal.innerText = 'R$ 0,00';
+        if (mbCashback) {
+            mbCashback.innerText = 'R$ 0,00';
+        }
+
+        if (mbVoucher) {
+            mbVoucher.innerText = 'Nenhum';
+        }
+
+        if (mbDescontoVoucher) {
+            mbDescontoVoucher.innerText = 'R$ 0,00';
+        }
+
+        if (mbCashbackSugerido) {
+            mbCashbackSugerido.innerText = 'R$ 0,00';
+        }
+
+        if (mbTotalDesconto) {
+            mbTotalDesconto.innerText = 'R$ 0,00';
+        }
+
+        if (mbValorFinal) {
+            mbValorFinal.innerText = 'R$ 0,00';
+        }
     }
 
     function recalcularResumoBeneficios() {
@@ -119,11 +159,35 @@
             return;
         }
 
-        const aplicarVoucher = aplicarVoucherInput && aplicarVoucherInput.checked && voucherValidado;
-        const aplicarCashback = aplicarCashbackInput && aplicarCashbackInput.checked;
+        const aplicarVoucher =
+            aplicarVoucherInput &&
+            aplicarVoucherInput.checked &&
+            voucherValidado;
+
+        const aplicarCashback =
+            aplicarCashbackInput &&
+            aplicarCashbackInput.checked;
 
         const descontoVoucherAplicado = aplicarVoucher ? descontoVoucher : 0;
-        const cashbackAplicado = aplicarCashback ? Number(ultimaSimulacao.cashback_sugerido || 0) : 0;
+
+        let cashbackAplicado = 0;
+
+        if (aplicarCashback && cashbackUsadoInput) {
+            cashbackAplicado = Number(cashbackUsadoInput.value || 0);
+        }
+
+        if (cashbackAplicado > saldoAtual) {
+            cashbackAplicado = saldoAtual;
+
+            if (cashbackUsadoInput) {
+                cashbackUsadoInput.value = saldoAtual.toFixed(2);
+            }
+
+            mostrarStatus(
+                'warning',
+                'O cashback utilizado não pode ser maior que o saldo disponível.'
+            );
+        }
 
         let totalDesconto = descontoVoucherAplicado + cashbackAplicado;
 
@@ -134,23 +198,18 @@
         const valorFinal = valorCompra - totalDesconto;
 
         if (mbDescontoVoucher) {
-            mbDescontoVoucher.innerText = 'R$ ' + descontoVoucherAplicado.toFixed(2);
+            mbDescontoVoucher.innerText =
+                'R$ ' + descontoVoucherAplicado.toFixed(2);
         }
 
         if (mbTotalDesconto) {
-            mbTotalDesconto.innerText = 'R$ ' + totalDesconto.toFixed(2);
+            mbTotalDesconto.innerText =
+                'R$ ' + totalDesconto.toFixed(2);
         }
 
         if (mbValorFinal) {
-            mbValorFinal.innerText = 'R$ ' + valorFinal.toFixed(2);
-        }
-
-        if (aplicarCashback && cashbackUsadoInput) {
-            cashbackUsadoInput.value = cashbackAplicado.toFixed(2);
-        }
-
-        if (!aplicarCashback && cashbackUsadoInput) {
-            cashbackUsadoInput.value = '0.00';
+            mbValorFinal.innerText =
+                'R$ ' + valorFinal.toFixed(2);
         }
     }
 
@@ -340,11 +399,15 @@
             );
 
             if (confirmar) {
-                cashbackUsadoInput.value = saldoAtual.toFixed(2);
+                if (aplicarVoucherInput) {
+                    aplicarVoucherInput.checked = false;
+                }
 
                 if (aplicarCashbackInput) {
                     aplicarCashbackInput.checked = true;
                 }
+
+                cashbackUsadoInput.value = saldoAtual.toFixed(2);
 
                 mostrarStatus(
                     'success',
@@ -445,6 +508,10 @@
             aplicarCashbackInput.checked = valorDigitado > 0;
         }
 
+        if (valorDigitado > 0 && aplicarVoucherInput) {
+            aplicarVoucherInput.checked = false;
+        }
+
         recalcularResumoBeneficios();
     });
 
@@ -480,12 +547,28 @@
 
     if (aplicarVoucherInput) {
         aplicarVoucherInput.addEventListener('change', function () {
+            if (this.checked) {
+                if (aplicarCashbackInput) {
+                    aplicarCashbackInput.checked = false;
+                }
+
+                if (cashbackUsadoInput) {
+                    cashbackUsadoInput.value = '';
+                }
+            }
+
             recalcularResumoBeneficios();
         });
     }
 
     if (aplicarCashbackInput) {
         aplicarCashbackInput.addEventListener('change', function () {
+            if (this.checked) {
+                if (aplicarVoucherInput) {
+                    aplicarVoucherInput.checked = false;
+                }
+            }
+
             recalcularResumoBeneficios();
         });
     }

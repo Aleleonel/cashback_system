@@ -23,10 +23,22 @@ def calcular_cashback(*, valor_compra, percentual):
 
 
 @transaction.atomic
-def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
-                     valor_cashback_usado=0,
-                     telefone='', email='', data_nascimento=None,
-                     aceita_email=True, aceita_sms=False, observacao=''):
+def registrar_compra(
+    *,
+    matriz,
+    loja,
+    cpf,
+    nome,
+    valor_compra,
+    valor_base_cashback=None,
+    valor_cashback_usado=0,
+    telefone='',
+    email='',
+    data_nascimento=None,
+    aceita_email=True,
+    aceita_sms=False,
+    observacao='',
+):
 
     configuracao = garantir_configuracao_sistema(
         matriz=matriz
@@ -34,6 +46,11 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
 
     valor_compra = Decimal(valor_compra)
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
+
+    if valor_base_cashback is None:
+        valor_base_cashback = valor_compra
+
+    valor_base_cashback = Decimal(valor_base_cashback)
 
     if valor_compra < configuracao.valor_minimo_compra:
         raise ValidationError(
@@ -109,7 +126,7 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
     hoje = timezone.localdate()
 
     valor_cashback = calcular_cashback(
-        valor_compra=valor_compra,
+        valor_compra=valor_base_cashback,
         percentual=configuracao.percentual_cashback
     )
 
@@ -118,6 +135,7 @@ def registrar_compra(*, matriz, loja, cpf, nome, valor_compra,
         loja=loja,
         cliente=cliente,
         valor_compra=valor_compra,
+        valor_base_cashback=valor_base_cashback,
         percentual_cashback=configuracao.percentual_cashback,
         valor_cashback=valor_cashback,
         valor_utilizado=Decimal('0.00'),

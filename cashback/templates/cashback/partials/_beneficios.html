@@ -32,12 +32,16 @@
             </label>
 
             <div class="input-group">
-                <input type="text" id="codigo-voucher" class="form-control" placeholder="Digite o código do voucher">
+                <input type="text" name="codigo_voucher" id="codigo-voucher" class="form-control"
+                    placeholder="Digite o código do voucher" autocomplete="off"
+                    value="{{ form.codigo_voucher.value|default_if_none:'' }}">
 
                 <button type="button" id="validar-voucher-btn" class="btn btn-outline-primary">
                     Validar Voucher
                 </button>
             </div>
+
+            {{ form.codigo_voucher.errors }}
 
             <div id="voucher-status" class="alert d-none mt-3 mb-0"></div>
 
@@ -57,18 +61,24 @@
 
                     <div class="col-md-4">
                         <small class="text-muted">Desconto</small>
-                        <h6 class="text-success" id="voucher-desconto">R$ 0,00</h6>
+                        <h6 class="text-success" id="voucher-desconto">
+                            R$ 0,00
+                        </h6>
                     </div>
 
                 </div>
 
                 <div class="form-check mt-3">
-                    <input class="form-check-input" type="checkbox" id="aplicar-voucher">
 
-                    <label class="form-check-label" for="aplicar-voucher">
+                    {{ form.aplicar_voucher }}
+
+                    <label class="form-check-label" for="{{ form.aplicar_voucher.id_for_label }}">
                         Aplicar Voucher
                     </label>
+
                 </div>
+
+                {{ form.aplicar_voucher.errors }}
 
             </div>
 

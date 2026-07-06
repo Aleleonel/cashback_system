@@ -59,6 +59,11 @@ def registrar_venda(
         valor_desconto_voucher=desconto_voucher,
     )
 
+    valor_base_cashback = valor_compra - desconto_voucher
+
+    if valor_base_cashback < Decimal('0.00'):
+        valor_base_cashback = Decimal('0.00')
+
     lancamento = registrar_compra(
         matriz=matriz,
         loja=loja,
@@ -68,6 +73,7 @@ def registrar_venda(
         email=email,
         data_nascimento=data_nascimento,
         valor_compra=valor_compra,
+        valor_base_cashback=valor_base_cashback,
         valor_cashback_usado=valor_cashback_usado,
         aceita_email=aceita_email,
         aceita_sms=aceita_sms,
@@ -97,5 +103,6 @@ def registrar_venda(
             'cashback_usado': valor_cashback_usado,
             'voucher': voucher_validado,
             'desconto_voucher': desconto_voucher,
+            'valor_base_cashback': valor_base_cashback,
         }
     }

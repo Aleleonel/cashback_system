@@ -52,8 +52,8 @@ def nova_compra(request):
                     aceita_email=form.cleaned_data['aceita_email'],
                     aceita_sms=form.cleaned_data['aceita_sms'],
                     observacao=form.cleaned_data['observacao'],
-                    aplicar_voucher=False,
-                    codigo_voucher='',
+                    aplicar_voucher=form.cleaned_data['aplicar_voucher'],
+                    codigo_voucher=form.cleaned_data['codigo_voucher'],
                 )
 
                 lancamento = resultado['compra']
