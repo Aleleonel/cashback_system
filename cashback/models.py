@@ -34,8 +34,6 @@ class LancamentoCashback(models.Model):
         related_name='lancamentos_cashback'
     )
 
-    
-    valor_base_cashback = models.DecimalField(max_digits=10, decimal_places=2,)
     valor_compra = models.DecimalField(
         max_digits=10,
         decimal_places=2
