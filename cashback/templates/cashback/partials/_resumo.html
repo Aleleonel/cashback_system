@@ -3,35 +3,23 @@
     <div class="col-12">
 
         {{ form.observacao.label_tag }}
-
         {{ form.observacao }}
-
         {{ form.observacao.errors }}
 
     </div>
 
     <div class="col-md-6">
-
         <div class="form-check mt-2">
-
             {{ form.aceita_email }}
-
             {{ form.aceita_email.label_tag }}
-
         </div>
-
     </div>
 
     <div class="col-md-6">
-
         <div class="form-check mt-2">
-
             {{ form.aceita_sms }}
-
             {{ form.aceita_sms.label_tag }}
-
         </div>
-
     </div>
 
 </div>
@@ -41,12 +29,16 @@
 <div class="mt-4">
 
     {% for message in messages %}
-
     <div class="alert alert-{{ message.tags }} mb-2">
         {{ message }}
     </div>
-
     {% endfor %}
+
+    <div class="d-flex justify-content-end mt-3">
+        <a href="{% url 'cashback:nova_compra' %}" class="btn btn-success">
+            Nova Compra
+        </a>
+    </div>
 
 </div>
 
@@ -55,15 +47,11 @@
 <div class="d-flex justify-content-end gap-2 mt-4">
 
     <button type="button" id="cancelar-compra" class="btn btn-outline-secondary">
-
         Cancelar
-
     </button>
 
     <button type="submit" class="btn btn-dark" {% if bloquear_formulario %}disabled{% endif %}>
-
         Registrar compra
-
     </button>
 
 </div>
