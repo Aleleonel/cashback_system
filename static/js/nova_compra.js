@@ -6,11 +6,16 @@
     const nascimentoInput = document.getElementById('id_data_nascimento');
     const cashbackUsadoInput = document.getElementById('id_valor_cashback_usado');
     const valorCompraInput = document.getElementById('id_valor_compra');
+    const observacaoInput = document.getElementById('id_observacao');
+
+    const aceitaEmailInput = document.getElementById('id_aceita_email');
+    const aceitaSmsInput = document.getElementById('id_aceita_sms');
 
     const statusBox = document.getElementById('cliente-status');
     const saldoCard = document.getElementById('saldo-card');
     const saldoDisponivel = document.getElementById('saldo-disponivel');
     const usarSaldoTotalBtn = document.getElementById('usar-saldo-total');
+    const cancelarCompraBtn = document.getElementById('cancelar-compra');
 
     const motorCard = document.getElementById('motor-beneficios-card');
     const mbCashback = document.getElementById('mb-cashback');
@@ -118,15 +123,7 @@
         }
     }
 
-    function esconderMotorBeneficios() {
-        ultimaSimulacao = null;
-
-        if (!motorCard) {
-            return;
-        }
-
-        motorCard.classList.add('d-none');
-
+    function limparResumoBeneficios() {
         if (mbCashback) {
             mbCashback.innerText = 'R$ 0,00';
         }
@@ -152,10 +149,21 @@
         }
     }
 
+    function esconderMotorBeneficios() {
+        ultimaSimulacao = null;
+
+        if (motorCard) {
+            motorCard.classList.add('d-none');
+        }
+
+        limparResumoBeneficios();
+    }
+
     function recalcularResumoBeneficios() {
         const valorCompra = Number(valorCompraInput.value || 0);
 
         if (!ultimaSimulacao || valorCompra <= 0) {
+            limparResumoBeneficios();
             return;
         }
 
@@ -382,40 +390,221 @@
             });
     }
 
-    if (usarSaldoTotalBtn) {
-        usarSaldoTotalBtn.addEventListener('click', function () {
-            if (saldoAtual <= 0) {
-                mostrarStatus(
-                    'warning',
-                    'Este cliente não possui cashback disponível para uso.'
-                );
-                return;
-            }
+    function criarModalOperacao() {
+        let modal = document.getElementById('modal-operacao-caixa');
 
-            const valorFormatado = saldoAtual.toFixed(2).replace('.', ',');
+        if (modal) {
+            return modal;
+        }
 
-            const confirmar = confirm(
-                `Deseja realmente usar R$ ${valorFormatado} de cashback nesta compra?`
-            );
+        modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'modal-operacao-caixa';
+        modal.tabIndex = -1;
+        modal.setAttribute('aria-hidden', 'true');
 
-            if (confirmar) {
+        modal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-operacao-titulo">
+                            Confirmar operação
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="mb-0" id="modal-operacao-mensagem"></p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Voltar
+                        </button>
+
+                        <button type="button" class="btn btn-dark" id="modal-operacao-confirmar">
+                            Confirmar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        return modal;
+    }
+
+    function confirmarOperacao({ titulo, mensagem, textoConfirmar, classeConfirmar, aoConfirmar }) {
+        const modalElement = criarModalOperacao();
+
+        const tituloElement = modalElement.querySelector('#modal-operacao-titulo');
+        const mensagemElement = modalElement.querySelector('#modal-operacao-mensagem');
+        let confirmarBtn = modalElement.querySelector('#modal-operacao-confirmar');
+
+        tituloElement.textContent = titulo;
+        mensagemElement.textContent = mensagem;
+        confirmarBtn.textContent = textoConfirmar || 'Confirmar';
+        confirmarBtn.className = classeConfirmar || 'btn btn-dark';
+
+        const novoConfirmarBtn = confirmarBtn.cloneNode(true);
+        confirmarBtn.parentNode.replaceChild(novoConfirmarBtn, confirmarBtn);
+        confirmarBtn = novoConfirmarBtn;
+
+        if (window.bootstrap && window.bootstrap.Modal) {
+            const modalBootstrap = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+
+            confirmarBtn.addEventListener('click', function () {
+                modalBootstrap.hide();
+                aoConfirmar();
+            });
+
+            modalBootstrap.show();
+            return;
+        }
+
+        if (confirm(mensagem)) {
+            aoConfirmar();
+        }
+    }
+
+    function calcularValorCashbackParaUsar() {
+        if (!ultimaSimulacao) {
+            return saldoAtual;
+        }
+
+        const sugerido = Number(ultimaSimulacao.cashback_sugerido || 0);
+
+        if (sugerido > 0) {
+            return Math.min(saldoAtual, sugerido);
+        }
+
+        return saldoAtual;
+    }
+
+    function cancelarCompra() {
+        confirmarOperacao({
+            titulo: 'Cancelar operação',
+            mensagem: 'Deseja realmente cancelar esta compra? Todos os dados preenchidos serão descartados.',
+            textoConfirmar: 'Cancelar compra',
+            classeConfirmar: 'btn btn-danger',
+            aoConfirmar: function () {
+                if (cpfInput) {
+                    cpfInput.value = '';
+                }
+
+                if (nomeInput) {
+                    nomeInput.value = '';
+                }
+
+                if (telefoneInput) {
+                    telefoneInput.value = '';
+                }
+
+                if (emailInput) {
+                    emailInput.value = '';
+                }
+
+                if (nascimentoInput) {
+                    nascimentoInput.value = '';
+                }
+
+                if (valorCompraInput) {
+                    valorCompraInput.value = '';
+                }
+
+                if (cashbackUsadoInput) {
+                    cashbackUsadoInput.value = '';
+                }
+
+                if (codigoVoucherInput) {
+                    codigoVoucherInput.value = '';
+                }
+
+                if (observacaoInput) {
+                    observacaoInput.value = '';
+                }
+
+                if (aceitaEmailInput) {
+                    aceitaEmailInput.checked = true;
+                }
+
+                if (aceitaSmsInput) {
+                    aceitaSmsInput.checked = false;
+                }
+
                 if (aplicarVoucherInput) {
                     aplicarVoucherInput.checked = false;
                 }
 
                 if (aplicarCashbackInput) {
-                    aplicarCashbackInput.checked = true;
+                    aplicarCashbackInput.checked = false;
                 }
 
-                cashbackUsadoInput.value = saldoAtual.toFixed(2);
+                saldoAtual = 0;
+                voucherValidado = null;
+                descontoVoucher = 0;
+                ultimaSimulacao = null;
+
+                esconderStatus();
+                esconderSaldo();
+                esconderMotorBeneficios();
+                esconderVoucherInfo();
+                esconderVoucherStatus();
+                limparResumoBeneficios();
 
                 mostrarStatus(
-                    'success',
-                    `Cashback de R$ ${valorFormatado} aplicado nesta compra.`
+                    'secondary',
+                    'Operação cancelada. Inicie uma nova compra.'
                 );
 
-                recalcularResumoBeneficios();
+                if (cpfInput) {
+                    cpfInput.focus();
+                }
             }
+        });
+    }
+
+    if (usarSaldoTotalBtn) {
+        usarSaldoTotalBtn.addEventListener('click', function () {
+            const valorCashbackParaUsar = calcularValorCashbackParaUsar();
+
+            if (saldoAtual <= 0 || valorCashbackParaUsar <= 0) {
+                mostrarStatus(
+                    'warning',
+                    'Este cliente não possui cashback disponível para uso nesta compra.'
+                );
+                return;
+            }
+
+            const valorFormatado = valorCashbackParaUsar.toFixed(2).replace('.', ',');
+
+            confirmarOperacao({
+                titulo: 'Aplicar cashback',
+                mensagem: `Será aplicado R$ ${valorFormatado} de cashback nesta compra. Voucher e cashback não podem ser usados juntos.`,
+                textoConfirmar: 'Aplicar cashback',
+                classeConfirmar: 'btn btn-success',
+                aoConfirmar: function () {
+                    if (aplicarVoucherInput) {
+                        aplicarVoucherInput.checked = false;
+                    }
+
+                    if (aplicarCashbackInput) {
+                        aplicarCashbackInput.checked = true;
+                    }
+
+                    cashbackUsadoInput.value = valorCashbackParaUsar.toFixed(2);
+
+                    mostrarStatus(
+                        'success',
+                        `Cashback de R$ ${valorFormatado} aplicado nesta compra.`
+                    );
+
+                    recalcularResumoBeneficios();
+                }
+            });
         });
     }
 
@@ -570,6 +759,12 @@
             }
 
             recalcularResumoBeneficios();
+        });
+    }
+
+    if (cancelarCompraBtn) {
+        cancelarCompraBtn.addEventListener('click', function () {
+            cancelarCompra();
         });
     }
 });
