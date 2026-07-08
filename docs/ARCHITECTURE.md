@@ -182,3 +182,20 @@ Para versões futuras:
 - Jobs assíncronos.
 - Cache.
 - API pública.
+
+Cashback
+
+Cliente
+    │
+    ▼
+Movimentações
+    │
+    ├── Cashback Gerado
+    ├── Cashback Utilizado
+    ├── Expiração (futuro)
+    ├── Ajustes (futuro)
+    └── Estornos (futuro)
+
+↓
+
+Extrato Financeiro

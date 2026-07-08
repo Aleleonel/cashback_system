@@ -45,4 +45,10 @@ Objetivos futuros:
 - [x] Estrutura modular JavaScript
 - [x] Estrutura modular CSS
 - [x] Diretório shared
-- [ ] Modularização completa da Nova Compra
+- [x] Modularização completa da Nova Compra
+
+
+- [x] Extrato Financeiro
+- [x] Motor Voucher
+- [x] Motor Cashback
+- [x] Caixa

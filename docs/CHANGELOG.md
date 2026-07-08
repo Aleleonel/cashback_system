@@ -70,3 +70,15 @@
 Status:
 - Sem alterações funcionais.
 - Compatibilidade total com a implementação atual.
+
+## [Unreleased]
+
+### Added
+
+- Novo extrato financeiro baseado em movimentações.
+- Resumo financeiro do cliente.
+- Cashback sobre valor líquido.
+- Voucher e cashback mutuamente exclusivos.
+- Cashback parcial.
+- Melhorias na experiência do operador do caixa.
+- Nova arquitetura para movimentações financeiras.
