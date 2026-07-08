@@ -130,3 +130,93 @@ def get_movimentacoes_cliente(*, matriz, cliente):
         item['saldo'] = saldo
 
     return list(reversed(movimentacoes))
+
+from django.db.models import Max, Min
+
+
+def get_resumo_extrato_cliente(*, matriz, cliente):
+    """
+    Retorna indicadores resumidos para o cabeçalho do extrato.
+
+    Não altera nenhuma regra financeira.
+    Apenas consolida informações para exibição.
+    """
+
+    hoje = timezone.localdate()
+
+    saldo_disponivel = get_saldo_disponivel_cliente(
+        matriz=matriz,
+        cliente=cliente,
+    )
+
+    ultima_compra = LancamentoCashback.objects.filter(
+        matriz=matriz,
+        cliente=cliente,
+    ).order_by(
+        "-data_compra",
+        "-criado_em",
+    ).first()
+
+    proxima_liberacao = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+            data_liberacao__gt=hoje,
+        )
+        .aggregate(data=Min("data_liberacao"))
+        .get("data")
+    )
+
+    proxima_expiracao = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+            data_expiracao__gte=hoje,
+            valor_cashback__gt=F("valor_utilizado"),
+        )
+        .aggregate(data=Min("data_expiracao"))
+        .get("data")
+    )
+
+    cashback_a_liberar = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+            data_liberacao__gt=hoje,
+        ).aggregate(
+            total=Sum(
+                F("valor_cashback") - F("valor_utilizado")
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    total_gerado = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+        ).aggregate(
+            total=Sum("valor_cashback")
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    total_utilizado = (
+        UsoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+        ).aggregate(
+            total=Sum("valor_usado")
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    return {
+        "saldo_disponivel": saldo_disponivel,
+        "ultima_compra": ultima_compra,
+        "proxima_liberacao": proxima_liberacao,
+        "proxima_expiracao": proxima_expiracao,
+        "cashback_a_liberar": cashback_a_liberar,
+        "total_gerado": total_gerado,
+        "total_utilizado": total_utilizado,
+    }

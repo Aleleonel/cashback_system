@@ -14,8 +14,10 @@ from auditoria.services import registrar_auditoria
 
 from cashback.selectors import (
     get_movimentacoes_cliente,
+    get_resumo_extrato_cliente,
     get_saldo_disponivel_cliente,
 )
+
 from core.services import get_contexto_operacional_usuario
 
 from .models import Cliente
@@ -126,6 +128,11 @@ def extrato_cliente(request, cliente_id):
         cliente=cliente
     )
 
+    resumo = get_resumo_extrato_cliente(
+        matriz=contexto['matriz'],
+        cliente=cliente
+    )
+
     return render(
         request,
         'clientes/extrato_cliente.html',
@@ -133,6 +140,7 @@ def extrato_cliente(request, cliente_id):
             'cliente': cliente,
             'saldo': saldo,
             'movimentacoes': movimentacoes,
+            'resumo': resumo,
         }
     )
 
