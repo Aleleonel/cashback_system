@@ -228,6 +228,14 @@ class UsoVoucher(models.Model):
         related_name='usos'
     )
 
+    compra = models.ForeignKey(
+        'cashback.LancamentoCashback',
+        on_delete=models.PROTECT,
+        related_name='vouchers_utilizados',
+        blank=True,
+        null=True
+    )
+
     cliente = models.ForeignKey(
         Cliente,
         on_delete=models.PROTECT,
@@ -269,6 +277,7 @@ class UsoVoucher(models.Model):
             models.Index(fields=['matriz', 'voucher']),
             models.Index(fields=['matriz', 'loja']),
             models.Index(fields=['voucher', 'cliente']),
+            models.Index(fields=['voucher', 'criado_em']),
             models.Index(fields=['criado_em']),
         ]
         constraints = [

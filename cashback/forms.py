@@ -45,13 +45,11 @@ class NovaCompraForm(forms.Form):
         label='Data de nascimento',
         required=False,
         input_formats=['%d/%m/%Y'],
-        widget=forms.TextInput(
-            attrs={
-                'class': 'form-control',
-                'placeholder': 'dd/mm/aaaa',
-                'maxlength': '10',
-            }
-        )
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'dd/mm/aaaa',
+            'maxlength': '10',
+        })
     )
 
     valor_compra = forms.DecimalField(
@@ -77,6 +75,26 @@ class NovaCompraForm(forms.Form):
             'class': 'form-control',
             'placeholder': '0,00',
             'step': '0.01',
+        })
+    )
+
+    aplicar_voucher = forms.BooleanField(
+        label='Aplicar voucher',
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+        })
+    )
+
+    codigo_voucher = forms.CharField(
+        label='Código do voucher',
+        required=False,
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Digite o código do voucher',
+            'autocomplete': 'off',
         })
     )
 
@@ -119,3 +137,21 @@ class NovaCompraForm(forms.Form):
             raise forms.ValidationError('Informe o nome completo do cliente.')
 
         return nome
+
+    def clean_codigo_voucher(self):
+        codigo = self.cleaned_data.get('codigo_voucher', '')
+        return codigo.strip().upper()
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        aplicar_voucher = cleaned_data.get('aplicar_voucher')
+        codigo_voucher = cleaned_data.get('codigo_voucher')
+
+        if aplicar_voucher and not codigo_voucher:
+            self.add_error(
+                'codigo_voucher',
+                'Informe o código do voucher para aplicar o benefício.'
+            )
+
+        return cleaned_data

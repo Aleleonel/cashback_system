@@ -12,4 +12,5 @@ class ConfiguracaoSistemaAdmin(admin.ModelAdmin):
         'dias_liberacao',
         'dias_expiracao',
         'valor_minimo_compra',
+        'percentual_maximo_beneficio',
     )

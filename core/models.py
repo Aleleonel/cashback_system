@@ -31,6 +31,12 @@ class ConfiguracaoSistema(models.Model):
         default=0
     )
 
+    percentual_maximo_beneficio = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=30.00
+    )
+
     enviar_email_saldo = models.BooleanField(default=True)
 
     enviar_email_aniversario = models.BooleanField(default=True)

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
@@ -11,9 +13,11 @@ from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 
 from cashback.selectors import (
-    get_extrato_cliente,
+    get_movimentacoes_cliente,
+    get_resumo_extrato_cliente,
     get_saldo_disponivel_cliente,
 )
+
 from core.services import get_contexto_operacional_usuario
 
 from .models import Cliente
@@ -81,6 +85,7 @@ def buscar_cliente_cpf(request):
         matriz=contexto['matriz'],
         cliente=cliente
     )
+    saldo_disponivel = saldo_disponivel.quantize(Decimal('0.01'))
 
     return JsonResponse({
         'encontrado': True,
@@ -118,7 +123,12 @@ def extrato_cliente(request, cliente_id):
         cliente=cliente
     )
 
-    extrato = get_extrato_cliente(
+    movimentacoes = get_movimentacoes_cliente(
+        matriz=contexto['matriz'],
+        cliente=cliente
+    )
+
+    resumo = get_resumo_extrato_cliente(
         matriz=contexto['matriz'],
         cliente=cliente
     )
@@ -129,7 +139,8 @@ def extrato_cliente(request, cliente_id):
         {
             'cliente': cliente,
             'saldo': saldo,
-            'extrato': extrato,
+            'movimentacoes': movimentacoes,
+            'resumo': resumo,
         }
     )
 
