@@ -52,6 +52,16 @@ def registrar_compra(
 
     valor_base_cashback = Decimal(valor_base_cashback)
 
+    if valor_base_cashback < Decimal('0.00'):
+        raise ValidationError(
+            'A base de cálculo do cashback não pode ser negativa.'
+        )
+
+    if valor_base_cashback > valor_compra:
+        raise ValidationError(
+            'A base de cálculo do cashback não pode ser maior que o valor da compra.'
+        )
+
     if valor_compra < configuracao.valor_minimo_compra:
         raise ValidationError(
             'Valor da compra abaixo do mínimo configurado para gerar cashback.'

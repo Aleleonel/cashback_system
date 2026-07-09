@@ -127,7 +127,6 @@ def get_movimentacoes_cliente(*, matriz, cliente):
 
     return list(reversed(movimentacoes))
 
-
 def get_resumo_extrato_cliente(*, matriz, cliente):
     hoje = timezone.localdate()
 
@@ -144,47 +143,64 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
         '-criado_em',
     ).first()
 
-    resumo_lancamentos = LancamentoCashback.objects.filter(
-        matriz=matriz,
-        cliente=cliente,
-    ).aggregate(
-        proxima_liberacao=Min(
-            'data_liberacao',
-            filter=F('data_liberacao') > hoje
-        ),
-        total_gerado=Sum('valor_cashback'),
+    proxima_liberacao = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+            data_liberacao__gt=hoje,
+        ).aggregate(
+            data=Min('data_liberacao')
+        )['data']
     )
 
-    proxima_expiracao = LancamentoCashback.objects.filter(
-        matriz=matriz,
-        cliente=cliente,
-        data_expiracao__gte=hoje,
-        valor_cashback__gt=F('valor_utilizado'),
-    ).aggregate(
-        data=Min('data_expiracao')
-    )['data']
+    proxima_expiracao = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+            data_expiracao__gte=hoje,
+            valor_cashback__gt=F('valor_utilizado'),
+        ).aggregate(
+            data=Min('data_expiracao')
+        )['data']
+    )
 
-    cashback_a_liberar = LancamentoCashback.objects.filter(
-        matriz=matriz,
-        cliente=cliente,
-        data_liberacao__gt=hoje,
-    ).aggregate(
-        total=Sum(F('valor_cashback') - F('valor_utilizado'))
-    )['total'] or Decimal('0.00')
+    cashback_a_liberar = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+            data_liberacao__gt=hoje,
+        ).aggregate(
+            total=Sum(F('valor_cashback') - F('valor_utilizado'))
+        )['total']
+        or Decimal('0.00')
+    )
 
-    total_utilizado = UsoCashback.objects.filter(
-        matriz=matriz,
-        cliente=cliente,
-    ).aggregate(
-        total=Sum('valor_usado')
-    )['total'] or Decimal('0.00')
+    total_gerado = (
+        LancamentoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+        ).aggregate(
+            total=Sum('valor_cashback')
+        )['total']
+        or Decimal('0.00')
+    )
+
+    total_utilizado = (
+        UsoCashback.objects.filter(
+            matriz=matriz,
+            cliente=cliente,
+        ).aggregate(
+            total=Sum('valor_usado')
+        )['total']
+        or Decimal('0.00')
+    )
 
     return {
         'saldo_disponivel': saldo_disponivel,
         'ultima_compra': ultima_compra,
-        'proxima_liberacao': resumo_lancamentos['proxima_liberacao'],
+        'proxima_liberacao': proxima_liberacao,
         'proxima_expiracao': proxima_expiracao,
         'cashback_a_liberar': cashback_a_liberar,
-        'total_gerado': resumo_lancamentos['total_gerado'] or Decimal('0.00'),
+        'total_gerado': total_gerado,
         'total_utilizado': total_utilizado,
     }

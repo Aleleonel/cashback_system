@@ -33,6 +33,11 @@ def registrar_venda(
     valor_compra = Decimal(valor_compra)
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
 
+    if valor_compra <= Decimal('0.00'):
+        raise ValidationError(
+            'O valor da compra precisa ser maior que zero.'
+        )
+
     voucher_validado = None
     desconto_voucher = Decimal('0.00')
 
@@ -60,9 +65,6 @@ def registrar_venda(
     )
 
     valor_base_cashback = valor_compra - desconto_voucher
-
-    if valor_base_cashback < Decimal('0.00'):
-        valor_base_cashback = Decimal('0.00')
 
     lancamento = registrar_compra(
         matriz=matriz,
