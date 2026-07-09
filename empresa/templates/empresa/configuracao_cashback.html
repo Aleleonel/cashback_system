@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-cash-coin me-2"></i>
+                Configuração de Cashback
+            </strong>
+            <div class="text-muted small">
+                Regras de geração, liberação e validade do cashback da sua empresa.
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        {{ form.percentual_cashback.label_tag }}
+                        {{ form.percentual_cashback }}
+                        {{ form.percentual_cashback.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.dias_liberacao.label_tag }}
+                        {{ form.dias_liberacao }}
+                        {{ form.dias_liberacao.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.dias_expiracao.label_tag }}
+                        {{ form.dias_expiracao }}
+                        {{ form.dias_expiracao.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.valor_minimo_compra.label_tag }}
+                        {{ form.valor_minimo_compra }}
+                        {{ form.valor_minimo_compra.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            {{ form.enviar_email_saldo }}
+                            {{ form.enviar_email_saldo.label_tag }}
+                            {{ form.enviar_email_saldo.errors }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'empresa:dashboard' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Salvar Configuração
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,15 +1,23 @@
 from django.core.exceptions import PermissionDenied, ValidationError
+
+from core.choices import StatusOperacional
+
 from .models import ConfiguracaoSistema
 
 
 def get_contexto_operacional_usuario(usuario):
     if not usuario.is_authenticated:
         raise PermissionDenied('Usuário não autenticado.')
+    
+    if usuario.is_superuser:
+        raise PermissionDenied(
+            'Superusuário não possui contexto operacional.'
+        )
 
     if not usuario.matriz:
         raise ValidationError('Usuário não está vinculado a uma matriz.')
 
-    lojas = usuario.lojas.filter(ativa=True)
+    lojas = usuario.lojas.filter(status=StatusOperacional.ATIVA,)
 
     if not lojas.exists():
         raise ValidationError('Usuário não está vinculado a nenhuma loja ativa.')
@@ -30,6 +38,7 @@ def garantir_configuracao_sistema(*, matriz):
             'dias_liberacao': 7,
             'dias_expiracao': 45,
             'valor_minimo_compra': 0,
+            'percentual_maximo_beneficio': 30,
             'enviar_email_saldo': True,
             'enviar_email_aniversario': True,
             'enviar_sms_aniversario': False,
@@ -37,3 +46,15 @@ def garantir_configuracao_sistema(*, matriz):
     )
 
     return configuracao
+
+def get_contexto_plataforma(usuario):
+
+    if not usuario.is_authenticated:
+        raise PermissionDenied('Usuário não autenticado.')
+
+    if not usuario.is_superuser:
+        raise PermissionDenied('Acesso exclusivo da plataforma.')
+
+    return {
+        'usuario': usuario,
+    }

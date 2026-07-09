@@ -134,3 +134,44 @@ def get_contexto_exemplo_template():
         'loja': 'Pro Corps',
         'dias': '7',
     }
+
+from django.utils import timezone
+
+
+@transaction.atomic
+def processar_envio_campanha_aniversario(*, envio):
+
+    if envio.status not in [
+        CampanhaAniversarioEnvio.STATUS_PENDENTE,
+        CampanhaAniversarioEnvio.STATUS_ERRO,
+    ]:
+        return envio
+
+    envio.status = CampanhaAniversarioEnvio.STATUS_PROCESSANDO
+    envio.save(update_fields=['status'])
+
+    try:
+        envio.status = CampanhaAniversarioEnvio.STATUS_ENVIADO
+        envio.enviado_em = timezone.now()
+        envio.erro = ''
+
+        envio.save(
+            update_fields=[
+                'status',
+                'enviado_em',
+                'erro',
+            ]
+        )
+
+    except Exception as erro:
+        envio.status = CampanhaAniversarioEnvio.STATUS_ERRO
+        envio.erro = str(erro)
+
+        envio.save(
+            update_fields=[
+                'status',
+                'erro',
+            ]
+        )
+
+    return envio

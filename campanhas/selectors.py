@@ -98,7 +98,7 @@ def get_fila_envios_aniversario(*, matriz):
             CampanhaAniversarioEnvio.STATUS_ERRO,
         ]
     ).select_related(
-        'cliente'
+        'cliente',
         'template',
     ).only(
         'id',

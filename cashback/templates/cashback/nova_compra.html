@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block content %}
@@ -12,117 +12,33 @@
             <div class="card shadow-sm border-0">
 
                 <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Nova Compra</h5>
+
+                    <h5 class="mb-0">
+                        Nova Compra
+                    </h5>
 
                     {% if loja_operacional %}
                     <small class="text-white-50">
-                        Loja operacional: {{ loja_operacional.nome }}
+                        Loja operacional:
+                        {{ loja_operacional.nome }}
                     </small>
                     {% endif %}
+
                 </div>
 
                 <div class="card-body">
 
-                    {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} mb-3">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                    {% endif %}
-
-                    <div id="cliente-status" class="alert d-none mb-3"></div>
-
-                    <div id="saldo-card" class="card border-success mb-3 d-none">
-
-                        <div class="card-body">
-
-                            <h6 class="text-muted mb-1">
-                                Saldo disponível
-                            </h6>
-
-                            <h3 class="text-success mb-0" id="saldo-disponivel">
-                                R$ 0,00
-                            </h3>
-
-                        </div>
-
-                    </div>
-
                     <form method="post" novalidate>
+
                         {% csrf_token %}
 
-                        <div class="row g-3">
+                        {% include "cashback/partials/_cliente.html" %}
 
-                            <div class="col-md-6">
-                                {{ form.cpf.label_tag }}
-                                {{ form.cpf }}
-                                {{ form.cpf.errors }}
-                            </div>
+                        {% include "cashback/partials/_cashback.html" %}
 
-                            <div class="col-md-6">
-                                {{ form.nome.label_tag }}
-                                {{ form.nome }}
-                                {{ form.nome.errors }}
-                            </div>
+                        {% include "cashback/partials/_beneficios.html" %}
 
-                            <div class="col-md-6">
-                                {{ form.telefone.label_tag }}
-                                {{ form.telefone }}
-                                {{ form.telefone.errors }}
-                            </div>
-
-                            <div class="col-md-6">
-                                {{ form.email.label_tag }}
-                                {{ form.email }}
-                                {{ form.email.errors }}
-                            </div>
-
-                            <div class="col-md-6">
-                                {{ form.data_nascimento.label_tag }}
-                                {{ form.data_nascimento }}
-                                {{ form.data_nascimento.errors }}
-                            </div>
-
-                            <div class="col-md-6">
-                                {{ form.valor_compra.label_tag }}
-                                {{ form.valor_compra }}
-                                {{ form.valor_compra.errors }}
-                            </div>
-
-                            <div class="col-md-6">
-                                {{ form.valor_cashback_usado.label_tag }}
-                                {{ form.valor_cashback_usado }}
-                                {{ form.valor_cashback_usado.errors }}
-                            </div>
-
-                            <div class="col-12">
-                                {{ form.observacao.label_tag }}
-                                {{ form.observacao }}
-                                {{ form.observacao.errors }}
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-check mt-2">
-                                    {{ form.aceita_email }}
-                                    {{ form.aceita_email.label_tag }}
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-check mt-2">
-                                    {{ form.aceita_sms }}
-                                    {{ form.aceita_sms.label_tag }}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-dark" {% if bloquear_formulario %}disabled{% endif %}>
-                                Registrar compra
-                            </button>
-                        </div>
+                        {% include "cashback/partials/_resumo.html" %}
 
                     </form>
 
@@ -136,10 +52,10 @@
 
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
 
 <script src="{% static 'js/nova_compra.js' %}"></script>
-
-{% endblock %}
 
 {% endblock %}

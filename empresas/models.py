@@ -1,10 +1,11 @@
 import uuid
 
 from django.db import models
-
+from core.choices import StatusOperacional
 
 class Matriz(models.Model):
 
+    
     uuid = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
@@ -22,7 +23,12 @@ class Matriz(models.Model):
         db_index=True
     )
 
-    ativa = models.BooleanField(default=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StatusOperacional.choices,
+        default=StatusOperacional.ATIVA,
+        db_index=True
+    )
 
     criada_em = models.DateTimeField(auto_now_add=True)
     atualizada_em = models.DateTimeField(auto_now=True)
@@ -31,7 +37,7 @@ class Matriz(models.Model):
         ordering = ['nome']
         indexes = [
             models.Index(fields=['nome']),
-            models.Index(fields=['ativa']),
+            models.Index(fields=['status']),
         ]
 
     def __str__(self):
@@ -69,7 +75,12 @@ class Loja(models.Model):
         db_index=True
     )
 
-    ativa = models.BooleanField(default=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StatusOperacional.choices,
+        default=StatusOperacional.IMPLANTACAO,
+        db_index=True
+    )
 
     criada_em = models.DateTimeField(auto_now_add=True)
     atualizada_em = models.DateTimeField(auto_now=True)
@@ -85,7 +96,7 @@ class Loja(models.Model):
         indexes = [
             models.Index(fields=['matriz', 'nome']),
             models.Index(fields=['matriz', 'cnpj']),
-            models.Index(fields=['matriz', 'ativa']),
+            models.Index(fields=['matriz', 'status']),
         ]
 
     def __str__(self):

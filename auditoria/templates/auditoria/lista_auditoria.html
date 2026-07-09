@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load ui_tags %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-shield-check me-2"></i>
+                Auditoria da Plataforma
+            </strong>
+            <div class="text-muted small">
+                Registro das principais ações executadas no sistema.
+            </div>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Usuário, matriz, recurso, IP">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Ação</label>
+                    <select name="acao" class="form-select">
+                        <option value="">Todas</option>
+
+                        {% for item in acoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Data inicial</label>
+                    <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Data final</label>
+                    <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark w-100">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'auditoria:lista_auditoria' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Usuário</th>
+                        <th>Matriz</th>
+                        <th>Loja</th>
+                        <th>Ação</th>
+                        <th>Recurso</th>
+                        <th>Descrição</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for registro in registros %}
+
+                    <tr>
+                        <td>{{ registro.criado_em|date:"d/m/Y H:i" }}</td>
+                        <td>{{ registro.usuario|default:"-" }}</td>
+                        <td>{{ registro.matriz|default:"-" }}</td>
+                        <td>{{ registro.loja|default:"-" }}</td>
+                        <td>
+                            {% auditoria_badge_class registro.acao as badge_class %}
+                            {% auditoria_icone registro.acao as icone_acao %}
+
+                            <span class="badge {{ badge_class }}">
+                                <i class="bi {{ icone_acao }} me-1"></i>
+                                {{ registro.get_acao_display }}
+                            </span>
+                        </td>
+                        <td>{{ registro.recurso }}</td>
+                        <td>{{ registro.descricao|truncatechars:80 }}</td>
+                        <td>{{ registro.ip|default:"-" }}</td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            Nenhum registro de auditoria encontrado.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% if registros.has_other_pages %}
+
+        <div class="card-footer bg-white">
+
+            <nav>
+                <ul class="pagination mb-0">
+
+                    {% if registros.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ registros.previous_page_number }}&q={{ busca }}&acao={{ acao }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}">
+                            Anterior
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{ registros.number }} de {{ registros.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if registros.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ registros.next_page_number }}&q={{ busca }}&acao={{ acao }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}">
+                            Próxima
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

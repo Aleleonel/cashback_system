@@ -1,0 +1,227 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Nova Compra</h5>
+
+                    {% if loja_operacional %}
+                    <small class="text-white-50">
+                        Loja operacional: {{ loja_operacional.nome }}
+                    </small>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mb-3">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <div id="cliente-status" class="alert d-none mb-3"></div>
+
+                    <div id="saldo-card" class="card border-success mb-3 d-none">
+
+                        <div class="card-body">
+
+                            <h6 class="text-muted mb-1">
+                                Cashback disponível para uso
+                            </h6>
+
+                            <h3 class="text-success mb-0" id="saldo-disponivel">
+                                R$ 0,00
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+                    <div id="motor-beneficios-card" class="card border-primary mb-3 d-none">
+
+                        <div class="card-header bg-primary text-white">
+                            <strong>
+                                <i class="bi bi-stars me-2"></i>
+                                Motor de Benefícios
+                            </strong>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <small class="text-muted">Cashback disponível</small>
+                                    <h5 id="mb-cashback">R$ 0,00</h5>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <small class="text-muted">Voucher recomendado</small>
+                                    <h5 id="mb-voucher">Nenhum</h5>
+                                </div>
+
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <small class="text-muted">Desconto Voucher</small>
+                                    <h5 id="mb-desconto-voucher">R$ 0,00</h5>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted">Cashback sugerido</small>
+                                    <h5 id="mb-cashback-sugerido">R$ 0,00</h5>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted">Valor Final</small>
+                                    <h4 class="text-success" id="mb-valor-final">
+                                        R$ 0,00
+                                    </h4>
+                                </div>
+
+                            </div>
+
+                            <hr>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="aplicar-voucher">
+
+                                <label class="form-check-label" for="aplicar-voucher">
+                                    Aplicar voucher recomendado
+                                </label>
+                            </div>
+
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="aplicar-cashback">
+
+                                <label class="form-check-label" for="aplicar-cashback">
+                                    Aplicar cashback sugerido
+                                </label>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                {{ form.cpf.label_tag }}
+                                {{ form.cpf }}
+                                {{ form.cpf.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.nome.label_tag }}
+                                {{ form.nome }}
+                                {{ form.nome.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.telefone.label_tag }}
+                                {{ form.telefone }}
+                                {{ form.telefone.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.email.label_tag }}
+                                {{ form.email }}
+                                {{ form.email.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.data_nascimento.label_tag }}
+                                {{ form.data_nascimento }}
+                                {{ form.data_nascimento.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.valor_compra.label_tag }}
+                                {{ form.valor_compra }}
+                                {{ form.valor_compra.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"
+                                    for="{{ form.valor_cashback_usado.id_for_label }}">
+                                    Usar cashback disponível
+                                </label>
+
+                                {{ form.valor_cashback_usado }}
+                                {{ form.valor_cashback_usado.errors }}
+
+                                <div class="form-text">
+                                    Informe o valor de cashback que será abatido nesta compra.
+                                </div>
+
+                                <button type="button" id="usar-saldo-total" class="btn btn-sm btn-outline-success mt-2">
+                                    Usar saldo disponível
+                                </button>
+                            </div>
+
+                            <div class="col-12">
+                                {{ form.observacao.label_tag }}
+                                {{ form.observacao }}
+                                {{ form.observacao.errors }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-check mt-2">
+                                    {{ form.aceita_email }}
+                                    {{ form.aceita_email.label_tag }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-check mt-2">
+                                    {{ form.aceita_sms }}
+                                    {{ form.aceita_sms.label_tag }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-dark" {% if bloquear_formulario %}disabled{% endif %}>
+                                Registrar compra
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% block extra_js %}
+
+<script src="{% static 'js/nova_compra.js' %}"></script>
+
+{% endblock %}
+
+{% endblock %}

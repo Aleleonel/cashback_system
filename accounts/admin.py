@@ -1,7 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Usuario
+from .models import (
+    Usuario,
+    PermissaoUsuario,
+)
 
 
 @admin.register(Usuario)
@@ -40,4 +43,23 @@ class UsuarioAdmin(UserAdmin):
         'groups',
         'user_permissions',
         'lojas',
+    )
+
+@admin.register(PermissaoUsuario)
+class PermissaoUsuarioAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'usuario',
+        'permissao',
+        'criado_em',
+    )
+
+    search_fields = (
+        'usuario__username',
+        'permissao',
+    )
+
+    list_filter = (
+        'permissao',
+        'criado_em',
     )

@@ -1,0 +1,174 @@
+<aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
+
+    <h5 class="fw-bold mb-4">
+        <i class="bi bi-cash-coin me-2"></i>
+        Cashback System
+    </h5>
+
+    <nav class="nav flex-column gap-1">
+
+        {% if request.user.is_superuser %}
+
+        <div class="text-uppercase text-white-50 small mt-2 mb-1">
+            Plataforma
+        </div>
+
+        <a href="{% url 'plataforma:painel_master' %}" class="nav-link text-warning">
+            <i class="bi bi-grid-1x2 me-2"></i>
+            Painel Master
+        </a>
+
+        <a href="{% url 'plataforma:nova_empresa_matriz' %}" class="nav-link text-warning">
+            <i class="bi bi-rocket-takeoff me-2"></i>
+            Nova Empresa
+        </a>
+
+        <a href="{% url 'plataforma:lista_matrizes' %}" class="nav-link text-warning">
+            <i class="bi bi-building me-2"></i>
+            Matrizes
+        </a>
+
+        <a href="{% url 'plataforma:lista_lojas' %}" class="nav-link text-warning">
+            <i class="bi bi-shop me-2"></i>
+            Lojas
+        </a>
+
+        <a href="{% url 'accounts:lista_usuarios' %}" class="nav-link text-warning">
+            <i class="bi bi-people me-2"></i>
+            Usuários
+        </a>
+
+        <a href="{% url 'auditoria:lista_auditoria' %}" class="nav-link text-warning">
+            <i class="bi bi-shield-check me-2"></i>
+            Auditoria
+        </a>
+
+        <hr class="border-secondary">
+
+        <a href="/admin/" class="nav-link text-white-50">
+            <i class="bi bi-gear me-2"></i>
+            Django Admin
+        </a>
+
+        {% else %}
+
+        <div class="text-uppercase text-white-50 small mt-2 mb-1">
+            Operação
+        </div>
+
+        {% if pode_ver_dashboard %}
+        <a href="{% url 'relatorios:dashboard' %}" class="nav-link text-white">
+            <i class="bi bi-speedometer2 me-2"></i>
+            Dashboard
+        </a>
+        {% endif %}
+
+        {% if pode_nova_compra %}
+        <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
+            <i class="bi bi-cart-plus me-2"></i>
+            Nova Compra
+        </a>
+        {% endif %}
+
+        {% if pode_ver_clientes %}
+        <a href="{% url 'clientes:lista_clientes' %}" class="nav-link text-white">
+            <i class="bi bi-people me-2"></i>
+            Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_gerenciar_vouchers %}
+        <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
+            <i class="bi bi-ticket-perforated me-2"></i>
+            Vouchers
+        </a>
+        {% endif %}
+
+        {% if pode_importar_clientes %}
+        <a href="{% url 'clientes:importar_clientes' %}" class="nav-link text-white-50">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+            Importar Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Minha Empresa
+        </div>
+
+        <a href="{% url 'empresa:dashboard' %}" class="nav-link text-white-50">
+            <i class="bi bi-building-gear me-2"></i>
+            Painel da Empresa
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas %}
+        <a href="{% url 'empresa:lista_lojas' %}" class="nav-link text-white-50">
+            <i class="bi bi-shop me-2"></i>
+            Lojas
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_usuarios %}
+        <a href="{% url 'empresa:lista_usuarios' %}" class="nav-link text-white-50">
+            <i class="bi bi-people me-2"></i>
+            Usuários
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_cashback %}
+        <a href="{% url 'empresa:configurar_cashback' %}" class="nav-link text-white-50">
+            <i class="bi bi-cash-coin me-2"></i>
+            Config. Cashback
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
+        <a href="{% url 'empresa:auditoria' %}" class="nav-link text-white-50">
+            <i class="bi bi-shield-check me-2"></i>
+            Auditoria
+        </a>
+        {% endif %}
+
+        {% if pode_ver_campanhas or pode_configurar_campanhas or pode_templates_campanhas %}
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Campanhas
+        </div>
+        {% endif %}
+
+        {% if pode_ver_campanhas %}
+        <a href="{% url 'campanhas:aniversariantes_mes' %}" class="nav-link text-white-50">
+            <i class="bi bi-megaphone me-2"></i>
+            Aniversariantes
+        </a>
+
+        <a href="{% url 'campanhas:historico_envios' %}" class="nav-link text-white-50">
+            <i class="bi bi-clock-history me-2"></i>
+            Histórico
+        </a>
+
+        <a href="{% url 'campanhas:fila_envios' %}" class="nav-link text-white-50">
+            <i class="bi bi-list-check me-2"></i>
+            Fila
+        </a>
+        {% endif %}
+
+        {% if pode_templates_campanhas %}
+        <a href="{% url 'campanhas:lista_templates_campanhas' %}" class="nav-link text-white-50">
+            <i class="bi bi-layout-text-window-reverse me-2"></i>
+            Templates
+        </a>
+        {% endif %}
+
+        {% if pode_configurar_campanhas %}
+        <a href="{% url 'campanhas:configurar_campanha_aniversario' %}" class="nav-link text-white-50">
+            <i class="bi bi-sliders me-2"></i>
+            Config. Campanha
+        </a>
+        {% endif %}
+
+        {% endif %}
+
+    </nav>
+
+</aside>

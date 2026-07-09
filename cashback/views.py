@@ -3,13 +3,18 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 
+from accounts.decorators import require_permission
+from accounts.permissions import PERMISSAO_CASHBACK_NOVA_COMPRA
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
 from core.services import get_contexto_operacional_usuario
 
 from .forms import NovaCompraForm
-from .services import registrar_compra
+from .services import registrar_venda
 
 
 @login_required
+@require_permission(PERMISSAO_CASHBACK_NOVA_COMPRA)
 def nova_compra(request):
 
     try:
@@ -33,9 +38,10 @@ def nova_compra(request):
         if form.is_valid():
 
             try:
-                lancamento = registrar_compra(
+                resultado = registrar_venda(
                     matriz=contexto_operacional['matriz'],
                     loja=contexto_operacional['loja'],
+                    usuario=request.user,
                     cpf=form.cleaned_data['cpf'],
                     nome=form.cleaned_data['nome'],
                     telefone=form.cleaned_data['telefone'],
@@ -46,7 +52,11 @@ def nova_compra(request):
                     aceita_email=form.cleaned_data['aceita_email'],
                     aceita_sms=form.cleaned_data['aceita_sms'],
                     observacao=form.cleaned_data['observacao'],
+                    aplicar_voucher=form.cleaned_data['aplicar_voucher'],
+                    codigo_voucher=form.cleaned_data['codigo_voucher'],
                 )
+
+                lancamento = resultado['compra']
 
             except ValidationError as erro:
                 messages.error(request, erro.message)
@@ -55,6 +65,21 @@ def nova_compra(request):
                 messages.success(
                     request,
                     f'Compra registrada. Cashback gerado: R$ {lancamento.valor_cashback}.'
+                )
+
+                registrar_auditoria(
+                    usuario=request.user,
+                    matriz=contexto_operacional['matriz'],
+                    loja=contexto_operacional['loja'],
+                    acao=RegistroAuditoria.ACAO_CRIAR,
+                    recurso='cashback.compra',
+                    recurso_id=lancamento.id,
+                    descricao=(
+                        f'Compra registrada para {lancamento.cliente.nome}. '
+                        f'Valor da compra: R$ {lancamento.valor_compra}. '
+                        f'Cashback gerado: R$ {lancamento.valor_cashback}.'
+                    ),
+                    request=request
                 )
 
                 return redirect('cashback:nova_compra')

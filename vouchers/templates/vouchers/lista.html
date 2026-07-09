@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>
+                    <i class="bi bi-ticket-perforated me-2"></i>
+                    Vouchers
+                </strong>
+                <div class="text-muted small">
+                    Benefícios promocionais disponíveis para clientes.
+                </div>
+            </div>
+
+            <a href="{% url 'vouchers:criar_voucher' %}" class="btn btn-sm btn-dark">
+                Novo Voucher
+            </a>
+        </div>
+
+        <div class="card-body border-bottom">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control"
+                        placeholder="Código, nome, cliente ou CPF">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        {% for item in status_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        {% for item in tipo_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Origem</label>
+                    <select name="origem" class="form-select">
+                        <option value="">Todas</option>
+                        {% for item in origem_opcoes %}
+                        <option value="{{ item.valor }}" {% if item.selecionado %}selected{% endif %}>
+                            {{ item.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'vouchers:lista_vouchers' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Benefício</th>
+                        <th>Cliente</th>
+                        <th>Validade</th>
+                        <th>Uso</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for voucher in vouchers %}
+
+                    <tr>
+                        <td>
+                            <strong>{{ voucher.codigo }}</strong>
+                        </td>
+                        <td>{{ voucher.nome }}</td>
+                        <td>{{ voucher.get_tipo_display }}</td>
+                        <td>
+                            {% if voucher.tipo == 'valor_fixo' %}
+                            R$ {{ voucher.valor }}
+                            {% else %}
+                            {{ voucher.percentual }}%
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if voucher.cliente %}
+                            {{ voucher.cliente.nome }}
+                            {% else %}
+                            Geral
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ voucher.data_inicio|date:"d/m/Y" }}
+                            -
+                            {{ voucher.data_fim|date:"d/m/Y" }}
+                        </td>
+                        <td>
+                            {{ voucher.total_utilizado }}/{{ voucher.limite_utilizacao }}
+                        </td>
+                        <td>
+                            {% if voucher.status == 'ativo' %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+
+                            {% if voucher.esta_expirado %}
+                            <span class="badge bg-danger">Expirado</span>
+                            {% endif %}
+
+                            {% if voucher.esta_esgotado %}
+                            <span class="badge bg-warning text-dark">Esgotado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <a href="{% url 'vouchers:editar_voucher' voucher.id %}"
+                                    class="btn btn-sm btn-outline-dark">
+                                    Editar
+                                </a>
+
+                                {% if voucher.status == 'ativo' %}
+                                <form method="post" action="{% url 'vouchers:inativar_voucher' voucher.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Inativar
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'vouchers:ativar_voucher' voucher.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Ativar
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            Nenhum voucher encontrado.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

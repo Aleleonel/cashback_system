@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+            <strong>
+                <i class="bi bi-ticket-perforated me-2"></i>
+                {{ titulo }}
+            </strong>
+            <div class="text-muted small">
+                Cadastro de benefício promocional.
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-8">
+                        {{ form.nome.label_tag }}
+                        {{ form.nome }}
+                        {{ form.nome.errors }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.tipo.label_tag }}
+                        {{ form.tipo }}
+                        {{ form.tipo.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.descricao.label_tag }}
+                        {{ form.descricao }}
+                        {{ form.descricao.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.valor.label_tag }}
+                        {{ form.valor }}
+                        {{ form.valor.errors }}
+                        <div class="form-text">
+                            Preencha apenas se o tipo for valor fixo.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.percentual.label_tag }}
+                        {{ form.percentual }}
+                        {{ form.percentual.errors }}
+                        <div class="form-text">
+                            Preencha apenas se o tipo for percentual.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.data_inicio.label_tag }}
+                        {{ form.data_inicio }}
+                        {{ form.data_inicio.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form.data_fim.label_tag }}
+                        {{ form.data_fim }}
+                        {{ form.data_fim.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.cliente.label_tag }}
+                        {{ form.cliente }}
+                        {{ form.cliente.errors }}
+                        <div class="form-text">
+                            Deixe vazio para voucher geral.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.limite_utilizacao.label_tag }}
+                        {{ form.limite_utilizacao }}
+                        {{ form.limite_utilizacao.errors }}
+                    </div>
+
+                    <div class="col-md-12">
+                        {{ form.lojas.label_tag }}
+                        {{ form.lojas }}
+                        {{ form.lojas.errors }}
+                        <div class="form-text">
+                            Deixe vazio para permitir uso em todas as lojas da matriz.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            {{ form.uso_unico_por_cliente }}
+                            {{ form.uso_unico_por_cliente.label_tag }}
+                            {{ form.uso_unico_por_cliente.errors }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'vouchers:lista_vouchers' %}" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-dark">
+                        Salvar Voucher
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

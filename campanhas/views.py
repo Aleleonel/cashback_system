@@ -4,6 +4,15 @@ from campanhas.utils import get_template_json_placeholder, get_template_json_url
 
 from clientes.models import Cliente
 from django.contrib.auth.decorators import login_required
+
+from accounts.decorators import require_permission
+
+from accounts.permissions import (
+    PERMISSAO_CAMPANHAS_DISPARAR,
+    PERMISSAO_CAMPANHAS_CONFIGURAR,
+    PERMISSAO_CAMPANHAS_TEMPLATES,
+)
+
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.db import models
@@ -11,6 +20,9 @@ from core.services import get_contexto_operacional_usuario
 from clientes.selectors import aplicar_busca_clientes
 from django.http import JsonResponse
 from clientes.utils import limpar_numero, normalizar_texto
+
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
 
 from .selectors import (
     get_aniversariantes_do_mes,
@@ -39,11 +51,13 @@ from .services import (
     registrar_reenvio_aniversariante,
     renderizar_mensagem_template,
     get_contexto_exemplo_template,
+    processar_envio_campanha_aniversario,
     
 )
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def aniversariantes_mes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -94,6 +108,7 @@ def aniversariantes_mes(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def disparar_aniversariantes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -143,6 +158,16 @@ def disparar_aniversariantes(request):
                 template=form.cleaned_data.get('template'),
             )
 
+            registrar_auditoria(
+                usuario=request.user,
+                matriz=contexto['matriz'],
+                loja=contexto['loja'],
+                acao=RegistroAuditoria.ACAO_DISPARAR,
+                recurso='campanhas.aniversariantes',
+                descricao=f'{total} envios de campanha de aniversário registrados.',
+                request=request
+            )
+
             messages.success(
                 request,
                 f'{total} envios foram registrados para disparo.'
@@ -177,6 +202,7 @@ def disparar_aniversariantes(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def reenviar_aniversariante(request, cliente_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -232,6 +258,7 @@ def reenviar_aniversariante(request, cliente_id):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def historico_envios(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -308,6 +335,7 @@ def historico_envios(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
 def fila_envios(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -379,6 +407,45 @@ def fila_envios(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_DISPARAR)
+def processar_envio_aniversariante(request, envio_id):
+
+    contexto = get_contexto_operacional_usuario(request.user)
+
+    envio = get_object_or_404(
+        CampanhaAniversarioEnvio.objects.select_related(
+            'cliente',
+            'matriz'
+        ),
+        id=envio_id,
+        matriz=contexto['matriz']
+    )
+
+    processar_envio_campanha_aniversario(
+        envio=envio
+    )
+
+    registrar_auditoria(
+        usuario=request.user,
+        matriz=contexto['matriz'],
+        loja=contexto['loja'],
+        acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso='campanhas.envio_aniversario',
+        recurso_id=envio.id,
+        descricao=f'Envio processado para {envio.cliente.nome}. Status: {envio.status}.',
+        request=request
+    )
+
+    messages.success(
+        request,
+        'Envio processado com sucesso.'
+    )
+
+    return redirect('campanhas:fila_envios')
+
+
+@login_required
+@require_permission(PERMISSAO_CAMPANHAS_CONFIGURAR)
 def configurar_campanha_aniversario(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -418,6 +485,7 @@ def configurar_campanha_aniversario(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def lista_templates_campanhas(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -436,6 +504,7 @@ def lista_templates_campanhas(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def criar_template_campanha(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -489,6 +558,7 @@ def criar_template_campanha(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def editar_template_campanha(request, template_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -532,6 +602,7 @@ def editar_template_campanha(request, template_id):
 
 
 @login_required
+@require_permission(PERMISSAO_CAMPANHAS_TEMPLATES)
 def detalhe_template_campanha_json(request, template_id):
 
     contexto = get_contexto_operacional_usuario(request.user)

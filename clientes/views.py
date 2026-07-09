@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
@@ -7,10 +9,15 @@ from io import BytesIO
 from django.http import HttpResponse
 from openpyxl import Workbook
 
+from auditoria.models import RegistroAuditoria
+from auditoria.services import registrar_auditoria
+
 from cashback.selectors import (
-    get_extrato_cliente,
+    get_movimentacoes_cliente,
+    get_resumo_extrato_cliente,
     get_saldo_disponivel_cliente,
 )
+
 from core.services import get_contexto_operacional_usuario
 
 from .models import Cliente
@@ -36,10 +43,20 @@ from .selectors import (
     get_cliente_por_cpf,
 )
 
+from accounts.decorators import require_permission
+
+from accounts.permissions import (
+    PERMISSAO_CLIENTES_CRIAR,
+    PERMISSAO_CLIENTES_EDITAR,
+    PERMISSAO_CLIENTES_IMPORTAR,
+    PERMISSAO_CLIENTES_VISUALIZAR,
+)
+
 from django.core.paginator import Paginator
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
 def buscar_cliente_cpf(request):
 
     cpf = request.GET.get('cpf')
@@ -68,6 +85,7 @@ def buscar_cliente_cpf(request):
         matriz=contexto['matriz'],
         cliente=cliente
     )
+    saldo_disponivel = saldo_disponivel.quantize(Decimal('0.01'))
 
     return JsonResponse({
         'encontrado': True,
@@ -85,6 +103,7 @@ def buscar_cliente_cpf(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
 def extrato_cliente(request, cliente_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -104,7 +123,12 @@ def extrato_cliente(request, cliente_id):
         cliente=cliente
     )
 
-    extrato = get_extrato_cliente(
+    movimentacoes = get_movimentacoes_cliente(
+        matriz=contexto['matriz'],
+        cliente=cliente
+    )
+
+    resumo = get_resumo_extrato_cliente(
         matriz=contexto['matriz'],
         cliente=cliente
     )
@@ -115,11 +139,13 @@ def extrato_cliente(request, cliente_id):
         {
             'cliente': cliente,
             'saldo': saldo,
-            'extrato': extrato,
+            'movimentacoes': movimentacoes,
+            'resumo': resumo,
         }
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
 def lista_clientes(request):
 
     contexto = get_contexto_operacional_usuario(
@@ -167,6 +193,7 @@ def lista_clientes(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_CRIAR)
 def criar_cliente(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -178,7 +205,19 @@ def criar_cliente(request):
             cliente = form.save(commit=False)
             cliente.matriz = contexto['matriz']
             cliente.loja_cadastro = contexto['loja']
+
             cliente.save()
+
+            registrar_auditoria(
+                usuario=request.user,
+                matriz=contexto['matriz'],
+                loja=contexto['loja'],
+                acao=RegistroAuditoria.ACAO_CRIAR,
+                recurso='clientes.cliente',
+                recurso_id=cliente.id,
+                descricao=f'Cliente criado: {cliente.nome}',
+                request=request
+            )
 
             messages.success(request, 'Cliente cadastrado com sucesso.')
 
@@ -198,6 +237,7 @@ def criar_cliente(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_EDITAR)
 def editar_cliente(request, cliente_id):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -212,7 +252,18 @@ def editar_cliente(request, cliente_id):
         form = ClienteForm(request.POST, instance=cliente)
 
         if form.is_valid():
-            form.save()
+            cliente = form.save()
+
+            registrar_auditoria(
+                usuario=request.user,
+                matriz=contexto['matriz'],
+                loja=contexto['loja'],
+                acao=RegistroAuditoria.ACAO_EDITAR,
+                recurso='clientes.cliente',
+                recurso_id=cliente.id,
+                descricao=f'Cliente editado: {cliente.nome}',
+                request=request
+            )
 
             messages.success(request, 'Cliente atualizado com sucesso.')
 
@@ -232,6 +283,7 @@ def editar_cliente(request, cliente_id):
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def importar_clientes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -276,6 +328,7 @@ def importar_clientes(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def confirmar_importacao_clientes(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
@@ -292,6 +345,20 @@ def confirmar_importacao_clientes(request):
         loja=contexto['loja'],
         linhas=linhas
     )
+    
+    registrar_auditoria(
+        usuario=request.user,
+        matriz=contexto['matriz'],
+        loja=contexto['loja'],
+        acao=RegistroAuditoria.ACAO_IMPORTAR,
+        recurso='clientes.importacao',
+        descricao=(
+            f"Importação de clientes concluída. "
+            f"Criados: {resultado['criados']}. "
+            f"Atualizados: {resultado['atualizados']}."
+        ),
+        request=request
+    )
 
     del request.session['importacao_clientes_linhas']
 
@@ -304,6 +371,7 @@ def confirmar_importacao_clientes(request):
 
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def baixar_modelo_importacao_clientes(request):
 
     workbook = Workbook()
