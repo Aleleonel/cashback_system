@@ -16,7 +16,6 @@ def get_vouchers(
         matriz=matriz
     ).select_related(
         'cliente',
-        'matriz',
     ).prefetch_related(
         'lojas_permitidas__loja'
     ).order_by(
@@ -58,7 +57,6 @@ def get_voucher(
 
     return Voucher.objects.select_related(
         'cliente',
-        'matriz',
     ).prefetch_related(
         'lojas_permitidas__loja'
     ).get(
@@ -91,6 +89,8 @@ def get_vouchers_cliente(
     ).filter(
         Q(cliente__isnull=True) |
         Q(cliente=cliente)
+    ).select_related(
+        'cliente'
     ).order_by(
         'data_fim',
         'nome'
