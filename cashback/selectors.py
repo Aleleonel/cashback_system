@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.db.models import F, Min, Sum
 from django.utils import timezone
 
+from vouchers.models import UsoVoucher
+
 from .models import (
     LancamentoCashback,
     UsoCashback,
@@ -86,10 +88,13 @@ def get_movimentacoes_cliente(*, matriz, cliente):
             'valor_base_cashback': lancamento.valor_base_cashback,
             'percentual_cashback': lancamento.percentual_cashback,
             'observacao': lancamento.observacao or '',
+            'voucher_codigo': None,
+            'voucher_nome': None,
+            'desconto_voucher': None,
             'referencia': lancamento,
         })
 
-    usos = UsoCashback.objects.filter(
+    usos_cashback = UsoCashback.objects.filter(
         matriz=matriz,
         cliente=cliente
     ).select_related(
@@ -98,7 +103,7 @@ def get_movimentacoes_cliente(*, matriz, cliente):
         'data_uso'
     )
 
-    for uso in usos:
+    for uso in usos_cashback:
         movimentacoes.append({
             'data': uso.data_uso,
             'tipo': 'SAIDA',
@@ -110,6 +115,48 @@ def get_movimentacoes_cliente(*, matriz, cliente):
             'valor_base_cashback': None,
             'percentual_cashback': None,
             'observacao': uso.observacao or '',
+            'voucher_codigo': None,
+            'voucher_nome': None,
+            'desconto_voucher': None,
+            'referencia': uso,
+        })
+
+    usos_voucher = UsoVoucher.objects.filter(
+        matriz=matriz,
+        cliente=cliente
+    ).select_related(
+        'loja',
+        'voucher',
+        'compra',
+    ).order_by(
+        'criado_em'
+    )
+
+    for uso in usos_voucher:
+        compra = uso.compra
+
+        movimentacoes.append({
+            'data': uso.criado_em,
+            'tipo': 'BENEFICIO',
+            'titulo': 'Voucher utilizado',
+            'loja': uso.loja,
+            'entrada': Decimal('0.00'),
+            'saida': Decimal('0.00'),
+            'valor_compra': uso.valor_compra,
+            'valor_base_cashback': (
+                compra.valor_base_cashback
+                if compra
+                else None
+            ),
+            'percentual_cashback': (
+                compra.percentual_cashback
+                if compra
+                else None
+            ),
+            'observacao': uso.observacao or '',
+            'voucher_codigo': uso.voucher.codigo,
+            'voucher_nome': uso.voucher.nome,
+            'desconto_voucher': uso.valor_desconto,
             'referencia': uso,
         })
 
@@ -126,6 +173,7 @@ def get_movimentacoes_cliente(*, matriz, cliente):
         item['saldo'] = saldo
 
     return list(reversed(movimentacoes))
+
 
 def get_resumo_extrato_cliente(*, matriz, cliente):
     hoje = timezone.localdate()
