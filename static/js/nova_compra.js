@@ -643,6 +643,14 @@
                     emailInput.value = data.email || '';
                     nascimentoInput.value = data.data_nascimento || '';
 
+                    if (aceitaEmailInput) {
+                        aceitaEmailInput.checked = Boolean(data.aceita_email);
+                    }
+
+                    if (aceitaSmsInput) {
+                        aceitaSmsInput.checked = Boolean(data.aceita_sms);
+                    }
+
                     mostrarSaldo(data.saldo_disponivel);
 
                     if (valorCompraInput.value) {
