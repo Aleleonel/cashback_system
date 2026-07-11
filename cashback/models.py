@@ -1,4 +1,4 @@
-import uuid
+import uuid as uuid_lib
 
 from django.db import models
 from django.utils import timezone
@@ -10,10 +10,16 @@ from clientes.models import Cliente
 class LancamentoCashback(models.Model):
 
     uuid = models.UUIDField(
-        default=uuid.uuid4,
+        default=uuid_lib.uuid4,
         editable=False,
         unique=True,
         db_index=True
+    )
+
+    chave_idempotencia = models.UUIDField(
+        default=uuid_lib.uuid4,
+        editable=False,
+        unique=True,
     )
 
     matriz = models.ForeignKey(
@@ -110,7 +116,7 @@ class LancamentoCashback(models.Model):
 class UsoCashback(models.Model):
 
     uuid = models.UUIDField(
-        default=uuid.uuid4,
+        default=uuid_lib.uuid4,
         editable=False,
         unique=True,
         db_index=True

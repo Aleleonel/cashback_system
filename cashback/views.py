@@ -1,6 +1,8 @@
+import uuid
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.shortcuts import redirect, render
 
 from accounts.decorators import require_permission
@@ -10,6 +12,7 @@ from auditoria.services import registrar_auditoria
 from core.services import get_contexto_operacional_usuario
 
 from .forms import NovaCompraForm
+from .models import LancamentoCashback
 from .services import registrar_venda
 
 
@@ -27,7 +30,9 @@ def nova_compra(request):
             request,
             'cashback/nova_compra.html',
             {
-                'form': NovaCompraForm(),
+                'form': NovaCompraForm(initial={
+                    'chave_idempotencia': uuid.uuid4(),
+                }),
                 'bloquear_formulario': True,
             }
         )
@@ -42,6 +47,7 @@ def nova_compra(request):
                     matriz=contexto_operacional['matriz'],
                     loja=contexto_operacional['loja'],
                     usuario=request.user,
+                    chave_idempotencia=form.cleaned_data['chave_idempotencia'],
                     cpf=form.cleaned_data['cpf'],
                     nome=form.cleaned_data['nome'],
                     telefone=form.cleaned_data['telefone'],
@@ -56,15 +62,51 @@ def nova_compra(request):
                     codigo_voucher=form.cleaned_data['codigo_voucher'],
                 )
 
-                lancamento = resultado['compra']
-
             except ValidationError as erro:
                 messages.error(request, erro.message)
 
+            except IntegrityError:
+                lancamento_existente = (
+                    LancamentoCashback.objects
+                    .filter(
+                        matriz=contexto_operacional['matriz'],
+                        chave_idempotencia=(
+                            form.cleaned_data['chave_idempotencia']
+                        ),
+                    )
+                    .select_related(
+                        'cliente',
+                    )
+                    .first()
+                )
+
+                if not lancamento_existente:
+                    raise
+
+                messages.warning(
+                    request,
+                    'Esta compra já foi registrada anteriormente.'
+                )
+
+                return redirect('cashback:nova_compra')
+
             else:
+                lancamento = resultado['compra']
+
+                if resultado['duplicada']:
+                    messages.warning(
+                        request,
+                        'Esta compra já foi registrada anteriormente.'
+                    )
+
+                    return redirect('cashback:nova_compra')
+
                 messages.success(
                     request,
-                    f'Compra registrada. Cashback gerado: R$ {lancamento.valor_cashback}.'
+                    (
+                        'Compra registrada. '
+                        f'Cashback gerado: R$ {lancamento.valor_cashback}.'
+                    )
                 )
 
                 registrar_auditoria(
@@ -85,7 +127,9 @@ def nova_compra(request):
                 return redirect('cashback:nova_compra')
 
     else:
-        form = NovaCompraForm()
+        form = NovaCompraForm(initial={
+            'chave_idempotencia': uuid.uuid4(),
+        })
 
     return render(
         request,

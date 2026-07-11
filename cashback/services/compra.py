@@ -27,6 +27,7 @@ def registrar_compra(
     *,
     matriz,
     loja,
+    chave_idempotencia,
     cpf,
     nome,
     valor_compra,
@@ -151,6 +152,7 @@ def registrar_compra(
     lancamento = LancamentoCashback.objects.create(
         matriz=matriz,
         loja=loja,
+        chave_idempotencia=chave_idempotencia,
         cliente=cliente,
         valor_compra=valor_compra,
         valor_base_cashback=valor_base_cashback,

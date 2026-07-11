@@ -16,6 +16,8 @@
     const saldoDisponivel = document.getElementById('saldo-disponivel');
     const usarSaldoTotalBtn = document.getElementById('usar-saldo-total');
     const cancelarCompraBtn = document.getElementById('cancelar-compra');
+    const registrarCompraBtn = document.getElementById('registrar-compra');
+    const novaCompraForm = document.getElementById('nova-compra-form');
 
     const motorCard = document.getElementById('motor-beneficios-card');
     const mbCashback = document.getElementById('mb-cashback');
@@ -773,6 +775,21 @@
     if (cancelarCompraBtn) {
         cancelarCompraBtn.addEventListener('click', function () {
             cancelarCompra();
+        });
+    }
+
+    if (novaCompraForm && registrarCompraBtn) {
+        let envioEmAndamento = false;
+
+        novaCompraForm.addEventListener('submit', function (event) {
+            if (envioEmAndamento) {
+                event.preventDefault();
+                return;
+            }
+
+            envioEmAndamento = true;
+            registrarCompraBtn.disabled = true;
+            registrarCompraBtn.textContent = 'Registrando...';
         });
     }
 });

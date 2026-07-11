@@ -28,9 +28,17 @@
 
                 <div class="card-body">
 
-                    <form method="post" novalidate>
+                    <form method="post" id="nova-compra-form" novalidate>
 
                         {% csrf_token %}
+
+                        {{ form.chave_idempotencia }}
+
+                        {% if form.chave_idempotencia.errors %}
+                        <div class="alert alert-danger mb-3">
+                            Não foi possível identificar esta operação. Atualize a página e tente novamente.
+                        </div>
+                        {% endif %}
 
                         {% include "cashback/partials/_cliente.html" %}
 
@@ -56,6 +64,6 @@
 
 {% block extra_js %}
 
-<script src="{% static 'js/nova_compra.js' %}?v=20260711-1"></script>
+<script src="{% static 'js/nova_compra.js' %}?v=20260711-3"></script>
 
 {% endblock %}
