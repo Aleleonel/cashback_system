@@ -7,18 +7,25 @@ from .estrategia import (
     selecionar_voucher_recomendado,
 )
 
+def calcular_cashback_sugerido(*, matriz, cliente, valor_compra):
+    from cashback.services.validacoes import (
+        calcular_limite_maximo_beneficios,
+    )
 
-def calcular_cashback_sugerido(*, matriz, cliente, valor_restante):
     saldo = get_cashback_disponivel(
         matriz=matriz,
         cliente=cliente
     )
 
-    return min(
-        saldo,
-        valor_restante
+    limite = calcular_limite_maximo_beneficios(
+        matriz=matriz,
+        valor_compra=valor_compra
     )
 
+    return min(
+        saldo,
+        limite
+    )
 
 def simular_compra(
     *,
@@ -85,12 +92,10 @@ def simular_beneficios(*, matriz, cliente, valor_compra):
             valor_compra=valor_compra
         )
 
-    valor_restante = valor_compra - desconto_voucher
-
     cashback_sugerido = calcular_cashback_sugerido(
         matriz=matriz,
         cliente=cliente,
-        valor_restante=valor_restante
+        valor_compra=valor_compra
     )
 
     total_desconto = desconto_voucher + cashback_sugerido

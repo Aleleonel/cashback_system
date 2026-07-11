@@ -64,7 +64,11 @@ def registrar_venda(
         valor_desconto_voucher=desconto_voucher,
     )
 
-    valor_base_cashback = valor_compra - desconto_voucher
+    valor_base_cashback = (
+        valor_compra
+        - valor_cashback_usado
+        - desconto_voucher
+    )
 
     lancamento = registrar_compra(
         matriz=matriz,

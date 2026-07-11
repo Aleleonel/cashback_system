@@ -105,6 +105,14 @@ def registrar_compra(
             cliente.data_nascimento = data_nascimento
             campos_atualizar.append('data_nascimento')
 
+        if cliente.aceita_email != aceita_email:
+            cliente.aceita_email = aceita_email
+            campos_atualizar.append('aceita_email')
+
+        if cliente.aceita_sms != aceita_sms:
+            cliente.aceita_sms = aceita_sms
+            campos_atualizar.append('aceita_sms')
+
         if campos_atualizar:
             cliente.save(update_fields=campos_atualizar)
 
