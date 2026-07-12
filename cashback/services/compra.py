@@ -82,6 +82,13 @@ def registrar_compra(
         }
     )
 
+    if not criado:
+        cliente = (
+            Cliente.objects
+            .select_for_update()
+            .get(pk=cliente.pk)
+        )
+
     if not cliente.ativo:
         raise ValidationError(
             'Cliente inativo. Não é possível lançar cashback.'
