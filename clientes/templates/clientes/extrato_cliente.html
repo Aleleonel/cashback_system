@@ -21,12 +21,14 @@
                     </p>
 
                     <p class="mb-0">
-                        <strong>Loja cadastro:</strong> {{ cliente.loja_cadastro.nome }}
+                        <strong>Loja cadastro:</strong>
+                        {{ cliente.loja_cadastro.nome }}
                     </p>
                 </div>
 
                 <div class="text-end">
                     <small class="text-muted">Saldo disponível</small>
+
                     <h3 class="text-success mb-0">
                         R$ {{ resumo.saldo_disponivel|floatformat:2 }}
                     </h3>
@@ -38,6 +40,7 @@
 
                 <div class="col-md-4">
                     <small class="text-muted">Última compra</small>
+
                     <h6 class="mb-0">
                         {% if resumo.ultima_compra %}
                         {{ resumo.ultima_compra.data_compra|date:"d/m/Y" }}
@@ -49,6 +52,7 @@
 
                 <div class="col-md-4">
                     <small class="text-muted">Próxima liberação</small>
+
                     <h6 class="mb-0">
                         {% if resumo.proxima_liberacao %}
                         {{ resumo.proxima_liberacao|date:"d/m/Y" }}
@@ -60,6 +64,7 @@
 
                 <div class="col-md-4">
                     <small class="text-muted">Próxima expiração</small>
+
                     <h6 class="mb-0">
                         {% if resumo.proxima_expiracao %}
                         {{ resumo.proxima_expiracao|date:"d/m/Y" }}
@@ -79,10 +84,13 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
+
                     <small class="text-muted">Saldo atual</small>
+
                     <h4 class="text-success mb-0">
                         R$ {{ resumo.saldo_disponivel|floatformat:2 }}
                     </h4>
+
                 </div>
             </div>
         </div>
@@ -90,10 +98,13 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
+
                     <small class="text-muted">A liberar</small>
+
                     <h4 class="mb-0">
                         R$ {{ resumo.cashback_a_liberar|floatformat:2 }}
                     </h4>
+
                 </div>
             </div>
         </div>
@@ -101,10 +112,13 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
+
                     <small class="text-muted">Total gerado</small>
+
                     <h4 class="mb-0">
                         R$ {{ resumo.total_gerado|floatformat:2 }}
                     </h4>
+
                 </div>
             </div>
         </div>
@@ -112,10 +126,13 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
+
                     <small class="text-muted">Total utilizado</small>
+
                     <h4 class="mb-0 text-danger">
                         R$ {{ resumo.total_utilizado|floatformat:2 }}
                     </h4>
+
                 </div>
             </div>
         </div>
@@ -123,6 +140,7 @@
     </div>
 
     <div class="card shadow-sm border-0">
+
         <div class="card-header bg-white">
             <strong>Movimentações da Conta Cashback</strong>
         </div>
@@ -138,23 +156,35 @@
                     <div>
 
                         <div class="mb-2">
+
                             {% if item.tipo == "ENTRADA" %}
-                            <span class="badge bg-success">Crédito</span>
-                            {% else %}
-                            <span class="badge bg-danger">Débito</span>
+
+                            <span class="badge bg-success">
+                                Crédito
+                            </span>
+
+                            {% elif item.tipo == "SAIDA" %}
+
+                            <span class="badge bg-danger">
+                                Débito
+                            </span>
+
+                            {% elif item.tipo == "BENEFICIO" %}
+
+                            <span class="badge bg-primary">
+                                Benefício
+                            </span>
+
                             {% endif %}
 
                             <small class="text-muted ms-2">
                                 {{ item.data|date:"d/m/Y H:i" }}
                             </small>
+
                         </div>
 
                         <h5 class="mb-1">
-                            {% if item.tipo == "ENTRADA" %}
-                            Cashback Gerado
-                            {% else %}
-                            Cashback Utilizado
-                            {% endif %}
+                            {{ item.titulo }}
                         </h5>
 
                         <p class="mb-0 text-muted">
@@ -166,15 +196,31 @@
                     <div class="text-end">
 
                         {% if item.tipo == "ENTRADA" %}
+
                         <small class="text-muted">Entrada</small>
+
                         <h4 class="text-success mb-0">
                             + R$ {{ item.entrada|floatformat:2 }}
                         </h4>
-                        {% else %}
+
+                        {% elif item.tipo == "SAIDA" %}
+
                         <small class="text-muted">Saída</small>
+
                         <h4 class="text-danger mb-0">
                             - R$ {{ item.saida|floatformat:2 }}
                         </h4>
+
+                        {% elif item.tipo == "BENEFICIO" %}
+
+                        <small class="text-muted">
+                            Desconto aplicado
+                        </small>
+
+                        <h4 class="text-primary mb-0">
+                            R$ {{ item.desconto_voucher|floatformat:2 }}
+                        </h4>
+
                         {% endif %}
 
                     </div>
@@ -188,23 +234,82 @@
                 <div class="row g-3">
 
                     <div class="col-md-4">
-                        <small class="text-muted">Valor da compra</small>
+                        <small class="text-muted">
+                            Valor da compra
+                        </small>
+
                         <p class="mb-0 fw-semibold">
                             R$ {{ item.valor_compra|floatformat:2 }}
                         </p>
                     </div>
 
                     <div class="col-md-4">
-                        <small class="text-muted">Base de cálculo</small>
+                        <small class="text-muted">
+                            Base de cálculo
+                        </small>
+
                         <p class="mb-0 fw-semibold">
                             R$ {{ item.valor_base_cashback|default:item.valor_compra|floatformat:2 }}
                         </p>
                     </div>
 
                     <div class="col-md-4">
-                        <small class="text-muted">Percentual</small>
+                        <small class="text-muted">
+                            Percentual
+                        </small>
+
                         <p class="mb-0 fw-semibold">
                             {{ item.percentual_cashback|floatformat:2 }}%
+                        </p>
+                    </div>
+
+                </div>
+
+                {% elif item.tipo == "BENEFICIO" %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            Código do voucher
+                        </small>
+
+                        <p class="mb-0 fw-semibold">
+                            {{ item.voucher_codigo }}
+                        </p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            Voucher
+                        </small>
+
+                        <p class="mb-0 fw-semibold">
+                            {{ item.voucher_nome }}
+                        </p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            Valor da compra
+                        </small>
+
+                        <p class="mb-0 fw-semibold">
+                            R$ {{ item.valor_compra|floatformat:2 }}
+                        </p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            Base para cashback
+                        </small>
+
+                        <p class="mb-0 fw-semibold">
+                            {% if item.valor_base_cashback is not None %}
+                            R$ {{ item.valor_base_cashback|floatformat:2 }}
+                            {% else %}
+                            Não informada
+                            {% endif %}
                         </p>
                     </div>
 
@@ -213,17 +318,39 @@
                 {% endif %}
 
                 {% if item.observacao %}
+
                 <div class="mt-3">
-                    <small class="text-muted">Observação</small>
-                    <p class="mb-0">{{ item.observacao }}</p>
+                    <small class="text-muted">
+                        Observação
+                    </small>
+
+                    <p class="mb-0">
+                        {{ item.observacao }}
+                    </p>
                 </div>
+
                 {% endif %}
 
                 <div class="mt-3 pt-3 border-top text-end">
-                    <small class="text-muted">Saldo após movimentação</small>
+
+                    {% if item.tipo == "BENEFICIO" %}
+
+                    <small class="text-muted">
+                        Saldo de cashback não alterado
+                    </small>
+
+                    {% else %}
+
+                    <small class="text-muted">
+                        Saldo após movimentação
+                    </small>
+
+                    {% endif %}
+
                     <h5 class="mb-0">
                         R$ {{ item.saldo|floatformat:2 }}
                     </h5>
+
                 </div>
 
             </div>

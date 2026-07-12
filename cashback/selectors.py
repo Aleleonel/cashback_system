@@ -1,7 +1,9 @@
 from decimal import Decimal
 
-from django.db.models import Sum, F
+from django.db.models import F, Min, Sum
 from django.utils import timezone
+
+from vouchers.models import UsoVoucher
 
 from .models import (
     LancamentoCashback,
@@ -19,9 +21,7 @@ def get_lancamentos_disponiveis_cliente(*, matriz, cliente):
         data_expiracao__gte=hoje,
         valor_cashback__gt=F('valor_utilizado'),
     ).select_related(
-        'matriz',
-        'loja',
-        'cliente'
+        'loja'
     ).order_by(
         'data_expiracao',
         'data_liberacao',
@@ -30,12 +30,10 @@ def get_lancamentos_disponiveis_cliente(*, matriz, cliente):
 
 
 def get_saldo_disponivel_cliente(*, matriz, cliente):
-    lancamentos = get_lancamentos_disponiveis_cliente(
+    total = get_lancamentos_disponiveis_cliente(
         matriz=matriz,
         cliente=cliente
-    )
-
-    total = lancamentos.aggregate(
+    ).aggregate(
         total=Sum(F('valor_cashback') - F('valor_utilizado'))
     )['total']
 
@@ -90,10 +88,13 @@ def get_movimentacoes_cliente(*, matriz, cliente):
             'valor_base_cashback': lancamento.valor_base_cashback,
             'percentual_cashback': lancamento.percentual_cashback,
             'observacao': lancamento.observacao or '',
+            'voucher_codigo': None,
+            'voucher_nome': None,
+            'desconto_voucher': None,
             'referencia': lancamento,
         })
 
-    usos = UsoCashback.objects.filter(
+    usos_cashback = UsoCashback.objects.filter(
         matriz=matriz,
         cliente=cliente
     ).select_related(
@@ -102,7 +103,7 @@ def get_movimentacoes_cliente(*, matriz, cliente):
         'data_uso'
     )
 
-    for uso in usos:
+    for uso in usos_cashback:
         movimentacoes.append({
             'data': uso.data_uso,
             'tipo': 'SAIDA',
@@ -114,6 +115,48 @@ def get_movimentacoes_cliente(*, matriz, cliente):
             'valor_base_cashback': None,
             'percentual_cashback': None,
             'observacao': uso.observacao or '',
+            'voucher_codigo': None,
+            'voucher_nome': None,
+            'desconto_voucher': None,
+            'referencia': uso,
+        })
+
+    usos_voucher = UsoVoucher.objects.filter(
+        matriz=matriz,
+        cliente=cliente
+    ).select_related(
+        'loja',
+        'voucher',
+        'compra',
+    ).order_by(
+        'criado_em'
+    )
+
+    for uso in usos_voucher:
+        compra = uso.compra
+
+        movimentacoes.append({
+            'data': uso.criado_em,
+            'tipo': 'BENEFICIO',
+            'titulo': 'Voucher utilizado',
+            'loja': uso.loja,
+            'entrada': Decimal('0.00'),
+            'saida': Decimal('0.00'),
+            'valor_compra': uso.valor_compra,
+            'valor_base_cashback': (
+                compra.valor_base_cashback
+                if compra
+                else None
+            ),
+            'percentual_cashback': (
+                compra.percentual_cashback
+                if compra
+                else None
+            ),
+            'observacao': uso.observacao or '',
+            'voucher_codigo': uso.voucher.codigo,
+            'voucher_nome': uso.voucher.nome,
+            'desconto_voucher': uso.valor_desconto,
             'referencia': uso,
         })
 
@@ -131,17 +174,8 @@ def get_movimentacoes_cliente(*, matriz, cliente):
 
     return list(reversed(movimentacoes))
 
-from django.db.models import Max, Min
-
 
 def get_resumo_extrato_cliente(*, matriz, cliente):
-    """
-    Retorna indicadores resumidos para o cabeçalho do extrato.
-
-    Não altera nenhuma regra financeira.
-    Apenas consolida informações para exibição.
-    """
-
     hoje = timezone.localdate()
 
     saldo_disponivel = get_saldo_disponivel_cliente(
@@ -153,8 +187,8 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
         matriz=matriz,
         cliente=cliente,
     ).order_by(
-        "-data_compra",
-        "-criado_em",
+        '-data_compra',
+        '-criado_em',
     ).first()
 
     proxima_liberacao = (
@@ -162,9 +196,9 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
             matriz=matriz,
             cliente=cliente,
             data_liberacao__gt=hoje,
-        )
-        .aggregate(data=Min("data_liberacao"))
-        .get("data")
+        ).aggregate(
+            data=Min('data_liberacao')
+        )['data']
     )
 
     proxima_expiracao = (
@@ -172,10 +206,10 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
             matriz=matriz,
             cliente=cliente,
             data_expiracao__gte=hoje,
-            valor_cashback__gt=F("valor_utilizado"),
-        )
-        .aggregate(data=Min("data_expiracao"))
-        .get("data")
+            valor_cashback__gt=F('valor_utilizado'),
+        ).aggregate(
+            data=Min('data_expiracao')
+        )['data']
     )
 
     cashback_a_liberar = (
@@ -184,11 +218,9 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
             cliente=cliente,
             data_liberacao__gt=hoje,
         ).aggregate(
-            total=Sum(
-                F("valor_cashback") - F("valor_utilizado")
-            )
-        )["total"]
-        or Decimal("0.00")
+            total=Sum(F('valor_cashback') - F('valor_utilizado'))
+        )['total']
+        or Decimal('0.00')
     )
 
     total_gerado = (
@@ -196,9 +228,9 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
             matriz=matriz,
             cliente=cliente,
         ).aggregate(
-            total=Sum("valor_cashback")
-        )["total"]
-        or Decimal("0.00")
+            total=Sum('valor_cashback')
+        )['total']
+        or Decimal('0.00')
     )
 
     total_utilizado = (
@@ -206,17 +238,17 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
             matriz=matriz,
             cliente=cliente,
         ).aggregate(
-            total=Sum("valor_usado")
-        )["total"]
-        or Decimal("0.00")
+            total=Sum('valor_usado')
+        )['total']
+        or Decimal('0.00')
     )
 
     return {
-        "saldo_disponivel": saldo_disponivel,
-        "ultima_compra": ultima_compra,
-        "proxima_liberacao": proxima_liberacao,
-        "proxima_expiracao": proxima_expiracao,
-        "cashback_a_liberar": cashback_a_liberar,
-        "total_gerado": total_gerado,
-        "total_utilizado": total_utilizado,
+        'saldo_disponivel': saldo_disponivel,
+        'ultima_compra': ultima_compra,
+        'proxima_liberacao': proxima_liberacao,
+        'proxima_expiracao': proxima_expiracao,
+        'cashback_a_liberar': cashback_a_liberar,
+        'total_gerado': total_gerado,
+        'total_utilizado': total_utilizado,
     }

@@ -8,14 +8,8 @@ from core.services import garantir_configuracao_sistema
 from vouchers.services import validar_voucher
 
 
-def calcular_limite_maximo_beneficios(
-    *,
-    matriz,
-    valor_compra,
-):
-    configuracao = garantir_configuracao_sistema(
-        matriz=matriz
-    )
+def calcular_limite_maximo_beneficios(*, matriz, valor_compra):
+    configuracao = garantir_configuracao_sistema(matriz=matriz)
 
     valor_compra = Decimal(valor_compra)
 
@@ -35,6 +29,16 @@ def validar_limite_beneficios(
 ):
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
     valor_desconto_voucher = Decimal(valor_desconto_voucher or 0)
+
+    if valor_cashback_usado < Decimal('0.00'):
+        raise ValidationError(
+            'O valor de cashback utilizado não pode ser negativo.'
+        )
+
+    if valor_desconto_voucher < Decimal('0.00'):
+        raise ValidationError(
+            'O desconto do voucher não pode ser negativo.'
+        )
 
     if valor_cashback_usado > 0 and valor_desconto_voucher > 0:
         raise ValidationError(
@@ -67,13 +71,9 @@ def validar_voucher_pre_venda(
     )
 
     if voucher is None:
-        raise ValidationError(
-            'Voucher não encontrado.'
-        )
+        raise ValidationError('Voucher não encontrado.')
 
-    valido, mensagem = validar_voucher(
-        voucher=voucher
-    )
+    valido, mensagem = validar_voucher(voucher=voucher)
 
     if not valido:
         raise ValidationError(mensagem)
@@ -81,9 +81,7 @@ def validar_voucher_pre_venda(
     lojas_permitidas = voucher.lojas_permitidas.all()
 
     if lojas_permitidas.exists():
-        permitido = lojas_permitidas.filter(
-            loja=loja
-        ).exists()
+        permitido = lojas_permitidas.filter(loja=loja).exists()
 
         if not permitido:
             raise ValidationError(

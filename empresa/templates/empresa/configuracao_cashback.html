@@ -30,6 +30,16 @@
                     </div>
 
                     <div class="col-md-3">
+                        {{ form.percentual_maximo_beneficio.label_tag }}
+                        {{ form.percentual_maximo_beneficio }}
+                        {{ form.percentual_maximo_beneficio.errors }}
+
+                        <div class="form-text">
+                            Percentual máximo do valor da compra que pode ser utilizado como benefício.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
                         {{ form.dias_liberacao.label_tag }}
                         {{ form.dias_liberacao }}
                         {{ form.dias_liberacao.errors }}

@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from cashback.models import LancamentoCashback
 from cashback.services.compra import registrar_compra
 from cashback.services.validacoes import (
     validar_limite_beneficios,
@@ -17,6 +18,7 @@ def registrar_venda(
     matriz,
     loja,
     usuario,
+    chave_idempotencia,
     cpf,
     nome,
     valor_compra,
@@ -32,6 +34,32 @@ def registrar_venda(
 ):
     valor_compra = Decimal(valor_compra)
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
+
+    lancamento_existente = (
+        LancamentoCashback.objects
+        .filter(
+            matriz=matriz,
+            chave_idempotencia=chave_idempotencia,
+        )
+        .select_related(
+            'cliente',
+        )
+        .first()
+    )
+
+    if lancamento_existente:
+        return {
+            'compra': lancamento_existente,
+            'cliente': lancamento_existente.cliente,
+            'uso_voucher': None,
+            'beneficios': None,
+            'duplicada': True,
+        }
+
+    if valor_compra <= Decimal('0.00'):
+        raise ValidationError(
+            'O valor da compra precisa ser maior que zero.'
+        )
 
     voucher_validado = None
     desconto_voucher = Decimal('0.00')
@@ -59,14 +87,16 @@ def registrar_venda(
         valor_desconto_voucher=desconto_voucher,
     )
 
-    valor_base_cashback = valor_compra - desconto_voucher
-
-    if valor_base_cashback < Decimal('0.00'):
-        valor_base_cashback = Decimal('0.00')
+    valor_base_cashback = (
+        valor_compra
+        - valor_cashback_usado
+        - desconto_voucher
+    )
 
     lancamento = registrar_compra(
         matriz=matriz,
         loja=loja,
+        chave_idempotencia=chave_idempotencia,
         cpf=cpf,
         nome=nome,
         telefone=telefone,
@@ -104,5 +134,6 @@ def registrar_venda(
             'voucher': voucher_validado,
             'desconto_voucher': desconto_voucher,
             'valor_base_cashback': valor_base_cashback,
-        }
+        },
+        'duplicada': False,
     }

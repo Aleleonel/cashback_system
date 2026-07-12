@@ -27,6 +27,7 @@ def registrar_compra(
     *,
     matriz,
     loja,
+    chave_idempotencia,
     cpf,
     nome,
     valor_compra,
@@ -52,6 +53,16 @@ def registrar_compra(
 
     valor_base_cashback = Decimal(valor_base_cashback)
 
+    if valor_base_cashback < Decimal('0.00'):
+        raise ValidationError(
+            'A base de cálculo do cashback não pode ser negativa.'
+        )
+
+    if valor_base_cashback > valor_compra:
+        raise ValidationError(
+            'A base de cálculo do cashback não pode ser maior que o valor da compra.'
+        )
+
     if valor_compra < configuracao.valor_minimo_compra:
         raise ValidationError(
             'Valor da compra abaixo do mínimo configurado para gerar cashback.'
@@ -70,6 +81,13 @@ def registrar_compra(
             'aceita_sms': aceita_sms,
         }
     )
+
+    if not criado:
+        cliente = (
+            Cliente.objects
+            .select_for_update()
+            .get(pk=cliente.pk)
+        )
 
     if not cliente.ativo:
         raise ValidationError(
@@ -94,6 +112,14 @@ def registrar_compra(
         if data_nascimento and cliente.data_nascimento != data_nascimento:
             cliente.data_nascimento = data_nascimento
             campos_atualizar.append('data_nascimento')
+
+        if cliente.aceita_email != aceita_email:
+            cliente.aceita_email = aceita_email
+            campos_atualizar.append('aceita_email')
+
+        if cliente.aceita_sms != aceita_sms:
+            cliente.aceita_sms = aceita_sms
+            campos_atualizar.append('aceita_sms')
 
         if campos_atualizar:
             cliente.save(update_fields=campos_atualizar)
@@ -133,6 +159,7 @@ def registrar_compra(
     lancamento = LancamentoCashback.objects.create(
         matriz=matriz,
         loja=loja,
+        chave_idempotencia=chave_idempotencia,
         cliente=cliente,
         valor_compra=valor_compra,
         valor_base_cashback=valor_base_cashback,
