@@ -82,3 +82,53 @@ Status:
 - Cashback parcial.
 - Melhorias na experiência do operador do caixa.
 - Nova arquitetura para movimentações financeiras.
+
+Sprint 26
+História: H006
+
+Status:
+✔ Concluída
+
+Entregas
+
+✔ Chave de idempotência
+✔ Constraint UNIQUE
+✔ Migração dos registros antigos
+✔ Service protegida
+✔ View protegida
+✔ Auditoria protegida
+✔ Cashback protegido
+✔ Voucher protegido
+✔ Botão anti duplo clique
+✔ Feedback visual
+✔ Teste automatizado
+✔ 63 testes passando
+
+Resumo da Sprint 26 (até o momento)
+
+Hoje concluímos:
+
+✅ H006 – Idempotência da venda
+Chave UUID por operação
+Proteção contra duplo clique
+Constraint unique
+Migração para dados existentes
+Tratamento de concorrência
+✅ H007 – Regra de benefícios
+Cashback OU Voucher
+Nunca ambos simultaneamente
+Backend, API e Frontend alinhados
+Novos testes automatizados
+✅ H008 – Concorrência do cliente
+select_for_update() para clientes existentes
+Eliminação de condição de corrida na atualização cadastral
+Fluxo transacional fortalecido
+
+E tudo isso mantendo:
+
+✅ git diff --check
+✅ python manage.py check
+✅ 65 testes passando
+✅ homologação manual
+✅ commits organizados
+✅ push realizado

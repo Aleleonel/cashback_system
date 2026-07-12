@@ -93,6 +93,8 @@ def buscar_cliente_cpf(request):
         'nome': cliente.nome,
         'telefone': cliente.telefone or '',
         'email': cliente.email or '',
+        'aceita_email': cliente.aceita_email,
+        'aceita_sms': cliente.aceita_sms,
         'saldo_disponivel': str(saldo_disponivel),
         'data_nascimento': (
             cliente.data_nascimento.strftime('%d/%m/%Y')

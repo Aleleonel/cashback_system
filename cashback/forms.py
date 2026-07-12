@@ -3,6 +3,10 @@ from django import forms
 
 class NovaCompraForm(forms.Form):
 
+    chave_idempotencia = forms.UUIDField(
+        widget=forms.HiddenInput()
+    )
+
     cpf = forms.CharField(
         label='CPF',
         max_length=14,

@@ -16,6 +16,8 @@
     const saldoDisponivel = document.getElementById('saldo-disponivel');
     const usarSaldoTotalBtn = document.getElementById('usar-saldo-total');
     const cancelarCompraBtn = document.getElementById('cancelar-compra');
+    const registrarCompraBtn = document.getElementById('registrar-compra');
+    const novaCompraForm = document.getElementById('nova-compra-form');
 
     const motorCard = document.getElementById('motor-beneficios-card');
     const mbCashback = document.getElementById('mb-cashback');
@@ -197,7 +199,13 @@
             );
         }
 
-        let totalDesconto = descontoVoucherAplicado + cashbackAplicado;
+        let totalDesconto = 0;
+
+        if (aplicarVoucher) {
+            totalDesconto = descontoVoucherAplicado;
+        } else if (aplicarCashback) {
+            totalDesconto = cashbackAplicado;
+        }
 
         if (totalDesconto > valorCompra) {
             totalDesconto = valorCompra;
@@ -643,6 +651,14 @@
                     emailInput.value = data.email || '';
                     nascimentoInput.value = data.data_nascimento || '';
 
+                    if (aceitaEmailInput) {
+                        aceitaEmailInput.checked = Boolean(data.aceita_email);
+                    }
+
+                    if (aceitaSmsInput) {
+                        aceitaSmsInput.checked = Boolean(data.aceita_sms);
+                    }
+
                     mostrarSaldo(data.saldo_disponivel);
 
                     if (valorCompraInput.value) {
@@ -765,6 +781,21 @@
     if (cancelarCompraBtn) {
         cancelarCompraBtn.addEventListener('click', function () {
             cancelarCompra();
+        });
+    }
+
+    if (novaCompraForm && registrarCompraBtn) {
+        let envioEmAndamento = false;
+
+        novaCompraForm.addEventListener('submit', function (event) {
+            if (envioEmAndamento) {
+                event.preventDefault();
+                return;
+            }
+
+            envioEmAndamento = true;
+            registrarCompraBtn.disabled = true;
+            registrarCompraBtn.textContent = 'Registrando...';
         });
     }
 });

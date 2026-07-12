@@ -59,6 +59,7 @@ class ConfiguracaoCashbackEmpresaForm(forms.ModelForm):
 
         fields = [
             'percentual_cashback',
+            'percentual_maximo_beneficio',
             'dias_liberacao',
             'dias_expiracao',
             'valor_minimo_compra',
@@ -69,6 +70,12 @@ class ConfiguracaoCashbackEmpresaForm(forms.ModelForm):
             'percentual_cashback': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
+            }),
+            'percentual_maximo_beneficio': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'max': '100',
             }),
             'dias_liberacao': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -84,6 +91,16 @@ class ConfiguracaoCashbackEmpresaForm(forms.ModelForm):
                 'class': 'form-check-input',
             }),
         }
+
+    def clean_percentual_maximo_beneficio(self):
+        percentual = self.cleaned_data['percentual_maximo_beneficio']
+
+        if percentual < 0 or percentual > 100:
+            raise forms.ValidationError(
+                'O percentual máximo de benefícios deve estar entre 0% e 100%.'
+            )
+
+        return percentual
 
 
 class UsuarioEmpresaForm(forms.Form):

@@ -118,6 +118,9 @@ def atualizar_configuracao_cashback_empresa(
 ):
 
     configuracao.percentual_cashback = dados['percentual_cashback']
+    configuracao.percentual_maximo_beneficio = (
+        dados['percentual_maximo_beneficio']
+    )
     configuracao.dias_liberacao = dados['dias_liberacao']
     configuracao.dias_expiracao = dados['dias_expiracao']
     configuracao.valor_minimo_compra = dados['valor_minimo_compra']
@@ -126,6 +129,7 @@ def atualizar_configuracao_cashback_empresa(
     configuracao.save(
         update_fields=[
             'percentual_cashback',
+            'percentual_maximo_beneficio',
             'dias_liberacao',
             'dias_expiracao',
             'valor_minimo_compra',

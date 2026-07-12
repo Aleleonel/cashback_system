@@ -1,6 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -126,12 +127,13 @@ class MotorBeneficiosTest(TestCase):
             Decimal('20.00')
         )
 
-    def test_simular_compra_com_cashback_e_voucher(self):
+    def test_simular_compra_rejeita_cashback_e_voucher_juntos(self):
         LancamentoCashback.objects.create(
             matriz=self.matriz,
             loja=self.loja,
             cliente=self.cliente,
             valor_compra=Decimal('100.00'),
+            valor_base_cashback=Decimal('100.00'),
             percentual_cashback=Decimal('10.00'),
             valor_cashback=Decimal('10.00'),
             valor_utilizado=Decimal('0.00'),
@@ -150,18 +152,100 @@ class MotorBeneficiosTest(TestCase):
             limite_utilizacao=1
         )
 
+        with self.assertRaisesMessage(
+            ValidationError,
+            'Cashback e voucher não podem ser simulados juntos.',
+        ):
+            simular_compra(
+                matriz=self.matriz,
+                cliente=self.cliente,
+                valor_compra=Decimal('100.00'),
+                voucher=voucher,
+                valor_cashback_usado=Decimal('10.00')
+            )
+
+    def test_simular_compra_apenas_com_cashback(self):
+        LancamentoCashback.objects.create(
+            matriz=self.matriz,
+            loja=self.loja,
+            cliente=self.cliente,
+            valor_compra=Decimal('100.00'),
+            valor_base_cashback=Decimal('100.00'),
+            percentual_cashback=Decimal('10.00'),
+            valor_cashback=Decimal('10.00'),
+            valor_utilizado=Decimal('0.00'),
+            data_liberacao=self.hoje,
+            data_expiracao=self.hoje + timedelta(days=10)
+        )
+
+        simulacao = simular_compra(
+            matriz=self.matriz,
+            cliente=self.cliente,
+            valor_compra=Decimal('100.00'),
+            valor_cashback_usado=Decimal('10.00')
+        )
+
+        self.assertEqual(
+            simulacao['beneficio_aplicado'],
+            'CASHBACK',
+        )
+        self.assertEqual(
+            simulacao['cashback_usado'],
+            Decimal('10.00'),
+        )
+        self.assertEqual(
+            simulacao['desconto_voucher'],
+            Decimal('0.00'),
+        )
+        self.assertEqual(
+            simulacao['total_desconto'],
+            Decimal('10.00'),
+        )
+        self.assertEqual(
+            simulacao['valor_final'],
+            Decimal('90.00'),
+        )
+
+    def test_simular_compra_apenas_com_voucher(self):
+        voucher = Voucher.objects.create(
+            matriz=self.matriz,
+            codigo='VCH-TESTE-04-VOUCHER',
+            nome='Voucher Compra Isolado',
+            tipo=Voucher.Tipo.VALOR_FIXO,
+            valor=Decimal('20.00'),
+            data_inicio=self.hoje,
+            data_fim=self.hoje + timedelta(days=10),
+            limite_utilizacao=1
+        )
+
         simulacao = simular_compra(
             matriz=self.matriz,
             cliente=self.cliente,
             valor_compra=Decimal('100.00'),
             voucher=voucher,
-            valor_cashback_usado=Decimal('10.00')
+            valor_cashback_usado=Decimal('0.00')
         )
 
-        self.assertEqual(simulacao['desconto_voucher'], Decimal('20.00'))
-        self.assertEqual(simulacao['cashback_usado'], Decimal('10.00'))
-        self.assertEqual(simulacao['total_desconto'], Decimal('30.00'))
-        self.assertEqual(simulacao['valor_final'], Decimal('70.00'))
+        self.assertEqual(
+            simulacao['beneficio_aplicado'],
+            'VOUCHER',
+        )
+        self.assertEqual(
+            simulacao['cashback_usado'],
+            Decimal('0.00'),
+        )
+        self.assertEqual(
+            simulacao['desconto_voucher'],
+            Decimal('20.00'),
+        )
+        self.assertEqual(
+            simulacao['total_desconto'],
+            Decimal('20.00'),
+        )
+        self.assertEqual(
+            simulacao['valor_final'],
+            Decimal('80.00'),
+        )
 
     def test_melhor_voucher(self):
         Voucher.objects.create(
@@ -251,6 +335,11 @@ class MotorBeneficiosTest(TestCase):
         )
 
         self.assertEqual(
-            simulacao['valor_final'],
-            Decimal('70.00')
+            simulacao['valor_final_cashback'],
+            Decimal('90.00')
+        )
+
+        self.assertEqual(
+            simulacao['valor_final_voucher'],
+            Decimal('80.00')
         )
