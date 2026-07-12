@@ -55,15 +55,31 @@ def simular_beneficios_view(request):
 
         return JsonResponse({
             'ok': True,
-            'cashback_disponivel': float(simulacao['cashback_disponivel']),
+
+            'cashback_disponivel': float(
+                simulacao['cashback_disponivel']
+            ),
+
             'voucher': {
                 'id': voucher.id,
                 'nome': voucher.nome,
             } if voucher else None,
-            'desconto_voucher': float(simulacao['desconto_voucher']),
-            'cashback_sugerido': float(simulacao['cashback_sugerido']),
-            'total_desconto': float(simulacao['total_desconto']),
-            'valor_final': float(simulacao['valor_final']),
+
+            'desconto_voucher': float(
+                simulacao['desconto_voucher']
+            ),
+
+            'cashback_sugerido': float(
+                simulacao['cashback_sugerido']
+            ),
+
+            'valor_final_cashback': float(
+                simulacao['valor_final_cashback']
+            ),
+
+            'valor_final_voucher': float(
+                simulacao['valor_final_voucher']
+            ),
         })
 
     except ValidationError as erro:

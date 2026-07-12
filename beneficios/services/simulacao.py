@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
+
 from beneficios.selectors import get_cashback_disponivel
 
 from .estrategia import (
@@ -54,10 +56,27 @@ def simular_compra(
             valor_compra=valor_compra
         )
 
-    total_desconto = desconto_voucher + valor_cashback_usado
+    if voucher and valor_cashback_usado > Decimal('0.00'):
+        raise ValidationError(
+            'Cashback e voucher não podem ser simulados juntos.'
+        )
 
-    if total_desconto > valor_compra:
-        total_desconto = valor_compra
+    if voucher:
+        total_desconto = min(
+            desconto_voucher,
+            valor_compra
+        )
+        beneficio_aplicado = 'VOUCHER'
+    else:
+        total_desconto = min(
+            valor_cashback_usado,
+            valor_compra
+        )
+        beneficio_aplicado = (
+            'CASHBACK'
+            if valor_cashback_usado > Decimal('0.00')
+            else 'NENHUM'
+        )
 
     valor_final = valor_compra - total_desconto
 
@@ -67,6 +86,7 @@ def simular_compra(
         'cashback_usado': valor_cashback_usado,
         'total_desconto': total_desconto,
         'valor_final': valor_final,
+        'beneficio_aplicado': beneficio_aplicado,
     }
 
 
@@ -98,12 +118,15 @@ def simular_beneficios(*, matriz, cliente, valor_compra):
         valor_compra=valor_compra
     )
 
-    total_desconto = desconto_voucher + cashback_sugerido
+    valor_final_cashback = (
+        valor_compra
+        - min(cashback_sugerido, valor_compra)
+    )
 
-    if total_desconto > valor_compra:
-        total_desconto = valor_compra
-
-    valor_final = valor_compra - total_desconto
+    valor_final_voucher = (
+        valor_compra
+        - min(desconto_voucher, valor_compra)
+    )
 
     return {
         'valor_compra': valor_compra,
@@ -111,6 +134,6 @@ def simular_beneficios(*, matriz, cliente, valor_compra):
         'voucher_sugerido': voucher_sugerido,
         'desconto_voucher': desconto_voucher,
         'cashback_sugerido': cashback_sugerido,
-        'total_desconto': total_desconto,
-        'valor_final': valor_final,
+        'valor_final_cashback': valor_final_cashback,
+        'valor_final_voucher': valor_final_voucher,
     }

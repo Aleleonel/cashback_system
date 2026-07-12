@@ -199,7 +199,13 @@
             );
         }
 
-        let totalDesconto = descontoVoucherAplicado + cashbackAplicado;
+        let totalDesconto = 0;
+
+        if (aplicarVoucher) {
+            totalDesconto = descontoVoucherAplicado;
+        } else if (aplicarCashback) {
+            totalDesconto = cashbackAplicado;
+        }
 
         if (totalDesconto > valorCompra) {
             totalDesconto = valorCompra;
