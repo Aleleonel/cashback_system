@@ -1,8 +1,8 @@
 import uuid
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.shortcuts import redirect, render
 
 from accounts.decorators import require_permission
@@ -12,8 +12,7 @@ from auditoria.services import registrar_auditoria
 from core.services import get_contexto_operacional_usuario
 
 from .forms import NovaCompraForm
-from .models import LancamentoCashback
-from .services import registrar_venda
+from .services import executar_venda_idempotente
 
 
 @login_required
@@ -43,7 +42,7 @@ def nova_compra(request):
         if form.is_valid():
 
             try:
-                resultado = registrar_venda(
+                resultado = executar_venda_idempotente(
                     matriz=contexto_operacional['matriz'],
                     loja=contexto_operacional['loja'],
                     usuario=request.user,
@@ -65,38 +64,13 @@ def nova_compra(request):
             except ValidationError as erro:
                 messages.error(request, erro.message)
 
-            except IntegrityError:
-                lancamento_existente = (
-                    LancamentoCashback.objects
-                    .filter(
-                        matriz=contexto_operacional['matriz'],
-                        chave_idempotencia=(
-                            form.cleaned_data['chave_idempotencia']
-                        ),
-                    )
-                    .select_related(
-                        'cliente',
-                    )
-                    .first()
-                )
-
-                if not lancamento_existente:
-                    raise
-
-                messages.warning(
-                    request,
-                    'Esta compra já foi registrada anteriormente.'
-                )
-
-                return redirect('cashback:nova_compra')
-
             else:
                 lancamento = resultado['compra']
 
                 if resultado['duplicada']:
                     messages.warning(
                         request,
-                        'Esta compra já foi registrada anteriormente.'
+                        'Esta compra jÃ¡ foi registrada anteriormente.'
                     )
 
                     return redirect('cashback:nova_compra')
