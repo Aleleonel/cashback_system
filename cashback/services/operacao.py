@@ -2,6 +2,7 @@ from django.db import IntegrityError
 
 from cashback.models import LancamentoCashback
 
+from .resultados import ResultadoOperacaoVenda
 from .venda import registrar_venda
 
 
@@ -25,7 +26,7 @@ def executar_venda_idempotente(
     observacao='',
 ):
     try:
-        return registrar_venda(
+        resultado = registrar_venda(
             matriz=matriz,
             loja=loja,
             usuario=usuario,
@@ -44,6 +45,14 @@ def executar_venda_idempotente(
             codigo_voucher=codigo_voucher,
         )
 
+        return ResultadoOperacaoVenda(
+            compra=resultado['compra'],
+            cliente=resultado['cliente'],
+            uso_voucher=resultado['uso_voucher'],
+            beneficios=resultado['beneficios'],
+            duplicada=resultado['duplicada'],
+        )
+
     except IntegrityError:
         lancamento_existente = (
             LancamentoCashback.objects
@@ -60,10 +69,10 @@ def executar_venda_idempotente(
         if lancamento_existente is None:
             raise
 
-        return {
-            'compra': lancamento_existente,
-            'cliente': lancamento_existente.cliente,
-            'uso_voucher': None,
-            'beneficios': None,
-            'duplicada': True,
-        }
+        return ResultadoOperacaoVenda(
+            compra=lancamento_existente,
+            cliente=lancamento_existente.cliente,
+            uso_voucher=None,
+            beneficios=None,
+            duplicada=True,
+        )

@@ -65,12 +65,12 @@ def nova_compra(request):
                 messages.error(request, erro.message)
 
             else:
-                lancamento = resultado['compra']
+                lancamento = resultado.compra
 
-                if resultado['duplicada']:
+                if resultado.duplicada:
                     messages.warning(
                         request,
-                        'Esta compra jÃ¡ foi registrada anteriormente.'
+                        'Esta compra já foi registrada anteriormente.'
                     )
 
                     return redirect('cashback:nova_compra')

@@ -148,13 +148,13 @@ class RegistrarVendaIdempotenciaTest(TestCase):
                 valor_compra=Decimal('100.00'),
             )
 
-        self.assertTrue(resultado['duplicada'])
+        self.assertTrue(resultado.duplicada)
         self.assertEqual(
-            resultado['compra'].id,
+            resultado.compra.id,
             compra_existente.id,
         )
         self.assertEqual(
-            resultado['cliente'].id,
+            resultado.cliente.id,
             self.cliente.id,
         )
 
