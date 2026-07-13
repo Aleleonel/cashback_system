@@ -6,13 +6,13 @@
 
 <div class="card shadow-sm border-0">
 
-    {% include 'partials/cabecalho_pagina.html' with titulo='Importar produtos' subtitulo='Envie uma planilha para validar e cadastrar produtos em massa.' icone='bi-file-earmark-spreadsheet' %}
+    {% include 'partials/cabecalho_pagina.html' with titulo='Importar produtos' subtitulo='Envie uma planilha para validar produtos novos e atualizações.' icone='bi-file-earmark-spreadsheet' %}
 
     <div class="card-body">
 
         <div class="alert alert-info">
             <strong>Fluxo seguro:</strong>
-            a planilha será validada antes de qualquer produto ser gravado.
+            nenhum produto será gravado durante esta validação.
         </div>
 
         <p class="text-muted">
@@ -20,11 +20,13 @@
             <strong>{{ matriz.nome }}</strong>.
         </p>
 
-        <p class="text-muted">
-            Formatos aceitos:
-            <strong>.xlsx e .xls</strong>.
-            Tamanho máximo: <strong>10 MB</strong>.
-        </p>
+        <a
+            href="{% url 'produtos:baixar_modelo_importacao' %}"
+            class="btn btn-outline-secondary btn-sm mb-4"
+        >
+            <i class="bi bi-download me-1"></i>
+            Baixar modelo da planilha
+        </a>
 
         <form
             method="post"
@@ -52,7 +54,10 @@
                     Voltar
                 </a>
 
-                <button type="submit" class="btn btn-dark">
+                <button
+                    type="submit"
+                    class="btn btn-dark"
+                >
                     <i class="bi bi-search me-1"></i>
                     Validar planilha
                 </button>

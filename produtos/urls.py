@@ -1,6 +1,7 @@
 ﻿from django.urls import path
 
 from .views import (
+    baixar_modelo_importacao_produtos,
     criar_categoria_view,
     criar_marca_view,
     criar_produto_view,
@@ -36,6 +37,11 @@ urlpatterns = [
         'importar/',
         importar_produtos_view,
         name='importar_produtos'
+    ),
+    path(
+        'importar/modelo/',
+        baixar_modelo_importacao_produtos,
+        name='baixar_modelo_importacao'
     ),
     path(
         '<int:produto_id>/',
@@ -96,4 +102,3 @@ urlpatterns = [
         name='editar_unidade_medida'
     ),
 ]
-
