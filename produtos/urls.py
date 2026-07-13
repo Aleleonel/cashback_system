@@ -10,6 +10,7 @@ from .views import (
     editar_marca_view,
     editar_produto_view,
     editar_unidade_medida_view,
+    importar_produtos_view,
     lista_categorias,
     lista_marcas,
     lista_produtos,
@@ -30,6 +31,11 @@ urlpatterns = [
         'novo/',
         criar_produto_view,
         name='criar_produto'
+    ),
+    path(
+        'importar/',
+        importar_produtos_view,
+        name='importar_produtos'
     ),
     path(
         '<int:produto_id>/',
@@ -90,3 +96,4 @@ urlpatterns = [
         name='editar_unidade_medida'
     ),
 ]
+

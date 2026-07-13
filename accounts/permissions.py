@@ -39,6 +39,7 @@ PERMISSAO_CLIENTES_IMPORTAR = 'clientes.importar'
 PERMISSAO_PRODUTOS_VISUALIZAR = 'produtos.visualizar'
 PERMISSAO_PRODUTOS_CRIAR = 'produtos.criar'
 PERMISSAO_PRODUTOS_EDITAR = 'produtos.editar'
+PERMISSAO_PRODUTOS_IMPORTAR = 'produtos.importar'
 PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES = (
     'produtos.gerenciar_auxiliares'
 )
@@ -86,6 +87,7 @@ PERMISSOES_PRODUTOS = {
     PERMISSAO_PRODUTOS_VISUALIZAR,
     PERMISSAO_PRODUTOS_CRIAR,
     PERMISSAO_PRODUTOS_EDITAR,
+    PERMISSAO_PRODUTOS_IMPORTAR,
     PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES,
 }
 
@@ -162,6 +164,11 @@ def get_permissoes_extras_disponiveis():
             'grupo': 'Produtos',
         },
         {
+            'codigo': PERMISSAO_PRODUTOS_IMPORTAR,
+            'nome': 'Produtos: importar planilhas',
+            'grupo': 'Produtos',
+        },
+        {
             'codigo': PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES,
             'nome': (
                 'Produtos: gerenciar categorias, marcas e unidades'
@@ -194,3 +201,4 @@ def get_permissoes_extras_disponiveis():
             'grupo': 'Clientes',
         },
     ]
+

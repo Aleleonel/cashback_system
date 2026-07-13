@@ -3,6 +3,7 @@
     editar_categoria_view,
     lista_categorias,
 )
+from .importacao import importar_produtos_view
 from .marcas import (
     criar_marca_view,
     editar_marca_view,
@@ -24,6 +25,7 @@ __all__ = [
     'criar_categoria_view',
     'editar_categoria_view',
     'lista_categorias',
+    'importar_produtos_view',
     'criar_marca_view',
     'editar_marca_view',
     'lista_marcas',
