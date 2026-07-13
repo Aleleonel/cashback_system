@@ -1,4 +1,4 @@
-from functools import wraps
+﻿from functools import wraps
 
 from django.core.exceptions import PermissionDenied
 
@@ -21,11 +21,19 @@ def require_permission(permissao):
             ):
                 usuario = (
                     request.user
-                    if getattr(request.user, 'is_authenticated', False)
+                    if getattr(
+                        request.user,
+                        'is_authenticated',
+                        False
+                    )
                     else None
                 )
 
-                matriz = getattr(request.user, 'matriz', None) if usuario else None
+                matriz = (
+                    getattr(request.user, 'matriz', None)
+                    if usuario
+                    else None
+                )
 
                 registrar_auditoria(
                     usuario=usuario,
