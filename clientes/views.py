@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -36,6 +36,10 @@ from .forms import (
 from .services import (
     importar_clientes_validados,
     validar_planilha_clientes,
+)
+
+from .importacao import (
+    criar_download_modelo_clientes,
 )
 
 from .selectors import (
@@ -338,7 +342,7 @@ def confirmar_importacao_clientes(request):
     linhas = request.session.get('importacao_clientes_linhas')
 
     if not linhas:
-        messages.error(request, 'Nenhuma importação pendente encontrada.')
+        messages.error(request, 'Nenhuma importaÃ§Ã£o pendente encontrada.')
 
         return redirect('clientes:importar_clientes')
 
@@ -355,7 +359,7 @@ def confirmar_importacao_clientes(request):
         acao=RegistroAuditoria.ACAO_IMPORTAR,
         recurso='clientes.importacao',
         descricao=(
-            f"Importação de clientes concluída. "
+            f"ImportaÃ§Ã£o de clientes concluÃ­da. "
             f"Criados: {resultado['criados']}. "
             f"Atualizados: {resultado['atualizados']}."
         ),
@@ -366,7 +370,7 @@ def confirmar_importacao_clientes(request):
 
     messages.success(
         request,
-        f"Importação concluída. Criados: {resultado['criados']}. Atualizados: {resultado['atualizados']}."
+        f"ImportaÃ§Ã£o concluÃ­da. Criados: {resultado['criados']}. Atualizados: {resultado['atualizados']}."
     )
 
     return redirect('clientes:lista_clientes')
@@ -375,53 +379,4 @@ def confirmar_importacao_clientes(request):
 @login_required
 @require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def baixar_modelo_importacao_clientes(request):
-
-    workbook = Workbook()
-    worksheet = workbook.active
-    worksheet.title = 'Clientes'
-
-    colunas = [
-        'Nome',
-        'CPF',
-        'Nascimento',
-        'Celular',
-        'E-mail',
-    ]
-
-    worksheet.append(colunas)
-
-    worksheet.append([
-        'João Silva',
-        '12345678900',
-        '01/01/1990',
-        '11999999999',
-        'joao@email.com',
-    ])
-
-    for column in worksheet.columns:
-        max_length = 0
-        column_letter = column[0].column_letter
-
-        for cell in column:
-            if cell.value:
-                max_length = max(
-                    max_length,
-                    len(str(cell.value))
-                )
-
-        worksheet.column_dimensions[column_letter].width = max_length + 4
-
-    arquivo = BytesIO()
-    workbook.save(arquivo)
-    arquivo.seek(0)
-
-    response = HttpResponse(
-        arquivo,
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-
-    response['Content-Disposition'] = (
-        'attachment; filename="modelo_importacao_clientes.xlsx"'
-    )
-
-    return response
+    return criar_download_modelo_clientes()
