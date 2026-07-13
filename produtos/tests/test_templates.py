@@ -15,6 +15,9 @@ class ProdutosTemplatesTestCase(SimpleTestCase):
         'produtos/marcas/form.html',
         'produtos/unidades_medida/lista.html',
         'produtos/unidades_medida/form.html',
+        'produtos/produtos/lista.html',
+        'produtos/produtos/form.html',
+        'produtos/produtos/detalhe.html',
     ]
 
     def test_templates_carregam_sem_erros(self):

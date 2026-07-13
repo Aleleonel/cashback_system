@@ -4,17 +4,63 @@ from django.urls import resolve, reverse
 from produtos.views import (
     criar_categoria_view,
     criar_marca_view,
+    criar_produto_view,
     criar_unidade_medida_view,
+    detalhe_produto,
     editar_categoria_view,
     editar_marca_view,
+    editar_produto_view,
     editar_unidade_medida_view,
     lista_categorias,
     lista_marcas,
+    lista_produtos,
     lista_unidades_medida,
 )
 
 
 class ProdutosUrlsTestCase(SimpleTestCase):
+    def test_url_lista_produtos(self):
+        url = reverse(
+            'produtos:lista_produtos'
+        )
+
+        self.assertEqual(
+            resolve(url).func,
+            lista_produtos
+        )
+
+    def test_url_criar_produto(self):
+        url = reverse(
+            'produtos:criar_produto'
+        )
+
+        self.assertEqual(
+            resolve(url).func,
+            criar_produto_view
+        )
+
+    def test_url_detalhe_produto(self):
+        url = reverse(
+            'produtos:detalhe_produto',
+            args=[1]
+        )
+
+        self.assertEqual(
+            resolve(url).func,
+            detalhe_produto
+        )
+
+    def test_url_editar_produto(self):
+        url = reverse(
+            'produtos:editar_produto',
+            args=[1]
+        )
+
+        self.assertEqual(
+            resolve(url).func,
+            editar_produto_view
+        )
+
     def test_url_lista_categorias(self):
         url = reverse(
             'produtos:lista_categorias'

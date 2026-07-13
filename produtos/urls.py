@@ -3,12 +3,16 @@
 from .views import (
     criar_categoria_view,
     criar_marca_view,
+    criar_produto_view,
     criar_unidade_medida_view,
+    detalhe_produto,
     editar_categoria_view,
     editar_marca_view,
+    editar_produto_view,
     editar_unidade_medida_view,
     lista_categorias,
     lista_marcas,
+    lista_produtos,
     lista_unidades_medida,
 )
 
@@ -17,6 +21,27 @@ app_name = 'produtos'
 
 
 urlpatterns = [
+    path(
+        '',
+        lista_produtos,
+        name='lista_produtos'
+    ),
+    path(
+        'novo/',
+        criar_produto_view,
+        name='criar_produto'
+    ),
+    path(
+        '<int:produto_id>/',
+        detalhe_produto,
+        name='detalhe_produto'
+    ),
+    path(
+        '<int:produto_id>/editar/',
+        editar_produto_view,
+        name='editar_produto'
+    ),
+
     path(
         'categorias/',
         lista_categorias,

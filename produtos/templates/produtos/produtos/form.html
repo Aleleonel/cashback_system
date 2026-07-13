@@ -1,0 +1,155 @@
+﻿{% extends 'produtos/base_catalogo.html' %}
+
+{% block nav_produtos %}active{% endblock %}
+
+{% block catalogo_content %}
+
+<div class="card shadow-sm border-0">
+
+    {% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo='Cadastro comercial, fiscal e logístico do produto.' icone='bi-box-seam' %}
+
+    <div class="card-body">
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <h2 class="h6 mb-3">Identificação</h2>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.codigo_interno %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.sku %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.status %}
+                </div>
+
+                <div class="col-md-8">
+                    {% include 'partials/campo_formulario.html' with campo=form.nome %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.unidade_medida %}
+                </div>
+
+                <div class="col-12">
+                    {% include 'partials/campo_formulario.html' with campo=form.descricao %}
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h2 class="h6 mb-3">Classificação</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {% include 'partials/campo_formulario.html' with campo=form.categoria %}
+                </div>
+
+                <div class="col-md-6">
+                    {% include 'partials/campo_formulario.html' with campo=form.marca %}
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h2 class="h6 mb-3">Preço e custo</h2>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.custo_base %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.preco_venda %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.estoque_minimo %}
+                </div>
+
+                <div class="col-12">
+                    {% include 'partials/campo_formulario.html' with campo=form.controla_estoque %}
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h2 class="h6 mb-3">Fiscal</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {% include 'partials/campo_formulario.html' with campo=form.gtin %}
+                </div>
+
+                <div class="col-md-6">
+                    {% include 'partials/campo_formulario.html' with campo=form.ncm %}
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h2 class="h6 mb-3">Logística e frete</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {% include 'partials/campo_formulario.html' with campo=form.peso_liquido_gramas %}
+                </div>
+
+                <div class="col-md-6">
+                    {% include 'partials/campo_formulario.html' with campo=form.peso_bruto_gramas %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.altura_cm %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.largura_cm %}
+                </div>
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.comprimento_cm %}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                {% if modo_edicao and produto %}
+                <a
+                    href="{% url 'produtos:detalhe_produto' produto.id %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Voltar
+                </a>
+                {% else %}
+                <a
+                    href="{% url 'produtos:lista_produtos' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Voltar
+                </a>
+                {% endif %}
+
+                <button type="submit" class="btn btn-dark">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Salvar produto
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

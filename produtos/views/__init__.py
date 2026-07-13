@@ -8,6 +8,12 @@ from .marcas import (
     editar_marca_view,
     lista_marcas,
 )
+from .produtos import (
+    criar_produto_view,
+    detalhe_produto,
+    editar_produto_view,
+    lista_produtos,
+)
 from .unidades_medida import (
     criar_unidade_medida_view,
     editar_unidade_medida_view,
@@ -21,6 +27,10 @@ __all__ = [
     'criar_marca_view',
     'editar_marca_view',
     'lista_marcas',
+    'criar_produto_view',
+    'detalhe_produto',
+    'editar_produto_view',
+    'lista_produtos',
     'criar_unidade_medida_view',
     'editar_unidade_medida_view',
     'lista_unidades_medida',
