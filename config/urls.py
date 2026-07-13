@@ -1,7 +1,8 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
 from django.contrib.auth.views import LogoutView
+
 from accounts.views import CashbackLoginView
 
 
@@ -12,7 +13,8 @@ urlpatterns = [
     path('clientes/', include('clientes.urls')),
     path('dashboard/', include('relatorios.urls')),
     path('campanhas/', include('campanhas.urls')),
-    
+    path('produtos/', include('produtos.urls')),
+
     path(
         'login/',
         CashbackLoginView.as_view(),
@@ -21,24 +23,18 @@ urlpatterns = [
 
     path(
         'logout/',
-        LogoutView.as_view(
-
-        ),
+        LogoutView.as_view(),
         name='logout'
     ),
 
     path(
         '',
-        include(
-        'plataforma.urls'
-        )
+        include('plataforma.urls')
     ),
 
     path(
         '',
-        include(
-        'auditoria.urls'
-        )
+        include('auditoria.urls')
     ),
 
     path('', include('accounts.urls')),
@@ -48,7 +44,7 @@ urlpatterns = [
     path('vouchers/', include('vouchers.urls')),
 
     path(
-        "beneficios/",
-        include("beneficios.urls")
+        'beneficios/',
+        include('beneficios.urls')
     ),
 ]

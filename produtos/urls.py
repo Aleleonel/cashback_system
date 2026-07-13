@@ -1,0 +1,67 @@
+﻿from django.urls import path
+
+from .views import (
+    criar_categoria_view,
+    criar_marca_view,
+    criar_unidade_medida_view,
+    editar_categoria_view,
+    editar_marca_view,
+    editar_unidade_medida_view,
+    lista_categorias,
+    lista_marcas,
+    lista_unidades_medida,
+)
+
+
+app_name = 'produtos'
+
+
+urlpatterns = [
+    path(
+        'categorias/',
+        lista_categorias,
+        name='lista_categorias'
+    ),
+    path(
+        'categorias/nova/',
+        criar_categoria_view,
+        name='criar_categoria'
+    ),
+    path(
+        'categorias/<int:categoria_id>/editar/',
+        editar_categoria_view,
+        name='editar_categoria'
+    ),
+
+    path(
+        'marcas/',
+        lista_marcas,
+        name='lista_marcas'
+    ),
+    path(
+        'marcas/nova/',
+        criar_marca_view,
+        name='criar_marca'
+    ),
+    path(
+        'marcas/<int:marca_id>/editar/',
+        editar_marca_view,
+        name='editar_marca'
+    ),
+
+    path(
+        'unidades/',
+        lista_unidades_medida,
+        name='lista_unidades_medida'
+    ),
+    path(
+        'unidades/nova/',
+        criar_unidade_medida_view,
+        name='criar_unidade_medida'
+    ),
+    path(
+        'unidades/<int:unidade_id>/editar/',
+        editar_unidade_medida_view,
+        name='editar_unidade_medida'
+    ),
+]
