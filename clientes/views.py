@@ -4,10 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
-from io import BytesIO
-
-from django.http import HttpResponse
-from openpyxl import Workbook
 
 from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
@@ -21,7 +17,6 @@ from cashback.selectors import (
 from core.services import get_contexto_operacional_usuario
 
 from .models import Cliente
-
 
 from django.db import models
 
@@ -57,7 +52,6 @@ from accounts.permissions import (
 )
 
 from django.core.paginator import Paginator
-
 
 @login_required
 @require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
@@ -106,7 +100,6 @@ def buscar_cliente_cpf(request):
             else ''
         )
     })
-
 
 @login_required
 @require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
@@ -241,7 +234,6 @@ def criar_cliente(request):
         }
     )
 
-
 @login_required
 @require_permission(PERMISSAO_CLIENTES_EDITAR)
 def editar_cliente(request, cliente_id):
@@ -332,7 +324,6 @@ def importar_clientes(request):
         }
     )
 
-
 @login_required
 @require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def confirmar_importacao_clientes(request):
@@ -375,8 +366,8 @@ def confirmar_importacao_clientes(request):
 
     return redirect('clientes:lista_clientes')
 
-
 @login_required
 @require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def baixar_modelo_importacao_clientes(request):
     return criar_download_modelo_clientes()
+

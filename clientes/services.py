@@ -1,8 +1,4 @@
-﻿from datetime import datetime
-
-import pandas as pd
-
-from django.db import transaction
+﻿from django.db import transaction
 
 from .models import Cliente
 from .utils import limpar_numero, normalizar_texto
@@ -10,56 +6,6 @@ from .utils import limpar_numero, normalizar_texto
 from .importacao import (
     validar_planilha_clientes_compartilhada,
 )
-
-
-COLUNAS_OBRIGATORIAS = [
-    'Nome',
-    'CPF',
-    'Nascimento',
-    'Celular',
-    'E-mail',
-]
-
-
-def normalizar_coluna(coluna):
-    return (
-        str(coluna)
-        .strip()
-        .lower()
-        .replace(' ', '')
-        .replace('-', '')
-        .replace('_', '')
-    )
-
-
-def limpar_texto(valor):
-    if pd.isna(valor):
-        return ''
-
-    return str(valor).strip()
-
-
-def converter_data(valor):
-    if pd.isna(valor) or valor == '':
-        return None
-
-    if isinstance(valor, datetime):
-        return valor.date()
-
-    valor = str(valor).strip()
-
-    formatos = [
-        '%d/%m/%Y',
-        '%Y-%m-%d',
-    ]
-
-    for formato in formatos:
-        try:
-            return datetime.strptime(valor, formato).date()
-        except ValueError:
-            continue
-
-    return None
 
 
 def converter_data_sessao(valor):
@@ -187,3 +133,4 @@ def importar_clientes_validados(*, matriz, loja, linhas):
         'atualizados': len(atualizar),
         'ignorados': 0,
     }
+
