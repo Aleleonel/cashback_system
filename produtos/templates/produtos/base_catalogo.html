@@ -1,0 +1,64 @@
+﻿{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div>
+            <h1 class="h4 mb-1">
+                <i class="bi bi-box-seam me-2"></i>
+                Catálogo de Produtos
+            </h1>
+
+            <div class="text-muted small">
+                Cadastros e configurações utilizadas pelo PDV.
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a
+                class="nav-link {% block nav_produtos %}{% endblock %}"
+                href="#"
+                aria-disabled="true"
+            >
+                Produtos
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a
+                class="nav-link {% block nav_categorias %}{% endblock %}"
+                href="{% url 'produtos:lista_categorias' %}"
+            >
+                Categorias
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a
+                class="nav-link {% block nav_marcas %}{% endblock %}"
+                href="{% url 'produtos:lista_marcas' %}"
+            >
+                Marcas
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a
+                class="nav-link {% block nav_unidades %}{% endblock %}"
+                href="{% url 'produtos:lista_unidades_medida' %}"
+            >
+                Unidades de medida
+            </a>
+        </li>
+    </ul>
+
+    {% block catalogo_content %}
+    {% endblock %}
+
+</div>
+
+{% endblock %}
