@@ -2,6 +2,7 @@
 
 from .views import (
     baixar_modelo_importacao_produtos,
+    confirmar_importacao_produtos,
     criar_categoria_view,
     criar_marca_view,
     criar_produto_view,
@@ -42,6 +43,11 @@ urlpatterns = [
         'importar/modelo/',
         baixar_modelo_importacao_produtos,
         name='baixar_modelo_importacao'
+    ),
+    path(
+        'importar/confirmar/',
+        confirmar_importacao_produtos,
+        name='confirmar_importacao'
     ),
     path(
         '<int:produto_id>/',

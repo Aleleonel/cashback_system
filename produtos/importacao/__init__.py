@@ -1,4 +1,8 @@
-﻿from .importador import (
+﻿from .executor import (
+    executar_importacao_produtos,
+    validar_linhas_para_confirmacao,
+)
+from .importador import (
     ImportadorProdutos,
     validar_planilha_produtos,
 )
@@ -12,6 +16,8 @@ from .modelo_excel import (
 __all__ = [
     'ImportadorProdutos',
     'validar_planilha_produtos',
+    'executar_importacao_produtos',
+    'validar_linhas_para_confirmacao',
     'COLUNAS_MODELO_PRODUTOS',
     'LINHAS_EXEMPLO_PRODUTOS',
     'criar_download_modelo_produtos',

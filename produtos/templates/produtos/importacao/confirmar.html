@@ -60,13 +60,17 @@
 
         {% if resultado.resumo.invalidos %}
         <div class="alert alert-warning mt-4 mb-0">
-            Corrija as linhas inválidas antes da confirmação.
-            Nesta etapa nenhum produto foi gravado.
+            A importação não pode ser confirmada enquanto existirem
+            linhas inválidas. Corrija a planilha e valide novamente.
+        </div>
+        {% elif not resultado.possui_validos %}
+        <div class="alert alert-warning mt-4 mb-0">
+            A planilha não possui produtos válidos para importação.
         </div>
         {% else %}
         <div class="alert alert-success mt-4 mb-0">
-            Todas as linhas foram validadas com sucesso.
-            A confirmação da importação será habilitada na próxima etapa.
+            Todas as linhas foram validadas.
+            Confira os dados abaixo antes de confirmar.
         </div>
         {% endif %}
 
@@ -95,26 +99,31 @@
                 {% for linha in resultado.linhas %}
                 <tr>
                     <td>{{ linha.linha }}</td>
+
                     <td>
                         <strong>
                             {{ linha.codigo_interno|default:'—' }}
                         </strong>
                     </td>
-                    <td>
-                        {{ linha.nome|default:'—' }}
-                    </td>
+
+                    <td>{{ linha.nome|default:'—' }}</td>
+
                     <td>
                         {{ linha.categoria_nome|default:'—' }}
                     </td>
+
                     <td>
                         {{ linha.marca_nome|default:'—' }}
                     </td>
+
                     <td>
                         {{ linha.unidade_medida_nome|default:'—' }}
                     </td>
+
                     <td>
                         R$ {{ linha.preco_venda|default:'0.00' }}
                     </td>
+
                     <td>
                         {% if linha.valido and linha.acao_prevista == 'novo' %}
                         <span class="badge text-bg-success">
@@ -130,6 +139,7 @@
                         </span>
                         {% endif %}
                     </td>
+
                     <td>
                         {% if linha.erros %}
                         <ul class="mb-0 ps-3 text-danger small">
@@ -138,12 +148,11 @@
                             {% endfor %}
                         </ul>
                         {% else %}
-                        <span class="text-muted">
-                            —
-                        </span>
+                        <span class="text-muted">—</span>
                         {% endif %}
                     </td>
                 </tr>
+
                 {% empty %}
                 <tr>
                     <td
@@ -170,14 +179,30 @@
             Enviar outra planilha
         </a>
 
+        {% if resultado.possui_validos and not resultado.resumo.invalidos %}
+        <form
+            method="post"
+            action="{% url 'produtos:confirmar_importacao' %}"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="btn btn-dark"
+            >
+                <i class="bi bi-check-lg me-1"></i>
+                Confirmar importação
+            </button>
+        </form>
+        {% else %}
         <button
             type="button"
             class="btn btn-dark"
             disabled
-            title="A confirmação será implementada na próxima etapa."
         >
             Confirmar importação
         </button>
+        {% endif %}
 
     </div>
 
