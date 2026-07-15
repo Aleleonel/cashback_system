@@ -744,3 +744,24 @@ O Model `SaldoEstoque` somente poderá ser implementado depois que:
 - a precisão da quantidade for aprovada;
 - a política de exclusão for confirmada;
 - o plano de testes for aprovado.
+
+---
+
+## 31. Estratégia de migrations
+
+A implementação do núcleo será incremental.
+
+A migration inicial do app conterá:
+
+- `SaldoEstoque`.
+
+A migration seguinte conterá:
+
+- `MovimentacaoEstoque`.
+
+Essa decisão permite revisar e testar cada entidade isoladamente, sem alterar
+o relacionamento transacional definido no domínio.
+
+A atomicidade entre saldo e movimentação continuará sendo responsabilidade
+dos Services, independentemente de os Models terem sido criados em migrations
+separadas.

@@ -1,1 +1,6 @@
-﻿"""Modelos do modulo de estoque."""
+﻿from .saldo import SaldoEstoque
+
+
+__all__ = [
+    'SaldoEstoque',
+]

@@ -933,12 +933,13 @@ A implementação seguirá esta ordem:
 3. implementar `MovimentacaoEstoque`;
 4. exportar os Models;
 5. registrar o app no Django;
-6. gerar a migration inicial;
-7. criar testes dos dois Models;
-8. aplicar a migration;
-9. executar toda a suíte.
+6. manter `SaldoEstoque` na migration inicial;
+7. gerar uma migration própria para `MovimentacaoEstoque`;
+8. criar testes do novo Model;
+9. aplicar a migration;
+10. executar toda a suíte.
 
-Os dois Models poderão entrar na mesma migration inicial.
+Os Models serão criados em migrations incrementais e revisáveis.
 
 Não haverá Foreign Key direta de `MovimentacaoEstoque` para `SaldoEstoque`.
 
@@ -966,4 +967,5 @@ O Model somente poderá ser implementado depois da aprovação de:
 - constraints;
 - índices;
 - testes.
+
 
