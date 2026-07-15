@@ -1,6 +1,8 @@
-﻿from .saldo import SaldoEstoque
+﻿from .movimentacao import MovimentacaoEstoque
+from .saldo import SaldoEstoque
 
 
 __all__ = [
+    'MovimentacaoEstoque',
     'SaldoEstoque',
 ]
