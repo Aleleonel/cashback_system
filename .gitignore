@@ -14,3 +14,6 @@ staticfiles/
 .vscode/
 .idea/
 temp_chatgpt/
+
+__pycache__/
+*.py[cod]
