@@ -1,0 +1,183 @@
+﻿{% extends 'produtos/base_catalogo.html' %}
+
+{% block nav_produtos %}active{% endblock %}
+
+{% block catalogo_content %}
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <strong>
+                <i class="bi bi-box-seam me-2"></i>
+                {{ produto.nome }}
+            </strong>
+
+            <div class="text-muted small">
+                {{ produto.codigo_interno }}
+                {% if produto.sku %} · SKU {{ produto.sku }}{% endif %}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a
+                href="{% url 'produtos:lista_produtos' %}"
+                class="btn btn-sm btn-outline-secondary"
+            >
+                Voltar
+            </a>
+
+            <a
+                href="{% url 'produtos:editar_produto' produto.id %}"
+                class="btn btn-sm btn-dark"
+            >
+                Editar produto
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Custo base</div>
+                    <div class="fs-5">R$ {{ produto.custo_base|floatformat:2 }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Preço de venda</div>
+                    <div class="fs-5">R$ {{ produto.preco_venda|floatformat:2 }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Markup</div>
+                    <div class="fs-5">
+                        {% if produto.markup_percentual is not None %}
+                        {{ produto.markup_percentual|floatformat:2 }}%
+                        {% else %}
+                        —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Margem bruta</div>
+                    <div class="fs-5">
+                        {% if produto.margem_bruta_percentual is not None %}
+                        {{ produto.margem_bruta_percentual|floatformat:2 }}%
+                        {% else %}
+                        —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-6">
+                <h2 class="h6">Informações comerciais</h2>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Categoria</dt>
+                    <dd class="col-sm-7">{{ produto.categoria.nome|default:'—' }}</dd>
+
+                    <dt class="col-sm-5">Marca</dt>
+                    <dd class="col-sm-7">{{ produto.marca.nome|default:'—' }}</dd>
+
+                    <dt class="col-sm-5">Unidade</dt>
+                    <dd class="col-sm-7">{{ produto.unidade_medida }}</dd>
+
+                    <dt class="col-sm-5">Origem do preço</dt>
+                    <dd class="col-sm-7">{{ produto.get_origem_preco_display }}</dd>
+
+                    <dt class="col-sm-5">Status</dt>
+                    <dd class="col-sm-7">{{ produto.get_status_display }}</dd>
+
+                    <dt class="col-sm-5">Controla estoque</dt>
+                    <dd class="col-sm-7">
+                        {% if produto.controla_estoque %}Sim{% else %}Não{% endif %}
+                    </dd>
+
+                    <dt class="col-sm-5">Estoque mínimo</dt>
+                    <dd class="col-sm-7">{{ produto.estoque_minimo }}</dd>
+                </dl>
+            </div>
+
+            <div class="col-lg-6">
+                <h2 class="h6">Fiscal e identificação</h2>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">GTIN/EAN</dt>
+                    <dd class="col-sm-7">{{ produto.gtin|default:'—' }}</dd>
+
+                    <dt class="col-sm-5">NCM</dt>
+                    <dd class="col-sm-7">{{ produto.ncm|default:'—' }}</dd>
+
+                    <dt class="col-sm-5">UUID</dt>
+                    <dd class="col-sm-7 text-break">{{ produto.uuid }}</dd>
+
+                    <dt class="col-sm-5">Criado em</dt>
+                    <dd class="col-sm-7">{{ produto.criado_em|date:'d/m/Y H:i' }}</dd>
+
+                    <dt class="col-sm-5">Atualizado em</dt>
+                    <dd class="col-sm-7">{{ produto.atualizado_em|date:'d/m/Y H:i' }}</dd>
+                </dl>
+            </div>
+
+            <div class="col-12">
+                <h2 class="h6">Logística</h2>
+
+                <dl class="row mb-0">
+                    <dt class="col-md-3">Peso líquido</dt>
+                    <dd class="col-md-3">
+                        {% if produto.peso_liquido_gramas is not None %}
+                        {{ produto.peso_liquido_gramas }} g
+                        {% else %}
+                        —
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-md-3">Peso bruto</dt>
+                    <dd class="col-md-3">
+                        {% if produto.peso_bruto_gramas is not None %}
+                        {{ produto.peso_bruto_gramas }} g
+                        {% else %}
+                        —
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-md-3">Altura</dt>
+                    <dd class="col-md-3">{{ produto.altura_cm|default:'—' }}{% if produto.altura_cm %} cm{% endif %}</dd>
+
+                    <dt class="col-md-3">Largura</dt>
+                    <dd class="col-md-3">{{ produto.largura_cm|default:'—' }}{% if produto.largura_cm %} cm{% endif %}</dd>
+
+                    <dt class="col-md-3">Comprimento</dt>
+                    <dd class="col-md-3">{{ produto.comprimento_cm|default:'—' }}{% if produto.comprimento_cm %} cm{% endif %}</dd>
+                </dl>
+            </div>
+
+            {% if produto.descricao %}
+            <div class="col-12">
+                <h2 class="h6">Descrição</h2>
+                <p class="mb-0">{{ produto.descricao|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

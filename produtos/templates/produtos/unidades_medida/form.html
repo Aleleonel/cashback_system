@@ -1,0 +1,60 @@
+﻿{% extends 'produtos/base_catalogo.html' %}
+
+{% block nav_unidades %}active{% endblock %}
+
+{% block catalogo_content %}
+
+<div class="card shadow-sm border-0">
+
+    {% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo='Cadastro de unidade utilizada pelos produtos.' icone='bi-rulers' %}
+
+    <div class="card-body">
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    {% include 'partials/campo_formulario.html' with campo=form.sigla %}
+                </div>
+
+                <div class="col-md-8">
+                    {% include 'partials/campo_formulario.html' with campo=form.descricao %}
+                </div>
+
+                <div class="col-12">
+                    {% include 'partials/campo_formulario.html' with campo=form.ativa %}
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a
+                    href="{% url 'produtos:lista_unidades_medida' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Voltar
+                </a>
+
+                <button type="submit" class="btn btn-dark">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Salvar unidade
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
