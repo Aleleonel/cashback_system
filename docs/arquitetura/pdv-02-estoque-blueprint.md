@@ -658,3 +658,93 @@ A sprint somente será considerada concluída quando:
 - documentação estiver atualizada;
 - branch estiver limpa;
 - homologação manual estiver concluída.
+
+---
+
+## 21. Capacidades estruturais obrigatorias
+
+O modulo de Estoque deve ser arquiteturalmente preparado para:
+
+- transferencias entre lojas;
+- inventarios fisicos;
+- ajustes positivos e negativos;
+- entradas por compras;
+- saidas por vendas;
+- devolucoes de compra;
+- devolucoes de venda;
+- reservas de estoque;
+- liberacao e consumo de reservas;
+- integracao fiscal;
+- cancelamentos fiscais;
+- auditoria completa;
+- reversoes;
+- rastreabilidade por documento de origem;
+- idempotencia;
+- concorrencia;
+- reconciliacao entre saldo e movimentacoes.
+
+Essas capacidades fazem parte do dominio fundamental de estoque.
+
+A implementacao podera ocorrer em etapas, mas Models, Services, tipos de
+movimentacao, referencias de origem e invariantes nao poderao impedir sua
+evolucao futura.
+
+### Separacao entre dominio e cronograma
+
+Uma capacidade pode estar:
+
+1. prevista no dominio;
+2. reservada na arquitetura;
+3. ainda nao exposta na interface;
+4. implementada em sprint posterior.
+
+Isso nao significa que a capacidade seja opcional. Significa apenas que sua
+entrega sera progressiva e controlada.
+
+### Reserva de estoque
+
+A reserva sera tratada como conceito distinto de saldo fisico.
+
+Posicao futura prevista:
+
+`disponivel = quantidade_atual - quantidade_reservada`
+
+A primeira implementacao de `SaldoEstoque` nao criara necessariamente o campo
+de reserva. Entretanto, a API do dominio nao podera assumir que todo saldo
+fisico esta disponivel para venda.
+
+### Integracao fiscal
+
+O modulo Fiscal nao alterara saldo diretamente.
+
+Eventos fiscais chamarao Services do Estoque, informando:
+
+- origem;
+- identificador da origem;
+- documento de referencia;
+- chave de idempotencia;
+- tipo da operacao;
+- usuario ou processo responsavel.
+
+Cancelamentos fiscais deverao gerar reversao ou movimentacao compensatoria,
+nunca exclusao de historico.
+
+### Devolucoes
+
+Devolucoes serao fatos de estoque independentes.
+
+Uma devolucao de venda normalmente gera entrada.
+
+Uma devolucao de compra normalmente gera saida.
+
+A natureza final dependera do evento operacional e sera validada pelo Service.
+
+### Reconciliacao
+
+O sistema devera permitir comparar:
+
+- saldo materializado em `SaldoEstoque`;
+- soma historica das movimentacoes validas;
+- contagem fisica de inventario.
+
+Divergencias deverao ser detectaveis e corrigidas por operacoes auditadas.
