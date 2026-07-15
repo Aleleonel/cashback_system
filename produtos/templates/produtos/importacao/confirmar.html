@@ -1,0 +1,211 @@
+﻿{% extends 'produtos/base_catalogo.html' %}
+
+{% block nav_produtos %}active{% endblock %}
+
+{% block catalogo_content %}
+
+<div class="card shadow-sm border-0">
+
+    {% include 'partials/cabecalho_pagina.html' with titulo='Pré-visualização da importação' subtitulo='Revise os produtos antes de confirmar a gravação.' icone='bi-clipboard-check' %}
+
+    <div class="card-body border-bottom">
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">
+                        Total de linhas
+                    </div>
+                    <div class="fs-4 fw-semibold">
+                        {{ resultado.resumo.total }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">
+                        Produtos novos
+                    </div>
+                    <div class="fs-4 fw-semibold text-success">
+                        {{ resultado.resumo.novos }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">
+                        Atualizações
+                    </div>
+                    <div class="fs-4 fw-semibold text-primary">
+                        {{ resultado.resumo.atualizar }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">
+                        Linhas inválidas
+                    </div>
+                    <div class="fs-4 fw-semibold text-danger">
+                        {{ resultado.resumo.invalidos }}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {% if resultado.resumo.invalidos %}
+        <div class="alert alert-warning mt-4 mb-0">
+            A importação não pode ser confirmada enquanto existirem
+            linhas inválidas. Corrija a planilha e valide novamente.
+        </div>
+        {% elif not resultado.possui_validos %}
+        <div class="alert alert-warning mt-4 mb-0">
+            A planilha não possui produtos válidos para importação.
+        </div>
+        {% else %}
+        <div class="alert alert-success mt-4 mb-0">
+            Todas as linhas foram validadas.
+            Confira os dados abaixo antes de confirmar.
+        </div>
+        {% endif %}
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Linha</th>
+                    <th>Código</th>
+                    <th>Produto</th>
+                    <th>Categoria</th>
+                    <th>Marca</th>
+                    <th>Unidade</th>
+                    <th>Venda</th>
+                    <th>Situação</th>
+                    <th>Erros</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for linha in resultado.linhas %}
+                <tr>
+                    <td>{{ linha.linha }}</td>
+
+                    <td>
+                        <strong>
+                            {{ linha.codigo_interno|default:'—' }}
+                        </strong>
+                    </td>
+
+                    <td>{{ linha.nome|default:'—' }}</td>
+
+                    <td>
+                        {{ linha.categoria_nome|default:'—' }}
+                    </td>
+
+                    <td>
+                        {{ linha.marca_nome|default:'—' }}
+                    </td>
+
+                    <td>
+                        {{ linha.unidade_medida_nome|default:'—' }}
+                    </td>
+
+                    <td>
+                        R$ {{ linha.preco_venda|default:'0.00' }}
+                    </td>
+
+                    <td>
+                        {% if linha.valido and linha.acao_prevista == 'novo' %}
+                        <span class="badge text-bg-success">
+                            Novo
+                        </span>
+                        {% elif linha.valido %}
+                        <span class="badge text-bg-primary">
+                            Atualizar
+                        </span>
+                        {% else %}
+                        <span class="badge text-bg-danger">
+                            Inválido
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if linha.erros %}
+                        <ul class="mb-0 ps-3 text-danger small">
+                            {% for erro in linha.erros %}
+                            <li>{{ erro }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td
+                        colspan="9"
+                        class="text-center text-muted py-5"
+                    >
+                        A planilha não possui linhas.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <div class="card-footer bg-white d-flex justify-content-between">
+
+        <a
+            href="{% url 'produtos:importar_produtos' %}"
+            class="btn btn-outline-secondary"
+        >
+            Enviar outra planilha
+        </a>
+
+        {% if resultado.possui_validos and not resultado.resumo.invalidos %}
+        <form
+            method="post"
+            action="{% url 'produtos:confirmar_importacao' %}"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="btn btn-dark"
+            >
+                <i class="bi bi-check-lg me-1"></i>
+                Confirmar importação
+            </button>
+        </form>
+        {% else %}
+        <button
+            type="button"
+            class="btn btn-dark"
+            disabled
+        >
+            Confirmar importação
+        </button>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

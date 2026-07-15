@@ -1,8 +1,9 @@
-# ==========================================================
+﻿# ==========================================================
 # PLATAFORMA
 # ==========================================================
 
 PERMISSAO_PLATAFORMA_PAINEL_MASTER = 'plataforma.painel_master'
+
 
 # ==========================================================
 # MINHA EMPRESA
@@ -11,6 +12,7 @@ PERMISSAO_PLATAFORMA_PAINEL_MASTER = 'plataforma.painel_master'
 PERMISSAO_EMPRESA_LOJAS_GERENCIAR = 'empresa.lojas_gerenciar'
 PERMISSAO_EMPRESA_CONFIGURAR_CASHBACK = 'empresa.configurar_cashback'
 PERMISSAO_VOUCHERS_GERENCIAR = 'vouchers.gerenciar'
+
 
 # ==========================================================
 # DASHBOARD / RELATORIOS
@@ -31,6 +33,19 @@ PERMISSAO_CLIENTES_IMPORTAR = 'clientes.importar'
 
 
 # ==========================================================
+# PRODUTOS
+# ==========================================================
+
+PERMISSAO_PRODUTOS_VISUALIZAR = 'produtos.visualizar'
+PERMISSAO_PRODUTOS_CRIAR = 'produtos.criar'
+PERMISSAO_PRODUTOS_EDITAR = 'produtos.editar'
+PERMISSAO_PRODUTOS_IMPORTAR = 'produtos.importar'
+PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES = (
+    'produtos.gerenciar_auxiliares'
+)
+
+
+# ==========================================================
 # CASHBACK
 # ==========================================================
 
@@ -46,7 +61,10 @@ PERMISSAO_CAMPANHAS_VISUALIZAR = 'campanhas.visualizar'
 PERMISSAO_CAMPANHAS_DISPARAR = 'campanhas.disparar'
 PERMISSAO_CAMPANHAS_CONFIGURAR = 'campanhas.configurar'
 PERMISSAO_CAMPANHAS_TEMPLATES = 'campanhas.templates'
-PERMISSAO_EMPRESA_USUARIOS_GERENCIAR = 'empresa.usuarios_gerenciar'
+PERMISSAO_EMPRESA_USUARIOS_GERENCIAR = (
+    'empresa.usuarios_gerenciar'
+)
+
 
 # ==========================================================
 # GRUPOS DE PERMISSOES
@@ -63,6 +81,14 @@ PERMISSOES_CLIENTES = {
     PERMISSAO_CLIENTES_CRIAR,
     PERMISSAO_CLIENTES_EDITAR,
     PERMISSAO_CLIENTES_IMPORTAR,
+}
+
+PERMISSOES_PRODUTOS = {
+    PERMISSAO_PRODUTOS_VISUALIZAR,
+    PERMISSAO_PRODUTOS_CRIAR,
+    PERMISSAO_PRODUTOS_EDITAR,
+    PERMISSAO_PRODUTOS_IMPORTAR,
+    PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES,
 }
 
 PERMISSOES_CASHBACK = {
@@ -99,7 +125,7 @@ PERMISSOES_POR_PERFIL = {
         | PERMISSOES_RELATORIOS
         | PERMISSOES_EMPRESA
         | PERMISSOES_VOUCHERS
-        
+        | PERMISSOES_PRODUTOS
     ),
 
     'admin_loja': (
@@ -107,6 +133,7 @@ PERMISSOES_POR_PERFIL = {
         | PERMISSOES_EMPRESA
         | PERMISSOES_CASHBACK
         | PERMISSOES_VOUCHERS
+        | PERMISSOES_PRODUTOS
         | {
             PERMISSAO_CAMPANHAS_VISUALIZAR,
             PERMISSAO_CAMPANHAS_DISPARAR,
@@ -121,13 +148,33 @@ PERMISSOES_POR_PERFIL = {
         PERMISSAO_RELATORIOS_DASHBOARD,
         PERMISSAO_CLIENTES_VISUALIZAR,
         PERMISSAO_CLIENTES_CRIAR,
+        PERMISSAO_PRODUTOS_VISUALIZAR,
+        PERMISSAO_PRODUTOS_CRIAR,
         PERMISSAO_CASHBACK_NOVA_COMPRA,
         PERMISSAO_CASHBACK_EXTRATO,
     },
 }
 
+
 def get_permissoes_extras_disponiveis():
     return [
+        {
+            'codigo': PERMISSAO_PRODUTOS_EDITAR,
+            'nome': 'Produtos: editar',
+            'grupo': 'Produtos',
+        },
+        {
+            'codigo': PERMISSAO_PRODUTOS_IMPORTAR,
+            'nome': 'Produtos: importar planilhas',
+            'grupo': 'Produtos',
+        },
+        {
+            'codigo': PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES,
+            'nome': (
+                'Produtos: gerenciar categorias, marcas e unidades'
+            ),
+            'grupo': 'Produtos',
+        },
         {
             'codigo': PERMISSAO_CAMPANHAS_VISUALIZAR,
             'nome': 'Campanhas: visualizar',
@@ -154,3 +201,4 @@ def get_permissoes_extras_disponiveis():
             'grupo': 'Clientes',
         },
     ]
+

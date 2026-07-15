@@ -1,4 +1,4 @@
-<aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
+﻿<aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
 
     <h5 class="fw-bold mb-4">
         <i class="bi bi-cash-coin me-2"></i>
@@ -77,6 +77,13 @@
         </a>
         {% endif %}
 
+        {% if pode_ver_produtos %}
+        <a href="{% url 'produtos:lista_produtos' %}" class="nav-link text-white">
+            <i class="bi bi-box-seam me-2"></i>
+            Produtos
+        </a>
+        {% endif %}
+
         {% if pode_gerenciar_vouchers %}
         <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
             <i class="bi bi-ticket-perforated me-2"></i>
@@ -84,10 +91,23 @@
         </a>
         {% endif %}
 
+        {% if pode_importar_clientes or pode_importar_produtos %}
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Importações
+        </div>
+        {% endif %}
+
         {% if pode_importar_clientes %}
         <a href="{% url 'clientes:importar_clientes' %}" class="nav-link text-white-50">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+            <i class="bi bi-person-lines-fill me-2"></i>
             Importar Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_importar_produtos %}
+        <a href="{% url 'produtos:importar_produtos' %}" class="nav-link text-white-50">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+            Importar Produtos
         </a>
         {% endif %}
 

@@ -1,0 +1,25 @@
+﻿<div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+        <strong>
+            {% if icone %}
+            <i class="bi {{ icone }} me-2"></i>
+            {% endif %}
+            {{ titulo }}
+        </strong>
+
+        {% if subtitulo %}
+        <div class="text-muted small">
+            {{ subtitulo }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if acao_url and acao_texto %}
+    <a href="{{ acao_url }}" class="btn btn-sm btn-dark">
+        {% if acao_icone %}
+        <i class="bi {{ acao_icone }} me-1"></i>
+        {% endif %}
+        {{ acao_texto }}
+    </a>
+    {% endif %}
+</div>
