@@ -1,5 +1,6 @@
-﻿from .movimentacoes import (
+from .movimentacoes import (
     ResultadoMovimentacaoEstoque,
+    ResultadoReservaEstoque,
     ResultadoTransferenciaEstoque,
     registrar_ajuste_estoque,
     registrar_entrada_estoque,
@@ -10,6 +11,7 @@
 
 __all__ = [
     'ResultadoMovimentacaoEstoque',
+    'ResultadoReservaEstoque',
     'ResultadoTransferenciaEstoque',
     'registrar_ajuste_estoque',
     'registrar_entrada_estoque',
