@@ -1,10 +1,12 @@
-﻿from .entradas import registrar_entrada_estoque
+﻿from .ajustes import registrar_ajuste_estoque
+from .entradas import registrar_entrada_estoque
 from .resultados import ResultadoMovimentacaoEstoque
 from .saidas import registrar_saida_estoque
 
 
 __all__ = [
     'ResultadoMovimentacaoEstoque',
+    'registrar_ajuste_estoque',
     'registrar_entrada_estoque',
     'registrar_saida_estoque',
 ]
