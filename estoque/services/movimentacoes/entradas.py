@@ -33,30 +33,17 @@ def registrar_entrada_estoque(
     grupo_transferencia=None,
     movimentacao_origem=None,
 ):
-    chave_idempotencia = (
-        chave_idempotencia or ''
-    ).strip()
-
-    if not chave_idempotencia:
-        raise ValidationError({
-            'chave_idempotencia': (
-                'A chave de idempotência é obrigatória.'
-            )
-        })
+    chave_idempotencia = _normalizar_chave_idempotencia(
+        chave_idempotencia
+    )
 
     quantidade = _normalizar_quantidade(quantidade)
 
-    observacao = (
-        observacao or ''
-    ).strip()
-
-    documento_referencia = (
-        documento_referencia or ''
-    ).strip()
-
-    origem_id = (
-        origem_id or ''
-    ).strip()
+    observacao = _normalizar_texto(observacao)
+    documento_referencia = _normalizar_texto(
+        documento_referencia
+    )
+    origem_id = _normalizar_texto(origem_id)
 
     _validar_contexto(
         matriz=matriz,
@@ -66,28 +53,22 @@ def registrar_entrada_estoque(
 
     _validar_tipo_entrada(tipo=tipo)
 
-    movimentacao_existente = _buscar_movimentacao_idempotente(
+    resultado_idempotente = _resolver_idempotencia(
         matriz=matriz,
+        loja=loja,
+        produto=produto,
+        tipo=tipo,
+        origem=origem,
+        quantidade=quantidade,
         chave_idempotencia=chave_idempotencia,
+        documento_referencia=documento_referencia,
+        origem_id=origem_id,
+        grupo_transferencia=grupo_transferencia,
+        movimentacao_origem=movimentacao_origem,
     )
 
-    if movimentacao_existente is not None:
-        _validar_reprocessamento_idempotente(
-            movimentacao=movimentacao_existente,
-            loja=loja,
-            produto=produto,
-            tipo=tipo,
-            origem=origem,
-            quantidade=quantidade,
-            documento_referencia=documento_referencia,
-            origem_id=origem_id,
-            grupo_transferencia=grupo_transferencia,
-            movimentacao_origem=movimentacao_origem,
-        )
-
-        return _criar_resultado_duplicado(
-            movimentacao=movimentacao_existente
-        )
+    if resultado_idempotente is not None:
+        return resultado_idempotente
 
     try:
         return _registrar_entrada_estoque_atomic(
@@ -108,30 +89,24 @@ def registrar_entrada_estoque(
         )
 
     except IntegrityError:
-        movimentacao_existente = _buscar_movimentacao_idempotente(
+        resultado_idempotente = _resolver_idempotencia(
             matriz=matriz,
-            chave_idempotencia=chave_idempotencia,
-        )
-
-        if movimentacao_existente is None:
-            raise
-
-        _validar_reprocessamento_idempotente(
-            movimentacao=movimentacao_existente,
             loja=loja,
             produto=produto,
             tipo=tipo,
             origem=origem,
             quantidade=quantidade,
+            chave_idempotencia=chave_idempotencia,
             documento_referencia=documento_referencia,
             origem_id=origem_id,
             grupo_transferencia=grupo_transferencia,
             movimentacao_origem=movimentacao_origem,
         )
 
-        return _criar_resultado_duplicado(
-            movimentacao=movimentacao_existente
-        )
+        if resultado_idempotente is None:
+            raise
+
+        return resultado_idempotente
 
 
 @transaction.atomic
@@ -152,23 +127,10 @@ def _registrar_entrada_estoque_atomic(
     grupo_transferencia=None,
     movimentacao_origem=None,
 ):
-    Produto.objects.select_for_update().get(
-        pk=produto.pk
-    )
-
-    saldo, saldo_criado = SaldoEstoque.objects.get_or_create(
+    saldo, saldo_criado = _obter_saldo_bloqueado(
         matriz=matriz,
         loja=loja,
         produto=produto,
-        defaults={
-            'quantidade_atual': Decimal('0.000'),
-        }
-    )
-
-    saldo = (
-        SaldoEstoque.objects
-        .select_for_update()
-        .get(pk=saldo.pk)
     )
 
     saldo_anterior = saldo.quantidade_atual
@@ -194,33 +156,23 @@ def _registrar_entrada_estoque_atomic(
         movimentacao_origem=movimentacao_origem,
     )
 
-    saldo.quantidade_atual = saldo_posterior
-    saldo.ultima_movimentacao_em = momento_movimentacao
-
-    saldo.save(
-        update_fields=[
-            'quantidade_atual',
-            'ultima_movimentacao_em',
-            'atualizado_em',
-        ]
+    _atualizar_saldo(
+        saldo=saldo,
+        saldo_posterior=saldo_posterior,
+        momento_movimentacao=momento_movimentacao,
     )
 
-    registrar_auditoria(
+    _registrar_auditoria_movimentacao(
         usuario=usuario,
         matriz=matriz,
         loja=loja,
-        acao=RegistroAuditoria.ACAO_CRIAR,
-        recurso='estoque.movimentacao',
-        recurso_id=movimentacao.uuid,
-        descricao=(
-            f'Entrada de estoque: '
-            f'produto={produto.codigo_interno}; '
-            f'tipo={tipo}; '
-            f'quantidade={quantidade}; '
-            f'saldo_anterior={saldo_anterior}; '
-            f'saldo_posterior={saldo_posterior}; '
-            f'saldo_criado={saldo_criado}.'
-        ),
+        produto=produto,
+        tipo=tipo,
+        quantidade=quantidade,
+        saldo_anterior=saldo_anterior,
+        saldo_posterior=saldo_posterior,
+        saldo_criado=saldo_criado,
+        movimentacao=movimentacao,
         request=request,
     )
 
@@ -229,6 +181,27 @@ def _registrar_entrada_estoque_atomic(
         movimentacao=movimentacao,
         duplicada=False,
     )
+
+
+def _normalizar_chave_idempotencia(chave_idempotencia):
+    chave_idempotencia = _normalizar_texto(
+        chave_idempotencia
+    )
+
+    if not chave_idempotencia:
+        raise ValidationError({
+            'chave_idempotencia': (
+                'A chave de idempotência é obrigatória.'
+            )
+        })
+
+    return chave_idempotencia
+
+
+def _normalizar_texto(valor):
+    return (
+        valor or ''
+    ).strip()
 
 
 def _normalizar_quantidade(quantidade):
@@ -295,6 +268,46 @@ def _validar_tipo_entrada(*, tipo):
                 'O tipo informado não representa uma entrada de estoque.'
             )
         })
+
+
+def _resolver_idempotencia(
+    *,
+    matriz,
+    loja,
+    produto,
+    tipo,
+    origem,
+    quantidade,
+    chave_idempotencia,
+    documento_referencia,
+    origem_id,
+    grupo_transferencia,
+    movimentacao_origem,
+):
+    movimentacao = _buscar_movimentacao_idempotente(
+        matriz=matriz,
+        chave_idempotencia=chave_idempotencia,
+    )
+
+    if movimentacao is None:
+        return None
+
+    _validar_reprocessamento_idempotente(
+        movimentacao=movimentacao,
+        loja=loja,
+        produto=produto,
+        tipo=tipo,
+        origem=origem,
+        quantidade=quantidade,
+        documento_referencia=documento_referencia,
+        origem_id=origem_id,
+        grupo_transferencia=grupo_transferencia,
+        movimentacao_origem=movimentacao_origem,
+    )
+
+    return _criar_resultado_duplicado(
+        movimentacao=movimentacao
+    )
 
 
 def _buscar_movimentacao_idempotente(
@@ -365,6 +378,86 @@ def _validar_reprocessamento_idempotente(
                 'por uma operação diferente.'
             )
         })
+
+
+def _obter_saldo_bloqueado(
+    *,
+    matriz,
+    loja,
+    produto,
+):
+    Produto.objects.select_for_update().get(
+        pk=produto.pk
+    )
+
+    saldo, saldo_criado = SaldoEstoque.objects.get_or_create(
+        matriz=matriz,
+        loja=loja,
+        produto=produto,
+        defaults={
+            'quantidade_atual': Decimal('0.000'),
+        }
+    )
+
+    saldo = (
+        SaldoEstoque.objects
+        .select_for_update()
+        .get(pk=saldo.pk)
+    )
+
+    return saldo, saldo_criado
+
+
+def _atualizar_saldo(
+    *,
+    saldo,
+    saldo_posterior,
+    momento_movimentacao,
+):
+    saldo.quantidade_atual = saldo_posterior
+    saldo.ultima_movimentacao_em = momento_movimentacao
+
+    saldo.save(
+        update_fields=[
+            'quantidade_atual',
+            'ultima_movimentacao_em',
+            'atualizado_em',
+        ]
+    )
+
+
+def _registrar_auditoria_movimentacao(
+    *,
+    usuario,
+    matriz,
+    loja,
+    produto,
+    tipo,
+    quantidade,
+    saldo_anterior,
+    saldo_posterior,
+    saldo_criado,
+    movimentacao,
+    request,
+):
+    registrar_auditoria(
+        usuario=usuario,
+        matriz=matriz,
+        loja=loja,
+        acao=RegistroAuditoria.ACAO_CRIAR,
+        recurso='estoque.movimentacao',
+        recurso_id=movimentacao.uuid,
+        descricao=(
+            f'Entrada de estoque: '
+            f'produto={produto.codigo_interno}; '
+            f'tipo={tipo}; '
+            f'quantidade={quantidade}; '
+            f'saldo_anterior={saldo_anterior}; '
+            f'saldo_posterior={saldo_posterior}; '
+            f'saldo_criado={saldo_criado}.'
+        ),
+        request=request,
+    )
 
 
 def _criar_resultado_duplicado(*, movimentacao):
