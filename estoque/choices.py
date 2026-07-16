@@ -1,4 +1,4 @@
-﻿from django.db import models
+from django.db import models
 
 
 class NaturezaMovimentacao(models.TextChoices):
@@ -100,3 +100,9 @@ def tipo_movimentacao_compativel_com_natureza(
         natureza_esperada is not None
         and natureza_esperada == natureza
     )
+class StatusReservaEstoque(models.TextChoices):
+    ATIVA = 'ativa', 'Ativa'
+    CONFIRMADA = 'confirmada', 'Confirmada'
+    LIBERADA = 'liberada', 'Liberada'
+    CANCELADA = 'cancelada', 'Cancelada'
+    EXPIRADA = 'expirada', 'Expirada'
