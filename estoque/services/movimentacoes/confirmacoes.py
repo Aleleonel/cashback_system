@@ -79,6 +79,18 @@ def confirmar_reserva_estoque(
             )
         })
 
+    agora = timezone.now()
+
+    if (
+        reserva_bloqueada.expira_em is not None
+        and reserva_bloqueada.expira_em <= agora
+    ):
+        raise ValidationError({
+            'expira_em': (
+                'A reserva está vencida e não pode ser confirmada.'
+            )
+        })
+
     resultado_saida = registrar_saida_estoque(
         matriz=reserva_bloqueada.matriz,
         loja=reserva_bloqueada.loja,
