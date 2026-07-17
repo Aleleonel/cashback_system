@@ -35,3 +35,10 @@ class ResultadoTransferenciaEstoque:
 class ResultadoReservaEstoque:
     reserva: ReservaEstoque
     duplicada: bool = False
+
+@dataclass(frozen=True)
+class ResultadoConfirmacaoReservaEstoque:
+    reserva: ReservaEstoque
+    saldo: SaldoEstoque
+    movimentacao: MovimentacaoEstoque
+    duplicada: bool = False

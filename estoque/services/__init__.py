@@ -1,4 +1,6 @@
 from .movimentacoes import (
+    confirmar_reserva_estoque,
+    ResultadoConfirmacaoReservaEstoque,
     ResultadoMovimentacaoEstoque,
     ResultadoReservaEstoque,
     ResultadoTransferenciaEstoque,
@@ -12,6 +14,8 @@ from .movimentacoes import (
 
 
 __all__ = [
+    'confirmar_reserva_estoque',
+    'ResultadoConfirmacaoReservaEstoque',
     'ResultadoMovimentacaoEstoque',
     'ResultadoReservaEstoque',
     'ResultadoTransferenciaEstoque',
