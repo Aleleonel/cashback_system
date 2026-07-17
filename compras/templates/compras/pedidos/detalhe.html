@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido de compra{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h1 class="h3 mb-1">
+                PC-{{ pedido.numero|stringformat:"06d" }}
+            </h1>
+            <div class="text-muted">
+                {{ pedido.fornecedor }} Â·
+                {{ pedido.get_status_display }}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a
+                href="{% url 'compras:listar_pedidos_compra' %}"
+                class="btn btn-outline-secondary"
+            >
+                Voltar
+            </a>
+
+            {% if pedido.status == "rascunho" %}
+                <a
+                    href="{% url 'compras:editar_pedido_compra' pedido.uuid %}"
+                    class="btn btn-outline-primary"
+                >
+                    Editar
+                </a>
+            {% endif %}
+
+            {% if pedido.status == "enviado" or pedido.status == "parcial" %}
+                <a
+                    href="{% url 'compras:receber_pedido_compra' pedido.uuid %}"
+                    class="btn btn-success"
+                >
+                    Receber mercadorias
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <strong>Emissao</strong>
+                    <div>{{ pedido.data_emissao|date:"d/m/Y" }}</div>
+                </div>
+
+                <div class="col-md-3">
+                    <strong>Previsao de entrega</strong>
+                    <div>
+                        {{ pedido.previsao_entrega|date:"d/m/Y"|default:"-" }}
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <strong>Condicao de pagamento</strong>
+                    <div>
+                        {{ pedido.condicao_pagamento|default:"-" }}
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <strong>Total</strong>
+                    <div>R$ {{ pedido.total|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Itens
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th class="text-end">Quantidade</th>
+                        <th class="text-end">Valor unitario</th>
+                        <th class="text-end">Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in pedido.itens.all %}
+                        <tr>
+                            <td>{{ item.produto }}</td>
+                            <td class="text-end">
+                                {{ item.quantidade|floatformat:3 }}
+                            </td>
+                            <td class="text-end">
+                                R$ {{ item.valor_unitario|floatformat:2 }}
+                            </td>
+                            <td class="text-end">
+                                R$ {{ item.subtotal|floatformat:2 }}
+                            </td>
+                            <td class="text-end">
+                                {% if pedido.status == "rascunho" %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'compras:remover_item_pedido_compra' pedido.uuid item.id %}"
+                                    >
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            Remover
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                Nenhum item adicionado.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">Subtotal</th>
+                        <th class="text-end">
+                            R$ {{ pedido.subtotal|floatformat:2 }}
+                        </th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">Frete</th>
+                        <th class="text-end">
+                            R$ {{ pedido.frete|floatformat:2 }}
+                        </th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">Desconto</th>
+                        <th class="text-end">
+                            R$ {{ pedido.desconto|floatformat:2 }}
+                        </th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">Total</th>
+                        <th class="text-end">
+                            R$ {{ pedido.total|floatformat:2 }}
+                        </th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    {% if pedido.status == "rascunho" %}
+        <div class="card mb-3">
+            <div class="card-header">
+                Adicionar item
+            </div>
+
+            <div class="card-body">
+                <form
+                    method="post"
+                    action="{% url 'compras:adicionar_item_pedido_compra' pedido.uuid %}"
+                >
+                    {% csrf_token %}
+
+                    {% if item_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ item_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in item_form %}
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <button class="btn btn-primary">
+                        Adicionar item
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <form
+                method="post"
+                action="{% url 'compras:enviar_pedido_compra' pedido.uuid %}"
+            >
+                {% csrf_token %}
+                <button class="btn btn-success">
+                    Enviar ao fornecedor
+                </button>
+            </form>
+
+            <form
+                method="post"
+                action="{% url 'compras:cancelar_pedido_compra' pedido.uuid %}"
+            >
+                {% csrf_token %}
+                <button class="btn btn-outline-danger">
+                    Cancelar pedido
+                </button>
+            </form>
+        </div>
+    {% elif pedido.status != "recebido" and pedido.status != "cancelado" %}
+        <form
+            method="post"
+            action="{% url 'compras:cancelar_pedido_compra' pedido.uuid %}"
+        >
+            {% csrf_token %}
+            <button class="btn btn-outline-danger">
+                Cancelar pedido
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<section class="card mt-4">
+    <div class="card-header">
+        Recebimentos e devolucoes
+    </div>
+    <div class="card-body">
+        {% for recebimento in pedido.recebimentos.all %}
+            <div class="border rounded p-3 mb-3">
+                <strong>
+                    Recebimento {{ recebimento.id }}
+                </strong>
+                - {{ recebimento.loja }}
+                - {{ recebimento.recebido_em|date:"d/m/Y H:i" }}
+
+                <div class="mt-2">
+                    <a
+                        href="{% url 'compras:devolver_recebimento_compra' recebimento.uuid %}"
+                        class="btn btn-sm btn-outline-danger"
+                    >
+                        Devolver ao fornecedor
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-muted mb-0">
+                Nenhum recebimento registrado.
+            </p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

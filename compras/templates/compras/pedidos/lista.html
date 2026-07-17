@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Pedidos de compra{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Pedidos de compra</h1>
+
+        <a
+            href="{% url 'compras:criar_pedido_compra' %}"
+            class="btn btn-primary"
+        >
+            Novo pedido
+        </a>
+    </div>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-7">
+            <input
+                type="search"
+                name="busca"
+                value="{{ busca }}"
+                class="form-control"
+                placeholder="Numero, fornecedor ou CNPJ"
+            >
+        </div>
+
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">Todos os status</option>
+
+                {% for valor, rotulo in status_choices %}
+                    <option
+                        value="{{ valor }}"
+                        {% if status == valor %}selected{% endif %}
+                    >
+                        {{ rotulo }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100">
+                Filtrar
+            </button>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Numero</th>
+                        <th>Fornecedor</th>
+                        <th>Emissao</th>
+                        <th>Previsao</th>
+                        <th>Status</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for pedido in pagina %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'compras:detalhar_pedido_compra' pedido.uuid %}">
+                                    PC-{{ pedido.numero|stringformat:"06d" }}
+                                </a>
+                            </td>
+                            <td>{{ pedido.fornecedor }}</td>
+                            <td>{{ pedido.data_emissao|date:"d/m/Y" }}</td>
+                            <td>
+                                {{ pedido.previsao_entrega|date:"d/m/Y"|default:"-" }}
+                            </td>
+                            <td>{{ pedido.get_status_display }}</td>
+                            <td class="text-end">
+                                R$ {{ pedido.total|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                Nenhum pedido encontrado.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

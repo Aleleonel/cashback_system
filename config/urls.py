@@ -1,4 +1,4 @@
-﻿from django.contrib import admin
+from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
 from django.contrib.auth.views import LogoutView
@@ -14,6 +14,7 @@ urlpatterns = [
     path('dashboard/', include('relatorios.urls')),
     path('campanhas/', include('campanhas.urls')),
     path('produtos/', include('produtos.urls')),
+    path('compras/', include('compras.urls')),
 
     path(
         'login/',
