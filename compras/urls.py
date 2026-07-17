@@ -62,4 +62,9 @@ urlpatterns = [
         views.cancelar_pedido_compra_view,
         name='cancelar_pedido_compra',
     ),
+    path(
+        'pedidos/<uuid:pedido_uuid>/receber/',
+        views.receber_pedido_compra_view,
+        name='receber_pedido_compra',
+    ),
 ]

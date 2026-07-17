@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Receber pedido{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3">
+        Receber PC-{{ pedido.numero|stringformat:"06d" }}
+    </h1>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.chave_idempotencia }}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            {% if field.name != "chave_idempotencia" %}
+                <div class="mb-3">
+                    <label class="form-label">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <button class="btn btn-success">
+            Confirmar recebimento
+        </button>
+
+        <a
+            href="{% url 'compras:detalhar_pedido_compra' pedido.uuid %}"
+            class="btn btn-outline-secondary"
+        >
+            Voltar
+        </a>
+    </form>
+</div>
+{% endblock %}

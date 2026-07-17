@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.utils import timezone
 
@@ -120,3 +122,73 @@ class ItemPedidoCompraForm(forms.ModelForm):
         self.fields['produto'].queryset = (
             produtos.order_by('pk')
         )
+
+class RecebimentoCompraForm(forms.Form):
+    loja = forms.ModelChoiceField(
+        queryset=None,
+        label='Loja de entrada',
+    )
+    documento_referencia = forms.CharField(
+        required=False,
+        max_length=80,
+    )
+    observacoes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3}),
+    )
+    chave_idempotencia = forms.CharField(
+        widget=forms.HiddenInput(),
+    )
+
+    def __init__(
+        self,
+        *args,
+        matriz=None,
+        pedido=None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        from empresas.models import Loja
+
+        self.fields['loja'].queryset = (
+            Loja.objects
+            .filter(matriz=matriz)
+            .order_by('nome')
+        )
+        self.pedido = pedido
+
+        for item in pedido.itens.select_related(
+            'produto'
+        ):
+            self.fields[
+                f'quantidade_{item.pk}'
+            ] = forms.DecimalField(
+                required=False,
+                min_value=Decimal('0.000'),
+                max_value=item.quantidade_pendente,
+                decimal_places=3,
+                max_digits=12,
+                initial=item.quantidade_pendente,
+                label=(
+                    f'{item.produto} '
+                    f'(pendente: '
+                    f'{item.quantidade_pendente})'
+                ),
+            )
+
+    def get_itens(self):
+        itens = []
+
+        for item in self.pedido.itens.all():
+            quantidade = self.cleaned_data.get(
+                f'quantidade_{item.pk}'
+            )
+
+            if quantidade:
+                itens.append({
+                    'item_pedido_id': item.pk,
+                    'quantidade': quantidade,
+                })
+
+        return itens

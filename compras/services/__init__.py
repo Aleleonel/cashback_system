@@ -3,6 +3,7 @@ from .fornecedores import (
     criar_fornecedor,
     editar_fornecedor,
 )
+from .recebimentos import receber_pedido_compra
 from .pedidos import (
     adicionar_item_pedido_compra,
     cancelar_pedido_compra,
@@ -22,4 +23,5 @@ __all__ = [
     'editar_pedido_compra',
     'enviar_pedido_compra',
     'remover_item_pedido_compra',
+    'receber_pedido_compra',
 ]

@@ -406,3 +406,102 @@ class ItemPedidoCompra(models.Model):
     @property
     def quantidade_pendente(self):
         return self.quantidade - self.quantidade_recebida
+
+class RecebimentoCompra(models.Model):
+    uuid = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        db_index=True,
+    )
+    matriz = models.ForeignKey(
+        Matriz,
+        on_delete=models.PROTECT,
+        related_name='recebimentos_compra',
+    )
+    loja = models.ForeignKey(
+        'empresas.Loja',
+        on_delete=models.PROTECT,
+        related_name='recebimentos_compra',
+    )
+    pedido = models.ForeignKey(
+        PedidoCompra,
+        on_delete=models.PROTECT,
+        related_name='recebimentos',
+    )
+    chave_idempotencia = models.CharField(max_length=100)
+    documento_referencia = models.CharField(
+        max_length=80,
+        blank=True,
+    )
+    observacoes = models.TextField(blank=True)
+    recebido_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='recebimentos_compra_realizados',
+    )
+    recebido_em = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    class Meta:
+        ordering = ['-recebido_em', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['matriz', 'chave_idempotencia'],
+                name='uq_rec_compra_mat_idemp',
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=['matriz', 'pedido'],
+                name='rec_compra_mat_ped_idx',
+            ),
+            models.Index(
+                fields=['matriz', 'loja', 'recebido_em'],
+                name='rec_compra_mat_loja_dt_idx',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Recebimento {self.id} - {self.pedido}'
+
+
+class ItemRecebimentoCompra(models.Model):
+    recebimento = models.ForeignKey(
+        RecebimentoCompra,
+        on_delete=models.CASCADE,
+        related_name='itens',
+    )
+    item_pedido = models.ForeignKey(
+        ItemPedidoCompra,
+        on_delete=models.PROTECT,
+        related_name='recebimentos',
+    )
+    quantidade = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        validators=[
+            MinValueValidator(Decimal('0.001')),
+        ],
+    )
+    movimentacao_estoque = models.OneToOneField(
+        'estoque.MovimentacaoEstoque',
+        on_delete=models.PROTECT,
+        related_name='item_recebimento_compra',
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recebimento', 'item_pedido'],
+                name='uq_item_rec_compra_pedido',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantidade__gt=0),
+                name='item_rec_compra_qtd_pos',
+            ),
+        ]

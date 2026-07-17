@@ -31,6 +31,15 @@
                     Editar
                 </a>
             {% endif %}
+
+            {% if pedido.status == "enviado" or pedido.status == "parcial" %}
+                <a
+                    href="{% url 'compras:receber_pedido_compra' pedido.uuid %}"
+                    class="btn btn-success"
+                >
+                    Receber mercadorias
+                </a>
+            {% endif %}
         </div>
     </div>
 

@@ -13,6 +13,7 @@ from .forms import (
     FornecedorForm,
     ItemPedidoCompraForm,
     PedidoCompraForm,
+    RecebimentoCompraForm,
 )
 from .models import ItemPedidoCompra
 from .selectors import (
@@ -30,6 +31,7 @@ from .services import (
     editar_pedido_compra,
     enviar_pedido_compra,
     remover_item_pedido_compra,
+    receber_pedido_compra,
 )
 
 
@@ -573,4 +575,74 @@ def cancelar_pedido_compra_view(
     return redirect(
         'compras:detalhar_pedido_compra',
         pedido_uuid=pedido.uuid,
+    )
+
+@login_required
+def receber_pedido_compra_view(
+    request,
+    pedido_uuid,
+):
+    import uuid as uuid_lib
+
+    matriz = _get_matriz_usuario(request)
+    pedido = get_pedido_compra_por_uuid(
+        matriz=matriz,
+        pedido_uuid=pedido_uuid,
+    )
+
+    form = RecebimentoCompraForm(
+        request.POST or None,
+        matriz=matriz,
+        pedido=pedido,
+        initial={
+            'chave_idempotencia': str(
+                uuid_lib.uuid4()
+            )
+        },
+    )
+
+    if request.method == 'POST' and form.is_valid():
+        try:
+            receber_pedido_compra(
+                pedido=pedido,
+                loja=form.cleaned_data['loja'],
+                itens=form.get_itens(),
+                chave_idempotencia=(
+                    form.cleaned_data[
+                        'chave_idempotencia'
+                    ]
+                ),
+                documento_referencia=(
+                    form.cleaned_data[
+                        'documento_referencia'
+                    ]
+                ),
+                observacoes=(
+                    form.cleaned_data['observacoes']
+                ),
+                usuario=request.user,
+                request=request,
+            )
+        except ValidationError as erro:
+            _aplicar_erros_formulario(
+                form=form,
+                erro=erro,
+            )
+        else:
+            messages.success(
+                request,
+                'Recebimento registrado com sucesso.',
+            )
+            return redirect(
+                'compras:detalhar_pedido_compra',
+                pedido_uuid=pedido.uuid,
+            )
+
+    return render(
+        request,
+        'compras/pedidos/receber.html',
+        {
+            'pedido': pedido,
+            'form': form,
+        },
     )

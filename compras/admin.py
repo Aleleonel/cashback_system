@@ -4,6 +4,8 @@ from .models import (
     Fornecedor,
     ItemPedidoCompra,
     PedidoCompra,
+    ItemRecebimentoCompra,
+    RecebimentoCompra,
 )
 
 
@@ -82,3 +84,43 @@ class PedidoCompraAdmin(admin.ModelAdmin):
     inlines = [
         ItemPedidoCompraInline,
     ]
+
+class ItemRecebimentoCompraInline(admin.TabularInline):
+    model = ItemRecebimentoCompra
+    extra = 0
+    can_delete = False
+    readonly_fields = [
+        'item_pedido',
+        'quantidade',
+        'movimentacao_estoque',
+        'criado_em',
+    ]
+
+
+@admin.register(RecebimentoCompra)
+class RecebimentoCompraAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'pedido',
+        'loja',
+        'documento_referencia',
+        'recebido_por',
+        'recebido_em',
+    ]
+    list_filter = [
+        'matriz',
+        'loja',
+        'recebido_em',
+    ]
+    readonly_fields = [
+        'uuid',
+        'matriz',
+        'loja',
+        'pedido',
+        'chave_idempotencia',
+        'documento_referencia',
+        'observacoes',
+        'recebido_por',
+        'recebido_em',
+    ]
+    inlines = [ItemRecebimentoCompraInline]
