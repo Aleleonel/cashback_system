@@ -1,0 +1,81 @@
+﻿CASHBACK SYSTEM
+PLANO OFICIAL DE EXECUÇÃO
+
+ETAPA 1 — REVISÃO DO ESTOQUE ATUAL
+
+1. Revisar model ReservaEstoque.
+2. Revisar selectors.
+3. Revisar registro da reserva.
+4. Revisar liberação.
+5. Revisar confirmação.
+6. Revisar os locks.
+7. Revisar idempotência.
+8. Revisar auditoria.
+9. Revisar isolamento multempresa.
+
+ETAPA 2 — COMPLETAR CICLO DE VIDA DA RESERVA
+
+1. Definir máquina de estados.
+2. Definir diferença entre liberação e cancelamento.
+3. Implementar cancelamento.
+4. Implementar expiração individual.
+5. Implementar expiração em lote.
+6. Criar índice para busca de vencidas.
+7. Criar auditoria.
+8. Criar testes.
+
+ETAPA 3 — CONCORRÊNCIA E INTEGRIDADE
+
+1. Testar reservas simultâneas.
+2. Testar confirmações simultâneas.
+3. Testar confirmação contra liberação.
+4. Testar idempotência simultânea.
+5. Testar rollback.
+6. Testar isolamento multempresa.
+7. Testar com PostgreSQL.
+
+ETAPA 4 — PERFORMANCE
+
+1. Medir queries dos services.
+2. Analisar agregações.
+3. Analisar índices.
+4. Revisar lock por loja e produto.
+5. Simular volume de reservas.
+6. Registrar resultados.
+
+ETAPA 5 — HOMOLOGAÇÃO DO PDV-02
+
+1. Executar suíte completa.
+2. Executar django check.
+3. Executar makemigrations --check.
+4. Revisar documentação.
+5. Revisar migrations.
+6. Conferir git diff.
+7. Criar commit final.
+8. Realizar merge revisado.
+
+ETAPA 6 — INICIAR DOMÍNIO DO PDV
+
+1. Criar blueprint do PDV.
+2. Modelar caixa e sessão.
+3. Modelar venda e itens.
+4. Modelar pagamentos.
+5. Integrar reservas.
+6. Implementar venda não fiscal.
+7. Implementar cancelamentos e estornos.
+8. Homologar o domínio comercial.
+
+ETAPA 7 — INICIAR CAMADA FISCAL
+
+1. Criar contratos fiscais.
+2. Criar máquina de estados fiscais.
+3. Criar adaptadores.
+4. Implementar idempotência fiscal.
+5. Implementar contingência.
+6. Integrar com venda sem acoplamento direto.
+7. Testar falhas e compensações.
+
+REGRA
+
+Nenhuma etapa posterior deve ser iniciada com pendências críticas na
+etapa anterior.

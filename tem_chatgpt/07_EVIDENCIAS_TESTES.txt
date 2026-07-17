@@ -1,0 +1,28 @@
+﻿CASHBACK SYSTEM
+EVIDÊNCIAS DE VERIFICAÇÃO
+
+Gerado em: 2026-07-17 13:34:33
+
+================================================
+DJANGO CHECK
+================================================
+
+System check identified no issues (0 silenced).
+
+
+================================================
+MAKEMIGRATIONS --CHECK --DRY-RUN
+================================================
+
+No changes detected
+
+
+================================================
+OBSERVAÇÃO
+================================================
+
+A suíte completa de testes será registrada separadamente depois da
+implementação das pendências do estoque.
+
+Nenhuma etapa será considerada concluída apenas porque o código foi
+criado. A conclusão depende de evidências executáveis.

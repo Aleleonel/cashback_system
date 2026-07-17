@@ -1,0 +1,47 @@
+﻿CASHBACK SYSTEM
+STATUS ATUAL DO DESENVOLVIMENTO
+
+Gerado em: 2026-07-17 13:34:33
+Branch atual: feature/pdv-02-estoque
+
+SPRINT ATUAL
+
+PDV-02 — Estoque
+
+ÚLTIMO MARCO IDENTIFICADO
+
+- Criação do domínio de reservas.
+- Selectors de reserva e saldo disponível.
+- Serviço de registro de reserva.
+- Serviço de liberação de reserva.
+- Serviço de confirmação de reserva.
+- Idempotência por matriz.
+- Auditoria das operações.
+- Bloqueios pessimistas nas operações críticas.
+- Testes de model, selectors e services.
+
+STATUS DO REPOSITÓRIO
+
+?? analise_estoque.txt ?? analise_reserva_estoque.txt ?? tem_chatgpt/
+
+ÚLTIMOS COMMITS
+
+43f438d (HEAD -> feature/pdv-02-estoque) feat(estoque): implementa confirma├º├úo de reserva de estoque 1e81832 feat: implementa liberacao de reserva de estoque b632579 feat: implementa service de reserva de estoque d9e68b1 feat: adiciona selectors de reserva de estoque 32629b6 feat: adiciona model de reserva de estoque c4653c8 feat: adiciona resultado de reserva de estoque a48c613 feat: adiciona status de reserva de estoque e51a351 docs: adiciona blueprint consolidado do modulo de estoque 24a3c21 feat: implementa transferencia de estoque entre lojas 6d6ca1e feat: implementa service de ajuste de estoque 6fde4bf feat: implementa service de saida de estoque 5d191d4 refactor: organiza service de entrada de estoque e0d0ef9 feat: implementa service de entrada de estoque c6be657 feat: adiciona model de movimentacao de estoque d4cb840 feat: adiciona model de saldo de estoque
+
+OBJETIVO IMEDIATO
+
+Concluir tecnicamente o módulo de estoque antes de iniciar o PDV fiscal
+e não fiscal.
+
+A conclusão exige:
+
+- expiração de reservas;
+- cancelamento de reservas, caso distinto da liberação;
+- revisão dos locks;
+- testes de concorrência;
+- testes de idempotência simultânea;
+- testes de rollback;
+- testes multempresa;
+- validação de performance;
+- documentação final;
+- homologação da sprint.
