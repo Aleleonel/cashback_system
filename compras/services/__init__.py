@@ -1,3 +1,7 @@
+from .custos import (
+    atualizar_custos_produtos_recebimento,
+    calcular_custo_unitario_item,
+)
 from .devolucoes import devolver_recebimento_compra
 from .fornecedores import (
     alterar_status_fornecedor,
@@ -15,6 +19,8 @@ from .pedidos import (
 )
 
 __all__ = [
+    'atualizar_custos_produtos_recebimento',
+    'calcular_custo_unitario_item',
     'adicionar_item_pedido_compra',
     'alterar_status_fornecedor',
     'cancelar_pedido_compra',

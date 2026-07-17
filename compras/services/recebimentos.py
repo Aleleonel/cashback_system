@@ -19,6 +19,8 @@ from compras.models import (
     RecebimentoCompra,
 )
 
+from .custos import atualizar_custos_produtos_recebimento
+
 
 @transaction.atomic
 def receber_pedido_compra(
@@ -79,6 +81,16 @@ def receber_pedido_compra(
     if not itens:
         raise ValidationError({
             'itens': 'Informe ao menos um item.'
+        })
+
+    ids = [
+        item['item_pedido_id']
+        for item in itens
+    ]
+
+    if len(ids) != len(set(ids)):
+        raise ValidationError({
+            'itens': 'Item informado mais de uma vez.'
         })
 
     recebimento = RecebimentoCompra.objects.create(
@@ -154,6 +166,14 @@ def receber_pedido_compra(
             ]
         )
 
+    atualizar_custos_produtos_recebimento(
+        pedido=pedido,
+        itens_recebidos=itens,
+        usuario=usuario,
+        loja=loja,
+        request=request,
+    )
+
     possui_pendente = (
         ItemPedidoCompra.objects
         .filter(
@@ -203,15 +223,18 @@ def _normalizar_itens(itens):
 
             if not quantidade.is_finite():
                 raise InvalidOperation
+
+            item_pedido_id = int(
+                item['item_pedido_id']
+            )
         except (
             InvalidOperation,
+            KeyError,
             TypeError,
             ValueError,
         ) as erro:
             raise ValidationError({
-                'quantidade': (
-                    'Informe uma quantidade valida.'
-                )
+                'itens': 'Item ou quantidade invalida.'
             }) from erro
 
         if quantidade < Decimal('0.000'):
@@ -225,9 +248,7 @@ def _normalizar_itens(itens):
             continue
 
         resultado.append({
-            'item_pedido_id': int(
-                item['item_pedido_id']
-            ),
+            'item_pedido_id': item_pedido_id,
             'quantidade': quantidade,
         })
 
