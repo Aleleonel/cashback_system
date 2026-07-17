@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Fornecedores{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Fornecedores</h1>
+
+        <a
+            href="{% url 'compras:criar_fornecedor' %}"
+            class="btn btn-primary"
+        >
+            Novo fornecedor
+        </a>
+    </div>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-7">
+            <input
+                type="search"
+                name="busca"
+                value="{{ busca }}"
+                class="form-control"
+                placeholder="Razao social, fantasia, CNPJ, email ou contato"
+            >
+        </div>
+
+        <div class="col-md-3">
+            <select
+                name="status"
+                class="form-select"
+            >
+                <option value="">
+                    Todos os status
+                </option>
+
+                {% for valor, rotulo in status_choices %}
+                    <option
+                        value="{{ valor }}"
+                        {% if status == valor %}selected{% endif %}
+                    >
+                        {{ rotulo }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100">
+                Filtrar
+            </button>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Razao social</th>
+                        <th>Nome fantasia</th>
+                        <th>CNPJ</th>
+                        <th>Status</th>
+                        <th class="text-end">Acoes</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for fornecedor in pagina %}
+                        <tr>
+                            <td>{{ fornecedor.razao_social }}</td>
+                            <td>{{ fornecedor.nome_fantasia|default:"-" }}</td>
+                            <td>{{ fornecedor.cnpj|default:"-" }}</td>
+                            <td>{{ fornecedor.get_status_display }}</td>
+                            <td class="text-end">
+                                <a
+                                    href="{% url 'compras:editar_fornecedor' fornecedor.uuid %}"
+                                    class="btn btn-sm btn-outline-secondary"
+                                >
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                Nenhum fornecedor encontrado.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
