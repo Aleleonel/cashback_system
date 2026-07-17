@@ -1,0 +1,88 @@
+﻿CASHBACK SYSTEM
+REGISTRO DE DECISÕES TÉCNICAS
+
+DECISÃO 001
+Tema:
+Separação entre saldo físico e reserva.
+
+Decisão:
+A reserva não altera fisicamente o estoque.
+
+Motivo:
+A reserva representa intenção temporária de consumo.
+
+Consequência:
+O saldo disponível é calculado como saldo físico menos reservas ativas.
+
+DECISÃO 002
+Tema:
+Alteração de estoque.
+
+Decisão:
+Somente services podem alterar saldo e movimentações.
+
+Motivo:
+Garantir transação, auditoria, idempotência e consistência.
+
+DECISÃO 003
+Tema:
+Movimentações.
+
+Decisão:
+Movimentações de estoque devem ser imutáveis.
+
+Motivo:
+Preservar rastreabilidade e auditoria.
+
+DECISÃO 004
+Tema:
+Multempresa.
+
+Decisão:
+Matriz e loja fazem parte do contexto obrigatório das operações.
+
+Motivo:
+Evitar vazamento de dados e conflitos entre empresas.
+
+DECISÃO 005
+Tema:
+Venda comercial e fiscal.
+
+Decisão:
+O domínio da venda não fiscal será separado da emissão fiscal.
+
+Motivo:
+Permitir evolução independente, contingência e integração com
+diferentes provedores fiscais.
+
+DECISÃO PENDENTE 006
+Tema:
+Recurso usado no lock de reserva.
+
+Alternativas:
+- Produto;
+- SaldoEstoque de matriz, loja e produto.
+
+Recomendação:
+Preferir SaldoEstoque quando a estrutura garantir a existência do
+registro e o bloqueio correto.
+
+Validação necessária:
+Testes reais de concorrência no PostgreSQL.
+
+DECISÃO PENDENTE 007
+Tema:
+Diferença entre liberação e cancelamento.
+
+Necessidade:
+Definir se os dois estados representam eventos de negócio distintos.
+
+Possível interpretação:
+
+Liberada:
+Reserva desfeita normalmente antes da conclusão.
+
+Cancelada:
+Reserva desfeita em razão do cancelamento formal da operação de origem.
+
+A decisão deve ser tomada antes da implementação do PDV.

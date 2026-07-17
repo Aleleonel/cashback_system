@@ -1,0 +1,138 @@
+﻿CASHBACK SYSTEM
+CHECKLIST DE CONCLUSÃO — PDV-02 ESTOQUE
+
+Legenda:
+
+[ ] Não concluído
+[~] Em análise ou parcialmente concluído
+[x] Concluído e comprovado
+
+A. MODELAGEM
+
+[x] SaldoEstoque implementado.
+[x] MovimentacaoEstoque implementada.
+[x] ReservaEstoque implementada.
+[x] Quantidade protegida por validação.
+[x] Quantidade protegida por constraint.
+[x] Idempotência protegida no banco.
+[x] Relação matriz, loja e produto validada.
+[x] Estados da reserva modelados.
+[ ] Revisar se CANCELADA e LIBERADA possuem regras distintas.
+[ ] Documentar oficialmente todas as transições de status.
+[ ] Avaliar constraints de coerência dos timestamps no banco.
+
+B. SERVICES
+
+[x] Entrada de estoque.
+[x] Saída de estoque.
+[x] Ajuste de estoque.
+[x] Transferência de estoque.
+[x] Registro de reserva.
+[x] Liberação de reserva.
+[x] Confirmação de reserva.
+[ ] Cancelamento explícito da reserva.
+[ ] Expiração individual da reserva.
+[ ] Expiração em lote de reservas vencidas.
+[ ] Política para tentativa de confirmar reserva vencida.
+[ ] Política para confirmar reserva sem chave idempotente original.
+[ ] Revisar locks por matriz, loja e produto.
+
+C. INTEGRIDADE MULTEMPRESA
+
+[x] Reserva vinculada à matriz.
+[x] Reserva vinculada à loja.
+[x] Produto validado contra a matriz.
+[x] Loja validada contra a matriz.
+[x] Chave idempotente isolada por matriz.
+[ ] Teste de acesso cruzado por ID.
+[ ] Teste de service com objeto de outra matriz.
+[ ] Teste de selector sem vazamento entre matrizes.
+[ ] Teste de auditoria com matriz e loja corretas.
+[ ] Revisão de permissões nas futuras APIs.
+
+D. CONCORRÊNCIA
+
+[~] Uso de select_for_update presente.
+[ ] Definir recurso oficial de lock.
+[ ] Testar duas reservas simultâneas com saldo suficiente.
+[ ] Testar duas reservas simultâneas com saldo insuficiente para ambas.
+[ ] Testar duas confirmações simultâneas.
+[ ] Testar confirmação simultânea com liberação.
+[ ] Testar duas chamadas com a mesma chave idempotente.
+[ ] Executar testes com banco compatível com locks reais.
+[ ] Documentar diferenças entre SQLite e PostgreSQL.
+
+E. IDEMPOTÊNCIA
+
+[x] Constraint por matriz e chave.
+[x] Reprocessamento compatível retorna duplicada.
+[x] Reprocessamento incompatível é rejeitado.
+[x] IntegrityError concorrente é tratado no registro.
+[ ] Testar idempotência simultânea.
+[ ] Testar idempotência da confirmação.
+[ ] Testar movimentação não duplicada após confirmação repetida.
+[ ] Padronizar formato das chaves idempotentes.
+[ ] Documentar tamanho e origem das chaves.
+
+F. PERFORMANCE
+
+[x] Índices básicos de reserva existentes.
+[x] Selectors usam agregação no banco.
+[ ] Medir quantidade de queries por operação.
+[ ] Avaliar lock em SaldoEstoque em vez de Produto.
+[ ] Avaliar índice para reservas ativas vencidas.
+[ ] Avaliar índice composto para matriz, status e expira_em.
+[ ] Testar volume elevado de reservas encerradas.
+[ ] Verificar crescimento da tabela de movimentações.
+[ ] Definir paginação para histórico.
+[ ] Definir retenção sem apagar auditoria obrigatória.
+
+G. AUDITORIA
+
+[x] Criação da reserva auditada.
+[x] Liberação auditada.
+[x] Confirmação auditada.
+[ ] Expiração auditada.
+[ ] Cancelamento auditado.
+[ ] Testar rollback quando auditoria falhar.
+[ ] Padronizar nomes dos recursos auditados.
+[ ] Definir dados sensíveis que não devem entrar na descrição.
+
+H. TESTES
+
+[x] Testes do model ReservaEstoque.
+[x] Testes dos selectors.
+[x] Testes do resultado imutável.
+[ ] Revisar cobertura dos services de reserva.
+[ ] Testes da confirmação.
+[ ] Testes da liberação.
+[ ] Testes da expiração.
+[ ] Testes do cancelamento.
+[ ] Testes de rollback.
+[ ] Testes de concorrência.
+[ ] Testes multempresa.
+[ ] Testes de performance mínima.
+[ ] Suíte completa do projeto aprovada.
+
+I. DOCUMENTAÇÃO E ENTREGA
+
+[x] Blueprint inicial do estoque.
+[x] Documentação técnica criada em tem_chatgpt.
+[ ] Atualizar blueprint com o estado final.
+[ ] Registrar decisões sobre locks.
+[ ] Registrar máquina de estados.
+[ ] Gerar evidência final dos testes.
+[ ] Executar django check.
+[ ] Executar makemigrations --check.
+[ ] Conferir migrations.
+[ ] Conferir git diff.
+[ ] Garantir árvore limpa.
+[ ] Criar commit final da sprint.
+[ ] Merge revisado para develop.
+[ ] Tag ou marco de homologação, se aplicável.
+
+CRITÉRIO DE SAÍDA
+
+O PDV-02 somente poderá ser considerado concluído quando todos os itens
+críticos de integridade, concorrência, multempresa, idempotência,
+auditoria e testes estiverem marcados como concluídos e comprovados.

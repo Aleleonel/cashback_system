@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'empresas',
     'clientes',
     'produtos.apps.ProdutosConfig',
+    'estoque.apps.EstoqueConfig',
     'cashback',
     'vouchers',
     'campanhas',
@@ -172,3 +173,4 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
