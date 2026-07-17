@@ -1,6 +1,9 @@
 from django.db.models import Q
 
-from .models import Fornecedor
+from .models import (
+    Fornecedor,
+    PedidoCompra,
+)
 
 
 def get_fornecedores(
@@ -84,4 +87,69 @@ def get_fornecedor_por_cnpj(
             cnpj=cnpj_normalizado,
         )
         .first()
+    )
+
+
+def get_pedidos_compra(
+    *,
+    matriz,
+    busca='',
+    status='',
+):
+    pedidos = (
+        PedidoCompra.objects
+        .filter(matriz=matriz)
+        .select_related(
+            'fornecedor',
+            'criado_por',
+        )
+        .prefetch_related(
+            'itens',
+        )
+        .order_by(
+            '-data_emissao',
+            '-numero',
+        )
+    )
+
+    busca = (busca or '').strip()
+    status = (status or '').strip()
+
+    if busca:
+        filtro = (
+            Q(fornecedor__razao_social__icontains=busca)
+            | Q(fornecedor__nome_fantasia__icontains=busca)
+            | Q(fornecedor__cnpj__icontains=busca)
+        )
+
+        if busca.isdigit():
+            filtro |= Q(numero=int(busca))
+
+        pedidos = pedidos.filter(filtro)
+
+    if status:
+        pedidos = pedidos.filter(status=status)
+
+    return pedidos
+
+
+def get_pedido_compra_por_uuid(
+    *,
+    matriz,
+    pedido_uuid,
+):
+    return (
+        PedidoCompra.objects
+        .select_related(
+            'matriz',
+            'fornecedor',
+            'criado_por',
+        )
+        .prefetch_related(
+            'itens__produto',
+        )
+        .get(
+            matriz=matriz,
+            uuid=pedido_uuid,
+        )
     )
