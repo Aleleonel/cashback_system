@@ -1,0 +1,67 @@
+﻿CASHBACK SYSTEM
+DOCUMENTAÇÃO TÉCNICA DE DESENVOLVIMENTO
+
+FINALIDADE
+
+Esta pasta registra as decisões técnicas, critérios de qualidade,
+checklists, riscos, evidências e planejamento do Cashback System.
+
+A documentação deve acompanhar o código e ser atualizada antes da
+conclusão de cada sprint.
+
+PRINCÍPIOS OBRIGATÓRIOS
+
+1. Sem dívida técnica deliberada.
+2. Sem downgrade de arquitetura.
+3. Sem quebra de compatibilidade sem análise.
+4. Sem alteração de domínio sem testes.
+5. Sem operação multempresa sem isolamento por matriz e loja.
+6. Sem alteração de estoque fora da camada de services.
+7. Sem movimentação sem transação atômica.
+8. Sem recurso crítico sem auditoria.
+9. Sem operação repetível sem idempotência.
+10. Sem merge com testes quebrados.
+11. Sem avanço de sprint com pendências críticas.
+12. Sem regra fiscal misturada prematuramente ao domínio comercial.
+
+ORGANIZAÇÃO DOS ARQUIVOS
+
+00_LEIA_ME.txt
+    Finalidade e regras desta pasta.
+
+01_STATUS_ATUAL.txt
+    Estado atual da branch, commits e arquivos modificados.
+
+02_PRINCIPIOS_DE_ARQUITETURA.txt
+    Regras estruturais obrigatórias do projeto.
+
+03_CHECKLIST_CONCLUSAO_ESTOQUE.txt
+    Critérios para encerrar o PDV-02.
+
+04_ROADMAP_PDV_FISCAL_NAO_FISCAL.txt
+    Planejamento para o desenvolvimento do PDV.
+
+05_MATRIZ_DE_RISCOS.txt
+    Riscos técnicos, operacionais e arquiteturais.
+
+06_INVENTARIO_ESTOQUE.txt
+    Arquivos relacionados ao módulo de estoque.
+
+07_EVIDENCIAS_TESTES.txt
+    Resultado das verificações automatizadas.
+
+08_DECISOES_TECNICAS.txt
+    Registro das decisões que não devem ser perdidas.
+
+09_PLANO_DE_EXECUCAO.txt
+    Ordem oficial das próximas implementações.
+
+REGRA DE ATUALIZAÇÃO
+
+Sempre que uma etapa importante for concluída:
+
+1. Atualizar os documentos afetados.
+2. Executar os testes.
+3. Gerar novamente as evidências.
+4. Conferir o git diff.
+5. Criar um commit pequeno e descritivo.

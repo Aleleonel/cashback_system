@@ -1,0 +1,195 @@
+﻿CASHBACK SYSTEM
+PRINCÍPIOS OBRIGATÓRIOS DE ARQUITETURA
+
+1. CAMADAS
+
+Models:
+- estrutura de dados;
+- invariantes do domínio;
+- constraints;
+- validações que sempre devem ser verdadeiras.
+
+Services:
+- alteração de estado;
+- transações;
+- locks;
+- idempotência;
+- auditoria;
+- coordenação entre models.
+
+Selectors:
+- consultas reutilizáveis;
+- cálculos de leitura;
+- filtros multempresa;
+- otimização de queries.
+
+Views e APIs:
+- autenticação;
+- autorização;
+- validação de entrada;
+- chamada dos services;
+- serialização da resposta.
+
+Views e APIs não devem alterar saldo diretamente.
+
+2. INTEGRIDADE MULTEMPRESA
+
+Toda operação de negócio deve verificar:
+
+- matriz;
+- loja;
+- produto pertencente à matriz;
+- usuário autorizado na empresa;
+- ausência de acesso cruzado;
+- índices compatíveis com os filtros empresariais.
+
+Nenhum objeto deve ser localizado somente pelo ID quando houver risco
+de acesso entre empresas.
+
+Preferir buscas com contexto:
+
+- matriz;
+- loja;
+- identificador do objeto.
+
+3. ESTOQUE
+
+Toda alteração física do estoque deve:
+
+- ocorrer dentro de transaction.atomic;
+- bloquear o recurso correto;
+- gerar movimentação imutável;
+- atualizar o saldo;
+- registrar auditoria;
+- possuir chave de idempotência quando repetível;
+- permitir rollback completo.
+
+Reserva não é movimentação física.
+
+Reserva ativa reduz o saldo disponível, mas não altera diretamente o
+saldo físico.
+
+Confirmação da reserva:
+
+- gera saída física;
+- encerra a reserva;
+- deve ser idempotente.
+
+Liberação, cancelamento ou expiração:
+
+- encerra a reserva;
+- devolve disponibilidade;
+- não gera entrada física.
+
+4. CONCORRÊNCIA
+
+Não confiar apenas em validação realizada antes da transação.
+
+O fluxo crítico deve:
+
+1. abrir transação;
+2. bloquear o recurso disputado;
+3. verificar novamente a idempotência;
+4. recalcular o saldo;
+5. validar a operação;
+6. alterar o estado;
+7. registrar auditoria;
+8. confirmar a transação.
+
+O lock deve ser o mais específico possível.
+
+Para estoque, avaliar bloqueio por:
+
+- matriz;
+- loja;
+- produto.
+
+Evitar bloquear globalmente um produto quando lojas diferentes puderem
+operar independentemente.
+
+5. IDEMPOTÊNCIA
+
+Uma chave idempotente deve:
+
+- ser obrigatória nas operações críticas;
+- ser única no escopo empresarial adequado;
+- retornar o resultado anterior quando a operação for igual;
+- rejeitar reutilização com parâmetros diferentes;
+- ser protegida por constraint no banco;
+- tratar condições de corrida.
+
+6. PERFORMANCE
+
+Antes de considerar uma implementação concluída, revisar:
+
+- quantidade de queries;
+- consultas dentro de loops;
+- select_related;
+- prefetch_related;
+- índices;
+- agregações;
+- locks excessivamente amplos;
+- paginação;
+- crescimento histórico das tabelas;
+- custo das auditorias;
+- custo das reservas ativas.
+
+Não realizar otimização prematura, mas também não aceitar uma estrutura
+que conhecidamente cause contenção ou consultas ilimitadas.
+
+7. AUDITORIA
+
+A auditoria deve estar dentro da mesma transação da operação.
+
+Registrar quando aplicável:
+
+- usuário;
+- matriz;
+- loja;
+- recurso;
+- identificador;
+- ação;
+- quantidade;
+- estado anterior;
+- estado posterior;
+- documento de referência;
+- origem;
+- request.
+
+8. MIGRAÇÕES
+
+Toda mudança de banco deve:
+
+- possuir migration;
+- preservar dados existentes;
+- ser reversível quando possível;
+- evitar locks longos em produção;
+- possuir constraint no banco quando a integridade depender dela;
+- ser validada com makemigrations --check.
+
+9. TESTES
+
+São obrigatórios:
+
+- regras do model;
+- services;
+- selectors;
+- idempotência;
+- isolamento multempresa;
+- rollback;
+- estados inválidos;
+- concorrência;
+- autorização nas APIs;
+- regressão das funcionalidades anteriores.
+
+10. REGRA DE MERGE
+
+Não realizar merge quando existir:
+
+- teste quebrado;
+- migration pendente;
+- risco crítico não tratado;
+- dívida técnica classificada como bloqueadora;
+- documentação desatualizada;
+- alteração sem auditoria;
+- operação sem isolamento multempresa.

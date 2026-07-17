@@ -1,0 +1,148 @@
+﻿CASHBACK SYSTEM
+MATRIZ DE RISCOS TÉCNICOS
+
+RISCO 01
+Descrição:
+Duas vendas consumirem o mesmo saldo disponível.
+
+Impacto:
+Crítico.
+
+Tratamento:
+- transação;
+- lock específico;
+- recálculo dentro da transação;
+- teste de concorrência.
+
+Status:
+Em validação.
+
+RISCO 02
+Descrição:
+Lock excessivamente amplo no produto bloquear lojas independentes.
+
+Impacto:
+Alto em escala.
+
+Tratamento:
+Avaliar lock no SaldoEstoque de matriz, loja e produto.
+
+Status:
+Pendente de decisão técnica.
+
+RISCO 03
+Descrição:
+Vazamento de dados entre empresas.
+
+Impacto:
+Crítico.
+
+Tratamento:
+- filtros obrigatórios por matriz;
+- validação de loja;
+- autorização;
+- testes de acesso cruzado.
+
+Status:
+Exige testes adicionais.
+
+RISCO 04
+Descrição:
+Operação repetida gerar duplicação de saldo ou movimentação.
+
+Impacto:
+Crítico.
+
+Tratamento:
+- chave idempotente;
+- constraint;
+- reprocessamento compatível;
+- teste simultâneo.
+
+Status:
+Estrutura implementada; concorrência ainda precisa de prova.
+
+RISCO 05
+Descrição:
+Reserva vencida continuar bloqueando disponibilidade.
+
+Impacto:
+Alto.
+
+Tratamento:
+- expiração automática;
+- processamento idempotente;
+- índice apropriado;
+- auditoria.
+
+Status:
+Não implementado.
+
+RISCO 06
+Descrição:
+Falha de auditoria deixar alteração parcialmente concluída.
+
+Impacto:
+Alto.
+
+Tratamento:
+Auditoria na mesma transação e teste de rollback.
+
+Status:
+Estrutura existente; teste necessário.
+
+RISCO 07
+Descrição:
+Crescimento das reservas prejudicar o cálculo de disponibilidade.
+
+Impacto:
+Médio agora; alto em escala.
+
+Tratamento:
+- índices;
+- medir queries;
+- avaliar saldo reservado materializado;
+- arquivamento lógico sem perda de histórico.
+
+Status:
+Monitorar antes da produção em escala.
+
+RISCO 08
+Descrição:
+Misturar venda comercial com emissão fiscal.
+
+Impacto:
+Crítico para manutenção.
+
+Tratamento:
+Separar domínio comercial da camada fiscal e usar adaptadores.
+
+Status:
+Diretriz definida.
+
+RISCO 09
+Descrição:
+Falha fiscal causar baixa duplicada ou perda de estoque.
+
+Impacto:
+Crítico.
+
+Tratamento:
+Definir máquina de estados, idempotência e compensações antes da
+integração fiscal.
+
+Status:
+Planejamento futuro obrigatório.
+
+RISCO 10
+Descrição:
+SQLite ocultar problemas reais de concorrência.
+
+Impacto:
+Alto.
+
+Tratamento:
+Executar testes críticos com PostgreSQL.
+
+Status:
+Pendente.

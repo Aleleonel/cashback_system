@@ -1,0 +1,175 @@
+﻿CASHBACK SYSTEM
+ROADMAP PARA PDV FISCAL E NÃO FISCAL
+
+OBJETIVO
+
+Construir o PDV sobre uma base estável de catálogo, estoque, empresas,
+auditoria e idempotência, evitando acoplamento prematuro com regras
+fiscais.
+
+FASE 1 — CONCLUIR ESTOQUE
+
+Pré-requisitos:
+
+- reservas completas;
+- expiração;
+- cancelamento;
+- concorrência validada;
+- multempresa validada;
+- auditoria completa;
+- testes aprovados;
+- performance analisada.
+
+FASE 2 — DOMÍNIO COMERCIAL DO PDV
+
+Entidades previstas:
+
+- Caixa;
+- SessaoCaixa;
+- Venda;
+- ItemVenda;
+- PagamentoVenda;
+- FormaPagamento;
+- OperadorCaixa;
+- CancelamentoVenda;
+- Sangria;
+- Suprimento;
+- DocumentoComercial.
+
+Estados possíveis da venda:
+
+- aberta;
+- em pagamento;
+- concluída;
+- cancelada;
+- estornada;
+- pendente de emissão fiscal;
+- rejeitada fiscalmente.
+
+Princípio:
+
+A venda comercial deve existir independentemente do documento fiscal.
+
+FASE 3 — PDV NÃO FISCAL
+
+Funcionalidades:
+
+- abertura do caixa;
+- leitura ou busca de produtos;
+- inclusão de itens;
+- alteração controlada de quantidade;
+- descontos autorizados;
+- reserva de estoque;
+- múltiplas formas de pagamento;
+- conclusão da venda;
+- confirmação da reserva;
+- baixa física do estoque;
+- comprovante não fiscal;
+- cancelamento;
+- estorno;
+- fechamento de caixa;
+- auditoria.
+
+FASE 4 — CAMADA FISCAL
+
+A camada fiscal não deve dominar diretamente o estoque ou o caixa.
+
+Criar abstrações para:
+
+- DocumentoFiscal;
+- EmissaoFiscal;
+- ItemFiscal;
+- TributacaoProduto;
+- ResultadoEmissaoFiscal;
+- EventoFiscal;
+- CancelamentoFiscal;
+- ContingenciaFiscal.
+
+A venda envia uma solicitação à camada fiscal.
+
+A camada fiscal devolve:
+
+- autorizada;
+- rejeitada;
+- pendente;
+- contingência;
+- cancelada.
+
+FASE 5 — INTEGRAÇÕES FISCAIS
+
+Preparar adaptadores independentes para:
+
+- NFC-e;
+- NF-e;
+- SAT, caso aplicável;
+- provedores externos;
+- certificado digital;
+- SEFAZ;
+- contingência;
+- impressão de DANFE ou comprovantes.
+
+Evitar lógica específica de fornecedor dentro do domínio.
+
+FASE 6 — CONSISTÊNCIA ENTRE VENDA, ESTOQUE E FISCAL
+
+Definir claramente:
+
+- momento da reserva;
+- momento da baixa física;
+- comportamento em rejeição fiscal;
+- comportamento em falha de comunicação;
+- retentativas;
+- idempotência da emissão;
+- cancelamento comercial;
+- cancelamento fiscal;
+- estorno de pagamento;
+- devolução ao estoque.
+
+FASE 7 — SEGURANÇA MULTEMPRESA
+
+Toda venda deve possuir:
+
+- matriz;
+- loja;
+- caixa;
+- sessão;
+- operador;
+- cliente, quando aplicável;
+- contexto fiscal da loja.
+
+Nenhum usuário poderá:
+
+- vender em loja não autorizada;
+- acessar caixa de outra empresa;
+- emitir documento com configuração fiscal de outra matriz;
+- visualizar venda de outra empresa;
+- reutilizar chave idempotente fora do escopo correto.
+
+FASE 8 — TESTES OBRIGATÓRIOS DO PDV
+
+- venda simples;
+- múltiplos itens;
+- múltiplos pagamentos;
+- saldo insuficiente;
+- venda simultânea;
+- repetição da requisição;
+- falha no pagamento;
+- falha fiscal;
+- rejeição fiscal;
+- contingência;
+- cancelamento;
+- estorno;
+- rollback;
+- multempresa;
+- autorização;
+- fechamento de caixa;
+- divergência de caixa.
+
+REGRA DE EVOLUÇÃO
+
+Primeiro consolidar o domínio comercial não fiscal.
+
+Depois conectar a camada fiscal por contratos estáveis.
+
+Essa separação reduz risco, evita acoplamento e permite utilizar o PDV
+mesmo em cenários de indisponibilidade fiscal controlada.
