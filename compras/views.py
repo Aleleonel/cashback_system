@@ -646,3 +646,83 @@ def receber_pedido_compra_view(
             'form': form,
         },
     )
+
+
+@login_required
+def devolver_recebimento_compra_view(
+    request,
+    recebimento_uuid,
+):
+    import uuid as uuid_lib
+
+    from django.contrib import messages
+    from django.core.exceptions import ValidationError
+    from django.shortcuts import get_object_or_404, redirect, render
+
+    from compras.forms import DevolucaoCompraForm
+    from compras.models import RecebimentoCompra
+    from compras.services import devolver_recebimento_compra
+
+    matriz = _get_matriz_usuario(request)
+
+    recebimento = get_object_or_404(
+        RecebimentoCompra.objects
+        .select_related(
+            'pedido',
+            'pedido__fornecedor',
+            'loja',
+        )
+        .prefetch_related(
+            'itens__item_pedido__produto'
+        ),
+        uuid=recebimento_uuid,
+        matriz=matriz,
+    )
+
+    form = DevolucaoCompraForm(
+        request.POST or None,
+        recebimento=recebimento,
+        initial={
+            'chave_idempotencia': str(uuid_lib.uuid4())
+        },
+    )
+
+    if request.method == 'POST' and form.is_valid():
+        try:
+            devolver_recebimento_compra(
+                recebimento=recebimento,
+                itens=form.get_itens(),
+                chave_idempotencia=(
+                    form.cleaned_data['chave_idempotencia']
+                ),
+                documento_referencia=(
+                    form.cleaned_data['documento_referencia']
+                ),
+                motivo=form.cleaned_data['motivo'],
+                usuario=request.user,
+                request=request,
+            )
+        except ValidationError as erro:
+            _aplicar_erros_formulario(
+                form=form,
+                erro=erro,
+            )
+        else:
+            messages.success(
+                request,
+                'Devolucao registrada com sucesso.',
+            )
+            return redirect(
+                'compras:detalhar_pedido_compra',
+                pedido_uuid=recebimento.pedido.uuid,
+            )
+
+    return render(
+        request,
+        'compras/pedidos/devolver.html',
+        {
+            'recebimento': recebimento,
+            'pedido': recebimento.pedido,
+            'form': form,
+        },
+    )

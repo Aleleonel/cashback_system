@@ -1,3 +1,4 @@
+from .devolucoes import devolver_recebimento_compra
 from .fornecedores import (
     alterar_status_fornecedor,
     criar_fornecedor,
@@ -24,4 +25,5 @@ __all__ = [
     'enviar_pedido_compra',
     'remover_item_pedido_compra',
     'receber_pedido_compra',
+    'devolver_recebimento_compra',
 ]

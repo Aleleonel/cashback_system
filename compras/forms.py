@@ -192,3 +192,80 @@ class RecebimentoCompraForm(forms.Form):
                 })
 
         return itens
+
+
+class DevolucaoCompraForm(forms.Form):
+    documento_referencia = forms.CharField(
+        required=False,
+        max_length=80,
+        label='Documento de referencia',
+    )
+    motivo = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={'rows': 3}),
+        label='Motivo da devolucao',
+    )
+    chave_idempotencia = forms.CharField(
+        widget=forms.HiddenInput(),
+    )
+
+    def __init__(self, *args, recebimento=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.recebimento = recebimento
+
+        for item in recebimento.itens.select_related(
+            'item_pedido__produto'
+        ):
+            disponivel = (
+                item.quantidade
+                - item.quantidade_devolvida
+            )
+
+            if disponivel <= Decimal('0.000'):
+                continue
+
+            self.fields[
+                f'quantidade_{item.pk}'
+            ] = forms.DecimalField(
+                required=False,
+                min_value=Decimal('0.000'),
+                max_value=disponivel,
+                decimal_places=3,
+                max_digits=12,
+                initial=Decimal('0.000'),
+                label=(
+                    f'{item.item_pedido.produto} '
+                    f'(disponivel: {disponivel})'
+                ),
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if not any(
+            nome.startswith('quantidade_')
+            and valor
+            and valor > Decimal('0.000')
+            for nome, valor in cleaned_data.items()
+        ):
+            raise forms.ValidationError(
+                'Informe ao menos uma quantidade.'
+            )
+
+        return cleaned_data
+
+    def get_itens(self):
+        itens = []
+
+        for item in self.recebimento.itens.all():
+            quantidade = self.cleaned_data.get(
+                f'quantidade_{item.pk}'
+            )
+
+            if quantidade:
+                itens.append({
+                    'item_recebimento_id': item.pk,
+                    'quantidade': quantidade,
+                })
+
+        return itens

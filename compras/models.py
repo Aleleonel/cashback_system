@@ -491,6 +491,15 @@ class ItemRecebimentoCompra(models.Model):
         on_delete=models.PROTECT,
         related_name='item_recebimento_compra',
     )
+    quantidade_devolvida = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        default=Decimal('0.000'),
+        validators=[
+            MinValueValidator(Decimal('0.000')),
+        ],
+    )
+
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -503,5 +512,105 @@ class ItemRecebimentoCompra(models.Model):
             models.CheckConstraint(
                 condition=models.Q(quantidade__gt=0),
                 name='item_rec_compra_qtd_pos',
+            ),
+        ]
+
+
+class DevolucaoCompra(models.Model):
+    uuid = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        db_index=True,
+    )
+    matriz = models.ForeignKey(
+        Matriz,
+        on_delete=models.PROTECT,
+        related_name='devolucoes_compra',
+    )
+    loja = models.ForeignKey(
+        'empresas.Loja',
+        on_delete=models.PROTECT,
+        related_name='devolucoes_compra',
+    )
+    recebimento = models.ForeignKey(
+        RecebimentoCompra,
+        on_delete=models.PROTECT,
+        related_name='devolucoes',
+    )
+    chave_idempotencia = models.CharField(max_length=100)
+    documento_referencia = models.CharField(
+        max_length=80,
+        blank=True,
+    )
+    motivo = models.TextField()
+    devolvido_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='devolucoes_compra_realizadas',
+    )
+    devolvido_em = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    class Meta:
+        ordering = ['-devolvido_em', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['matriz', 'chave_idempotencia'],
+                name='uq_dev_compra_mat_idemp',
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=['matriz', 'recebimento'],
+                name='dev_compra_mat_rec_idx',
+            ),
+            models.Index(
+                fields=['matriz', 'loja', 'devolvido_em'],
+                name='dev_compra_mat_loja_dt_idx',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Devolucao {self.id} - {self.recebimento.pedido}'
+
+
+class ItemDevolucaoCompra(models.Model):
+    devolucao = models.ForeignKey(
+        DevolucaoCompra,
+        on_delete=models.CASCADE,
+        related_name='itens',
+    )
+    item_recebimento = models.ForeignKey(
+        ItemRecebimentoCompra,
+        on_delete=models.PROTECT,
+        related_name='devolucoes',
+    )
+    quantidade = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        validators=[
+            MinValueValidator(Decimal('0.001')),
+        ],
+    )
+    movimentacao_estoque = models.OneToOneField(
+        'estoque.MovimentacaoEstoque',
+        on_delete=models.PROTECT,
+        related_name='item_devolucao_compra',
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['devolucao', 'item_recebimento'],
+                name='uq_item_dev_compra_rec',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantidade__gt=0),
+                name='item_dev_compra_qtd_pos',
             ),
         ]

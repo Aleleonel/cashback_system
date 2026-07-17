@@ -235,4 +235,35 @@
         </form>
     {% endif %}
 </div>
+
+<section class="card mt-4">
+    <div class="card-header">
+        Recebimentos e devolucoes
+    </div>
+    <div class="card-body">
+        {% for recebimento in pedido.recebimentos.all %}
+            <div class="border rounded p-3 mb-3">
+                <strong>
+                    Recebimento {{ recebimento.id }}
+                </strong>
+                - {{ recebimento.loja }}
+                - {{ recebimento.recebido_em|date:"d/m/Y H:i" }}
+
+                <div class="mt-2">
+                    <a
+                        href="{% url 'compras:devolver_recebimento_compra' recebimento.uuid %}"
+                        class="btn btn-sm btn-outline-danger"
+                    >
+                        Devolver ao fornecedor
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-muted mb-0">
+                Nenhum recebimento registrado.
+            </p>
+        {% endfor %}
+    </div>
+</section>
+
 {% endblock %}

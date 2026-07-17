@@ -67,4 +67,9 @@ urlpatterns = [
         views.receber_pedido_compra_view,
         name='receber_pedido_compra',
     ),
+    path(
+        'recebimentos/<uuid:recebimento_uuid>/devolver/',
+        views.devolver_recebimento_compra_view,
+        name='devolver_recebimento_compra',
+    ),
 ]

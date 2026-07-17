@@ -124,3 +124,50 @@ class RecebimentoCompraAdmin(admin.ModelAdmin):
         'recebido_em',
     ]
     inlines = [ItemRecebimentoCompraInline]
+
+
+from compras.models import (
+    DevolucaoCompra,
+    ItemDevolucaoCompra,
+)
+
+
+class ItemDevolucaoCompraInline(admin.TabularInline):
+    model = ItemDevolucaoCompra
+    extra = 0
+    can_delete = False
+    readonly_fields = [
+        'item_recebimento',
+        'quantidade',
+        'movimentacao_estoque',
+        'criado_em',
+    ]
+
+
+@admin.register(DevolucaoCompra)
+class DevolucaoCompraAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'recebimento',
+        'loja',
+        'documento_referencia',
+        'devolvido_por',
+        'devolvido_em',
+    ]
+    list_filter = [
+        'matriz',
+        'loja',
+        'devolvido_em',
+    ]
+    readonly_fields = [
+        'uuid',
+        'matriz',
+        'loja',
+        'recebimento',
+        'chave_idempotencia',
+        'documento_referencia',
+        'motivo',
+        'devolvido_por',
+        'devolvido_em',
+    ]
+    inlines = [ItemDevolucaoCompraInline]
