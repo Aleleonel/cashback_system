@@ -46,3 +46,38 @@ h6 {
 ::selection {
     background: rgba(37, 99, 235, 0.18);
 }
+
+/* UI-CHECKBOX-01: alinhamento global de checkboxes - inicio */
+
+/*
+ * Alinha checkboxes comuns sem afetar form-switch.
+ */
+.form-check:not(.form-switch) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: auto;
+    padding-left: 0;
+}
+
+.form-check:not(.form-switch) .form-check-input {
+    float: none;
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.form-check:not(.form-switch) .form-check-label {
+    margin: 0;
+    line-height: 1.25;
+}
+
+.table .form-check:not(.form-switch) {
+    justify-content: center;
+    margin: 0;
+}
+
+input.form-check-input[type="checkbox"]:not([role="switch"]) {
+    vertical-align: middle;
+}
+
+/* UI-CHECKBOX-01: alinhamento global de checkboxes - fim */

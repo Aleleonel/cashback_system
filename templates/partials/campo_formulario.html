@@ -1,20 +1,5 @@
-﻿{% if campo.field.widget.input_type == 'checkbox' %}
-<div class="form-check">
-    {{ campo }}
-    {{ campo.label_tag }}
-
-    {% if campo.help_text %}
-    <div class="form-text">
-        {{ campo.help_text }}
-    </div>
-    {% endif %}
-
-    {% for erro in campo.errors %}
-    <div class="text-danger small">
-        {{ erro }}
-    </div>
-    {% endfor %}
-</div>
+{% if campo.field.widget.input_type == 'checkbox' %}
+    {% include "partials/form_checkbox.html" with campo=campo %}
 {% else %}
 <div>
     {{ campo.label_tag }}

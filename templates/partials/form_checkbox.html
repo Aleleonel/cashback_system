@@ -1,0 +1,28 @@
+{% comment %}
+Componente padrao para campos BooleanField/CheckboxInput.
+
+Uso:
+{% include "partials/form_checkbox.html" with campo=campo %}
+{% endcomment %}
+
+<div class="form-check ui-form-check">
+    {{ campo }}
+    <label
+        class="form-check-label"
+        for="{{ campo.id_for_label }}"
+    >
+        {{ campo.label }}
+    </label>
+</div>
+
+{% if campo.help_text %}
+    <div class="form-text">
+        {{ campo.help_text }}
+    </div>
+{% endif %}
+
+{% for erro in campo.errors %}
+    <div class="invalid-feedback d-block">
+        {{ erro }}
+    </div>
+{% endfor %}
