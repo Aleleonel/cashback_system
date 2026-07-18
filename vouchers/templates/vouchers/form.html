@@ -102,11 +102,7 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check">
-                            {{ form.uso_unico_por_cliente }}
-                            {{ form.uso_unico_por_cliente.label_tag }}
-                            {{ form.uso_unico_por_cliente.errors }}
-                        </div>
+                        {% include "partials/form_checkbox.html" with campo=form.uso_unico_por_cliente %}
                     </div>
 
                 </div>
