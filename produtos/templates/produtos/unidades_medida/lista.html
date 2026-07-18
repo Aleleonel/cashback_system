@@ -15,61 +15,9 @@
     {% include 'partials/toolbar_lista.html' with toolbar_titulo='Localizar unidades de medida' toolbar_subtitulo='Pesquise por sigla ou descrição e refine a listagem.' toolbar_icone='bi-search' toolbar_rotulo_busca='Buscar unidade' toolbar_placeholder_busca='Sigla ou descrição' toolbar_url_limpar=url_limpar_unidades toolbar_exibir_ativas=True %}
     <!-- UI-03.1B: TOOLBAR AUXILIAR REUTILIZAVEL - FIM -->
 
-    <div class="table-responsive">
-
-        <table class="table table-hover align-middle mb-0">
-
-            <thead class="table-light">
-                <tr>
-                    <th>Sigla</th>
-                    <th>Descrição</th>
-                    <th>Status</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for unidade in pagina %}
-                <tr>
-                    <td>
-                        <strong>{{ unidade.sigla }}</strong>
-                    </td>
-
-                    <td>
-                        {{ unidade.descricao }}
-                    </td>
-
-                    <td>
-                        {% if unidade.ativa %}
-                        <span class="badge text-bg-success">
-                            Ativa
-                        </span>
-                        {% else %}
-                        <span class="badge text-bg-secondary">
-                            Inativa
-                        </span>
-                        {% endif %}
-                    </td>
-
-                    <td class="text-end">
-                        <a
-                            href="{% url 'produtos:editar_unidade_medida' unidade.id %}"
-                            class="btn btn-sm btn-outline-dark"
-                        >
-                            Editar
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                    {% include 'partials/estado_vazio.html' with colunas=4 mensagem='Nenhuma unidade de medida encontrada.' icone='bi-rulers' %}
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+    <!-- UI-03.2D: TABELA UNIDADES_MEDIDA - INICIO -->
+    {% include 'partials/tabela_base.html' with tabela_conteudo='produtos/templates/produtos/unidades_medida/_tabela_conteudo.html' tabela_aria_label='Lista de unidades de medida' %}
+    <!-- UI-03.2D: TABELA UNIDADES_MEDIDA - FIM -->
 
     {% include 'partials/paginacao.html' %}
 

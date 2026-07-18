@@ -1,0 +1,47 @@
+<thead class="table-light">
+                <tr>
+                    <th>Marca</th>
+                    <th>Fabricante</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for marca in pagina %}
+                <tr>
+                    <td>
+                        <strong>{{ marca.nome }}</strong>
+                    </td>
+
+                    <td>
+                        {{ marca.fabricante|default:'—' }}
+                    </td>
+
+                    <td>
+                        {% if marca.ativa %}
+                        <span class="badge text-bg-success">
+                            Ativa
+                        </span>
+                        {% else %}
+                        <span class="badge text-bg-secondary">
+                            Inativa
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <a
+                            href="{% url 'produtos:editar_marca' marca.id %}"
+                            class="btn btn-sm btn-outline-dark"
+                        >
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                    {% include 'partials/estado_vazio.html' with colunas=4 mensagem='Nenhuma marca encontrada.' icone='bi-award' %}
+                {% endfor %}
+
+            </tbody>

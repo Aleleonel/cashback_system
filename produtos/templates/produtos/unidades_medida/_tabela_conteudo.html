@@ -1,0 +1,47 @@
+<thead class="table-light">
+                <tr>
+                    <th>Sigla</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for unidade in pagina %}
+                <tr>
+                    <td>
+                        <strong>{{ unidade.sigla }}</strong>
+                    </td>
+
+                    <td>
+                        {{ unidade.descricao }}
+                    </td>
+
+                    <td>
+                        {% if unidade.ativa %}
+                        <span class="badge text-bg-success">
+                            Ativa
+                        </span>
+                        {% else %}
+                        <span class="badge text-bg-secondary">
+                            Inativa
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <a
+                            href="{% url 'produtos:editar_unidade_medida' unidade.id %}"
+                            class="btn btn-sm btn-outline-dark"
+                        >
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                    {% include 'partials/estado_vazio.html' with colunas=4 mensagem='Nenhuma unidade de medida encontrada.' icone='bi-rulers' %}
+                {% endfor %}
+
+            </tbody>
