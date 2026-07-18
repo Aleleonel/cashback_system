@@ -1,0 +1,20 @@
+@media (max-width: 991.98px) {
+    .app-page {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .app-page-header {
+        flex-direction: column;
+    }
+
+    .app-page-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .app-page-actions .btn {
+        flex: 1 1 auto;
+    }
+}

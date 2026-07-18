@@ -1,0 +1,326 @@
+=== DATA === 
+18/07/2026  8:50:30,63 
+ 
+=== BRANCH === 
+feature/ui-foundation
+ 
+=== GIT STATUS === 
+?? aplicar_ui_01a_seguro.ps1
+?? aplicar_ui_01a_seguro_v2.ps1
+?? coletar_ui_01b_base.ps1
+?? diagnostico_pre_ui_01a.txt
+?? diagnostico_recuperacao_ui.txt
+?? diagnostico_ui_01b_base.txt
+?? recuperar_tentativa_ui.ps1
+?? recuperar_tentativa_ui_v2.ps1
+?? static/ui/
+ 
+=== BASE.HTML === 
+{% load static %}
+
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cashback System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <div class="d-flex">
+
+        {% include 'partials/sidebar.html' %}
+
+        <div class="flex-grow-1">
+
+            {% include 'partials/navbar.html' %}
+
+            <main>
+
+                {% if messages %}
+
+                <div class="container-fluid mt-3">
+
+                    {% for message in messages %}
+
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm">
+
+                        {{ message }}
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert">
+                        </button>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% endif %}
+                {% block content %}
+                {% endblock %}
+            </main>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}
+    {% endblock %}
+
+</body>
+
+</html> 
+=== NAVBAR.HTML === 
+<header class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+
+    <div>
+        <strong>Sistema de Cashback</strong>
+        <div class="text-muted small">
+            Gestão de clientes, compras e benefícios
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+
+        {% if request.user.is_authenticated %}
+
+        <div class="text-muted small">
+            <i class="bi bi-person-circle me-1"></i>
+            {{ request.user.username }}
+        </div>
+
+        <form method="post" action="{% url 'logout' %}" class="m-0">
+            {% csrf_token %}
+
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-box-arrow-right me-1"></i>
+                Sair
+            </button>
+        </form>
+
+        {% endif %}
+
+    </div>
+
+</header> 
+=== SIDEBAR.HTML === 
+﻿<aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
+
+    <h5 class="fw-bold mb-4">
+        <i class="bi bi-cash-coin me-2"></i>
+        Cashback System
+    </h5>
+
+    <nav class="nav flex-column gap-1">
+
+        {% if request.user.is_superuser %}
+
+        <div class="text-uppercase text-white-50 small mt-2 mb-1">
+            Plataforma
+        </div>
+
+        <a href="{% url 'plataforma:painel_master' %}" class="nav-link text-warning">
+            <i class="bi bi-grid-1x2 me-2"></i>
+            Painel Master
+        </a>
+
+        <a href="{% url 'plataforma:nova_empresa_matriz' %}" class="nav-link text-warning">
+            <i class="bi bi-rocket-takeoff me-2"></i>
+            Nova Empresa
+        </a>
+
+        <a href="{% url 'plataforma:lista_matrizes' %}" class="nav-link text-warning">
+            <i class="bi bi-building me-2"></i>
+            Matrizes
+        </a>
+
+        <a href="{% url 'plataforma:lista_lojas' %}" class="nav-link text-warning">
+            <i class="bi bi-shop me-2"></i>
+            Lojas
+        </a>
+
+        <a href="{% url 'accounts:lista_usuarios' %}" class="nav-link text-warning">
+            <i class="bi bi-people me-2"></i>
+            Usuários
+        </a>
+
+        <a href="{% url 'auditoria:lista_auditoria' %}" class="nav-link text-warning">
+            <i class="bi bi-shield-check me-2"></i>
+            Auditoria
+        </a>
+
+        <hr class="border-secondary">
+
+        <a href="/admin/" class="nav-link text-white-50">
+            <i class="bi bi-gear me-2"></i>
+            Django Admin
+        </a>
+
+        {% else %}
+
+        <div class="text-uppercase text-white-50 small mt-2 mb-1">
+            Operação
+        </div>
+
+        {% if pode_ver_dashboard %}
+        <a href="{% url 'relatorios:dashboard' %}" class="nav-link text-white">
+            <i class="bi bi-speedometer2 me-2"></i>
+            Dashboard
+        </a>
+        {% endif %}
+
+        {% if pode_nova_compra %}
+        <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
+            <i class="bi bi-cart-plus me-2"></i>
+            Nova Compra
+        </a>
+        {% endif %}
+
+        {% if pode_ver_clientes %}
+        <a href="{% url 'clientes:lista_clientes' %}" class="nav-link text-white">
+            <i class="bi bi-people me-2"></i>
+            Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_ver_produtos %}
+        <a href="{% url 'produtos:lista_produtos' %}" class="nav-link text-white">
+            <i class="bi bi-box-seam me-2"></i>
+            Produtos
+        </a>
+        {% endif %}
+
+        {% if pode_gerenciar_vouchers %}
+        <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
+            <i class="bi bi-ticket-perforated me-2"></i>
+            Vouchers
+        </a>
+        {% endif %}
+
+        {% if pode_importar_clientes or pode_importar_produtos %}
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Importações
+        </div>
+        {% endif %}
+
+        {% if pode_importar_clientes %}
+        <a href="{% url 'clientes:importar_clientes' %}" class="nav-link text-white-50">
+            <i class="bi bi-person-lines-fill me-2"></i>
+            Importar Clientes
+        </a>
+        {% endif %}
+
+        {% if pode_importar_produtos %}
+        <a href="{% url 'produtos:importar_produtos' %}" class="nav-link text-white-50">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+            Importar Produtos
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Minha Empresa
+        </div>
+
+        <a href="{% url 'empresa:dashboard' %}" class="nav-link text-white-50">
+            <i class="bi bi-building-gear me-2"></i>
+            Painel da Empresa
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas %}
+        <a href="{% url 'empresa:lista_lojas' %}" class="nav-link text-white-50">
+            <i class="bi bi-shop me-2"></i>
+            Lojas
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_usuarios %}
+        <a href="{% url 'empresa:lista_usuarios' %}" class="nav-link text-white-50">
+            <i class="bi bi-people me-2"></i>
+            Usuários
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_cashback %}
+        <a href="{% url 'empresa:configurar_cashback' %}" class="nav-link text-white-50">
+            <i class="bi bi-cash-coin me-2"></i>
+            Config. Cashback
+        </a>
+        {% endif %}
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
+        <a href="{% url 'empresa:auditoria' %}" class="nav-link text-white-50">
+            <i class="bi bi-shield-check me-2"></i>
+            Auditoria
+        </a>
+        {% endif %}
+
+        {% if pode_ver_campanhas or pode_configurar_campanhas or pode_templates_campanhas %}
+        <div class="text-uppercase text-white-50 small mt-4 mb-1">
+            Campanhas
+        </div>
+        {% endif %}
+
+        {% if pode_ver_campanhas %}
+        <a href="{% url 'campanhas:aniversariantes_mes' %}" class="nav-link text-white-50">
+            <i class="bi bi-megaphone me-2"></i>
+            Aniversariantes
+        </a>
+
+        <a href="{% url 'campanhas:historico_envios' %}" class="nav-link text-white-50">
+            <i class="bi bi-clock-history me-2"></i>
+            Histórico
+        </a>
+
+        <a href="{% url 'campanhas:fila_envios' %}" class="nav-link text-white-50">
+            <i class="bi bi-list-check me-2"></i>
+            Fila
+        </a>
+        {% endif %}
+
+        {% if pode_templates_campanhas %}
+        <a href="{% url 'campanhas:lista_templates_campanhas' %}" class="nav-link text-white-50">
+            <i class="bi bi-layout-text-window-reverse me-2"></i>
+            Templates
+        </a>
+        {% endif %}
+
+        {% if pode_configurar_campanhas %}
+        <a href="{% url 'campanhas:configurar_campanha_aniversario' %}" class="nav-link text-white-50">
+            <i class="bi bi-sliders me-2"></i>
+            Config. Campanha
+        </a>
+        {% endif %}
+
+        {% endif %}
+
+    </nav>
+
+</aside>
+ 
+=== MESSAGES.HTML === 
+ARQUIVO NAO EXISTE
+ 
+=== STATIC UI FILES === 
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\js
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\base.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\components.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\forms.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\layout.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\responsive.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\tables.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\tokens.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\js\app-shell.js
+ 
+=== DJANGO CHECK === 
+System check identified no issues (0 silenced).

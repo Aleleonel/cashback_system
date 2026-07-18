@@ -1,4 +1,4 @@
-﻿{% extends 'produtos/base_catalogo.html' %}
+{% extends 'produtos/base_catalogo.html' %}
 
 {% block nav_marcas %}active{% endblock %}
 
@@ -10,59 +10,10 @@
 
     {% include 'partials/cabecalho_pagina.html' with titulo='Marcas' subtitulo='Cadastre marcas e fabricantes dos produtos.' icone='bi-award' acao_url=url_nova_marca acao_texto='Nova marca' acao_icone='bi-plus-lg' %}
 
-    <div class="card-body border-bottom">
-
-        <form method="get" class="row g-2 align-items-end">
-
-            <div class="col-md-6 col-lg-4">
-                <label for="id_busca" class="form-label">
-                    Buscar
-                </label>
-
-                <input
-                    type="text"
-                    id="id_busca"
-                    name="busca"
-                    value="{{ busca }}"
-                    class="form-control"
-                    placeholder="Nome ou fabricante"
-                >
-            </div>
-
-            <div class="col-md-auto">
-                <div class="form-check mb-2">
-                    <input
-                        type="checkbox"
-                        id="id_ativas"
-                        name="ativas"
-                        value="1"
-                        class="form-check-input"
-                        {% if somente_ativas %}checked{% endif %}
-                    >
-
-                    <label for="id_ativas" class="form-check-label">
-                        Somente ativas
-                    </label>
-                </div>
-            </div>
-
-            <div class="col-12 d-flex gap-2">
-                <button type="submit" class="btn btn-dark">
-                    <i class="bi bi-funnel me-1"></i>
-                    Filtrar
-                </button>
-
-                <a
-                    href="{% url 'produtos:lista_marcas' %}"
-                    class="btn btn-outline-secondary"
-                >
-                    Limpar
-                </a>
-            </div>
-
-        </form>
-
-    </div>
+    <!-- UI-03.1B: TOOLBAR AUXILIAR REUTILIZAVEL - INICIO -->
+    {% url 'produtos:lista_marcas' as url_limpar_marcas %}
+    {% include 'partials/toolbar_lista.html' with toolbar_titulo='Localizar marcas' toolbar_subtitulo='Pesquise por nome ou fabricante e refine a listagem.' toolbar_icone='bi-search' toolbar_rotulo_busca='Buscar marca' toolbar_placeholder_busca='Nome ou fabricante' toolbar_url_limpar=url_limpar_marcas toolbar_exibir_ativas=True %}
+    <!-- UI-03.1B: TOOLBAR AUXILIAR REUTILIZAVEL - FIM -->
 
     <div class="table-responsive">
 

@@ -1,0 +1,15 @@
+﻿=== DATA ===
+2026-07-17 21:48:08
+
+=== BRANCH ===
+feature/ui-foundation
+
+=== GIT STATUS ===
+?? recuperar_tentativa_ui.ps1 ?? recuperar_tentativa_ui_v2.ps1
+
+=== DJANGO CHECK ===
+System check identified no issues (0 silenced).
+
+
+=== BACKUP ===
+.\temp_chatgpt\backup_erro_ui_20260717_214805

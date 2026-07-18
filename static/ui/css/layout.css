@@ -1,0 +1,38 @@
+.app-shell {
+    min-height: 100vh;
+}
+
+.app-content {
+    min-height: calc(100vh - var(--ui-navbar-height));
+}
+
+.app-page {
+    padding: 1.5rem;
+}
+
+.app-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.app-page-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.app-page-description {
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    color: var(--ui-text-muted);
+}
+
+.app-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.625rem;
+}

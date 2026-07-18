@@ -1,4 +1,4 @@
-﻿{% extends 'produtos/base_catalogo.html' %}
+{% extends 'produtos/base_catalogo.html' %}
 
 {% block nav_produtos %}active{% endblock %}
 
@@ -8,185 +8,202 @@
 
     {% url 'produtos:criar_produto' as url_novo_produto %}
 
-    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <strong>
-                <i class="bi bi-box-seam me-2"></i>
-                Produtos
-            </strong>
-
-            <div class="text-muted small">
-                Consulte e mantenha os itens utilizados pelo PDV.
-            </div>
-        </div>
-
-        <div class="d-flex flex-wrap gap-2">
-
-            {% if pode_importar_produtos %}
-            <a
-                href="{% url 'produtos:importar_produtos' %}"
-                class="btn btn-sm btn-outline-dark"
-            >
-                <i class="bi bi-file-earmark-spreadsheet me-1"></i>
-                Importar produtos
-            </a>
-            {% endif %}
-
-            <a
-                href="{{ url_novo_produto }}"
-                class="btn btn-sm btn-dark"
-            >
-                <i class="bi bi-plus-lg me-1"></i>
-                Novo produto
-            </a>
-
-        </div>
-    </div>
-
-    <div class="card-body border-bottom">
-        <form method="get" class="row g-2 align-items-end">
-
-            <div class="col-md-6 col-lg-4">
-                <label for="id_busca" class="form-label">Buscar</label>
-                <input
-                    type="text"
-                    id="id_busca"
-                    name="busca"
-                    value="{{ busca }}"
-                    class="form-control"
-                    placeholder="Nome, código, SKU, GTIN ou NCM"
+    <!-- UI-02.1B: CABECALHO E ACOES - INICIO -->
+    <div class="card-header bg-white border-0 px-4 pt-4 pb-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <div class="d-flex align-items-start gap-3">
+                <div
+                    class="d-inline-flex align-items-center justify-content-center rounded-3 bg-light border"
+                    style="width: 2.75rem; height: 2.75rem;"
+                    aria-hidden="true"
                 >
+                    <i class="bi bi-box-seam fs-5"></i>
+                </div>
+
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h2 class="h5 mb-0">Produtos</h2>
+
+                        <span class="badge text-bg-secondary">
+                            {{ pagina.paginator.count }}
+                            item{{ pagina.paginator.count|pluralize:"s" }}
+                        </span>
+                    </div>
+
+                    <p class="text-muted small mb-0 mt-1">
+                        Consulte, organize e mantenha os itens utilizados pelo PDV.
+                    </p>
+                </div>
             </div>
 
-            <div class="col-md-3 col-lg-2">
-                <label for="id_status" class="form-label">Status</label>
-                <select id="id_status" name="status" class="form-select">
-                    <option value="">Todos</option>
-                    {% for valor, nome in status_opcoes %}
-                    <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>
-                        {{ nome }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                {% if pode_importar_produtos %}
+                <a
+                    href="{% url 'produtos:importar_produtos' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+                    Importar
+                </a>
+                {% endif %}
 
-            <div class="col-md-3">
-                <label for="id_categoria" class="form-label">Categoria</label>
-                <select id="id_categoria" name="categoria" class="form-select">
-                    <option value="">Todas</option>
-                    {% for categoria in categorias %}
-                    <option value="{{ categoria.id }}" {% if categoria_id == categoria.id|stringformat:'s' %}selected{% endif %}>
-                        {{ categoria.nome }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label for="id_marca" class="form-label">Marca</label>
-                <select id="id_marca" name="marca" class="form-select">
-                    <option value="">Todas</option>
-                    {% for marca in marcas %}
-                    <option value="{{ marca.id }}" {% if marca_id == marca.id|stringformat:'s' %}selected{% endif %}>
-                        {{ marca.nome }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="col-12 d-flex gap-2">
-                <button type="submit" class="btn btn-dark">
-                    <i class="bi bi-funnel me-1"></i>
-                    Filtrar
-                </button>
-
-                <a href="{% url 'produtos:lista_produtos' %}" class="btn btn-outline-secondary">
-                    Limpar
+                <a
+                    href="{{ url_novo_produto }}"
+                    class="btn btn-dark"
+                >
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Novo produto
                 </a>
             </div>
-
-        </form>
+        </div>
     </div>
+    <!-- UI-02.1B: CABECALHO E ACOES - FIM -->
 
+        <!-- UI-03.1A: TOOLBAR REUTILIZAVEL - INICIO -->
+    {% url 'produtos:lista_produtos' as url_limpar_produtos %}
+    {% include 'partials/toolbar_lista.html' with toolbar_titulo='Localizar produtos' toolbar_subtitulo='Pesquise por identificação ou refine a listagem pelos filtros.' toolbar_icone='bi-search' toolbar_rotulo_busca='Buscar produto' toolbar_placeholder_busca='Nome, código, SKU, GTIN ou NCM' toolbar_url_limpar=url_limpar_produtos toolbar_exibir_status=True toolbar_exibir_categoria=True toolbar_exibir_marca=True %}
+    <!-- UI-03.1A: TOOLBAR REUTILIZAVEL - FIM -->
+
+    <!-- UI-02.1D: TABELA DE PRODUTOS - INICIO -->
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-
             <thead class="table-light">
                 <tr>
-                    <th>Código</th>
-                    <th>Produto</th>
-                    <th>Categoria</th>
-                    <th>Marca</th>
-                    <th>Custo</th>
-                    <th>Venda</th>
-                    <th>Margem</th>
-                    <th>Status</th>
-                    <th class="text-end">Ações</th>
+                    <th class="ps-4 text-nowrap">Produto</th>
+                    <th class="text-nowrap">Categoria</th>
+                    <th class="text-nowrap">Marca</th>
+                    <th class="text-end text-nowrap">Custo</th>
+                    <th class="text-end text-nowrap">Venda</th>
+                    <th class="text-end text-nowrap">Margem</th>
+                    <th class="text-center text-nowrap">Status</th>
+                    <th class="pe-4 text-end text-nowrap">Ações</th>
                 </tr>
             </thead>
 
             <tbody>
                 {% for produto in pagina %}
                 <tr>
-                    <td><strong>{{ produto.codigo_interno }}</strong></td>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div
+                                class="d-inline-flex align-items-center justify-content-center rounded-3 bg-light border flex-shrink-0"
+                                style="width: 2.5rem; height: 2.5rem;"
+                                aria-hidden="true"
+                            >
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+
+                            <div class="min-w-0">
+                                <a
+                                    href="{% url 'produtos:detalhe_produto' produto.id %}"
+                                    class="fw-semibold text-decoration-none text-dark"
+                                >
+                                    {{ produto.nome }}
+                                </a>
+
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    <span class="text-muted small">
+                                        Código: {{ produto.codigo_interno }}
+                                    </span>
+
+                                    {% if produto.sku %}
+                                    <span class="text-muted small">
+                                        SKU: {{ produto.sku }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
 
                     <td>
-                        <div>{{ produto.nome }}</div>
-                        {% if produto.sku %}
-                        <div class="text-muted small">SKU: {{ produto.sku }}</div>
+                        {% if produto.categoria %}
+                        <span class="badge rounded-pill text-bg-light border text-dark fw-normal">
+                            {{ produto.categoria.nome }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">—</span>
                         {% endif %}
                     </td>
 
-                    <td>{{ produto.categoria.nome|default:'—' }}</td>
-                    <td>{{ produto.marca.nome|default:'—' }}</td>
-                    <td>R$ {{ produto.custo_base|floatformat:2 }}</td>
-                    <td><strong>R$ {{ produto.preco_venda|floatformat:2 }}</strong></td>
-
                     <td>
+                        {% if produto.marca %}
+                        <span class="text-body-secondary">
+                            {{ produto.marca.nome }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end text-nowrap">
+                        <span class="text-body-secondary">
+                            R$ {{ produto.custo_base|floatformat:2 }}
+                        </span>
+                    </td>
+
+                    <td class="text-end text-nowrap">
+                        <strong>R$ {{ produto.preco_venda|floatformat:2 }}</strong>
+                    </td>
+
+                    <td class="text-end text-nowrap">
                         {% if produto.margem_bruta_percentual is not None %}
-                        {{ produto.margem_bruta_percentual|floatformat:2 }}%
+                        <span class="fw-medium">
+                            {{ produto.margem_bruta_percentual|floatformat:2 }}%
+                        </span>
                         {% else %}
-                        —
+                        <span class="text-muted">—</span>
                         {% endif %}
                     </td>
 
-                    <td>
+                    <td class="text-center">
                         {% if produto.status == 'ativo' %}
-                        <span class="badge text-bg-success">Ativo</span>
+                        <span class="badge rounded-pill text-bg-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Ativo
+                        </span>
                         {% elif produto.status == 'inativo' %}
-                        <span class="badge text-bg-secondary">Inativo</span>
+                        <span class="badge rounded-pill text-bg-secondary">
+                            <i class="bi bi-pause-circle me-1"></i>
+                            Inativo
+                        </span>
                         {% else %}
-                        <span class="badge text-bg-warning">Descontinuado</span>
+                        <span class="badge rounded-pill text-bg-warning">
+                            <i class="bi bi-archive me-1"></i>
+                            Descontinuado
+                        </span>
                         {% endif %}
                     </td>
 
-                    <td class="text-end">
-                        <div class="d-flex justify-content-end gap-2">
-
+                    <td class="pe-4 text-end">
+                        <div class="d-inline-flex align-items-center gap-1">
                             <a
                                 href="{% url 'produtos:detalhe_produto' produto.id %}"
                                 class="btn btn-sm btn-outline-secondary"
+                                title="Ver detalhes"
+                                aria-label="Ver detalhes de {{ produto.nome }}"
                             >
-                                Ver
+                                <i class="bi bi-eye"></i>
                             </a>
 
                             <a
                                 href="{% url 'produtos:editar_produto' produto.id %}"
                                 class="btn btn-sm btn-outline-dark"
+                                title="Editar produto"
+                                aria-label="Editar {{ produto.nome }}"
                             >
-                                Editar
+                                <i class="bi bi-pencil-square"></i>
                             </a>
-
                         </div>
                     </td>
                 </tr>
                 {% empty %}
-                    {% include 'partials/estado_vazio.html' with colunas=9 mensagem='Nenhum produto encontrado.' icone='bi-box-seam' %}
+                    {% include 'partials/estado_vazio.html' with colunas=8 mensagem='Nenhum produto encontrado.' icone='bi-box-seam' %}
                 {% endfor %}
             </tbody>
-
         </table>
     </div>
+    <!-- UI-02.1D: TABELA DE PRODUTOS - FIM -->
 
     {% include 'partials/paginacao.html' %}
 

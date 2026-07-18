@@ -1,0 +1,204 @@
+{% comment %}
+UI-03.1A — Toolbar reutilizável para páginas de listagem.
+
+Parâmetros principais:
+- toolbar_titulo
+- toolbar_subtitulo
+- toolbar_icone
+- toolbar_rotulo_busca
+- toolbar_placeholder_busca
+- toolbar_url_limpar
+- toolbar_exibir_status
+- toolbar_exibir_categoria
+- toolbar_exibir_marca
+- toolbar_exibir_ativas
+
+Contexto esperado quando os filtros correspondentes estiverem ativos:
+- pagina
+- busca
+- status / status_opcoes
+- categoria_id / categorias
+- marca_id / marcas
+- somente_ativas
+{% endcomment %}
+
+<!-- UI-03.1A: COMPONENTE TOOLBAR LISTA - INICIO -->
+<div class="card-body border-top border-bottom bg-light bg-opacity-50 px-4 py-4">
+    <div class="d-flex flex-column flex-xl-row justify-content-between gap-3 mb-3">
+        <div>
+            <h3 class="h6 mb-1">
+                <i class="bi {{ toolbar_icone|default:'bi-search' }} me-2"></i>
+                {{ toolbar_titulo|default:'Localizar registros' }}
+            </h3>
+            <p class="text-muted small mb-0">
+                {{ toolbar_subtitulo|default:'Pesquise ou refine a listagem pelos filtros disponíveis.' }}
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="badge rounded-pill text-bg-light border text-dark">
+                <i class="bi bi-list-ul me-1"></i>
+                {{ pagina.paginator.count }}
+                resultado{{ pagina.paginator.count|pluralize:"s" }}
+            </span>
+
+            {% if pagina.paginator.count %}
+            <span class="badge rounded-pill text-bg-light border text-dark">
+                Exibindo {{ pagina.start_index }}–{{ pagina.end_index }}
+            </span>
+            {% endif %}
+
+            {% if busca or status or categoria_id or marca_id or somente_ativas %}
+            <span class="badge rounded-pill text-bg-dark">
+                <i class="bi bi-funnel-fill me-1"></i>
+                Filtros ativos
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="{% if toolbar_exibir_status or toolbar_exibir_categoria or toolbar_exibir_marca or toolbar_exibir_ativas %}col-12 col-lg-5{% else %}col-12 col-lg-10{% endif %}">
+            <label for="id_busca" class="form-label">
+                {{ toolbar_rotulo_busca|default:'Buscar' }}
+            </label>
+
+            <div class="input-group">
+                <span class="input-group-text bg-white" aria-hidden="true">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input
+                    type="search"
+                    id="id_busca"
+                    name="busca"
+                    value="{{ busca }}"
+                    class="form-control"
+                    placeholder="{{ toolbar_placeholder_busca|default:'Digite para pesquisar' }}"
+                    autocomplete="off"
+                >
+            </div>
+        </div>
+
+        {% if toolbar_exibir_ativas %}
+        <div class="col-12 col-sm-6 col-lg-2">
+            <div class="form-check d-flex align-items-center h-100 mb-0 pb-2">
+                <input
+                    type="checkbox"
+                    id="id_ativas"
+                    name="ativas"
+                    value="1"
+                    class="form-check-input"
+                    {% if somente_ativas %}checked{% endif %}
+                >
+                <label for="id_ativas" class="form-check-label ms-2">
+                    Somente ativas
+                </label>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if toolbar_exibir_status %}
+        <div class="col-12 col-sm-6 col-lg-2">
+            <label for="id_status" class="form-label">Status</label>
+            <select id="id_status" name="status" class="form-select">
+                <option value="">Todos os status</option>
+                {% for valor, nome in status_opcoes %}
+                <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>
+                    {{ nome }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        {% if toolbar_exibir_categoria %}
+        <div class="col-12 col-sm-6 col-lg-2">
+            <label for="id_categoria" class="form-label">Categoria</label>
+            <select id="id_categoria" name="categoria" class="form-select">
+                <option value="">Todas as categorias</option>
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id }}" {% if categoria_id == categoria.id|stringformat:'s' %}selected{% endif %}>
+                    {{ categoria.nome }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        {% if toolbar_exibir_marca %}
+        <div class="col-12 col-sm-6 col-lg-2">
+            <label for="id_marca" class="form-label">Marca</label>
+            <select id="id_marca" name="marca" class="form-select">
+                <option value="">Todas as marcas</option>
+                {% for marca in marcas %}
+                <option value="{{ marca.id }}" {% if marca_id == marca.id|stringformat:'s' %}selected{% endif %}>
+                    {{ marca.nome }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="{% if toolbar_exibir_status or toolbar_exibir_categoria or toolbar_exibir_marca or toolbar_exibir_ativas %}col-12 col-sm-6 col-lg-1{% else %}col-12 col-lg-2{% endif %} d-grid">
+            <button type="submit" class="btn btn-dark" title="Aplicar filtros">
+                <i class="bi bi-funnel me-lg-0 me-xl-1"></i>
+                <span class="{% if toolbar_exibir_status or toolbar_exibir_categoria or toolbar_exibir_marca or toolbar_exibir_ativas %}d-lg-none d-xl-inline{% endif %}">
+                    Filtrar
+                </span>
+            </button>
+        </div>
+
+        {% if busca or status or categoria_id or marca_id or somente_ativas %}
+        <div class="col-12">
+            <div class="d-flex flex-wrap align-items-center gap-2 pt-1">
+                <span class="text-muted small me-1">Filtros aplicados:</span>
+
+                {% if busca %}
+                <span class="badge rounded-pill text-bg-light border text-dark">
+                    Busca: {{ busca }}
+                </span>
+                {% endif %}
+
+                {% if somente_ativas %}
+                <span class="badge rounded-pill text-bg-light border text-dark">
+                    Status: somente ativas
+                </span>
+                {% endif %}
+
+                {% if status %}
+                <span class="badge rounded-pill text-bg-light border text-dark">
+                    Status:
+                    {% for valor, nome in status_opcoes %}
+                        {% if status == valor %}{{ nome }}{% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+
+                {% if categoria_id %}
+                <span class="badge rounded-pill text-bg-light border text-dark">
+                    Categoria:
+                    {% for categoria in categorias %}
+                        {% if categoria_id == categoria.id|stringformat:'s' %}{{ categoria.nome }}{% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+
+                {% if marca_id %}
+                <span class="badge rounded-pill text-bg-light border text-dark">
+                    Marca:
+                    {% for marca in marcas %}
+                        {% if marca_id == marca.id|stringformat:'s' %}{{ marca.nome }}{% endif %}
+                    {% endfor %}
+                </span>
+                {% endif %}
+
+                <a href="{{ toolbar_url_limpar }}" class="btn btn-sm btn-link text-decoration-none ms-sm-auto">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Limpar filtros
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </form>
+</div>
+<!-- UI-03.1A: COMPONENTE TOOLBAR LISTA - FIM -->

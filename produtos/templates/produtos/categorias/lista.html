@@ -1,4 +1,4 @@
-﻿{% extends 'produtos/base_catalogo.html' %}
+{% extends 'produtos/base_catalogo.html' %}
 
 {% block nav_categorias %}active{% endblock %}
 
@@ -10,115 +10,14 @@
 
     {% include 'partials/cabecalho_pagina.html' with titulo='Categorias' subtitulo='Organize os produtos por grupos comerciais.' icone='bi-tags' acao_url=url_nova_categoria acao_texto='Nova categoria' acao_icone='bi-plus-lg' %}
 
-    <div class="card-body border-bottom">
+    <!-- UI-03.1B: TOOLBAR AUXILIAR REUTILIZAVEL - INICIO -->
+    {% url 'produtos:lista_categorias' as url_limpar_categorias %}
+    {% include 'partials/toolbar_lista.html' with toolbar_titulo='Localizar categorias' toolbar_subtitulo='Pesquise por nome ou descrição e refine a listagem.' toolbar_icone='bi-search' toolbar_rotulo_busca='Buscar categoria' toolbar_placeholder_busca='Nome ou descrição' toolbar_url_limpar=url_limpar_categorias toolbar_exibir_ativas=True %}
+    <!-- UI-03.1B: TOOLBAR AUXILIAR REUTILIZAVEL - FIM -->
 
-        <form method="get" class="row g-2 align-items-end">
-
-            <div class="col-md-6 col-lg-4">
-                <label for="id_busca" class="form-label">
-                    Buscar
-                </label>
-
-                <input
-                    type="text"
-                    id="id_busca"
-                    name="busca"
-                    value="{{ busca }}"
-                    class="form-control"
-                    placeholder="Nome ou descrição"
-                >
-            </div>
-
-            <div class="col-md-auto">
-                <div class="form-check mb-2">
-                    <input
-                        type="checkbox"
-                        id="id_ativas"
-                        name="ativas"
-                        value="1"
-                        class="form-check-input"
-                        {% if somente_ativas %}checked{% endif %}
-                    >
-
-                    <label for="id_ativas" class="form-check-label">
-                        Somente ativas
-                    </label>
-                </div>
-            </div>
-
-            <div class="col-12 d-flex gap-2">
-                <button type="submit" class="btn btn-dark">
-                    <i class="bi bi-funnel me-1"></i>
-                    Filtrar
-                </button>
-
-                <a
-                    href="{% url 'produtos:lista_categorias' %}"
-                    class="btn btn-outline-secondary"
-                >
-                    Limpar
-                </a>
-            </div>
-
-        </form>
-
-    </div>
-
-    <div class="table-responsive">
-
-        <table class="table table-hover align-middle mb-0">
-
-            <thead class="table-light">
-                <tr>
-                    <th>Nome</th>
-                    <th>Descrição</th>
-                    <th>Status</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for categoria in pagina %}
-                <tr>
-                    <td>
-                        <strong>{{ categoria.nome }}</strong>
-                    </td>
-
-                    <td>
-                        {{ categoria.descricao|default:'—' }}
-                    </td>
-
-                    <td>
-                        {% if categoria.ativa %}
-                        <span class="badge text-bg-success">
-                            Ativa
-                        </span>
-                        {% else %}
-                        <span class="badge text-bg-secondary">
-                            Inativa
-                        </span>
-                        {% endif %}
-                    </td>
-
-                    <td class="text-end">
-                        <a
-                            href="{% url 'produtos:editar_categoria' categoria.id %}"
-                            class="btn btn-sm btn-outline-dark"
-                        >
-                            Editar
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                    {% include 'partials/estado_vazio.html' with colunas=4 mensagem='Nenhuma categoria encontrada.' icone='bi-tags' %}
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+    <!-- UI-03.2A: TABELA BASE REUTILIZAVEL - INICIO -->
+    {% include 'partials/tabela_base.html' with tabela_conteudo='produtos/categorias/_tabela_conteudo.html' tabela_aria_label='Lista de categorias' %}
+    <!-- UI-03.2A: TABELA BASE REUTILIZAVEL - FIM -->
 
     {% include 'partials/paginacao.html' %}
 

@@ -1,0 +1,196 @@
+.card {
+    border-color: var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    box-shadow: var(--ui-shadow-sm);
+}
+
+.card-header,
+.card-footer {
+    background: var(--ui-surface);
+    border-color: var(--ui-border);
+}
+
+.btn {
+    border-radius: var(--ui-radius-md);
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: var(--ui-primary);
+    border-color: var(--ui-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--ui-primary-hover);
+    border-color: var(--ui-primary-hover);
+}
+
+.alert {
+    border-radius: var(--ui-radius-lg);
+}
+
+.dropdown-menu {
+    border-color: var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    box-shadow: var(--ui-shadow-md);
+}
+
+.badge {
+    font-weight: 600;
+}
+
+/* === UI-01C.1: COMPONENTES BASICOS - INICIO === */
+
+/*
+ * Padronizacao visual de componentes Bootstrap.
+ * Escopo: botoes, cards e alertas.
+ * Esta camada complementa o Bootstrap sem alterar templates.
+ */
+
+/* Botoes */
+.btn {
+    --bs-btn-border-radius: var(--ui-radius-md, 0.625rem);
+    --bs-btn-padding-x: 1rem;
+    --bs-btn-padding-y: 0.625rem;
+    --bs-btn-font-weight: 600;
+    --bs-btn-line-height: 1.25;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    box-shadow: none;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        color 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:focus-visible {
+    outline: 0;
+    box-shadow:
+        0 0 0 0.2rem rgba(33, 37, 41, 0.18);
+}
+
+.btn-sm {
+    --bs-btn-padding-x: 0.75rem;
+    --bs-btn-padding-y: 0.4rem;
+    --bs-btn-font-size: 0.875rem;
+    min-height: 2rem;
+}
+
+.btn-dark {
+    --bs-btn-bg: #212529;
+    --bs-btn-border-color: #212529;
+    --bs-btn-hover-bg: #343a40;
+    --bs-btn-hover-border-color: #343a40;
+    --bs-btn-active-bg: #16191c;
+    --bs-btn-active-border-color: #16191c;
+}
+
+.btn-outline-danger {
+    --bs-btn-hover-color: #ffffff;
+}
+
+/* Cards */
+.card {
+    --bs-card-border-color: rgba(33, 37, 41, 0.09);
+    --bs-card-border-radius: var(--ui-radius-lg, 0.875rem);
+    --bs-card-cap-bg: #ffffff;
+
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow:
+        0 1px 2px rgba(16, 24, 40, 0.04),
+        0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+.card-header,
+.card-footer {
+    border-color: rgba(33, 37, 41, 0.08);
+}
+
+.card-header {
+    padding: 1rem 1.25rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    padding: 0.875rem 1.25rem;
+}
+
+/* Alertas */
+.alert {
+    --bs-alert-border-radius: var(--ui-radius-md, 0.625rem);
+    --bs-alert-border-width: 1px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-left-width: 0.25rem;
+    box-shadow: 0 4px 14px rgba(16, 24, 40, 0.05);
+}
+
+.alert-dismissible {
+    padding-right: 3.25rem;
+}
+
+.alert .btn-close {
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 1rem;
+}
+
+.alert-success {
+    --bs-alert-color: #166534;
+    --bs-alert-bg: #f0fdf4;
+    --bs-alert-border-color: #86efac;
+}
+
+.alert-danger {
+    --bs-alert-color: #991b1b;
+    --bs-alert-bg: #fef2f2;
+    --bs-alert-border-color: #fca5a5;
+}
+
+.alert-warning {
+    --bs-alert-color: #854d0e;
+    --bs-alert-bg: #fefce8;
+    --bs-alert-border-color: #fde047;
+}
+
+.alert-info {
+    --bs-alert-color: #075985;
+    --bs-alert-bg: #f0f9ff;
+    --bs-alert-border-color: #7dd3fc;
+}
+
+/* Preferencia por movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+    .btn {
+        transition: none;
+    }
+
+    .btn:hover,
+    .btn:active {
+        transform: none;
+    }
+}
+
+/* === UI-01C.1: COMPONENTES BASICOS - FIM === */

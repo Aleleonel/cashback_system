@@ -1,0 +1,38 @@
+?? aplicar_ui_01a_seguro.ps1
+?? aplicar_ui_01a_seguro_v2.ps1
+?? diagnostico_pre_ui_01a.txt
+?? diagnostico_recuperacao_ui.txt
+?? recuperar_tentativa_ui.ps1
+?? recuperar_tentativa_ui_v2.ps1
+?? static/ui/
+ 
+=== BRANCH === 
+feature/ui-foundation
+ 
+=== DJANGO CHECK === 
+System check identified no issues (0 silenced).
+ 
+=== TESTES === 
+Using existing test database for alias 'default'...
+...................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 483 tests in 200.049s
+
+OK
+Preserving test database for alias 'default'...
+Found 483 test(s).
+System check identified no issues (0 silenced).
+ 
+=== ARQUIVOS STATIC UI === 
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\js
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\base.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\components.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\forms.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\layout.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\responsive.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\tables.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\css\tokens.css
+C:\Users\User\Alexandre\Projetos\cashback_system\static\ui\js\app-shell.js
+ 
+=== DIFF === 
