@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load formatadores %}
 
 {% block title %}Dashboard de Estoque{% endblock %}
 
@@ -28,17 +29,17 @@
     </div>
 
     <div class="row g-3">
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-4">
             <div class="card shadow-sm h-100 border-0">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between gap-3">
                         <div>
-                            <div class="text-muted small">Saldo consolidado</div>
+                            <div class="text-muted small">Quantidade total em estoque</div>
                             <div class="fs-3 fw-semibold mt-1">
-                                {{ indicadores.saldo_consolidado|floatformat:3 }}
+                                {{ indicadores.quantidade_total|quantidade_br }} un.
                             </div>
                             <div class="small text-muted">
-                                Soma de todas as lojas
+                                Soma das quantidades de todas as lojas
                             </div>
                         </div>
                         <i class="bi bi-boxes fs-3 text-muted" aria-hidden="true"></i>
@@ -47,7 +48,45 @@
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <div class="text-muted small">Valor do estoque pelo custo</div>
+                            <div class="fs-3 fw-semibold mt-1">
+                                R$ {{ indicadores.valor_estoque_custo|moeda_br }}
+                            </div>
+                            <div class="small text-muted">
+                                Saldo atual × custo base atual
+                            </div>
+                        </div>
+                        <i class="bi bi-cash-stack fs-3 text-muted" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <div class="text-muted small">Valor potencial de venda</div>
+                            <div class="fs-3 fw-semibold mt-1">
+                                R$ {{ indicadores.valor_potencial_venda|moeda_br }}
+                            </div>
+                            <div class="small text-muted">
+                                Saldo atual × preço de venda atual
+                            </div>
+                        </div>
+                        <i class="bi bi-graph-up-arrow fs-3 text-muted" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
             <div class="card shadow-sm h-100 border-0">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between gap-3">
@@ -66,7 +105,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-4">
             <div class="card shadow-sm h-100 border-0">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between gap-3">
@@ -85,7 +124,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl-4">
             <div class="card shadow-sm h-100 border-0">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between gap-3">
@@ -107,8 +146,8 @@
 
     <div class="alert alert-light border mt-4 mb-0" role="note">
         <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-        O indicador de estoque abaixo do mínimo será habilitado após a
-        definição do estoque mínimo por produto e loja.
+        Os valores financeiros são estimativas baseadas no custo e no preço
+        de venda atuais dos produtos. Eles não representam vendas realizadas.
     </div>
 </div>
 {% endblock %}

@@ -53,6 +53,8 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
             codigo_interno='DASH-001',
             nome='Produto com estoque',
             controla_estoque=True,
+            custo_base=Decimal('10.00'),
+            preco_venda=Decimal('25.00'),
         )
         self.produto_zerado = Produto.objects.create(
             matriz=self.matriz,
@@ -60,6 +62,8 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
             codigo_interno='DASH-002',
             nome='Produto zerado',
             controla_estoque=True,
+            custo_base=Decimal('20.00'),
+            preco_venda=Decimal('40.00'),
         )
         self.produto_sem_saldo = Produto.objects.create(
             matriz=self.matriz,
@@ -67,6 +71,8 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
             codigo_interno='DASH-003',
             nome='Produto sem saldo',
             controla_estoque=True,
+            custo_base=Decimal('30.00'),
+            preco_venda=Decimal('60.00'),
         )
         Produto.objects.create(
             matriz=self.matriz,
@@ -74,6 +80,8 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
             codigo_interno='DASH-004',
             nome='Produto sem controle',
             controla_estoque=False,
+            custo_base=Decimal('999.00'),
+            preco_venda=Decimal('999.00'),
         )
 
         produto_outra_matriz = Produto.objects.create(
@@ -82,6 +90,8 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
             codigo_interno='OUT-DASH-001',
             nome='Produto outra matriz',
             controla_estoque=True,
+            custo_base=Decimal('100.00'),
+            preco_venda=Decimal('200.00'),
         )
 
         SaldoEstoque.objects.create(
@@ -115,30 +125,33 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
         )
 
         self.assertEqual(
-            indicadores['saldo_consolidado'],
+            indicadores['quantidade_total'],
             Decimal('6.500'),
         )
         self.assertEqual(
-            indicadores['produtos_controlados'],
-            3,
+            indicadores['valor_estoque_custo'],
+            Decimal('65.00'),
         )
         self.assertEqual(
-            indicadores['produtos_com_estoque'],
-            1,
+            indicadores['valor_potencial_venda'],
+            Decimal('162.50'),
         )
-        self.assertEqual(
-            indicadores['produtos_sem_estoque'],
-            2,
-        )
+        self.assertEqual(indicadores['produtos_controlados'], 3)
+        self.assertEqual(indicadores['produtos_com_estoque'], 1)
+        self.assertEqual(indicadores['produtos_sem_estoque'], 2)
 
-    def test_isola_dados_de_outras_matrizes(self):
+    def test_isola_dados_financeiros_de_outras_matrizes(self):
         indicadores = get_indicadores_dashboard_estoque(
             matriz=self.matriz,
         )
 
-        self.assertNotEqual(
-            indicadores['saldo_consolidado'],
-            Decimal('105.500'),
+        self.assertEqual(
+            indicadores['valor_estoque_custo'],
+            Decimal('65.00'),
+        )
+        self.assertEqual(
+            indicadores['valor_potencial_venda'],
+            Decimal('162.50'),
         )
 
     def test_matriz_sem_dados_retorna_zeros(self):
@@ -150,19 +163,15 @@ class DashboardEstoqueSelectorsTestCase(TestCase):
             matriz=matriz_vazia,
         )
 
+        self.assertEqual(indicadores['quantidade_total'], Decimal('0'))
         self.assertEqual(
-            indicadores['saldo_consolidado'],
+            indicadores['valor_estoque_custo'],
             Decimal('0'),
         )
         self.assertEqual(
-            indicadores['produtos_controlados'],
-            0,
+            indicadores['valor_potencial_venda'],
+            Decimal('0'),
         )
-        self.assertEqual(
-            indicadores['produtos_com_estoque'],
-            0,
-        )
-        self.assertEqual(
-            indicadores['produtos_sem_estoque'],
-            0,
-        )
+        self.assertEqual(indicadores['produtos_controlados'], 0)
+        self.assertEqual(indicadores['produtos_com_estoque'], 0)
+        self.assertEqual(indicadores['produtos_sem_estoque'], 0)

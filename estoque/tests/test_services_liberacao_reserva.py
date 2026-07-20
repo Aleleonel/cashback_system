@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
@@ -117,7 +117,7 @@ class LiberarReservaEstoqueTestCase(TestCase):
         )
         self.assertEqual(auditoria.matriz, self.matriz)
         self.assertEqual(auditoria.loja, self.loja)
-        self.assertIn('LiberaÃ§Ã£o de reserva', auditoria.descricao)
+        self.assertIn('Liberação de reserva', auditoria.descricao)
         self.assertIn('saldo_disponivel_anterior=6.000', auditoria.descricao)
         self.assertIn('saldo_disponivel_posterior=10.000', auditoria.descricao)
 
