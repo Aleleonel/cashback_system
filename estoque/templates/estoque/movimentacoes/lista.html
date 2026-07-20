@@ -5,8 +5,28 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="card shadow-sm">
-        {% url 'estoque:criar_entrada_estoque' as url_nova_entrada %}
-        {% include 'partials/cabecalho_pagina.html' with titulo='Estoque' subtitulo='Consulte as movimentações registradas no estoque.' icone='bi-boxes' acao_url=url_nova_entrada acao_texto='Nova entrada' acao_icone='bi-plus-lg' %}
+        {% include 'partials/cabecalho_pagina.html' with titulo='Estoque' subtitulo='Consulte e registre as movimentações do estoque.' icone='bi-boxes' %}
+
+        <div class="card-body border-bottom">
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" href="{% url 'estoque:criar_entrada_estoque' %}">
+                    <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>
+                    Nova entrada
+                </a>
+                <a class="btn btn-outline-primary" href="{% url 'estoque:criar_saida_estoque' %}">
+                    <i class="bi bi-box-arrow-up me-1" aria-hidden="true"></i>
+                    Nova saída
+                </a>
+                <a class="btn btn-outline-primary" href="{% url 'estoque:criar_transferencia_estoque' %}">
+                    <i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>
+                    Transferência
+                </a>
+                <a class="btn btn-outline-secondary" href="{% url 'estoque:criar_ajuste_estoque' %}">
+                    <i class="bi bi-sliders me-1" aria-hidden="true"></i>
+                    Ajuste
+                </a>
+            </div>
+        </div>
 
         {% url 'estoque:lista_movimentacoes' as url_limpar_estoque %}
 
