@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard de Estoque{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-sm mb-4">
+        {% include 'partials/cabecalho_pagina.html' with titulo='Dashboard de Estoque' subtitulo='Acompanhe a posição consolidada do estoque da matriz.' icone='bi-speedometer2' %}
+
+        <div class="card-body border-top">
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" href="{% url 'estoque:lista_movimentacoes' %}">
+                    <i class="bi bi-list-ul me-1" aria-hidden="true"></i>
+                    Ver movimentações
+                </a>
+
+                <a class="btn btn-outline-primary" href="{% url 'estoque:criar_entrada_estoque' %}">
+                    <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>
+                    Nova entrada
+                </a>
+
+                <a class="btn btn-outline-primary" href="{% url 'estoque:criar_saida_estoque' %}">
+                    <i class="bi bi-box-arrow-up me-1" aria-hidden="true"></i>
+                    Nova saída
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <div class="text-muted small">Saldo consolidado</div>
+                            <div class="fs-3 fw-semibold mt-1">
+                                {{ indicadores.saldo_consolidado|floatformat:3 }}
+                            </div>
+                            <div class="small text-muted">
+                                Soma de todas as lojas
+                            </div>
+                        </div>
+                        <i class="bi bi-boxes fs-3 text-muted" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <div class="text-muted small">Produtos controlados</div>
+                            <div class="fs-3 fw-semibold mt-1">
+                                {{ indicadores.produtos_controlados }}
+                            </div>
+                            <div class="small text-muted">
+                                Produtos com controle de estoque
+                            </div>
+                        </div>
+                        <i class="bi bi-upc-scan fs-3 text-muted" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <div class="text-muted small">Produtos com estoque</div>
+                            <div class="fs-3 fw-semibold mt-1">
+                                {{ indicadores.produtos_com_estoque }}
+                            </div>
+                            <div class="small text-muted">
+                                Saldo consolidado maior que zero
+                            </div>
+                        </div>
+                        <i class="bi bi-check-circle fs-3 text-muted" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <div class="text-muted small">Produtos sem estoque</div>
+                            <div class="fs-3 fw-semibold mt-1">
+                                {{ indicadores.produtos_sem_estoque }}
+                            </div>
+                            <div class="small text-muted">
+                                Sem saldo ou com saldo zerado
+                            </div>
+                        </div>
+                        <i class="bi bi-exclamation-circle fs-3 text-muted" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light border mt-4 mb-0" role="note">
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+        O indicador de estoque abaixo do mínimo será habilitado após a
+        definição do estoque mínimo por produto e loja.
+    </div>
+</div>
+{% endblock %}

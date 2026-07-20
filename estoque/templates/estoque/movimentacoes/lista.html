@@ -9,6 +9,10 @@
 
         <div class="card-body border-bottom">
             <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-secondary" href="{% url 'estoque:dashboard_estoque' %}">
+                    <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>
+                    Dashboard
+                </a>
                 <a class="btn btn-primary" href="{% url 'estoque:criar_entrada_estoque' %}">
                     <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>
                     Nova entrada
