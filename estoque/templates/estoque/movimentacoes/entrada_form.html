@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova entrada de estoque{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        {% include 'partials/cabecalho_pagina.html' with titulo='Nova entrada de estoque' subtitulo='Registre a entrada manual de um produto em uma loja.' icone='bi-box-arrow-in-down' %}
+
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for erro in form.non_field_errors %}<div>{{ erro }}</div>{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    {% for campo in form %}
+                        <div class="{% if campo.name == 'observacao' %}col-12{% else %}col-12 col-lg-6{% endif %}">
+                            <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% for erro in campo.errors %}<div class="invalid-feedback d-block">{{ erro }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a class="btn btn-outline-secondary" href="{% url 'estoque:lista_movimentacoes' %}">Cancelar</a>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                        Registrar entrada
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

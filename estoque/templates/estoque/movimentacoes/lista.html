@@ -5,7 +5,8 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="card shadow-sm">
-        {% include 'partials/cabecalho_pagina.html' with titulo='Estoque' subtitulo='Consulte as movimentações registradas no estoque.' icone='bi-boxes' %}
+        {% url 'estoque:criar_entrada_estoque' as url_nova_entrada %}
+        {% include 'partials/cabecalho_pagina.html' with titulo='Estoque' subtitulo='Consulte as movimentações registradas no estoque.' icone='bi-boxes' acao_url=url_nova_entrada acao_texto='Nova entrada' acao_icone='bi-plus-lg' %}
 
         {% url 'estoque:lista_movimentacoes' as url_limpar_estoque %}
 
