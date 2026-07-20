@@ -7,6 +7,7 @@ from accounts.views import CashbackLoginView
 
 
 urlpatterns = [
+    path('estoque/', include('estoque.urls')),
     path('', lambda request: redirect('cashback:nova_compra')),
     path('admin/', admin.site.urls),
     path('cashback/', include('cashback.urls')),

@@ -1,0 +1,22 @@
+<thead>
+    <tr>
+        <th scope="col">Data</th>
+        <th scope="col">Produto</th>
+        <th scope="col">Tipo</th>
+        <th scope="col" class="text-end">Quantidade</th>
+        <th scope="col">Referência</th>
+    </tr>
+</thead>
+<tbody>
+    {% for movimentacao in pagina %}
+    <tr>
+        <td>{{ movimentacao.criado_em|date:'d/m/Y H:i' }}</td>
+        <td>{{ movimentacao.produto }}</td>
+        <td>{{ movimentacao.get_tipo_display }}</td>
+        <td class="text-end">{{ movimentacao.quantidade }}</td>
+        <td>{{ movimentacao.referencia|default:'—' }}</td>
+    </tr>
+    {% empty %}
+        {% include 'partials/estado_vazio.html' with colunas=5 mensagem='Nenhuma movimentação de estoque encontrada.' icone='bi-boxes' %}
+    {% endfor %}
+</tbody>
