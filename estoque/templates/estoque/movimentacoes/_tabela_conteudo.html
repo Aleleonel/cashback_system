@@ -1,4 +1,4 @@
-<thead>
+﻿<thead>
     <tr>
         <th scope="col">Data</th>
         <th scope="col">Produto</th>
@@ -14,7 +14,7 @@
         <td>{{ movimentacao.produto }}</td>
         <td>{{ movimentacao.get_tipo_display }}</td>
         <td class="text-end">{{ movimentacao.quantidade }}</td>
-        <td>{{ movimentacao.referencia|default:'—' }}</td>
+        <td>{{ movimentacao.documento_referencia|default:'—' }}</td>
     </tr>
     {% empty %}
         {% include 'partials/estado_vazio.html' with colunas=5 mensagem='Nenhuma movimentação de estoque encontrada.' icone='bi-boxes' %}
