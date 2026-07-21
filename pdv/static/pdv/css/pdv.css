@@ -1,0 +1,81 @@
+﻿.pdv-page {
+    max-width: 1800px;
+}
+
+.pdv-page .card-header {
+    padding: 1rem 1.25rem;
+}
+
+.pdv-product-empty {
+    background: var(--ui-body-bg);
+    min-height: 165px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.pdv-sidebar-stack {
+    display: grid;
+    gap: 1rem;
+}
+
+.pdv-total-card {
+    border: 0;
+}
+
+.pdv-total-value {
+    margin-top: 0.25rem;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--ui-heading);
+}
+
+.pdv-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: #fff;
+    color: var(--ui-text-muted);
+    font-size: 0.8125rem;
+}
+
+.pdv-shortcuts kbd {
+    margin-right: 0.25rem;
+}
+
+@media (min-width: 1400px) {
+    .pdv-sidebar-stack {
+        position: sticky;
+        top: 1rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pdv-page {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .pdv-shortcuts {
+        display: none;
+    }
+
+    .pdv-page .input-group-lg {
+        flex-wrap: wrap;
+    }
+
+    .pdv-page .input-group-lg .form-control {
+        min-width: calc(100% - 3.5rem);
+    }
+
+    .pdv-page .input-group-lg .btn {
+        width: 100%;
+        margin-top: 0.5rem;
+        border-radius: var(--bs-border-radius-lg) !important;
+    }
+}
