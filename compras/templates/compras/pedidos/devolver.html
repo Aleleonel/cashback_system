@@ -1,54 +1,339 @@
-
 {% extends "base.html" %}
 
-{% block title %}Devolver mercadorias{% endblock %}
+{% block title %}
+    Devolver mercadorias
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h1 class="h3">Devolver ao fornecedor</h1>
+<div class="container-fluid py-4">
 
-    <p class="text-muted">
-        Pedido PC-{{ pedido.numero|stringformat:"06d" }}
-        - Recebimento {{ recebimento.id }}
-        - {{ recebimento.loja }}
-    </p>
+    <div
+        class="d-flex flex-column flex-lg-row
+               justify-content-between align-items-lg-start
+               gap-3 mb-4"
+    >
+        <div>
+            <div class="text-muted small mb-1">
+                Compras / Recebimentos / Devolução
+            </div>
 
-    <form method="post" novalidate>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h1 class="h3 mb-0">
+                    Devolver ao fornecedor
+                </h1>
+
+                <span class="badge text-bg-danger">
+                    Saída de estoque
+                </span>
+            </div>
+
+            <p class="text-muted mb-0 mt-2">
+                Pedido
+                PC-{{ recebimento.pedido.numero|stringformat:"06d" }}
+                · {{ recebimento.pedido.fornecedor }}
+            </p>
+        </div>
+
+        <a
+            href="{% url 'compras:detalhar_pedido_compra' recebimento.pedido.uuid %}"
+            class="btn btn-outline-secondary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Voltar ao pedido
+        </a>
+    </div>
+
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Recebimento
+                    </div>
+
+                    <div class="fw-semibold">
+                        #{{ recebimento.id }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Fornecedor
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ recebimento.pedido.fornecedor }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Loja de origem
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ recebimento.loja }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Data do recebimento
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ recebimento.recebido_em|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <form method="post" novalidate data-ui-devolucao="true">
         {% csrf_token %}
-        {{ form.chave_idempotencia }}
+
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
 
         {% if form.non_field_errors %}
             <div class="alert alert-danger">
-                {{ form.non_field_errors }}
+                <div class="fw-semibold mb-1">
+                    Não foi possível registrar a devolução
+                </div>
+
+                {% for erro in form.non_field_errors %}
+                    <div>{{ erro }}</div>
+                {% endfor %}
             </div>
         {% endif %}
 
-        {% for field in form %}
-            {% if field.name != "chave_idempotencia" %}
-                <div class="mb-3">
-                    <label class="form-label">
-                        {{ field.label }}
-                    </label>
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <div class="text-danger small">
-                            {{ error }}
+
+        <div class="row g-4">
+            <div class="col-xl-8">
+
+                <section
+                    class="card shadow-sm border-0 mb-4"
+                    data-ui-itens-devolucao="true"
+                >
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-1">
+                            Produtos para devolução
+                        </h2>
+
+                        <div class="text-muted small">
+                            Informe somente as quantidades que retornarão
+                            ao fornecedor.
                         </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endfor %}
+                    </div>
 
-        <button class="btn btn-danger">
-            Confirmar devolucao
-        </button>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">
+                                            Produto ou item
+                                        </th>
 
-        <a
-            href="{% url 'compras:detalhar_pedido_compra' pedido.uuid %}"
-            class="btn btn-outline-secondary"
-        >
-            Voltar
-        </a>
+                                        <th style="width: 230px;">
+                                            Quantidade a devolver
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for field in form.visible_fields %}
+                                        {% if field.name != "documento_referencia" and field.name != "motivo" and field.name != "chave_idempotencia" %}
+                                            <tr>
+                                                <td class="ps-3">
+                                                    <label
+                                                        for="{{ field.id_for_label }}"
+                                                        class="fw-semibold"
+                                                    >
+                                                        {{ field.label }}
+                                                    </label>
+
+                                                    {% if field.help_text %}
+                                                        <div class="small text-muted mt-1">
+                                                            {{ field.help_text }}
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+
+                                                <td>
+                                                    {{ field }}
+
+                                                    {% for erro in field.errors %}
+                                                        <div class="invalid-feedback d-block">
+                                                            {{ erro }}
+                                                        </div>
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% empty %}
+                                        <tr>
+                                            <td
+                                                colspan="2"
+                                                class="text-center py-5"
+                                            >
+                                                <i
+                                                    class="bi bi-arrow-return-left
+                                                           fs-1 text-muted"
+                                                ></i>
+
+                                                <div class="fw-semibold mt-2">
+                                                    Nenhum item disponível
+                                                </div>
+
+                                                <div class="text-muted small">
+                                                    Não existem mercadorias
+                                                    com saldo disponível
+                                                    para devolução.
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <section class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-1">
+                            Motivo e documento
+                        </h2>
+
+                        <div class="text-muted small">
+                            Registre a justificativa e o documento
+                            relacionado à devolução.
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% if form.motivo %}
+                                <div class="col-12">
+                                    {% include "partials/campo_formulario.html" with campo=form.motivo %}
+                                </div>
+                            {% endif %}
+
+                            {% if form.documento_referencia %}
+                                <div class="col-md-6">
+                                    {% include "partials/campo_formulario.html" with campo=form.documento_referencia %}
+                                </div>
+                            {% endif %}
+
+                            {% if form.chave_idempotencia %}
+                                <div class="d-none">
+                                    {{ form.chave_idempotencia }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+
+            <div class="col-xl-4">
+                <section class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-0">
+                            Informações do recebimento
+                        </h2>
+                    </div>
+
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-5 text-muted fw-normal">
+                                Pedido
+                            </dt>
+
+                            <dd class="col-7 text-end">
+                                PC-{{ recebimento.pedido.numero|stringformat:"06d" }}
+                            </dd>
+
+                            <dt class="col-5 text-muted fw-normal">
+                                Loja
+                            </dt>
+
+                            <dd class="col-7 text-end">
+                                {{ recebimento.loja }}
+                            </dd>
+
+                            <dt class="col-5 text-muted fw-normal">
+                                Documento
+                            </dt>
+
+                            <dd class="col-7 text-end">
+                                {{ recebimento.documento_referencia|default:"Não informado" }}
+                            </dd>
+
+                            <dt class="col-5 text-muted fw-normal">
+                                Recebido em
+                            </dt>
+
+                            <dd class="col-7 text-end mb-0">
+                                {{ recebimento.recebido_em|date:"d/m/Y H:i" }}
+                            </dd>
+                        </dl>
+                    </div>
+                </section>
+
+
+                <section class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-0">
+                            Confirmação
+                        </h2>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="alert alert-warning small">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            A devolução reduzirá o estoque da
+                            loja {{ recebimento.loja }}.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button
+                                type="submit"
+                                class="btn btn-danger"
+                                onclick="return confirm('Confirmar a devolução destas mercadorias ao fornecedor?');"
+                            >
+                                <i class="bi bi-arrow-return-left me-1"></i>
+                                Registrar devolução
+                            </button>
+
+                            <a
+                                href="{% url 'compras:detalhar_pedido_compra' recebimento.pedido.uuid %}"
+                                class="btn btn-outline-secondary"
+                            >
+                                Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}

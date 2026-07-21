@@ -1,4 +1,4 @@
-﻿{% if pagina.paginator.num_pages > 1 %}
+{% if pagina.paginator.num_pages > 1 %}
 <div class="card-footer bg-white">
     <nav aria-label="Navegação entre páginas">
         <ul class="pagination pagination-sm justify-content-center mb-0">
@@ -7,7 +7,7 @@
                 {% if pagina.has_previous %}
                 <a
                     class="page-link"
-                    href="?page={{ pagina.previous_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if somente_ativas %}&ativas=1{% endif %}"
+                    href="?page={{ pagina.previous_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if somente_ativas %}&ativas=1{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id|urlencode }}{% endif %}{% if marca_id %}&marca={{ marca_id|urlencode }}{% endif %}"
                 >
                     Anterior
                 </a>
@@ -20,7 +20,8 @@
 
             <li class="page-item disabled">
                 <span class="page-link">
-                    Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+                    Página {{ pagina.number }} de
+                    {{ pagina.paginator.num_pages }}
                 </span>
             </li>
 
@@ -28,7 +29,7 @@
                 {% if pagina.has_next %}
                 <a
                     class="page-link"
-                    href="?page={{ pagina.next_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if somente_ativas %}&ativas=1{% endif %}"
+                    href="?page={{ pagina.next_page_number }}{% if busca %}&busca={{ busca|urlencode }}{% endif %}{% if somente_ativas %}&ativas=1{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id|urlencode }}{% endif %}{% if marca_id %}&marca={{ marca_id|urlencode }}{% endif %}"
                 >
                     Próxima
                 </a>

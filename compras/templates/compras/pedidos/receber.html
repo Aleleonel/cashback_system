@@ -1,49 +1,315 @@
 {% extends "base.html" %}
 
-{% block title %}Receber pedido{% endblock %}
+{% block title %}
+    Receber pedido PC-{{ pedido.numero|stringformat:"06d" }}
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h1 class="h3">
-        Receber PC-{{ pedido.numero|stringformat:"06d" }}
-    </h1>
+<div class="container-fluid py-4">
 
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form.chave_idempotencia }}
-
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {{ form.non_field_errors }}
+    <div
+        class="d-flex flex-column flex-lg-row
+               justify-content-between align-items-lg-start
+               gap-3 mb-4"
+    >
+        <div>
+            <div class="text-muted small mb-1">
+                Compras / Pedidos de compra / Recebimento
             </div>
-        {% endif %}
 
-        {% for field in form %}
-            {% if field.name != "chave_idempotencia" %}
-                <div class="mb-3">
-                    <label class="form-label">
-                        {{ field.label }}
-                    </label>
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <div class="text-danger small">
-                            {{ error }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endfor %}
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h1 class="h3 mb-0">
+                    Receber mercadorias
+                </h1>
 
-        <button class="btn btn-success">
-            Confirmar recebimento
-        </button>
+                <span class="badge text-bg-success">
+                    Entrada de estoque
+                </span>
+            </div>
+
+            <p class="text-muted mb-0 mt-2">
+                Pedido PC-{{ pedido.numero|stringformat:"06d" }}
+                · {{ pedido.fornecedor }}
+            </p>
+        </div>
 
         <a
             href="{% url 'compras:detalhar_pedido_compra' pedido.uuid %}"
             class="btn btn-outline-secondary"
         >
-            Voltar
+            <i class="bi bi-arrow-left me-1"></i>
+            Voltar ao pedido
         </a>
+    </div>
+
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Pedido
+                    </div>
+
+                    <div class="fw-semibold">
+                        PC-{{ pedido.numero|stringformat:"06d" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Fornecedor
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ pedido.fornecedor }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Emissão
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ pedido.data_emissao|date:"d/m/Y" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">
+                        Status
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ pedido.get_status_display }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <form method="post" novalidate data-ui-recebimento="true">
+        {% csrf_token %}
+
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <div class="fw-semibold mb-1">
+                    Não foi possível registrar o recebimento
+                </div>
+
+                {% for erro in form.non_field_errors %}
+                    <div>{{ erro }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+
+        <div class="row g-4">
+            <div class="col-xl-8">
+
+                <section
+                    class="card shadow-sm border-0 mb-4"
+                    data-ui-itens-recebimento="true"
+                >
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-1">
+                            Produtos do recebimento
+                        </h2>
+
+                        <div class="text-muted small">
+                            Informe as quantidades recebidas nesta entrada.
+                            Use zero para produtos que ainda não chegaram.
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">
+                                            Produto ou item
+                                        </th>
+
+                                        <th style="width: 230px;">
+                                            Quantidade recebida
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for field in form.visible_fields %}
+                                        {% if field.name != "loja" and field.name != "documento_referencia" and field.name != "observacoes" and field.name != "chave_idempotencia" %}
+                                            <tr>
+                                                <td class="ps-3">
+                                                    <label
+                                                        for="{{ field.id_for_label }}"
+                                                        class="fw-semibold"
+                                                    >
+                                                        {{ field.label }}
+                                                    </label>
+
+                                                    {% if field.help_text %}
+                                                        <div class="small text-muted mt-1">
+                                                            {{ field.help_text }}
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+
+                                                <td>
+                                                    {{ field }}
+
+                                                    {% for erro in field.errors %}
+                                                        <div class="invalid-feedback d-block">
+                                                            {{ erro }}
+                                                        </div>
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% empty %}
+                                        <tr>
+                                            <td
+                                                colspan="2"
+                                                class="text-center py-5"
+                                            >
+                                                <i
+                                                    class="bi bi-box-seam
+                                                           fs-1 text-muted"
+                                                ></i>
+
+                                                <div class="fw-semibold mt-2">
+                                                    Nenhum item pendente
+                                                </div>
+
+                                                <div class="text-muted small">
+                                                    Este pedido não possui
+                                                    mercadorias disponíveis
+                                                    para recebimento.
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <section class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-1">
+                            Informações adicionais
+                        </h2>
+
+                        <div class="text-muted small">
+                            Dados complementares do recebimento.
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% if form.documento_referencia %}
+                                <div class="col-md-6">
+                                    {% include "partials/campo_formulario.html" with campo=form.documento_referencia %}
+                                </div>
+                            {% endif %}
+
+                            {% if form.observacoes %}
+                                <div class="col-12">
+                                    {% include "partials/campo_formulario.html" with campo=form.observacoes %}
+                                </div>
+                            {% endif %}
+
+                            {% if form.chave_idempotencia %}
+                                <div class="d-none">
+                                    {{ form.chave_idempotencia }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+
+            <div class="col-xl-4">
+                <section
+                    class="card shadow-sm border-0 mb-4"
+                    data-ui-destino-recebimento="true"
+                >
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-0">
+                            Destino das mercadorias
+                        </h2>
+                    </div>
+
+                    <div class="card-body">
+                        {% if form.loja %}
+                            {% include "partials/campo_formulario.html" with campo=form.loja %}
+                        {% endif %}
+
+                        <div class="alert alert-info small mb-0 mt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            As quantidades confirmadas serão adicionadas
+                            ao estoque da loja selecionada.
+                        </div>
+                    </div>
+                </section>
+
+
+                <section class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-0">
+                            Confirmação
+                        </h2>
+                    </div>
+
+                    <div class="card-body">
+                        <p class="text-muted small">
+                            Confira a loja e as quantidades antes de
+                            registrar a entrada.
+                        </p>
+
+                        <div class="d-grid gap-2">
+                            <button
+                                type="submit"
+                                class="btn btn-success"
+                                onclick="return confirm('Confirmar o recebimento destas mercadorias?');"
+                            >
+                                <i class="bi bi-box-arrow-in-down me-1"></i>
+                                Confirmar recebimento
+                            </button>
+
+                            <a
+                                href="{% url 'compras:detalhar_pedido_compra' pedido.uuid %}"
+                                class="btn btn-outline-secondary"
+                            >
+                                Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}

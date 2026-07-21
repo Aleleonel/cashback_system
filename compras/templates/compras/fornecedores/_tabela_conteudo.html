@@ -1,0 +1,51 @@
+<thead class="table-light">
+    <tr>
+        <th scope="col">Razão social</th>
+        <th scope="col">Nome fantasia</th>
+        <th scope="col">CNPJ</th>
+        <th scope="col">Status</th>
+        <th scope="col" class="text-end">Ações</th>
+    </tr>
+</thead>
+
+<tbody>
+    {% for fornecedor in pagina %}
+    <tr>
+        <td>
+            <strong>{{ fornecedor.razao_social }}</strong>
+        </td>
+
+        <td>
+            {{ fornecedor.nome_fantasia|default:"—" }}
+        </td>
+
+        <td>
+            {{ fornecedor.cnpj|default:"—" }}
+        </td>
+
+        <td>
+            {% if fornecedor.status == "ativo" %}
+            <span class="badge text-bg-success">
+                {{ fornecedor.get_status_display }}
+            </span>
+            {% else %}
+            <span class="badge text-bg-secondary">
+                {{ fornecedor.get_status_display }}
+            </span>
+            {% endif %}
+        </td>
+
+        <td class="text-end">
+            <a
+                href="{% url 'compras:editar_fornecedor' fornecedor.uuid %}"
+                class="btn btn-sm btn-outline-dark"
+            >
+                Editar
+            </a>
+        </td>
+    </tr>
+
+    {% empty %}
+        {% include "partials/estado_vazio.html" with colunas=5 mensagem="Nenhum fornecedor encontrado." icone="bi-truck" %}
+    {% endfor %}
+</tbody>

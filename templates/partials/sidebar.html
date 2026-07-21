@@ -93,6 +93,36 @@
             Estoque
         </a>
 
+        <!-- UI-COMPRAS-INICIO -->
+        <div class="mt-2 mb-1 px-3">
+            <div
+                class="text-uppercase text-white-50 small fw-semibold"
+                style="letter-spacing: .06em;"
+            >
+                Compras
+            </div>
+        </div>
+
+        <a
+            href="{% url 'compras:listar_fornecedores' %}"
+            class="nav-link {% if request.resolver_match.namespace == 'compras' and 'fornecedor' in request.resolver_match.url_name %}active bg-primary text-white{% else %}text-white{% endif %}"
+            data-menu-compras-fornecedores="true"
+        >
+            <i class="bi bi-truck me-2"></i>
+            Fornecedores
+        </a>
+
+        <a
+            href="{% url 'compras:listar_pedidos_compra' %}"
+            class="nav-link {% if request.resolver_match.namespace == 'compras' and 'pedido_compra' in request.resolver_match.url_name %}active bg-primary text-white{% else %}text-white{% endif %}"
+            data-menu-compras-pedidos="true"
+        >
+            <i class="bi bi-bag-check me-2"></i>
+            Pedidos de compra
+        </a>
+        <!-- UI-COMPRAS-FIM -->
+
+
         {% if pode_gerenciar_vouchers %}
         <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
             <i class="bi bi-ticket-perforated me-2"></i>

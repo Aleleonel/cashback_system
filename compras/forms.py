@@ -13,7 +13,40 @@ from .models import (
 )
 
 
+def aplicar_estilo_bootstrap(formulario):
+    """Aplica as classes visuais padr?o aos campos Django."""
+
+    for campo in formulario.fields.values():
+        widget = campo.widget
+
+        if isinstance(widget, forms.HiddenInput):
+            continue
+
+        classes_atuais = (
+            widget.attrs.get('class', '').split()
+        )
+
+        if isinstance(widget, forms.CheckboxInput):
+            classe = 'form-check-input'
+        elif isinstance(widget, forms.Select):
+            classe = 'form-select'
+        else:
+            classe = 'form-control'
+
+        if classe not in classes_atuais:
+            classes_atuais.append(classe)
+
+        widget.attrs['class'] = ' '.join(
+            classes_atuais
+        )
+
+
+
 class FornecedorForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        aplicar_estilo_bootstrap(self)
+
     class Meta:
         model = Fornecedor
         fields = [
@@ -74,6 +107,7 @@ class PedidoCompraForm(forms.ModelForm):
 
     def __init__(self, *args, matriz=None, **kwargs):
         super().__init__(*args, **kwargs)
+        aplicar_estilo_bootstrap(self)
 
         if not self.is_bound and not self.instance.pk:
             self.initial['data_emissao'] = (
@@ -102,6 +136,7 @@ class ItemPedidoCompraForm(forms.ModelForm):
 
     def __init__(self, *args, matriz=None, **kwargs):
         super().__init__(*args, **kwargs)
+        aplicar_estilo_bootstrap(self)
 
         produtos = Produto.objects.all()
 

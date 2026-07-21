@@ -3,53 +3,45 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">{{ titulo }}</h1>
+<div class="container-fluid py-4">
+    <div class="card shadow-sm border-0">
+        {% url "compras:listar_pedidos_compra" as url_voltar_pedidos %}
 
-        <a
-            href="{% url 'compras:listar_pedidos_compra' %}"
-            class="btn btn-outline-secondary"
-        >
-            Voltar
-        </a>
-    </div>
+        {% include "partials/cabecalho_pagina.html" with titulo=titulo subtitulo="Informe os dados principais para registrar o pedido de compra." icone="bi-cart3" acao_url=url_voltar_pedidos acao_texto="Voltar" acao_icone="bi-arrow-left" %}
 
-    <form method="post" novalidate>
-        {% csrf_token %}
+        <form method="post" novalidate>
+            {% csrf_token %}
 
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {{ form.non_field_errors }}
-            </div>
-        {% endif %}
+            <div class="card-body p-4">
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
 
-        <div class="card">
-            <div class="card-body">
-                {% for field in form %}
-                    <div class="mb-3">
-                        <label
-                            for="{{ field.id_for_label }}"
-                            class="form-label"
-                        >
-                            {{ field.label }}
-                        </label>
-
-                        {{ field }}
-
-                        {% for error in field.errors %}
-                            <div class="text-danger small">
-                                {{ error }}
-                            </div>
-                        {% endfor %}
+                <div class="row g-4">
+                    {% for field in form %}
+                    <div class="col-12 {% if field.field.widget.input_type != 'checkbox' %}col-lg-6{% endif %}">
+                        {% include "partials/campo_formulario.html" with campo=field %}
                     </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
-        </div>
 
-        <button class="btn btn-primary mt-3">
-            Salvar
-        </button>
-    </form>
+            <div class="card-footer bg-white d-flex flex-wrap justify-content-end gap-2 px-4 py-3">
+                <a
+                    href="{% url 'compras:listar_pedidos_compra' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Cancelar
+                </a>
+
+                <button type="submit" class="btn btn-dark">
+                    <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                    Salvar pedido
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
