@@ -22,10 +22,12 @@ codigo="empresa",
         disponivel=True,
     ),
     GrupoConfiguracao(
-        codigo="usuarios",
+codigo="usuarios",
         titulo="Usuários e permissões",
         descricao="Acessos, perfis e permissões administrativas.",
         icone="bi-people",
+        url_name="configuracoes:usuarios_permissoes",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="clientes_cashback",

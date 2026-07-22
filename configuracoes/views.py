@@ -1,5 +1,8 @@
 from django.shortcuts import render
 
+from accounts.decorators import require_permission
+from accounts.permissions import PERMISSAO_EMPRESA_USUARIOS_GERENCIAR
+
 from .catalogo import listar_grupos_configuracao
 from .decorators import (
     central_configuracoes_required,
@@ -44,6 +47,23 @@ def empresa(request):
         {
             "contexto_configuracoes": contexto_acesso,
             "pode_operar_empresa": (
+                contexto_acesso["escopo"] == "empresa"
+                and contexto_acesso["matriz"] is not None
+            ),
+        },
+    )
+
+@central_configuracoes_required
+@require_permission(PERMISSAO_EMPRESA_USUARIOS_GERENCIAR)
+def usuarios_permissoes(request):
+    contexto_acesso = request.contexto_configuracoes
+
+    return render(
+        request,
+        "configuracoes/usuarios_permissoes.html",
+        {
+            "contexto_configuracoes": contexto_acesso,
+            "pode_operar_usuarios": (
                 contexto_acesso["escopo"] == "empresa"
                 and contexto_acesso["matriz"] is not None
             ),
