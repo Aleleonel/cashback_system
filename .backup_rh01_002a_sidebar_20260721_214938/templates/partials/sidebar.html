@@ -189,34 +189,6 @@
         </a>
         {% endif %}
 
-        <!-- UI-RH-INICIO -->
-        <div class="mt-4 mb-1 px-3">
-            <div
-                class="text-uppercase text-white-50 small fw-semibold"
-                style="letter-spacing: .06em;"
-            >
-                Recursos Humanos
-            </div>
-        </div>
-
-        <a
-            href="{% url 'rh:cargo_list' %}"
-            class="nav-link {% if request.resolver_match.namespace == 'rh' and request.resolver_match.url_name == 'cargo_list' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-rh-cargos="true"
-        >
-            <i class="bi bi-briefcase me-2"></i>
-            Cargos
-        </a>
-
-        <a
-            href="{% url 'rh:departamento_list' %}"
-            class="nav-link {% if request.resolver_match.namespace == 'rh' and request.resolver_match.url_name == 'departamento_list' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-rh-departamentos="true"
-        >
-            <i class="bi bi-diagram-3 me-2"></i>
-            Departamentos
-        </a>
-        <!-- UI-RH-FIM -->
         {% if pode_ver_campanhas or pode_configurar_campanhas or pode_templates_campanhas %}
         <div class="text-uppercase text-white-50 small mt-4 mb-1">
             Campanhas

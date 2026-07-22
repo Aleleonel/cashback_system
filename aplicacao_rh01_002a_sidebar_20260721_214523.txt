@@ -1,0 +1,50 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20260721214523
+Nome de Usuário: DESKTOP-89M8N1J\User
+Executar como Usuário: DESKTOP-89M8N1J\User
+Nome da Configuração: 
+Computador: DESKTOP-89M8N1J (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\User\AppData\Local\Programs\Microsoft VS Code\8a7abeba6e\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+ID do Processo: 8632
+PSVersion: 5.1.26100.8875
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8875
+BuildVersion: 10.0.26100.8875
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+============================================================
+RH-01.002A - Integracao do RH na sidebar
+============================================================
+Projeto: C:\Users\User\Alexandre\Projetos\cashback_system
+Sidebar: C:\Users\User\Alexandre\Projetos\cashback_system\templates\partials\sidebar.html
+Log: C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_002a_sidebar_20260721_214523.txt
+Backup: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_002a_sidebar_20260721_214523
+
+[1/8] Validando branch e estado do repositorio...
+Branch atual: feature/rh-01-fundacao
+Alteracoes inesperadas encontradas:
+ M rh/admin.py
+ M rh/models/__init__.py
+ M rh/urls.py
+?? diagnostico_rh01_002_departamento.ps1
+?? rh/forms/departamento_form.py
+?? rh/migrations/0002_departamento.py
+?? rh/models/departamento.py
+?? rh/selectors/departamento_selector.py
+?? rh/services/departamento_service.py
+?? rh/templates/rh/departamento/
+?? rh/tests/test_departamento_urls.py
+?? rh/views/departamento_views.py
+
+ERRO NA CORRECAO DA SIDEBAR:
+Existem alteracoes fora do escopo esperado.
+Consulte o log:
+C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_002a_sidebar_20260721_214523.txt
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20260721214523
+**********************

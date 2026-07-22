@@ -1,0 +1,173 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20260721215300
+Nome de Usuário: DESKTOP-89M8N1J\User
+Executar como Usuário: DESKTOP-89M8N1J\User
+Nome da Configuração: 
+Computador: DESKTOP-89M8N1J (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\User\AppData\Local\Programs\Microsoft VS Code\8a7abeba6e\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+ID do Processo: 8632
+PSVersion: 5.1.26100.8875
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8875
+BuildVersion: 10.0.26100.8875
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+============================================================
+RH-01.001 - Diagnostico dos templates de Cargo
+============================================================
+
+[1/6] View de Cargo
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+
+from rh.forms.cargo_form import CargoForm
+from rh.models import Cargo
+from rh.selectors.cargo_selector import listar_cargos
+from rh.services.cargo_service import (
+    atualizar_cargo,
+    criar_cargo,
+    excluir_cargo,
+)
+
+
+@login_required
+def cargo_list(request):
+    matriz = getattr(request.user, "matriz", None)
+
+    cargos = listar_cargos(matriz=matriz)
+
+    context = {
+        "cargos": cargos,
+    }
+
+    return render(
+        request,
+        "rh/cargo/list.html",
+        context,
+    )
+
+
+@login_required
+def cargo_create(request):
+    if request.method == "POST":
+        form = CargoForm(request.POST)
+
+        if form.is_valid():
+            criar_cargo(
+                matriz=form.cleaned_data["matriz"],
+                nome=form.cleaned_data["nome"],
+                descricao=form.cleaned_data["descricao"],
+                ativo=form.cleaned_data["ativo"],
+            )
+
+            messages.success(
+                request,
+                "Cargo cadastrado com sucesso.",
+            )
+
+            return redirect("rh:cargo_list")
+    else:
+        form = CargoForm()
+
+    return render(
+        request,
+        "rh/cargo/form.html",
+        {
+            "form": form,
+            "titulo": "Novo Cargo",
+        },
+    )
+
+
+@login_required
+def cargo_update(request, pk):
+    cargo = get_object_or_404(
+        Cargo,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = CargoForm(
+            request.POST,
+            instance=cargo,
+        )
+
+        if form.is_valid():
+            atualizar_cargo(
+                cargo=cargo,
+                nome=form.cleaned_data["nome"],
+                descricao=form.cleaned_data["descricao"],
+                ativo=form.cleaned_data["ativo"],
+            )
+
+            messages.success(
+                request,
+                "Cargo atualizado com sucesso.",
+            )
+
+            return redirect("rh:cargo_list")
+    else:
+        form = CargoForm(instance=cargo)
+
+    return render(
+        request,
+        "rh/cargo/form.html",
+        {
+            "form": form,
+            "titulo": "Editar Cargo",
+        },
+    )
+
+
+@login_required
+def cargo_delete(request, pk):
+    cargo = get_object_or_404(
+        Cargo,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        excluir_cargo(cargo)
+
+        messages.success(
+            request,
+            "Cargo removido com sucesso.",
+        )
+
+        return redirect("rh:cargo_list")
+
+    return render(
+        request,
+        "rh/cargo/delete.html",
+        {
+            "cargo": cargo,
+        },
+    )
+
+[2/6] Templates existentes no modulo RH
+
+
+[3/6] Referencias a templates de Cargo
+
+[4/6] URLs de Cargo
+
+[5/6] Teste de resolucao de template
+
+Template rh/cargo/list.html nao foi localizado.
+
+[6/6] Estado do Git
+
+
+Diagnostico concluido.
+Nenhum arquivo foi alterado.
+Log salvo em:
+C:\Users\User\Alexandre\Projetos\cashback_system\diagnostico_rh01_001_templates_cargo_20260721_215300.txt
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20260721215301
+**********************

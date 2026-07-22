@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Inativar Departamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        Confirmar inativação
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <p class="mb-4">
+                        Tem certeza que deseja inativar o departamento?
+                    </p>
+
+                    <h5 class="text-primary">
+                        {{ departamento.nome }}
+                    </h5>
+
+                    {% if departamento.descricao %}
+                        <p class="text-muted">
+                            {{ departamento.descricao }}
+                        </p>
+                    {% endif %}
+
+                    <div class="alert alert-warning mb-4">
+                        O departamento deixará de aparecer como ativo,
+                        mas continuará preservado no histórico.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="d-flex justify-content-between">
+                            <a
+                                href="{% url 'rh:departamento_list' %}"
+                                class="btn btn-secondary"
+                            >
+                                Cancelar
+                            </a>
+
+                            <button type="submit" class="btn btn-danger">
+                                Confirmar inativação
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

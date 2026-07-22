@@ -1,0 +1,87 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20260721214938
+Nome de Usuário: DESKTOP-89M8N1J\User
+Executar como Usuário: DESKTOP-89M8N1J\User
+Nome da Configuração: 
+Computador: DESKTOP-89M8N1J (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\User\AppData\Local\Programs\Microsoft VS Code\8a7abeba6e\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+ID do Processo: 8632
+PSVersion: 5.1.26100.8875
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8875
+BuildVersion: 10.0.26100.8875
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+============================================================
+RH-01.002A - Integracao do RH na sidebar
+============================================================
+Projeto: C:\Users\User\Alexandre\Projetos\cashback_system
+Sidebar: C:\Users\User\Alexandre\Projetos\cashback_system\templates\partials\sidebar.html
+Log: C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_002a_sidebar_20260721_214938.txt
+Backup: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_002a_sidebar_20260721_214938
+
+[1/8] Validando branch e estado do repositorio...
+Branch atual: feature/rh-01-fundacao
+
+[2/8] Validando URLs do RH...
+50 objects imported automatically (use -v 2 for details).
+
+/rh/cargos/
+/rh/departamentos/
+
+[3/8] Criando backup da sidebar...
+Backup criado: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_002a_sidebar_20260721_214938\templates\partials\sidebar.html
+
+[4/8] Analisando conteudo atual...
+
+[5/8] Inserindo secao Recursos Humanos...
+
+[6/8] Validando alteracao aplicada...
+OK - <!-- UI-RH-INICIO -->
+OK - <!-- UI-RH-FIM -->
+OK - {% url 'rh:cargo_list' %}
+OK - {% url 'rh:departamento_list' %}
+OK - data-menu-rh-cargos="true"
+OK - data-menu-rh-departamentos="true"
+
+[7/8] Executando validacoes Django...
+System check identified no issues (0 silenced).
+Found 8 test(s).
+Skipping setup of unused database(s): default.
+System check identified no issues (0 silenced).
+test_criacao_exige_autenticacao (rh.tests.test_departamento_urls.DepartamentoUrlsTests.test_criacao_exige_autenticacao) ... ok
+test_lista_exige_autenticacao (rh.tests.test_departamento_urls.DepartamentoUrlsTests.test_lista_exige_autenticacao) ... ok
+test_rota_criacao_resolve_view_correta (rh.tests.test_departamento_urls.DepartamentoUrlsTests.test_rota_criacao_resolve_view_correta) ... ok
+test_rota_edicao_resolve_view_correta (rh.tests.test_departamento_urls.DepartamentoUrlsTests.test_rota_edicao_resolve_view_correta) ... ok
+test_rota_inativacao_resolve_view_correta (rh.tests.test_departamento_urls.DepartamentoUrlsTests.test_rota_inativacao_resolve_view_correta) ... ok
+test_rota_lista_resolve_view_correta (rh.tests.test_departamento_urls.DepartamentoUrlsTests.test_rota_lista_resolve_view_correta) ... ok
+test_rota_inicial_exige_autenticacao (rh.tests.test_urls.RhUrlsTests.test_rota_inicial_exige_autenticacao) ... ok
+test_rota_inicial_resolve_view_correta (rh.tests.test_urls.RhUrlsTests.test_rota_inicial_resolve_view_correta) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.049s
+
+OK
+
+[8/8] Exibindo estado final...
+warning: in the working copy of 'templates/partials/sidebar.html', LF will be replaced by CRLF the next time Git touches it
+
+
+
+============================================================
+RH-01.002A aplicado com sucesso.
+A sidebar agora possui a secao Recursos Humanos.
+Links adicionados: Cargos e Departamentos.
+Backup preservado em:
+C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_002a_sidebar_20260721_214938
+Log salvo em:
+C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_002a_sidebar_20260721_214938.txt
+============================================================
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20260721214946
+**********************

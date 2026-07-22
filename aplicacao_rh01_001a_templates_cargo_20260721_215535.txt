@@ -1,0 +1,78 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20260721215535
+Nome de Usuário: DESKTOP-89M8N1J\User
+Executar como Usuário: DESKTOP-89M8N1J\User
+Nome da Configuração: 
+Computador: DESKTOP-89M8N1J (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\User\AppData\Local\Programs\Microsoft VS Code\8a7abeba6e\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+ID do Processo: 8632
+PSVersion: 5.1.26100.8875
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8875
+BuildVersion: 10.0.26100.8875
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+============================================================
+RH-01.001A - Correcao dos templates de Cargo
+============================================================
+Projeto: C:\Users\User\Alexandre\Projetos\cashback_system
+Origem: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh
+Destino: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo
+Backup: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_001a_templates_cargo_20260721_215535
+Log: C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_001a_templates_cargo_20260721_215535.txt
+
+[1/8] Validando branch...
+Branch atual: feature/rh-01-fundacao
+
+[2/8] Validando estrutura atual...
+OK - encontrado na origem: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\list.html
+OK - encontrado na origem: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\form.html
+OK - encontrado na origem: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\delete.html
+
+[3/8] Criando backup dos templates...
+Backup criado: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_001a_templates_cargo_20260721_215535\list.html
+Backup criado: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_001a_templates_cargo_20260721_215535\form.html
+Backup criado: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_001a_templates_cargo_20260721_215535\delete.html
+
+[4/8] Criando diretorio correto...
+Diretorio pronto: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo
+
+[5/8] Movendo templates de Cargo...
+Movido: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\list.html -> C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo\list.html
+Movido: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\form.html -> C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo\form.html
+Movido: C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\delete.html -> C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo\delete.html
+
+[6/8] Validando arquivos no destino...
+OK - C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo\list.html (3256 bytes)
+OK - C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo\form.html (3434 bytes)
+OK - C:\Users\User\Alexandre\Projetos\cashback_system\rh\templates\rh\cargo\delete.html (1826 bytes)
+
+[7/8] Validando carregamento pelo Django...
+
+
+
+
+[8/8] Exibindo diferencas e estado final...
+
+
+
+
+============================================================
+RH-01.001A aplicado com sucesso.
+Templates corrigidos:
+  rh/cargo/list.html
+  rh/cargo/form.html
+  rh/cargo/delete.html
+Backup preservado em:
+C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_001a_templates_cargo_20260721_215535
+Log salvo em:
+C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_001a_templates_cargo_20260721_215535.txt
+============================================================
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20260721215541
+**********************

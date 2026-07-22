@@ -1,0 +1,80 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20260721213333
+Nome de Usuário: DESKTOP-89M8N1J\User
+Executar como Usuário: DESKTOP-89M8N1J\User
+Nome da Configuração: 
+Computador: DESKTOP-89M8N1J (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\User\AppData\Local\Programs\Microsoft VS Code\8a7abeba6e\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+ID do Processo: 8632
+PSVersion: 5.1.26100.8875
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8875
+BuildVersion: 10.0.26100.8875
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+============================================================
+RH-01.002 - Aplicacao do cadastro de Departamentos
+============================================================
+Projeto: C:\Users\User\Alexandre\Projetos\cashback_system
+Log: C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_002_departamento_20260721_213333.txt
+Backup: C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_002_departamento_20260721_213333
+
+[1/12] Validando estado inicial...
+OK - manage.py
+OK - rh\models\cargo.py
+OK - rh\models\__init__.py
+OK - rh\urls.py
+OK - rh\admin.py
+OK - rh\migrations\0001_initial.py
+Branch atual: feature/rh-01-fundacao
+
+
+
+[2/12] Criando backups...
+Backups concluidos.
+
+[3/12] Criando model Departamento...
+
+[4/12] Atualizando exportacao dos models...
+
+[5/12] Criando form, selector e service...
+
+[6/12] Criando views...
+
+[7/12] Criando templates...
+
+[8/12] Atualizando URLs...
+
+[9/12] Atualizando admin...
+
+[10/12] Criando testes de URLs...
+
+[11/12] Validando sintaxe e gerando migration...
+
+
+Migration gerada: C:\Users\User\Alexandre\Projetos\cashback_system\rh\migrations\0002_departamento.py
+
+
+[12/12] Executando validacoes finais da aplicacao...
+
+
+
+Estado final do Git:
+
+
+============================================================
+RH-01.002 aplicado com sucesso.
+A migration foi criada, mas ainda nao foi aplicada ao banco.
+Backup preservado em:
+C:\Users\User\Alexandre\Projetos\cashback_system\.backup_rh01_002_departamento_20260721_213333
+Log salvo em:
+C:\Users\User\Alexandre\Projetos\cashback_system\aplicacao_rh01_002_departamento_20260721_213333.txt
+============================================================
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20260721213347
+**********************

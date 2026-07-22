@@ -1,3 +1,39 @@
+﻿**********************
+Início da transcrição do Windows PowerShell
+Hora de início: 20260721214203
+Nome de Usuário: DESKTOP-89M8N1J\User
+Executar como Usuário: DESKTOP-89M8N1J\User
+Nome da Configuração: 
+Computador: DESKTOP-89M8N1J (Microsoft Windows NT 10.0.26200.0)
+Aplicativo Host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\User\AppData\Local\Programs\Microsoft VS Code\8a7abeba6e\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+ID do Processo: 8632
+PSVersion: 5.1.26100.8875
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8875
+BuildVersion: 10.0.26100.8875
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcrição iniciada, o arquivo de saída é diagnostico_sidebar_rh01_002.txt
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+]633;D]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Write-Host "============================================================"
+============================================================
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Write-Host "RH-01.002 - Diagnostico da Sidebar"
+RH-01.002 - Diagnostico da Sidebar
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Write-Host "============================================================"
+============================================================
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+]633;D]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Write-Host "`n--- CONTEUDO COMPLETO DA SIDEBAR ---"
+
+--- CONTEUDO COMPLETO DA SIDEBAR ---
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Get-Content .\templates\partials\sidebar.html
 <aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
 
     <h5 class="fw-bold mb-4">
@@ -35,7 +71,7 @@
 
         <a href="{% url 'accounts:lista_usuarios' %}" class="nav-link text-warning">
             <i class="bi bi-people me-2"></i>
-            Usuários
+            UsuÃ¡rios
         </a>
 
         <a href="{% url 'auditoria:lista_auditoria' %}" class="nav-link text-warning">
@@ -53,7 +89,7 @@
         {% else %}
 
         <div class="text-uppercase text-white-50 small mt-2 mb-1">
-            Operação
+            OperaÃ§Ã£o
         </div>
 
         {% if pode_ver_dashboard %}
@@ -132,7 +168,7 @@
 
         {% if pode_importar_clientes or pode_importar_produtos %}
         <div class="text-uppercase text-white-50 small mt-4 mb-1">
-            Importações
+            ImportaÃ§Ãµes
         </div>
         {% endif %}
 
@@ -171,7 +207,7 @@
         {% if pode_empresa_usuarios %}
         <a href="{% url 'empresa:lista_usuarios' %}" class="nav-link text-white-50">
             <i class="bi bi-people me-2"></i>
-            Usuários
+            UsuÃ¡rios
         </a>
         {% endif %}
 
@@ -189,34 +225,6 @@
         </a>
         {% endif %}
 
-        <!-- UI-RH-INICIO -->
-        <div class="mt-4 mb-1 px-3">
-            <div
-                class="text-uppercase text-white-50 small fw-semibold"
-                style="letter-spacing: .06em;"
-            >
-                Recursos Humanos
-            </div>
-        </div>
-
-        <a
-            href="{% url 'rh:cargo_list' %}"
-            class="nav-link {% if request.resolver_match.namespace == 'rh' and request.resolver_match.url_name == 'cargo_list' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-rh-cargos="true"
-        >
-            <i class="bi bi-briefcase me-2"></i>
-            Cargos
-        </a>
-
-        <a
-            href="{% url 'rh:departamento_list' %}"
-            class="nav-link {% if request.resolver_match.namespace == 'rh' and request.resolver_match.url_name == 'departamento_list' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-rh-departamentos="true"
-        >
-            <i class="bi bi-diagram-3 me-2"></i>
-            Departamentos
-        </a>
-        <!-- UI-RH-FIM -->
         {% if pode_ver_campanhas or pode_configurar_campanhas or pode_templates_campanhas %}
         <div class="text-uppercase text-white-50 small mt-4 mb-1">
             Campanhas
@@ -231,7 +239,7 @@
 
         <a href="{% url 'campanhas:historico_envios' %}" class="nav-link text-white-50">
             <i class="bi bi-clock-history me-2"></i>
-            Histórico
+            HistÃ³rico
         </a>
 
         <a href="{% url 'campanhas:fila_envios' %}" class="nav-link text-white-50">
@@ -259,3 +267,28 @@
     </nav>
 
 </aside>
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+]633;D]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Write-Host "`n--- OCORRENCIAS RELACIONADAS AO RH E CARGO ---"
+
+--- OCORRENCIAS RELACIONADAS AO RH E CARGO ---
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Select-String `
+    -Path .\templates\partials\sidebar.html `
+    -Pattern "RH|Recursos Humanos|Cargo|cargo|rh:" `
+    -Context 8,8
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+]633;D]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Write-Host "`n--- STATUS DO GIT ---"
+
+--- STATUS DO GIT ---
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) git status --short
+
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+]633;D]633;A]633;P;Cwd=C:\x5cUsers\x5cUser\x5cAlexandre\x5cProjetos\x5ccashback_systemPS C:\Users\User\Alexandre\Projetos\cashback_system> ]633;B
+(venv) Stop-Transcript
+**********************
+Fim da transcrição do Windows PowerShell
+Hora de término: 20260721214204
+**********************
