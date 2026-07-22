@@ -14,10 +14,12 @@ class GrupoConfiguracao:
 
 GRUPOS_CONFIGURACAO = (
     GrupoConfiguracao(
-        codigo="empresa",
+codigo="empresa",
         titulo="Empresa e lojas",
         descricao="Dados empresariais, unidades e parâmetros da matriz.",
         icone="bi-buildings",
+        url_name="configuracoes:empresa",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="usuarios",

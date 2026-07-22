@@ -33,3 +33,20 @@ def criticas(request):
             "contexto_configuracoes": request.contexto_configuracoes,
         },
     )
+
+@central_configuracoes_required
+def empresa(request):
+    contexto_acesso = request.contexto_configuracoes
+
+    return render(
+        request,
+        "configuracoes/empresa.html",
+        {
+            "contexto_configuracoes": contexto_acesso,
+            "pode_operar_empresa": (
+                contexto_acesso["escopo"] == "empresa"
+                and contexto_acesso["matriz"] is not None
+            ),
+        },
+    )
+
