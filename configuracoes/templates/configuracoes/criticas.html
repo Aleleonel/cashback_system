@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <nav aria-label="Navegação estrutural" class="mb-3">
+        <a href="{% url 'configuracoes:inicio' %}"
+           class="text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i>
+            Voltar à Central de Configurações
+        </a>
+    </nav>
+
+    <div class="card border-danger shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <i class="bi bi-shield-lock me-2"></i>
+            Configurações críticas
+        </div>
+        <div class="card-body">
+            <h1 class="h4">Área exclusiva do administrador do sistema</h1>
+            <p class="text-secondary mb-0">
+                A fundação de segurança está ativa. Integrações globais,
+                recursos por empresa e parâmetros técnicos serão adicionados
+                em etapas futuras, sempre com auditoria.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

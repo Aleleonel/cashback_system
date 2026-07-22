@@ -12,6 +12,12 @@ from rh.views.departamento_views import (
     departamento_list,
     departamento_update,
 )
+from rh.views.funcionario_views import (
+    funcionario_create,
+    funcionario_delete,
+    funcionario_list,
+    funcionario_update,
+)
 from rh.views.inicio import inicio
 
 
@@ -64,4 +70,25 @@ urlpatterns = [
         departamento_delete,
         name="departamento_delete",
     ),
-]
+
+    # Funcionário
+    path(
+        "funcionarios/",
+        funcionario_list,
+        name="funcionario_list",
+    ),
+    path(
+        "funcionarios/novo/",
+        funcionario_create,
+        name="funcionario_create",
+    ),
+    path(
+        "funcionarios/<int:pk>/editar/",
+        funcionario_update,
+        name="funcionario_update",
+    ),
+    path(
+        "funcionarios/<int:pk>/inativar/",
+        funcionario_delete,
+        name="funcionario_delete",
+    ),]

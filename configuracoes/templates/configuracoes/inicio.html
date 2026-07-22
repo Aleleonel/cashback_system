@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <div class="text-uppercase text-secondary small fw-semibold mb-1">
+                Administração
+            </div>
+            <h1 class="h3 mb-1">Central de Configurações</h1>
+            <p class="text-secondary mb-0">
+                Todas as configurações do sistema ficam agrupadas neste local.
+            </p>
+        </div>
+
+        <span class="badge text-bg-light border px-3 py-2">
+            {% if contexto_configuracoes.escopo == "plataforma" %}
+                Escopo: Plataforma
+            {% else %}
+                Escopo: {{ contexto_configuracoes.matriz.nome }}
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="alert alert-info d-flex gap-2 align-items-start" role="alert">
+        <i class="bi bi-info-circle mt-1"></i>
+        <div>
+            Os módulos operacionais apenas consomem parâmetros cadastrados
+            aqui. Configurações críticas são exclusivas do administrador do
+            sistema.
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for grupo in grupos %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between gap-3 mb-3">
+                        <div class="fs-3 text-primary" aria-hidden="true">
+                            <i class="bi {{ grupo.icone }}"></i>
+                        </div>
+
+                        {% if grupo.critico %}
+                        <span class="badge text-bg-danger align-self-start">
+                            Crítica
+                        </span>
+                        {% elif grupo.disponivel %}
+                        <span class="badge text-bg-success align-self-start">
+                            Disponível
+                        </span>
+                        {% else %}
+                        <span class="badge text-bg-secondary align-self-start">
+                            Em breve
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h2 class="h5">{{ grupo.titulo }}</h2>
+                    <p class="text-secondary flex-grow-1">
+                        {{ grupo.descricao }}
+                    </p>
+
+                    {% if grupo.disponivel and grupo.url_name %}
+                    <a href="{% url grupo.url_name %}"
+                       class="btn btn-outline-primary stretched-link">
+                        Abrir configurações
+                    </a>
+                    {% else %}
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            disabled>
+                        Estrutura reservada
+                    </button>
+                    {% endif %}
+                </div>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,16 @@
 <aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
 
-    <h5 class="fw-bold mb-4">
-        <i class="bi bi-cash-coin me-2"></i>
-        Cashback System
-    </h5>
+    <!-- UI-SIDEBAR-BRAND-INICIO -->
+    <div class="sidebar-brand" aria-label="Cashback System">
+        <div class="sidebar-brand__icon" aria-hidden="true">
+            <i class="bi bi-cash-coin"></i>
+        </div>
+        <div class="sidebar-brand__content">
+            <div class="sidebar-brand__title">Cashback System</div>
+            <div class="sidebar-brand__subtitle">Gestão de Vendas</div>
+        </div>
+    </div>
+    <!-- UI-SIDEBAR-BRAND-FIM -->
 
     <nav class="nav flex-column gap-1">
 
@@ -43,6 +50,13 @@
             Auditoria
         </a>
 
+        <!-- CFG-01.01-CENTRAL-CONFIGURACOES-MASTER -->
+        <a href="{% url 'configuracoes:inicio' %}"
+           class="nav-link text-warning {% if request.resolver_match.namespace == 'configuracoes' %}active bg-primary text-white{% endif %}">
+            <i class="bi bi-sliders me-2"></i>
+            Configurações
+        </a>
+
         <hr class="border-secondary">
 
         <a href="/admin/" class="nav-link text-white-50">
@@ -77,11 +91,11 @@
         </a>
         {% endif %}
 
-                <div class="text-uppercase text-white-50 small mt-4 mb-1" data-menu-secao-pdv="true">
+        <div class="text-uppercase text-white-50 small mt-4 mb-1" data-menu-secao-pdv="true">
             PDV
         </div>
 
-{% if pode_ver_produtos %}
+        {% if pode_ver_produtos %}
         <a href="{% url 'produtos:lista_produtos' %}" class="nav-link text-white">
             <i class="bi bi-box-seam me-2"></i>
             Produtos
@@ -95,28 +109,21 @@
 
         <!-- UI-COMPRAS-INICIO -->
         <div class="mt-2 mb-1 px-3">
-            <div
-                class="text-uppercase text-white-50 small fw-semibold"
-                style="letter-spacing: .06em;"
-            >
+            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">
                 Compras
             </div>
         </div>
 
-        <a
-            href="{% url 'compras:listar_fornecedores' %}"
+        <a href="{% url 'compras:listar_fornecedores' %}"
             class="nav-link {% if request.resolver_match.namespace == 'compras' and 'fornecedor' in request.resolver_match.url_name %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-compras-fornecedores="true"
-        >
+            data-menu-compras-fornecedores="true">
             <i class="bi bi-truck me-2"></i>
             Fornecedores
         </a>
 
-        <a
-            href="{% url 'compras:listar_pedidos_compra' %}"
+        <a href="{% url 'compras:listar_pedidos_compra' %}"
             class="nav-link {% if request.resolver_match.namespace == 'compras' and 'pedido_compra' in request.resolver_match.url_name %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-compras-pedidos="true"
-        >
+            data-menu-compras-pedidos="true">
             <i class="bi bi-bag-check me-2"></i>
             Pedidos de compra
         </a>
@@ -159,6 +166,15 @@
             <i class="bi bi-building-gear me-2"></i>
             Painel da Empresa
         </a>
+
+        {% if request.user.perfil == 'admin_loja' or request.user.perfil == 'master' %}
+        <!-- CFG-01.01-CENTRAL-CONFIGURACOES-EMPRESA -->
+        <a href="{% url 'configuracoes:inicio' %}"
+           class="nav-link {% if request.resolver_match.namespace == 'configuracoes' %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+            <i class="bi bi-sliders me-2"></i>
+            Configurações
+        </a>
+        {% endif %}
         {% endif %}
 
         {% if pode_empresa_lojas %}
@@ -191,30 +207,28 @@
 
         <!-- UI-RH-INICIO -->
         <div class="mt-4 mb-1 px-3">
-            <div
-                class="text-uppercase text-white-50 small fw-semibold"
-                style="letter-spacing: .06em;"
-            >
+            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">
                 Recursos Humanos
             </div>
         </div>
 
-        <a
-            href="{% url 'rh:cargo_list' %}"
+        <a href="{% url 'rh:cargo_list' %}"
             class="nav-link {% if request.resolver_match.namespace == 'rh' and request.resolver_match.url_name == 'cargo_list' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-rh-cargos="true"
-        >
+            data-menu-rh-cargos="true">
             <i class="bi bi-briefcase me-2"></i>
             Cargos
         </a>
 
-        <a
-            href="{% url 'rh:departamento_list' %}"
+        <a href="{% url 'rh:departamento_list' %}"
             class="nav-link {% if request.resolver_match.namespace == 'rh' and request.resolver_match.url_name == 'departamento_list' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-rh-departamentos="true"
-        >
+            data-menu-rh-departamentos="true">
             <i class="bi bi-diagram-3 me-2"></i>
             Departamentos
+        </a>
+        <a href="{% url 'rh:funcionario_list' %}"
+            class="nav-link {% if request.resolver_match.url_name|slice:':11' == 'funcionario' %}active{% endif %}">
+            <i class="bi bi-people"></i>
+            <span>Funcionários</span>
         </a>
         <!-- UI-RH-FIM -->
         {% if pode_ver_campanhas or pode_configurar_campanhas or pode_templates_campanhas %}

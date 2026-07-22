@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Cargo, Departamento
+from .models import Cargo, Departamento, Funcionario
 
 
 @admin.register(Cargo)
@@ -33,7 +33,7 @@ class CargoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Informações Gerais",
+            "InformaÃ§Ãµes Gerais",
             {
                 "fields": (
                     "matriz",
@@ -88,7 +88,7 @@ class DepartamentoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Informações Gerais",
+            "InformaÃ§Ãµes Gerais",
             {
                 "fields": (
                     "matriz",
@@ -110,4 +110,38 @@ class DepartamentoAdmin(admin.ModelAdmin):
                 ),
             },
         ),
+    )
+
+@admin.register(Funcionario)
+class FuncionarioAdmin(admin.ModelAdmin):
+    list_display = (
+        "nome_completo",
+        "cpf",
+        "matriz",
+        "departamento",
+        "cargo",
+        "ativo",
+    )
+
+    list_filter = (
+        "ativo",
+        "matriz",
+        "departamento",
+        "cargo",
+    )
+
+    search_fields = (
+        "nome_completo",
+        "cpf",
+        "rg",
+        "email",
+    )
+
+    ordering = (
+        "nome_completo",
+    )
+
+    readonly_fields = (
+        "criado_em",
+        "atualizado_em",
     )

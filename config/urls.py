@@ -7,6 +7,7 @@ from accounts.views import CashbackLoginView
 
 
 urlpatterns = [
+    path('configuracoes/', include('configuracoes.urls')),
     path('pdv/', include('pdv.urls')),
     path('rh/', include('rh.urls')),
     path('estoque/', include('estoque.urls')),
