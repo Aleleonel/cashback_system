@@ -70,3 +70,19 @@ def usuarios_permissoes(request):
         },
     )
 
+@central_configuracoes_required
+def clientes_cashback(request):
+    contexto_acesso = request.contexto_configuracoes
+
+    return render(
+        request,
+        "configuracoes/clientes_cashback.html",
+        {
+            "contexto_configuracoes": contexto_acesso,
+            "pode_operar_clientes_cashback": (
+                contexto_acesso["escopo"] == "empresa"
+                and contexto_acesso["matriz"] is not None
+            ),
+        },
+    )
+

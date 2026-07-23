@@ -34,6 +34,8 @@ codigo="usuarios",
         titulo="Clientes e cashback",
         descricao="Regras de identificação, benefícios e cashback.",
         icone="bi-person-heart",
+        url_name="configuracoes:clientes_cashback",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="produtos_estoque",

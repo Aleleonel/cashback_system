@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <div class="text-uppercase text-secondary small fw-semibold mb-1">
+                Central de Configurações
+            </div>
+            <h1 class="h3 mb-1">Clientes e cashback</h1>
+            <p class="text-secondary mb-0">
+                Acesse os cadastros e operações existentes sem duplicar
+                regras de negócio.
+            </p>
+        </div>
+
+        <a href="{% url 'configuracoes:inicio' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Voltar à Central
+        </a>
+    </div>
+
+    {% if not pode_operar_clientes_cashback %}
+    <div class="alert alert-warning d-flex gap-2 align-items-start"
+         role="alert">
+        <i class="bi bi-exclamation-triangle mt-1"></i>
+        <div>
+            Selecione um contexto de empresa válido para executar operações
+            de clientes e cashback.
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="alert alert-info d-flex gap-2 align-items-start"
+         role="alert">
+        <i class="bi bi-diagram-3 mt-1"></i>
+        <div>
+            Esta página funciona somente como central de acesso. Cadastros,
+            extratos e movimentações continuam pertencendo aos módulos
+            Clientes e Cashback.
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div class="fs-3 text-primary mb-3" aria-hidden="true">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h2 class="h5">Cadastro de clientes</h2>
+                    <p class="text-secondary flex-grow-1">
+                        Consulte clientes, edite dados e acesse o extrato
+                        individual de cashback.
+                    </p>
+                    <a href="{% url 'clientes:lista_clientes' %}"
+                       class="btn btn-outline-primary">
+                        Abrir clientes
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div class="fs-3 text-primary mb-3" aria-hidden="true">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <h2 class="h5">Novo cliente</h2>
+                    <p class="text-secondary flex-grow-1">
+                        Cadastre um novo cliente utilizando o fluxo oficial
+                        do módulo Clientes.
+                    </p>
+                    <a href="{% url 'clientes:criar_cliente' %}"
+                       class="btn btn-outline-primary">
+                        Cadastrar cliente
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div class="fs-3 text-primary mb-3" aria-hidden="true">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    </div>
+                    <h2 class="h5">Importar clientes</h2>
+                    <p class="text-secondary flex-grow-1">
+                        Utilize o processo existente para importar cadastros
+                        com validação e confirmação.
+                    </p>
+                    <a href="{% url 'clientes:importar_clientes' %}"
+                       class="btn btn-outline-primary">
+                        Abrir importação
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div class="fs-3 text-primary mb-3" aria-hidden="true">
+                        <i class="bi bi-cart-check"></i>
+                    </div>
+                    <h2 class="h5">Registrar compra</h2>
+                    <p class="text-secondary flex-grow-1">
+                        Acesse o fluxo oficial que calcula e registra o
+                        cashback da compra.
+                    </p>
+                    <a href="{% url 'cashback:nova_compra' %}"
+                       class="btn btn-outline-primary">
+                        Nova compra
+                    </a>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+{% endblock %}

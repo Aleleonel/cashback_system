@@ -34,48 +34,9 @@
     <div class="row g-3">
         {% for grupo in grupos %}
         <div class="col-12 col-md-6 col-xl-4">
-            <article class="card h-100 border-0 shadow-sm">
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between gap-3 mb-3">
-                        <div class="fs-3 text-primary" aria-hidden="true">
-                            <i class="bi {{ grupo.icone }}"></i>
-                        </div>
-
-                        {% if grupo.critico %}
-                        <span class="badge text-bg-danger align-self-start">
-                            Crítica
-                        </span>
-                        {% elif grupo.disponivel %}
-                        <span class="badge text-bg-success align-self-start">
-                            Disponível
-                        </span>
-                        {% else %}
-                        <span class="badge text-bg-secondary align-self-start">
-                            Em breve
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    <h2 class="h5">{{ grupo.titulo }}</h2>
-                    <p class="text-secondary flex-grow-1">
-                        {{ grupo.descricao }}
-                    </p>
-
-                    {% if grupo.disponivel and grupo.url_name %}
-                    <a href="{% url grupo.url_name %}"
-                       class="btn btn-outline-primary stretched-link">
-                        Abrir configurações
-                    </a>
-                    {% else %}
-                    <button type="button"
-                            class="btn btn-outline-secondary"
-                            disabled>
-                        Estrutura reservada
-                    </button>
-                    {% endif %}
-                </div>
-            </article>
+            {% include "configuracoes/components/config_card.html" with grupo=grupo only %}
         </div>
+
         {% endfor %}
     </div>
 </div>

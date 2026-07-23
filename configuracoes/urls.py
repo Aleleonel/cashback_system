@@ -14,4 +14,9 @@ urlpatterns = [
         name="usuarios_permissoes",
     ),
     path("criticas/", views.criticas, name="criticas"),
+    path(
+        "clientes-cashback/",
+        views.clientes_cashback,
+        name="clientes_cashback",
+    ),
 ]
