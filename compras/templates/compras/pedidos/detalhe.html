@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{% extends "ui/page.html" %}
 
 {% block title %}
     Pedido PC-{{ pedido.numero|stringformat:"06d" }}
 {% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
+{% block page_content %}
+<div class="ui-page-stack" data-ui-pedido-detalhe="true">
 
     <div
         class="d-flex flex-column flex-lg-row
@@ -89,7 +89,7 @@
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
+                <div class="ui-panel__body">
                     <div class="text-muted small mb-1">
                         Fornecedor
                     </div>
@@ -102,9 +102,9 @@
 
         <div class="col-sm-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
+                <div class="ui-panel__body">
                     <div class="text-muted small mb-1">
-                        Data de emiss?o
+                        Data de emissão
                     </div>
                     <div class="fw-semibold">
                         {{ pedido.data_emissao|date:"d/m/Y" }}
@@ -115,12 +115,12 @@
 
         <div class="col-sm-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
+                <div class="ui-panel__body">
                     <div class="text-muted small mb-1">
-                        Previs?o de entrega
+                        Previsão de entrega
                     </div>
                     <div class="fw-semibold">
-                        {{ pedido.previsao_entrega|date:"d/m/Y"|default:"N?o informada" }}
+                        {{ pedido.previsao_entrega|date:"d/m/Y"|default:"Não informada" }}
                     </div>
                 </div>
             </div>
@@ -128,7 +128,7 @@
 
         <div class="col-sm-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
+                <div class="ui-panel__body">
                     <div class="text-muted small mb-1">
                         Total do pedido
                     </div>
@@ -145,11 +145,11 @@
         <div class="col-xl-8">
 
             <section
-                class="card shadow-sm border-0 mb-4"
+                class="ui-panel ui-panel--spaced"
                 data-ui-pedido-itens="true"
             >
                 <div
-                    class="card-header bg-white border-0
+                    class="ui-panel__header
                            d-flex justify-content-between
                            align-items-center py-3"
                 >
@@ -158,7 +158,7 @@
                             Itens do pedido
                         </h2>
                         <div class="text-muted small">
-                            Produtos inclu?dos nesta compra
+                            Produtos incluídos nesta compra
                         </div>
                     </div>
 
@@ -167,7 +167,7 @@
                     </span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="ui-table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
@@ -175,7 +175,7 @@
                                 <th class="text-end">Quantidade</th>
                                 <th class="text-end">Recebido</th>
                                 <th class="text-end">Pendente</th>
-                                <th class="text-end">Valor unit?rio</th>
+                                <th class="text-end">Valor unitário</th>
                                 <th class="text-end">Subtotal</th>
                                 <th class="text-end pe-3">Ações</th>
                             </tr>
@@ -313,10 +313,10 @@
 
             {% if pedido.status == "rascunho" %}
                 <section
-                    class="card shadow-sm border-0 mb-4"
+                    class="ui-panel ui-panel--spaced"
                     data-ui-adicionar-item="true"
                 >
-                    <div class="card-header bg-white border-0 py-3">
+                    <div class="ui-panel__header">
                         <h2 class="h5 mb-1">
                             Adicionar item
                         </h2>
@@ -325,7 +325,7 @@
                         </div>
                     </div>
 
-                    <div class="card-body">
+                    <div class="ui-panel__body">
                         <form
                             method="post"
                             action="{% url 'compras:adicionar_item_pedido_compra' pedido.uuid %}"
@@ -366,19 +366,19 @@
 
 
             <section
-                class="card shadow-sm border-0"
+                class="ui-panel"
                 data-ui-recebimentos="true"
             >
-                <div class="card-header bg-white border-0 py-3">
+                <div class="ui-panel__header">
                     <h2 class="h5 mb-1">
                         Recebimentos e devoluções
                     </h2>
                     <div class="text-muted small">
-                        Hist?rico de entradas vinculadas ao pedido
+                        Histórico de entradas vinculadas ao pedido
                     </div>
                 </div>
 
-                <div class="card-body">
+                <div class="ui-panel__body">
                     {% for recebimento in pedido.recebimentos.all %}
                         <div
                             class="border rounded-3 p-3
@@ -434,7 +434,7 @@
                             </div>
 
                             <div class="text-muted small">
-                                Os recebimentos aparecer?o aqui
+                                Os recebimentos aparecerão aqui
                                 depois da entrada das mercadorias.
                             </div>
                         </div>
@@ -445,20 +445,20 @@
 
 
         <div class="col-xl-4">
-            <section class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-0 py-3">
+            <section class="ui-panel ui-panel--spaced">
+                <div class="ui-panel__header">
                     <h2 class="h5 mb-0">
                         Informações do pedido
                     </h2>
                 </div>
 
-                <div class="card-body">
+                <div class="ui-panel__body">
                     <dl class="row mb-0">
                         <dt class="col-sm-5 text-muted fw-normal">
                             Condição
                         </dt>
                         <dd class="col-sm-7 text-sm-end">
-                            {{ pedido.condicao_pagamento|default:"N?o informada" }}
+                            {{ pedido.condicao_pagamento|default:"Não informada" }}
                         </dd>
 
                         <dt class="col-sm-5 text-muted fw-normal">
@@ -505,14 +505,14 @@
             </section>
 
 
-            <section class="card shadow-sm border-0">
-                <div class="card-header bg-white border-0 py-3">
+            <section class="ui-panel">
+                <div class="ui-panel__header">
                     <h2 class="h5 mb-0">
                         Ações do pedido
                     </h2>
                 </div>
 
-                <div class="card-body">
+                <div class="ui-panel__body">
                     {% if pedido.status == "rascunho" %}
                         <div class="d-grid gap-2">
                             <form
