@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Recursos Humanos{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'rh/css/rh.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 rh-page">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Recursos Humanos</h1>
+            <p class="text-muted mb-0">
+                GestÃ£o de cargos, departamentos e funcionÃ¡rios.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-4">
+            <section class="card shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-briefcase fs-3 text-muted" aria-hidden="true"></i>
+                    <h2 class="h5 mt-3">Cargos</h2>
+                    <p class="text-muted mb-0">
+                        Estrutura preparada para o cadastro e a gestÃ£o dos cargos da empresa.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <section class="card shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-diagram-3 fs-3 text-muted" aria-hidden="true"></i>
+                    <h2 class="h5 mt-3">Departamentos</h2>
+                    <p class="text-muted mb-0">
+                        OrganizaÃ§Ã£o dos setores respeitando o isolamento entre empresas.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <section class="card shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-person-vcard fs-3 text-muted" aria-hidden="true"></i>
+                    <h2 class="h5 mt-3">FuncionÃ¡rios</h2>
+                    <p class="text-muted mb-0">
+                        IntegraÃ§Ã£o futura com usuÃ¡rios sem duplicar dados de autenticaÃ§Ã£o.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

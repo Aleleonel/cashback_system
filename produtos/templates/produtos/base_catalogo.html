@@ -1,63 +1,81 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'produtos/css/produtos.css' %}">
+{% endblock %}
 
 {% block content %}
+<div class="produtos-page">
 
-<div class="container-fluid py-4">
+    <header class="produtos-page-header">
+        <div class="produtos-page-heading">
+            <span class="produtos-eyebrow">Catálogo comercial</span>
 
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-        <div>
-            <h1 class="h4 mb-1">
-                <i class="bi bi-box-seam me-2"></i>
-                Catálogo de Produtos
-            </h1>
+            <div class="produtos-title-row">
+                <span class="produtos-title-icon" aria-hidden="true">
+                    <i class="bi bi-box-seam"></i>
+                </span>
 
-            <div class="text-muted small">
-                Cadastros e configurações utilizadas pelo PDV.
+                <div>
+                    <h1 class="produtos-page-title">Catálogo de Produtos</h1>
+                    <p class="produtos-page-subtitle">
+                        Cadastros e configurações utilizados pelo PDV, estoque e processos comerciais.
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <a
-                class="nav-link {% block nav_produtos %}{% endblock %}"
-                href="{% url 'produtos:lista_produtos' %}"
-            >
-                Produtos
-            </a>
-        </li>
+    <nav class="produtos-nav-shell" aria-label="Navegação do catálogo">
+        <ul class="nav produtos-nav">
+            <li class="nav-item">
+                <a
+                    class="nav-link {% block nav_produtos %}{% endblock %}"
+                    href="{% url 'produtos:lista_produtos' %}"
+                >
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <span>Produtos</span>
+                </a>
+            </li>
 
-        <li class="nav-item">
-            <a
-                class="nav-link {% block nav_categorias %}{% endblock %}"
-                href="{% url 'produtos:lista_categorias' %}"
-            >
-                Categorias
-            </a>
-        </li>
+            <li class="nav-item">
+                <a
+                    class="nav-link {% block nav_categorias %}{% endblock %}"
+                    href="{% url 'produtos:lista_categorias' %}"
+                >
+                    <i class="bi bi-tags" aria-hidden="true"></i>
+                    <span>Categorias</span>
+                </a>
+            </li>
 
-        <li class="nav-item">
-            <a
-                class="nav-link {% block nav_marcas %}{% endblock %}"
-                href="{% url 'produtos:lista_marcas' %}"
-            >
-                Marcas
-            </a>
-        </li>
+            <li class="nav-item">
+                <a
+                    class="nav-link {% block nav_marcas %}{% endblock %}"
+                    href="{% url 'produtos:lista_marcas' %}"
+                >
+                    <i class="bi bi-award" aria-hidden="true"></i>
+                    <span>Marcas</span>
+                </a>
+            </li>
 
-        <li class="nav-item">
-            <a
-                class="nav-link {% block nav_unidades %}{% endblock %}"
-                href="{% url 'produtos:lista_unidades_medida' %}"
-            >
-                Unidades de medida
-            </a>
-        </li>
-    </ul>
+            <li class="nav-item">
+                <a
+                    class="nav-link {% block nav_unidades %}{% endblock %}"
+                    href="{% url 'produtos:lista_unidades_medida' %}"
+                >
+                    <i class="bi bi-rulers" aria-hidden="true"></i>
+                    <span>Unidades de medida</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
-    {% block catalogo_content %}
-    {% endblock %}
+    <main class="produtos-content">
+        {% block catalogo_content %}
+        {% endblock %}
+    </main>
 
 </div>
-
 {% endblock %}

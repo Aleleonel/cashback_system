@@ -1,0 +1,40 @@
+{% extends "ui/page.html" %}
+{% load static %}
+
+{% block title %}Inativar funcionário | RH{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'rh/css/rh.css' %}">
+{% endblock %}
+
+
+{% block page_class %}rh-page rh-delete-page{% endblock %}
+
+{% block page_content %}
+<section class="ui-panel ui-confirm">
+        <span class="ui-confirm__icon ui-confirm__icon--danger">
+            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        </span>
+
+        <span class="ui-page-header__eyebrow">Confirmação necessária</span>
+        <h1 class="ui-page-header__title">Inativar funcionário</h1>
+        <p class="ui-confirm__text">
+            Você está prestes a inativar
+            <strong>{{ funcionario.nome_completo }}</strong>.
+        </p>
+        <p class="ui-confirm__warning">
+            O registro será preservado no histórico, mas deixará de aparecer como ativo.
+        </p>
+
+        <form method="post" class="ui-confirm-actions">
+            {% csrf_token %}
+            <a href="{% url 'rh:funcionario_list' %}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-person-x" aria-hidden="true"></i>
+                Inativar funcionário
+            </button>
+        </form>
+    </section>
+{% endblock %}

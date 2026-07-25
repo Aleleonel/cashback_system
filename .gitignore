@@ -19,3 +19,22 @@ __pycache__/
 *.py[cod]
 
 tem_chatgpt/
+
+# Scripts temporários
+*.ps1
+
+# Relatórios
+*.txt
+
+# Backups
+*.bak
+*.bak_*
+
+# Pasta de backups
+backups/
+
+# Logs de diagnóstico
+diagnostico_*.txt
+aplicacao_*.txt
+consulta_*.txt
+validacao_*.txt

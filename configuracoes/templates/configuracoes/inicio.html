@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <div class="text-uppercase text-secondary small fw-semibold mb-1">
+                Administração
+            </div>
+            <h1 class="h3 mb-1">Central de Configurações</h1>
+            <p class="text-secondary mb-0">
+                Todas as configurações do sistema ficam agrupadas neste local.
+            </p>
+        </div>
+
+        <span class="badge text-bg-light border px-3 py-2">
+            {% if contexto_configuracoes.escopo == "plataforma" %}
+                Escopo: Plataforma
+            {% else %}
+                Escopo: {{ contexto_configuracoes.matriz.nome }}
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="alert alert-info d-flex gap-2 align-items-start" role="alert">
+        <i class="bi bi-info-circle mt-1"></i>
+        <div>
+            Os módulos operacionais apenas consomem parâmetros cadastrados
+            aqui. Configurações críticas são exclusivas do administrador do
+            sistema.
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for grupo in grupos %}
+        <div class="col-12 col-md-6 col-xl-4">
+            {% include "configuracoes/components/config_card.html" with grupo=grupo only %}
+        </div>
+
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

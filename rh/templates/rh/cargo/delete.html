@@ -1,0 +1,38 @@
+{% extends "ui/page.html" %}
+{% load static %}
+
+{% block title %}Excluir cargo | RH{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'rh/css/rh.css' %}">
+{% endblock %}
+
+
+{% block page_class %}rh-page rh-delete-page{% endblock %}
+
+{% block page_content %}
+<section class="ui-panel ui-confirm">
+        <span class="ui-confirm__icon ui-confirm__icon--danger">
+            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        </span>
+
+        <span class="ui-page-header__eyebrow">Confirmação necessária</span>
+        <h1 class="ui-page-header__title">Excluir cargo</h1>
+        <p class="ui-confirm__text">
+            Você está prestes a excluir o cargo
+            <strong>{{ cargo.nome }}</strong>.
+        </p>
+        <p class="ui-confirm__warning">Essa ação não poderá ser desfeita.</p>
+
+        <form method="post" class="ui-confirm-actions">
+            {% csrf_token %}
+            <a href="{% url 'rh:cargo_list' %}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+                Excluir cargo
+            </button>
+        </form>
+    </section>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "ui/page.html" %}
+{% load static %}
+
+{% block title %}Funcionários | RH{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'rh/css/rh.css' %}">
+{% endblock %}
+
+{% block page_header %}
+<header class="ui-page-header">
+        <div class="ui-page-header__content">
+            <span class="ui-page-header__eyebrow">Recursos Humanos</span>
+            <h1 class="ui-page-header__title">Cadastro de funcionários</h1>
+            <p class="ui-page-header__description">Gerencie os colaboradores vinculados à estrutura da empresa.</p>
+        </div>
+
+        <div class="ui-page-header__actions">
+            <a href="{% url 'rh:funcionario_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus" aria-hidden="true"></i>
+                Novo funcionário
+            </a>
+        </div>
+    </header>
+{% endblock %}
+
+{% block page_content %}
+<section class="rh-filter-card">
+        <form method="get" class="rh-filter-grid">
+            <div class="rh-field">
+                <label for="q" class="form-label">Pesquisar</label>
+                <div class="rh-search-input">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input
+                        type="text"
+                        name="q"
+                        id="q"
+                        value="{{ termo }}"
+                        class="form-control"
+                        placeholder="Nome, CPF ou e-mail"
+                    >
+                </div>
+            </div>
+
+            <div class="rh-field">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="ativos" {% if status == "ativos" %}selected{% endif %}>Ativos</option>
+                    <option value="inativos" {% if status == "inativos" %}selected{% endif %}>Inativos</option>
+                </select>
+            </div>
+
+            <div class="rh-filter-action">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="bi bi-funnel" aria-hidden="true"></i>
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="ui-panel">
+        <div class="ui-panel__header">
+            <div>
+                <h2 class="ui-panel__title">Funcionários cadastrados</h2>
+                <p class="ui-panel__caption">
+                    {{ funcionarios|length }} registro{{ funcionarios|length|pluralize }}
+                </p>
+            </div>
+        </div>
+
+        {% if funcionarios %}
+        <div class="table-responsive">
+            <table class="table rh-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Funcionário</th>
+                        <th scope="col">CPF</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Cargo</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for funcionario in funcionarios %}
+                    <tr>
+                        <td>
+                            <div class="rh-record-primary">
+                                <span class="rh-record-icon">
+                                    <i class="bi bi-person" aria-hidden="true"></i>
+                                </span>
+                                <div>
+                                    <strong>{{ funcionario.nome_completo }}</strong>
+                                    {% if funcionario.email %}
+                                    <div class="rh-muted rh-record-secondary">{{ funcionario.email }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ funcionario.cpf }}</td>
+                        <td>{{ funcionario.departamento.nome }}</td>
+                        <td>{{ funcionario.cargo.nome }}</td>
+                        <td>
+                            {% if funcionario.ativo %}
+                            <span class="rh-status rh-status-active">
+                                <span class="rh-status-dot"></span>
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="rh-status rh-status-inactive">
+                                <span class="rh-status-dot"></span>
+                                Inativo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="rh-actions">
+                                <a
+                                    href="{% url 'rh:funcionario_update' funcionario.pk %}"
+                                    class="ui-icon-button"
+                                    title="Editar funcionário"
+                                    aria-label="Editar funcionário {{ funcionario.nome_completo }}"
+                                >
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+
+                                {% if funcionario.ativo %}
+                                <a
+                                    href="{% url 'rh:funcionario_delete' funcionario.pk %}"
+                                    class="ui-icon-button ui-icon-button--danger"
+                                    title="Inativar funcionário"
+                                    aria-label="Inativar funcionário {{ funcionario.nome_completo }}"
+                                >
+                                    <i class="bi bi-person-x" aria-hidden="true"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="ui-empty-state">
+            <span class="ui-empty-state__icon">
+                <i class="bi bi-people" aria-hidden="true"></i>
+            </span>
+            <h2 class="ui-empty-state__title">Nenhum funcionário encontrado</h2>
+            <p class="ui-empty-state__description">Cadastre um funcionário ou ajuste os filtros utilizados.</p>
+            <a href="{% url 'rh:funcionario_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus" aria-hidden="true"></i>
+                Cadastrar funcionário
+            </a>
+        </div>
+        {% endif %}
+    </section>
+{% endblock %}

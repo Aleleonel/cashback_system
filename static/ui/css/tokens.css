@@ -1,36 +1,180 @@
+﻿/* ==========================================================================
+   CASHBACK SYSTEM | DESIGN SYSTEM GLOBAL
+   DS-01 - Tokens oficiais
+
+   Este arquivo e a unica fonte global para valores visuais reutilizaveis.
+   Modulos devem consumir estes tokens e nao redefinir cores, sombras,
+   raios, tipografia ou espacamentos equivalentes.
+   ========================================================================== */
+
 :root {
+    /* ----------------------------------------------------------------------
+       Identidade principal
+       ---------------------------------------------------------------------- */
     --ui-primary: #2563eb;
     --ui-primary-hover: #1d4ed8;
+    --ui-primary-active: #1e40af;
     --ui-primary-soft: #eff6ff;
+    --ui-primary-border: #bfdbfe;
+    --ui-primary-focus: rgba(37, 99, 235, 0.18);
 
+    /* ----------------------------------------------------------------------
+       Estados semanticos
+       ---------------------------------------------------------------------- */
     --ui-success: #16a34a;
-    --ui-warning: #d97706;
-    --ui-danger: #dc2626;
-    --ui-info: #0891b2;
+    --ui-success-strong: #15803d;
+    --ui-success-soft: #f0fdf4;
+    --ui-success-border: #86efac;
+    --ui-success-text: #166534;
 
+    --ui-warning: #d97706;
+    --ui-warning-strong: #b45309;
+    --ui-warning-soft: #fefce8;
+    --ui-warning-border: #fde047;
+    --ui-warning-text: #854d0e;
+
+    --ui-danger: #dc2626;
+    --ui-danger-strong: #b91c1c;
+    --ui-danger-soft: #fef2f2;
+    --ui-danger-border: #fca5a5;
+    --ui-danger-text: #991b1b;
+
+    --ui-info: #0891b2;
+    --ui-info-strong: #0e7490;
+    --ui-info-soft: #f0f9ff;
+    --ui-info-border: #7dd3fc;
+    --ui-info-text: #075985;
+
+    /* ----------------------------------------------------------------------
+       Superficies e fundos
+       ---------------------------------------------------------------------- */
     --ui-body-bg: #f4f7fb;
     --ui-surface: #ffffff;
     --ui-surface-muted: #f8fafc;
+    --ui-surface-subtle: #f8fbff;
+    --ui-surface-disabled: #f1f5f9;
+    --ui-overlay: rgba(15, 23, 42, 0.52);
 
+    /* ----------------------------------------------------------------------
+       Texto
+       ---------------------------------------------------------------------- */
     --ui-heading: #0f172a;
     --ui-text: #172033;
     --ui-text-muted: #64748b;
+    --ui-text-subtle: #98a2b3;
+    --ui-text-disabled: #94a3b8;
+    --ui-text-inverse: #ffffff;
 
+    /* Aliases de compatibilidade durante a migracao dos componentes */
+    --ui-color-heading: var(--ui-heading);
+    --ui-color-text: var(--ui-text);
+    --ui-color-text-muted: var(--ui-text-muted);
+
+    /* ----------------------------------------------------------------------
+       Bordas
+       ---------------------------------------------------------------------- */
+    --ui-border-subtle: #eaecf0;
     --ui-border: #e2e8f0;
     --ui-border-strong: #cbd5e1;
+    --ui-border-focus: #93c5fd;
 
+    /* ----------------------------------------------------------------------
+       Tipografia
+       ---------------------------------------------------------------------- */
+    --ui-font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --ui-font-size-xs: 0.75rem;
+    --ui-font-size-sm: 0.8125rem;
+    --ui-font-size-md: 0.9375rem;
+    --ui-font-size-lg: 1rem;
+    --ui-font-size-xl: 1.25rem;
+    --ui-font-size-2xl: 1.5rem;
+
+    --ui-font-weight-regular: 400;
+    --ui-font-weight-medium: 500;
+    --ui-font-weight-semibold: 600;
+    --ui-font-weight-bold: 700;
+    --ui-font-weight-extrabold: 800;
+
+    --ui-line-height-tight: 1.25;
+    --ui-line-height-normal: 1.5;
+    --ui-line-height-relaxed: 1.65;
+
+    /* ----------------------------------------------------------------------
+       Escala de espacamento
+       ---------------------------------------------------------------------- */
+    --ui-space-0: 0;
+    --ui-space-1: 0.25rem;
+    --ui-space-2: 0.5rem;
+    --ui-space-3: 0.75rem;
+    --ui-space-4: 1rem;
+    --ui-space-5: 1.25rem;
+    --ui-space-6: 1.5rem;
+    --ui-space-8: 2rem;
+    --ui-space-10: 2.5rem;
+    --ui-space-12: 3rem;
+    --ui-space-16: 4rem;
+
+    /* ----------------------------------------------------------------------
+       Raios
+       ---------------------------------------------------------------------- */
+    --ui-radius-xs: 0.25rem;
     --ui-radius-sm: 0.375rem;
     --ui-radius-md: 0.625rem;
     --ui-radius-lg: 0.875rem;
     --ui-radius-xl: 1.125rem;
+    --ui-radius-2xl: 1.5rem;
+    --ui-radius-pill: 999px;
+    --ui-radius-circle: 50%;
 
+    /* ----------------------------------------------------------------------
+       Sombras
+       ---------------------------------------------------------------------- */
+    --ui-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
     --ui-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
     --ui-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
     --ui-shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.12);
+    --ui-shadow-focus: 0 0 0 0.2rem var(--ui-primary-focus);
+
+    /* ----------------------------------------------------------------------
+       Dimensoes de componentes
+       ---------------------------------------------------------------------- */
+    --ui-control-height-sm: 2rem;
+    --ui-control-height-md: 2.5rem;
+    --ui-control-height-lg: 2.75rem;
+
+    --ui-icon-size-sm: 1rem;
+    --ui-icon-size-md: 1.25rem;
+    --ui-icon-size-lg: 1.5rem;
+
+    --ui-content-max-width: 1440px;
+    --ui-form-max-width: 1050px;
+    --ui-dialog-max-width: 680px;
 
     --ui-sidebar-width: 280px;
     --ui-navbar-height: 72px;
 
+    /* ----------------------------------------------------------------------
+       Movimento
+       ---------------------------------------------------------------------- */
     --ui-transition-fast: 150ms ease;
     --ui-transition-normal: 220ms ease;
+    --ui-transition-slow: 320ms ease;
+
+    /* ----------------------------------------------------------------------
+       Camadas
+       ---------------------------------------------------------------------- */
+    --ui-z-dropdown: 1000;
+    --ui-z-sticky: 1020;
+    --ui-z-fixed: 1030;
+    --ui-z-modal-backdrop: 1040;
+    --ui-z-modal: 1050;
+    --ui-z-tooltip: 1080;
 }

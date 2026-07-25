@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ui-page{% block page_class %}{% endblock %}">
+    {% block page_header %}
+    <header class="ui-page-header">
+        <div class="ui-page-header__content">
+            {% block page_back %}{% endblock %}
+
+            {% block page_eyebrow %}{% endblock %}
+
+            <h1 class="ui-page-header__title">
+                {% block page_title %}{% endblock %}
+            </h1>
+
+            {% block page_description %}{% endblock %}
+        </div>
+
+        {% block page_actions %}{% endblock %}
+    </header>
+    {% endblock %}
+
+    <div class="ui-page__content">
+        {% block page_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

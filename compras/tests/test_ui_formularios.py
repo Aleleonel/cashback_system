@@ -53,24 +53,46 @@ class FormulariosComprasUITests(SimpleTestCase):
         )
 
     def test_formulario_pedido_usa_ui_foundation(self):
-        conteudo = self.pedido_path.read_text(
-            encoding="utf-8"
+        caminho = (
+            Path(settings.BASE_DIR)
+            / "compras"
+            / "templates"
+            / "compras"
+            / "pedidos"
+            / "form.html"
         )
+        conteudo = caminho.read_text(encoding="utf-8")
 
         self.assertIn(
-            "partials/cabecalho_pagina.html",
+            '{% extends "ui/page.html" %}',
             conteudo,
         )
         self.assertIn(
-            "partials/campo_formulario.html",
+            "{% block page_content %}",
             conteudo,
         )
         self.assertIn(
+            'partials/cabecalho_pagina.html',
+            conteudo,
+        )
+        self.assertIn(
+            'partials/campo_formulario.html',
+            conteudo,
+        )
+        self.assertIn(
+            'method="post"',
+            conteudo,
+        )
+        self.assertIn(
+            "{% csrf_token %}",
+            conteudo,
+        )
+        self.assertNotIn(
             'class="card shadow-sm border-0"',
             conteudo,
         )
-        self.assertIn(
-            "Salvar pedido",
+        self.assertNotIn(
+            'class="container-fluid py-4"',
             conteudo,
         )
 

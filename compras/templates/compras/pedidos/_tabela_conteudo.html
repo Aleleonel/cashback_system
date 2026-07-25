@@ -1,0 +1,14 @@
+<tbody>
+{% for pedido in pagina %}
+<tr>
+<td><a href="{% url 'compras:detalhar_pedido_compra' pedido.uuid %}">PC-{{ pedido.numero|stringformat:"06d" }}</a></td>
+<td>{{ pedido.fornecedor }}</td>
+<td>{{ pedido.data_emissao|date:"d/m/Y" }}</td>
+<td>{{ pedido.previsao_entrega|date:"d/m/Y"|default:"-" }}</td>
+<td>{{ pedido.get_status_display }}</td>
+<td class="text-end">R$ {{ pedido.total|floatformat:2 }}</td>
+</tr>
+{% empty %}
+{% include "partials/estado_vazio.html" with colspan=6 mensagem="Nenhum pedido encontrado." %}
+{% endfor %}
+</tbody>
