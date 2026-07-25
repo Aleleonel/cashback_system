@@ -1,54 +1,40 @@
-{% extends "base.html" %}
+{% extends "ui/page.html" %}
+{% load static %}
 
-{% block title %}Inativar Funcionário{% endblock %}
+{% block title %}Inativar funcionário | RH{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card border-danger shadow-sm">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">Confirmar inativação</h4>
-                </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'rh/css/rh.css' %}">
+{% endblock %}
 
-                <div class="card-body">
-                    <p class="mb-4">
-                        Tem certeza que deseja inativar este funcionário?
-                    </p>
 
-                    <h5 class="text-primary">
-                        {{ funcionario.nome_completo }}
-                    </h5>
+{% block page_class %}rh-page rh-delete-page{% endblock %}
 
-                    <p class="text-muted">
-                        {{ funcionario.departamento.nome }} —
-                        {{ funcionario.cargo.nome }}
-                    </p>
+{% block page_content %}
+<section class="ui-panel ui-confirm">
+        <span class="ui-confirm__icon ui-confirm__icon--danger">
+            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        </span>
 
-                    <div class="alert alert-warning mb-4">
-                        O funcionário deixará de aparecer como ativo,
-                        mas continuará preservado no histórico.
-                    </div>
+        <span class="ui-page-header__eyebrow">Confirmação necessária</span>
+        <h1 class="ui-page-header__title">Inativar funcionário</h1>
+        <p class="ui-confirm__text">
+            Você está prestes a inativar
+            <strong>{{ funcionario.nome_completo }}</strong>.
+        </p>
+        <p class="ui-confirm__warning">
+            O registro será preservado no histórico, mas deixará de aparecer como ativo.
+        </p>
 
-                    <form method="post">
-                        {% csrf_token %}
-
-                        <div class="d-flex justify-content-between">
-                            <a
-                                href="{% url 'rh:funcionario_list' %}"
-                                class="btn btn-secondary"
-                            >
-                                Cancelar
-                            </a>
-
-                            <button type="submit" class="btn btn-danger">
-                                Confirmar inativação
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+        <form method="post" class="ui-confirm-actions">
+            {% csrf_token %}
+            <a href="{% url 'rh:funcionario_list' %}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-person-x" aria-hidden="true"></i>
+                Inativar funcionário
+            </button>
+        </form>
+    </section>
 {% endblock %}

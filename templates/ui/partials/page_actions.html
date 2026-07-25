@@ -1,0 +1,11 @@
+<div class="ui-page-header__actions">
+    <a
+        href="{{ page_action_url }}"
+        class="{{ page_action_class|default:'btn btn-primary btn-sm' }}"
+    >
+        {% if page_action_icon %}
+        <i class="{{ page_action_icon }}" aria-hidden="true"></i>
+        {% endif %}
+        {{ page_action_label }}
+    </a>
+</div>

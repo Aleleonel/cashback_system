@@ -1,73 +1,44 @@
-.card {
-    border-color: var(--ui-border);
-    border-radius: var(--ui-radius-lg);
-    box-shadow: var(--ui-shadow-sm);
-}
+/* ==========================================================================
+   CASHBACK SYSTEM | DESIGN SYSTEM GLOBAL
+   DS-02.1 - Componentes essenciais
 
-.card-header,
-.card-footer {
-    background: var(--ui-surface);
-    border-color: var(--ui-border);
-}
+   Responsabilidades:
+   - botoes;
+   - cards e paineis;
+   - alertas;
+   - menus suspensos;
+   - cabecalhos e toolbars;
+   - botoes de icone;
+   - estados vazios;
+   - confirmacoes.
 
+   Formularios, tabelas e responsividade permanecem em seus arquivos proprios.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Botoes
+   -------------------------------------------------------------------------- */
 .btn {
-    border-radius: var(--ui-radius-md);
-    font-weight: 600;
-}
-
-.btn-primary {
-    background: var(--ui-primary);
-    border-color: var(--ui-primary);
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-    background: var(--ui-primary-hover);
-    border-color: var(--ui-primary-hover);
-}
-
-.alert {
-    border-radius: var(--ui-radius-lg);
-}
-
-.dropdown-menu {
-    border-color: var(--ui-border);
-    border-radius: var(--ui-radius-lg);
-    box-shadow: var(--ui-shadow-md);
-}
-
-.badge {
-    font-weight: 600;
-}
-
-/* === UI-01C.1: COMPONENTES BASICOS - INICIO === */
-
-/*
- * Padronizacao visual de componentes Bootstrap.
- * Escopo: botoes, cards e alertas.
- * Esta camada complementa o Bootstrap sem alterar templates.
- */
-
-/* Botoes */
-.btn {
-    --bs-btn-border-radius: var(--ui-radius-md, 0.625rem);
-    --bs-btn-padding-x: 1rem;
+    --bs-btn-border-radius: var(--ui-radius-md);
+    --bs-btn-padding-x: var(--ui-space-4);
     --bs-btn-padding-y: 0.625rem;
-    --bs-btn-font-weight: 600;
-    --bs-btn-line-height: 1.25;
+    --bs-btn-font-weight: var(--ui-font-weight-semibold);
+    --bs-btn-line-height: var(--ui-line-height-tight);
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    min-height: 2.5rem;
+    gap: var(--ui-space-2);
+    min-height: var(--ui-control-height-md);
+    border-radius: var(--ui-radius-md);
+    font-weight: var(--ui-font-weight-semibold);
     box-shadow: none;
     transition:
-        background-color 160ms ease,
-        border-color 160ms ease,
-        color 160ms ease,
-        box-shadow 160ms ease,
-        transform 160ms ease;
+        background-color var(--ui-transition-fast),
+        border-color var(--ui-transition-fast),
+        color var(--ui-transition-fast),
+        box-shadow var(--ui-transition-fast),
+        transform var(--ui-transition-fast);
 }
 
 .btn:hover {
@@ -80,71 +51,319 @@
 
 .btn:focus-visible {
     outline: 0;
-    box-shadow:
-        0 0 0 0.2rem rgba(33, 37, 41, 0.18);
+    box-shadow: var(--ui-shadow-focus);
 }
 
 .btn-sm {
-    --bs-btn-padding-x: 0.75rem;
+    --bs-btn-padding-x: var(--ui-space-3);
     --bs-btn-padding-y: 0.4rem;
-    --bs-btn-font-size: 0.875rem;
-    min-height: 2rem;
+    --bs-btn-font-size: var(--ui-font-size-sm);
+    min-height: var(--ui-control-height-sm);
+}
+
+.btn-lg {
+    --bs-btn-padding-x: var(--ui-space-5);
+    --bs-btn-padding-y: 0.75rem;
+    min-height: var(--ui-control-height-lg);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--ui-primary);
+    --bs-btn-border-color: var(--ui-primary);
+    --bs-btn-hover-bg: var(--ui-primary-hover);
+    --bs-btn-hover-border-color: var(--ui-primary-hover);
+    --bs-btn-active-bg: var(--ui-primary-active);
+    --bs-btn-active-border-color: var(--ui-primary-active);
+    --bs-btn-disabled-bg: var(--ui-primary);
+    --bs-btn-disabled-border-color: var(--ui-primary);
+}
+
+.btn-secondary {
+    --bs-btn-bg: var(--ui-surface);
+    --bs-btn-border-color: var(--ui-border-strong);
+    --bs-btn-color: var(--ui-text);
+    --bs-btn-hover-bg: var(--ui-surface-muted);
+    --bs-btn-hover-border-color: var(--ui-border-strong);
+    --bs-btn-hover-color: var(--ui-heading);
+    --bs-btn-active-bg: var(--ui-surface-disabled);
+    --bs-btn-active-border-color: var(--ui-border-strong);
+    --bs-btn-active-color: var(--ui-heading);
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--ui-danger);
+    --bs-btn-border-color: var(--ui-danger);
+    --bs-btn-hover-bg: var(--ui-danger-strong);
+    --bs-btn-hover-border-color: var(--ui-danger-strong);
+    --bs-btn-active-bg: var(--ui-danger-text);
+    --bs-btn-active-border-color: var(--ui-danger-text);
 }
 
 .btn-dark {
-    --bs-btn-bg: #212529;
-    --bs-btn-border-color: #212529;
-    --bs-btn-hover-bg: #343a40;
-    --bs-btn-hover-border-color: #343a40;
-    --bs-btn-active-bg: #16191c;
-    --bs-btn-active-border-color: #16191c;
+    --bs-btn-bg: var(--ui-heading);
+    --bs-btn-border-color: var(--ui-heading);
+    --bs-btn-hover-bg: #1e293b;
+    --bs-btn-hover-border-color: #1e293b;
+    --bs-btn-active-bg: #020617;
+    --bs-btn-active-border-color: #020617;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--ui-primary);
+    --bs-btn-border-color: var(--ui-primary-border);
+    --bs-btn-hover-bg: var(--ui-primary-soft);
+    --bs-btn-hover-border-color: var(--ui-primary);
+    --bs-btn-hover-color: var(--ui-primary-hover);
+    --bs-btn-active-bg: var(--ui-primary);
+    --bs-btn-active-border-color: var(--ui-primary);
+}
+
+.btn-outline-secondary,
+.btn-outline-dark {
+    --bs-btn-color: var(--ui-text);
+    --bs-btn-border-color: var(--ui-border-strong);
+    --bs-btn-hover-bg: var(--ui-surface-muted);
+    --bs-btn-hover-border-color: var(--ui-border-strong);
+    --bs-btn-hover-color: var(--ui-heading);
+    --bs-btn-active-bg: var(--ui-surface-disabled);
+    --bs-btn-active-border-color: var(--ui-border-strong);
+    --bs-btn-active-color: var(--ui-heading);
 }
 
 .btn-outline-danger {
-    --bs-btn-hover-color: #ffffff;
+    --bs-btn-color: var(--ui-danger);
+    --bs-btn-border-color: var(--ui-danger-border);
+    --bs-btn-hover-color: var(--ui-text-inverse);
+    --bs-btn-hover-bg: var(--ui-danger);
+    --bs-btn-hover-border-color: var(--ui-danger);
+    --bs-btn-active-bg: var(--ui-danger-strong);
+    --bs-btn-active-border-color: var(--ui-danger-strong);
 }
 
-/* Cards */
-.card {
-    --bs-card-border-color: rgba(33, 37, 41, 0.09);
-    --bs-card-border-radius: var(--ui-radius-lg, 0.875rem);
-    --bs-card-cap-bg: #ffffff;
+/* --------------------------------------------------------------------------
+   Cards e paineis
+   -------------------------------------------------------------------------- */
+.card,
+.ui-panel,
+.ui-surface {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-sm);
+}
 
+.card {
+    --bs-card-border-color: var(--ui-border);
+    --bs-card-border-radius: var(--ui-radius-lg);
+    --bs-card-cap-bg: var(--ui-surface);
     overflow: hidden;
-    background-color: #ffffff;
-    box-shadow:
-        0 1px 2px rgba(16, 24, 40, 0.04),
-        0 8px 24px rgba(16, 24, 40, 0.06);
 }
 
 .card-header,
 .card-footer {
-    border-color: rgba(33, 37, 41, 0.08);
+    border-color: var(--ui-border);
+    background: var(--ui-surface);
 }
 
 .card-header {
-    padding: 1rem 1.25rem;
+    padding: var(--ui-space-4) var(--ui-space-5);
 }
 
 .card-body {
-    padding: 1.25rem;
+    padding: var(--ui-space-5);
 }
 
 .card-footer {
-    padding: 0.875rem 1.25rem;
+    padding: 0.875rem var(--ui-space-5);
 }
 
-/* Alertas */
+.ui-panel {
+    overflow: hidden;
+}
+
+.ui-panel--elevated {
+    box-shadow: var(--ui-shadow-md);
+}
+
+.ui-panel__header,
+.ui-panel__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-4);
+    padding: var(--ui-space-4) var(--ui-space-5);
+    border-color: var(--ui-border);
+    background: var(--ui-surface);
+}
+
+.ui-panel__header {
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.ui-panel__footer {
+    border-top: 1px solid var(--ui-border);
+}
+
+.ui-panel__body {
+    padding: var(--ui-space-5);
+}
+
+.ui-panel__title {
+    margin: 0;
+    color: var(--ui-heading);
+    font-size: var(--ui-font-size-lg);
+    font-weight: var(--ui-font-weight-bold);
+}
+
+.ui-panel__caption {
+    margin: var(--ui-space-1) 0 0;
+    color: var(--ui-text-muted);
+    font-size: var(--ui-font-size-sm);
+}
+
+/* --------------------------------------------------------------------------
+   DS-03.2 - Contrato global de pagina
+   -------------------------------------------------------------------------- */
+.ui-page,
+.app-page {
+    width: 100%;
+    padding: var(--ui-space-6);
+}
+
+.ui-page__content {
+    min-width: 0;
+}
+
+.ui-page-header,
+.app-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--ui-space-6);
+    margin-bottom: var(--ui-space-6);
+}
+
+.ui-page-header__content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ui-page-header__eyebrow {
+    display: block;
+    margin-bottom: var(--ui-space-1);
+    color: var(--ui-primary);
+    font-size: var(--ui-font-size-xs);
+    font-weight: var(--ui-font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ui-page-header__title,
+.app-page-title {
+    margin: 0;
+    color: var(--ui-heading);
+    font-size: clamp(1.65rem, 2vw, 2.2rem);
+    font-weight: var(--ui-font-weight-extrabold);
+    letter-spacing: -0.025em;
+}
+
+.ui-page-header__description,
+.app-page-description {
+    margin: 0.45rem 0 0;
+    color: var(--ui-text-muted);
+}
+
+.ui-page-header__actions,
+.app-page-actions,
+.ui-toolbar,
+.ui-form-actions,
+.ui-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-3);
+}
+
+.ui-page-header__actions,
+.app-page-actions {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.ui-page-header__actions .btn,
+.app-page-actions .btn {
+    min-height: 2.375rem;
+    padding: 0.45rem 0.9rem;
+    font-size: var(--ui-font-size-sm);
+    white-space: nowrap;
+}
+
+.ui-toolbar {
+    justify-content: space-between;
+    padding: var(--ui-space-4) var(--ui-space-5);
+    border-bottom: 1px solid var(--ui-border);
+}
+
+/* --------------------------------------------------------------------------
+   Botoes de icone
+   -------------------------------------------------------------------------- */
+.ui-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+    color: var(--ui-text-muted);
+    text-decoration: none;
+    transition:
+        border-color var(--ui-transition-fast),
+        color var(--ui-transition-fast),
+        background-color var(--ui-transition-fast),
+        box-shadow var(--ui-transition-fast),
+        transform var(--ui-transition-fast);
+}
+
+.ui-icon-button:hover,
+.ui-icon-button:focus-visible {
+    border-color: var(--ui-primary);
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary);
+    transform: translateY(-1px);
+}
+
+.ui-icon-button:focus-visible {
+    outline: 0;
+    box-shadow: var(--ui-shadow-focus);
+}
+
+.ui-icon-button--danger:hover,
+.ui-icon-button--danger:focus-visible {
+    border-color: var(--ui-danger);
+    background: var(--ui-danger-soft);
+    color: var(--ui-danger);
+}
+
+/* --------------------------------------------------------------------------
+   Alertas
+   -------------------------------------------------------------------------- */
 .alert {
-    --bs-alert-border-radius: var(--ui-radius-md, 0.625rem);
+    --bs-alert-border-radius: var(--ui-radius-md);
     --bs-alert-border-width: 1px;
 
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.875rem 1rem;
+    gap: var(--ui-space-3);
+    padding: 0.875rem var(--ui-space-4);
     border-left-width: 0.25rem;
-    box-shadow: 0 4px 14px rgba(16, 24, 40, 0.05);
+    border-radius: var(--ui-radius-md);
+    box-shadow: var(--ui-shadow-xs);
 }
 
 .alert-dismissible {
@@ -153,44 +372,147 @@
 
 .alert .btn-close {
     top: 50%;
+    padding: var(--ui-space-4);
     transform: translateY(-50%);
-    padding: 1rem;
 }
 
 .alert-success {
-    --bs-alert-color: #166534;
-    --bs-alert-bg: #f0fdf4;
-    --bs-alert-border-color: #86efac;
+    --bs-alert-color: var(--ui-success-text);
+    --bs-alert-bg: var(--ui-success-soft);
+    --bs-alert-border-color: var(--ui-success-border);
 }
 
 .alert-danger {
-    --bs-alert-color: #991b1b;
-    --bs-alert-bg: #fef2f2;
-    --bs-alert-border-color: #fca5a5;
+    --bs-alert-color: var(--ui-danger-text);
+    --bs-alert-bg: var(--ui-danger-soft);
+    --bs-alert-border-color: var(--ui-danger-border);
 }
 
 .alert-warning {
-    --bs-alert-color: #854d0e;
-    --bs-alert-bg: #fefce8;
-    --bs-alert-border-color: #fde047;
+    --bs-alert-color: var(--ui-warning-text);
+    --bs-alert-bg: var(--ui-warning-soft);
+    --bs-alert-border-color: var(--ui-warning-border);
 }
 
 .alert-info {
-    --bs-alert-color: #075985;
-    --bs-alert-bg: #f0f9ff;
-    --bs-alert-border-color: #7dd3fc;
+    --bs-alert-color: var(--ui-info-text);
+    --bs-alert-bg: var(--ui-info-soft);
+    --bs-alert-border-color: var(--ui-info-border);
 }
 
-/* Preferencia por movimento reduzido */
+/* --------------------------------------------------------------------------
+   Menus suspensos
+   -------------------------------------------------------------------------- */
+.dropdown-menu {
+    padding: var(--ui-space-2);
+    border-color: var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-md);
+}
+
+.dropdown-item {
+    border-radius: var(--ui-radius-sm);
+    color: var(--ui-text);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background: var(--ui-surface-muted);
+    color: var(--ui-heading);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background: var(--ui-primary);
+    color: var(--ui-text-inverse);
+}
+
+/* --------------------------------------------------------------------------
+   Estado vazio
+   -------------------------------------------------------------------------- */
+.ui-empty-state {
+    padding: var(--ui-space-16) var(--ui-space-6);
+    color: var(--ui-text-muted);
+    text-align: center;
+}
+
+.ui-empty-state__icon,
+.ui-confirm__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: var(--ui-space-4);
+    border-radius: var(--ui-radius-xl);
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary);
+    font-size: 1.65rem;
+}
+
+.ui-empty-state__title {
+    margin-bottom: var(--ui-space-2);
+    color: var(--ui-heading);
+    font-size: 1.15rem;
+    font-weight: var(--ui-font-weight-bold);
+}
+
+.ui-empty-state__description {
+    max-width: 36rem;
+    margin: 0 auto var(--ui-space-5);
+    color: var(--ui-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Confirmacoes
+   -------------------------------------------------------------------------- */
+.ui-confirm {
+    max-width: var(--ui-dialog-max-width);
+    margin-right: auto;
+    margin-left: auto;
+    padding: var(--ui-space-8);
+    text-align: center;
+}
+
+.ui-confirm__icon--danger {
+    background: var(--ui-danger-soft);
+    color: var(--ui-danger);
+}
+
+.ui-confirm__text {
+    margin: var(--ui-space-4) 0 var(--ui-space-1);
+    color: var(--ui-text-muted);
+    font-size: 1.05rem;
+}
+
+.ui-confirm__warning {
+    margin: 0;
+    color: var(--ui-text-muted);
+    font-size: var(--ui-font-size-sm);
+}
+
+.ui-confirm-actions,
+.ui-form-actions {
+    justify-content: flex-end;
+    margin-top: var(--ui-space-6);
+    padding-top: var(--ui-space-5);
+    border-top: 1px solid var(--ui-border);
+}
+
+/* --------------------------------------------------------------------------
+   Acessibilidade e movimento
+   -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-    .btn {
+    .btn,
+    .ui-icon-button {
         transition: none;
     }
 
     .btn:hover,
-    .btn:active {
+    .btn:active,
+    .ui-icon-button:hover,
+    .ui-icon-button:focus-visible {
         transform: none;
     }
 }
-
-/* === UI-01C.1: COMPONENTES BASICOS - FIM === */

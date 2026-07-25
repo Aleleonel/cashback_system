@@ -1,102 +1,122 @@
-{% extends "base.html" %}
+{% extends "ui/page.html" %}
+{% load static %}
 
-{% block title %}Departamentos{% endblock %}
+{% block title %}Departamentos | RH{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0">Departamentos</h2>
-            <small class="text-muted">
-                Organização dos departamentos da empresa
-            </small>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'rh/css/rh.css' %}">
+{% endblock %}
+
+{% block page_header %}
+<header class="ui-page-header">
+        <div class="ui-page-header__content">
+            <span class="ui-page-header__eyebrow">Recursos Humanos</span>
+            <h1 class="ui-page-header__title">Cadastro de departamentos</h1>
+            <p class="ui-page-header__description">Organize os departamentos utilizados na estrutura da empresa.</p>
         </div>
 
-        <a href="{% url 'rh:departamento_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i>
-            Novo Departamento
-        </a>
-    </div>
+        <div class="ui-page-header__actions">
+            <a href="{% url 'rh:departamento_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Novo departamento
+            </a>
+        </div>
+    </header>
+{% endblock %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                {{ message }}
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Fechar"
-                ></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nome</th>
-                            <th>Descrição</th>
-                            <th>Status</th>
-                            <th width="170">Ações</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for departamento in departamentos %}
-                            <tr>
-                                <td>
-                                    <strong>{{ departamento.nome }}</strong>
-                                </td>
-
-                                <td>
-                                    {{ departamento.descricao|default:"-" }}
-                                </td>
-
-                                <td>
-                                    {% if departamento.ativo %}
-                                        <span class="badge bg-success">
-                                            Ativo
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">
-                                            Inativo
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    <a
-                                        href="{% url 'rh:departamento_update' departamento.pk %}"
-                                        class="btn btn-sm btn-warning"
-                                    >
-                                        Editar
-                                    </a>
-
-                                    {% if departamento.ativo %}
-                                        <a
-                                            href="{% url 'rh:departamento_delete' departamento.pk %}"
-                                            class="btn btn-sm btn-danger"
-                                        >
-                                            Inativar
-                                        </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center py-5">
-                                    Nenhum departamento cadastrado.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+{% block page_content %}
+<section class="ui-panel">
+        <div class="ui-panel__header">
+            <div>
+                <h2 class="ui-panel__title">Departamentos cadastrados</h2>
+                <p class="ui-panel__caption">
+                    {{ departamentos|length }} registro{{ departamentos|length|pluralize }}
+                </p>
             </div>
         </div>
-    </div>
-</div>
+
+        {% if departamentos %}
+        <div class="table-responsive">
+            <table class="table rh-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Descrição</th>
+                        <th scope="col">Matriz</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for departamento in departamentos %}
+                    <tr>
+                        <td>
+                            <div class="rh-record-primary">
+                                <span class="rh-record-icon">
+                                    <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                                </span>
+                                <strong>{{ departamento.nome }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="rh-muted">
+                                {{ departamento.descricao|default:"Sem descrição"|truncatechars:90 }}
+                            </span>
+                        </td>
+                        <td>{{ departamento.matriz|default:"—" }}</td>
+                        <td>
+                            {% if departamento.ativo %}
+                            <span class="rh-status rh-status-active">
+                                <span class="rh-status-dot"></span>
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="rh-status rh-status-inactive">
+                                <span class="rh-status-dot"></span>
+                                Inativo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="rh-actions">
+                                <a
+                                    href="{% url 'rh:departamento_update' departamento.pk %}"
+                                    class="ui-icon-button"
+                                    title="Editar departamento"
+                                    aria-label="Editar departamento {{ departamento.nome }}"
+                                >
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+
+                                {% if departamento.ativo %}
+                                <a
+                                    href="{% url 'rh:departamento_delete' departamento.pk %}"
+                                    class="ui-icon-button ui-icon-button--danger"
+                                    title="Inativar departamento"
+                                    aria-label="Inativar departamento {{ departamento.nome }}"
+                                >
+                                    <i class="bi bi-slash-circle" aria-hidden="true"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="ui-empty-state">
+            <span class="ui-empty-state__icon">
+                <i class="bi bi-diagram-3" aria-hidden="true"></i>
+            </span>
+            <h2 class="ui-empty-state__title">Nenhum departamento cadastrado</h2>
+            <p class="ui-empty-state__description">Cadastre o primeiro departamento para organizar a estrutura do RH.</p>
+            <a href="{% url 'rh:departamento_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Cadastrar departamento
+            </a>
+        </div>
+        {% endif %}
+    </section>
 {% endblock %}

@@ -1,11 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'ui/page.html' %}
 
 {% block title %}{{ titulo }}{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="card shadow-sm">
-        {% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo=subtitulo icone=icone %}
+{% block page_class %}movimentacoes-page{% endblock %}
+
+{% block page_header %}
+{% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo=subtitulo icone=icone %}
+{% endblock %}
+
+{% block page_content %}
 
         <div class="card-body">
             <form method="post" novalidate>
@@ -49,6 +52,4 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-{% endblock %}
+    {% endblock %}
