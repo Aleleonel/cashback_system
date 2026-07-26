@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -333,7 +333,7 @@ def confirmar_importacao_clientes(request):
     linhas = request.session.get('importacao_clientes_linhas')
 
     if not linhas:
-        messages.error(request, 'Nenhuma importaÃ§Ã£o pendente encontrada.')
+        messages.error(request, 'Nenhuma importação pendente encontrada.')
 
         return redirect('clientes:importar_clientes')
 
@@ -350,7 +350,7 @@ def confirmar_importacao_clientes(request):
         acao=RegistroAuditoria.ACAO_IMPORTAR,
         recurso='clientes.importacao',
         descricao=(
-            f"ImportaÃ§Ã£o de clientes concluÃ­da. "
+            f"Importação de clientes concluída. "
             f"Criados: {resultado['criados']}. "
             f"Atualizados: {resultado['atualizados']}."
         ),
@@ -361,7 +361,7 @@ def confirmar_importacao_clientes(request):
 
     messages.success(
         request,
-        f"ImportaÃ§Ã£o concluÃ­da. Criados: {resultado['criados']}. Atualizados: {resultado['atualizados']}."
+        f"Importação concluída. Criados: {resultado['criados']}. Atualizados: {resultado['atualizados']}."
     )
 
     return redirect('clientes:lista_clientes')

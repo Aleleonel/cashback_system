@@ -21,18 +21,18 @@ class RegistrarVendaIdempotenciaTest(TestCase):
 
     def setUp(self):
         self.matriz = Matriz.objects.create(
-            nome='Matriz IdempotÃªncia'
+            nome='Matriz Idempotência'
         )
 
         self.loja = Loja.objects.create(
             matriz=self.matriz,
-            nome='Loja IdempotÃªncia'
+            nome='Loja Idempotência'
         )
 
         self.cliente = Cliente.objects.create(
             matriz=self.matriz,
             loja_cadastro=self.loja,
-            nome='Cliente Teste IdempotÃªncia',
+            nome='Cliente Teste Idempotência',
             cpf='12345678901',
             aceita_email=False,
             aceita_sms=False,
@@ -52,7 +52,7 @@ class RegistrarVendaIdempotenciaTest(TestCase):
             data_compra=hoje,
             data_liberacao=hoje,
             data_expiracao=hoje + timedelta(days=30),
-            observacao='Saldo para teste de idempotÃªncia.',
+            observacao='Saldo para teste de idempotência.',
         )
 
     def test_mesma_chave_nao_registra_venda_duas_vezes(self):
@@ -72,7 +72,7 @@ class RegistrarVendaIdempotenciaTest(TestCase):
             'valor_cashback_usado': Decimal('10.00'),
             'aceita_email': self.cliente.aceita_email,
             'aceita_sms': self.cliente.aceita_sms,
-            'observacao': 'Compra do teste de idempotÃªncia.',
+            'observacao': 'Compra do teste de idempotência.',
             'aplicar_voucher': False,
             'codigo_voucher': '',
         }
@@ -131,7 +131,7 @@ class RegistrarVendaIdempotenciaTest(TestCase):
             data_compra=timezone.localdate(),
             data_liberacao=timezone.localdate(),
             data_expiracao=timezone.localdate() + timedelta(days=30),
-            observacao='Compra concorrente jÃ¡ confirmada.',
+            observacao='Compra concorrente já confirmada.',
         )
 
         with patch(
@@ -163,7 +163,7 @@ class RegistrarVendaIdempotenciaTest(TestCase):
 
         with patch(
             'cashback.services.operacao.registrar_venda',
-            side_effect=IntegrityError('erro de integridade nÃ£o relacionado'),
+            side_effect=IntegrityError('erro de integridade não relacionado'),
         ):
             with self.assertRaises(IntegrityError):
                 executar_venda_idempotente(

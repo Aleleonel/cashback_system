@@ -33,7 +33,7 @@ class CargoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "InformaÃ§Ãµes Gerais",
+            "Informações Gerais",
             {
                 "fields": (
                     "matriz",
@@ -88,7 +88,7 @@ class DepartamentoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "InformaÃ§Ãµes Gerais",
+            "Informações Gerais",
             {
                 "fields": (
                     "matriz",

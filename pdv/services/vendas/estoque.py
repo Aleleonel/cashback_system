@@ -38,7 +38,7 @@ def obter_reserva_ativa_item(*, item):
             origem_id=_origem_id_item(item),
             status=StatusReservaEstoque.ATIVA,
         )
-        .order_by("-criada_em")
+        .order_by("-criado_em")
         .first()
     )
 

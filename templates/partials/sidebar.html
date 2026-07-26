@@ -95,6 +95,12 @@
             PDV
         </div>
 
+        <a href="{% url 'pdv:inicio' %}"
+           class="nav-link {% if request.resolver_match.namespace == 'pdv' %}active bg-primary text-white{% else %}text-white{% endif %}"
+           data-menu-pdv-frente-caixa="true">
+            <i class="bi bi-calculator me-2"></i>
+            Frente de Caixa
+        </a>
         {% if pode_ver_produtos %}
         <a href="{% url 'produtos:lista_produtos' %}" class="nav-link text-white">
             <i class="bi bi-box-seam me-2"></i>
