@@ -4,7 +4,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.http import JsonResponse
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
@@ -22,6 +24,7 @@ from pdv.models import (
     Venda,
 )
 from pdv.services.cliente_consumidor import obter_ou_criar_cliente_consumidor
+from clientes.models import Cliente
 from pdv.services.vendas import (
     adicionar_item_venda,
     alterar_item_venda,
@@ -118,6 +121,29 @@ def _serializar_item(item):
     }
 
 
+def _serializar_usuario(usuario):
+    if usuario is None:
+        return None
+    nome = usuario.get_full_name().strip() or usuario.username
+    return {
+        "id": usuario.pk,
+        "nome": nome,
+        "username": usuario.username,
+    }
+
+
+def _serializar_cliente(cliente):
+    if cliente is None:
+        return None
+    return {
+        "id": cliente.pk,
+        "nome": cliente.nome,
+        "cpf": cliente.cpf,
+        "telefone": cliente.telefone or "",
+        "email": cliente.email or "",
+    }
+
+
 def _serializar_venda(venda):
     if venda is None:
         return {
@@ -127,6 +153,8 @@ def _serializar_venda(venda):
             "desconto": "0.00",
             "acrescimo": "0.00",
             "total": "0.00",
+            "cliente": None,
+            "vendedor": None,
             "itens": [],
         }
 
@@ -143,6 +171,8 @@ def _serializar_venda(venda):
         "desconto": str(venda.desconto),
         "acrescimo": str(venda.acrescimo),
         "total": str(venda.total),
+        "cliente": _serializar_cliente(venda.cliente),
+        "vendedor": _serializar_usuario(venda.vendedor),
         "itens": [_serializar_item(item) for item in itens],
     }
 
@@ -269,6 +299,121 @@ def inicio(request):
 @require_GET
 def estado_venda(request):
     venda, _, _, _ = _obter_venda_atual(request, criar=False)
+    return JsonResponse({"ok": True, "venda": _serializar_venda(venda)})
+
+
+@login_required
+@require_GET
+def buscar_clientes(request):
+    matriz = getattr(request.user, "matriz", None)
+    termo = (request.GET.get("q") or "").strip()
+
+    if matriz is None:
+        return JsonResponse(
+            {"ok": False, "erro": "O usuário não possui matriz vinculada."},
+            status=400,
+        )
+
+    if len(termo) < 2:
+        return JsonResponse({"ok": True, "clientes": []})
+
+    somente_numeros = "".join(caractere for caractere in termo if caractere.isdigit())
+    filtros = Q(nome__icontains=termo) | Q(email__icontains=termo)
+    if somente_numeros:
+        filtros |= Q(cpf_normalizado__icontains=somente_numeros)
+        filtros |= Q(telefone_normalizado__icontains=somente_numeros)
+        filtros |= Q(cpf__icontains=termo)
+        filtros |= Q(telefone__icontains=termo)
+
+    clientes = (
+        Cliente.objects.filter(matriz=matriz, ativo=True)
+        .filter(filtros)
+        .order_by("nome")[:12]
+    )
+    return JsonResponse({
+        "ok": True,
+        "clientes": [_serializar_cliente(cliente) for cliente in clientes],
+    })
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def selecionar_cliente(request):
+    venda, matriz, _, sessao = _obter_venda_atual(request, criar=True)
+    if not matriz or not sessao or venda is None:
+        return JsonResponse(
+            {"ok": False, "erro": "Abra o caixa antes de selecionar o cliente."},
+            status=400,
+        )
+
+    cliente = get_object_or_404(
+        Cliente,
+        pk=request.POST.get("cliente_id"),
+        matriz=matriz,
+        ativo=True,
+    )
+    venda.cliente = cliente
+    venda.full_clean()
+    venda.save(update_fields=["cliente", "atualizada_em"])
+    return JsonResponse({"ok": True, "venda": _serializar_venda(venda)})
+
+
+@login_required
+@require_GET
+def buscar_vendedores(request):
+    matriz = getattr(request.user, "matriz", None)
+    _, loja, _ = _contexto_operacional(request)
+    termo = (request.GET.get("q") or "").strip()
+
+    if matriz is None or loja is None:
+        return JsonResponse(
+            {"ok": False, "erro": "O usuário não possui contexto operacional."},
+            status=400,
+        )
+
+    usuarios = get_user_model().objects.filter(
+        matriz=matriz,
+        ativo=True,
+        is_active=True,
+        lojas=loja,
+    )
+    if termo:
+        usuarios = usuarios.filter(
+            Q(username__icontains=termo)
+            | Q(first_name__icontains=termo)
+            | Q(last_name__icontains=termo)
+        )
+
+    vendedores = usuarios.distinct().order_by("first_name", "username")[:30]
+    return JsonResponse({
+        "ok": True,
+        "vendedores": [_serializar_usuario(usuario) for usuario in vendedores],
+    })
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def selecionar_vendedor(request):
+    venda, matriz, loja, sessao = _obter_venda_atual(request, criar=True)
+    if not matriz or not loja or not sessao or venda is None:
+        return JsonResponse(
+            {"ok": False, "erro": "Abra o caixa antes de selecionar o vendedor."},
+            status=400,
+        )
+
+    vendedor = get_object_or_404(
+        get_user_model(),
+        pk=request.POST.get("vendedor_id"),
+        matriz=matriz,
+        ativo=True,
+        is_active=True,
+        lojas=loja,
+    )
+    venda.vendedor = vendedor
+    venda.full_clean()
+    venda.save(update_fields=["vendedor", "atualizada_em"])
     return JsonResponse({"ok": True, "venda": _serializar_venda(venda)})
 
 

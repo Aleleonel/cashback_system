@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from clientes.models import Cliente
 from empresas.models import Loja, Matriz
 from pdv.models import Caixa, SessaoCaixa
 from produtos.choices import StatusProduto
@@ -66,6 +67,22 @@ class FrenteCaixaWebTests(TestCase):
             controla_estoque=False,
             status=StatusProduto.ATIVO,
         )
+        self.vendedor = get_user_model().objects.create_user(
+            username="vendedor_web",
+            first_name="Vendedor",
+            last_name="Teste",
+            password="senha-teste",
+            matriz=self.matriz,
+        )
+        self.vendedor.lojas.add(self.loja)
+        self.cliente_pdv = Cliente.objects.create(
+            matriz=self.matriz,
+            loja_cadastro=self.loja,
+            nome="Cliente Frente Caixa",
+            cpf="222.222.222-22",
+            telefone="(11) 99999-2222",
+            email="cliente.pdv@example.com",
+        )
         self.client.force_login(self.usuario)
 
     def test_inicio_exibe_caixa_aberto(self):
@@ -107,3 +124,40 @@ class FrenteCaixaWebTests(TestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(resposta.json()["venda"]["total"], "0.00")
         self.assertEqual(resposta.json()["venda"]["itens"], [])
+
+    def test_buscar_e_selecionar_cliente(self):
+        resposta = self.client.get(reverse("pdv:buscar_clientes"), {"q": "Frente Caixa"})
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTrue(resposta.json()["ok"])
+        self.assertEqual(resposta.json()["clientes"][0]["id"], self.cliente_pdv.id)
+
+        resposta = self.client.post(
+            reverse("pdv:selecionar_cliente"),
+            {"cliente_id": self.cliente_pdv.id},
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json()["venda"]["cliente"]["id"], self.cliente_pdv.id)
+
+    def test_buscar_e_selecionar_vendedor(self):
+        resposta = self.client.get(reverse("pdv:buscar_vendedores"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertIn(
+            self.vendedor.id,
+            [item["id"] for item in resposta.json()["vendedores"]],
+        )
+
+        resposta = self.client.post(
+            reverse("pdv:selecionar_vendedor"),
+            {"vendedor_id": self.vendedor.id},
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json()["venda"]["vendedor"]["id"], self.vendedor.id)
+
+    def test_cliente_e_vendedor_persistem_na_venda(self):
+        self.client.post(reverse("pdv:selecionar_cliente"), {"cliente_id": self.cliente_pdv.id})
+        self.client.post(reverse("pdv:selecionar_vendedor"), {"vendedor_id": self.vendedor.id})
+
+        resposta = self.client.get(reverse("pdv:estado_venda"))
+        venda = resposta.json()["venda"]
+        self.assertEqual(venda["cliente"]["id"], self.cliente_pdv.id)
+        self.assertEqual(venda["vendedor"]["id"], self.vendedor.id)

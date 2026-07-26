@@ -8,6 +8,13 @@
     const formBusca = document.getElementById("pdv-form-busca");
     const resultados = document.getElementById("pdv-resultados");
     const corpoItens = document.getElementById("pdv-itens");
+    const formCliente = document.getElementById("pdv-form-cliente");
+    const buscaCliente = document.getElementById("pdv-busca-cliente");
+    const resultadosClientes = document.getElementById("pdv-resultados-clientes");
+    const clienteNome = document.getElementById("pdv-cliente-nome");
+    const clienteDocumento = document.getElementById("pdv-cliente-documento");
+    const vendedorSelect = document.getElementById("pdv-vendedor");
+    const vendedorAtual = document.getElementById("pdv-vendedor-atual");
     const vazio = document.getElementById("pdv-vazio");
     const alerta = document.getElementById("pdv-alerta");
     const caixaAberto = app.dataset.caixaAberto === "true";
@@ -176,6 +183,18 @@
         document.getElementById("pdv-total").textContent = moeda(venda.total);
         document.getElementById("pdv-status-venda").textContent =
             venda.id ? `Venda em rascunho #${venda.id}` : "Nova venda";
+
+        if (venda.cliente) {
+            clienteNome.textContent = venda.cliente.nome;
+            clienteDocumento.textContent =
+                venda.cliente.cpf || venda.cliente.telefone || "Cliente identificado";
+        }
+        if (venda.vendedor) {
+            vendedorAtual.textContent = venda.vendedor.nome;
+            if (vendedorSelect.querySelector(`option[value="${venda.vendedor.id}"]`)) {
+                vendedorSelect.value = String(venda.vendedor.id);
+            }
+        }
     };
 
     const carregarEstado = async () => {
@@ -195,6 +214,63 @@
 
             renderVenda(payload.venda);
         } catch (erro) {
+            mostrarAlerta(erro.message);
+        }
+    };
+
+    const pesquisarClientes = async () => {
+        limparAlerta();
+        resultadosClientes.innerHTML = "";
+        const termo = buscaCliente.value.trim();
+
+        if (termo.length < 2) {
+            mostrarAlerta("Digite pelo menos 2 caracteres para localizar o cliente.", "warning");
+            return;
+        }
+
+        try {
+            const url = `${app.dataset.buscaClientesUrl}?q=${encodeURIComponent(termo)}`;
+            const resposta = await fetch(url, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            });
+            const payload = await lerJsonSeguro(resposta, url);
+            if (!resposta.ok || !payload.ok) {
+                throw new Error(payload.erro || "Falha ao pesquisar clientes.");
+            }
+
+            if (!payload.clientes.length) {
+                resultadosClientes.innerHTML =
+                    '<div class="border rounded-3 p-3 text-center text-muted small">Nenhum cliente encontrado.</div>';
+                return;
+            }
+
+            resultadosClientes.innerHTML = payload.clientes.map((cliente) => `
+                <button class="pdv-product-result" type="button" data-cliente-id="${cliente.id}">
+                    <span><strong>${escapar(cliente.nome)}</strong><small>${escapar(cliente.cpf || "Sem CPF")}</small></span>
+                    <span class="text-end"><small>${escapar(cliente.telefone || cliente.email || "")}</small></span>
+                </button>
+            `).join("");
+        } catch (erro) {
+            mostrarAlerta(erro.message);
+        }
+    };
+
+    const carregarVendedores = async () => {
+        try {
+            const url = app.dataset.buscaVendedoresUrl;
+            const resposta = await fetch(url, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            });
+            const payload = await lerJsonSeguro(resposta, url);
+            if (!resposta.ok || !payload.ok) {
+                throw new Error(payload.erro || "Falha ao carregar vendedores.");
+            }
+
+            vendedorSelect.innerHTML = payload.vendedores.map((vendedor) =>
+                `<option value="${vendedor.id}">${escapar(vendedor.nome)}</option>`
+            ).join("");
+        } catch (erro) {
+            vendedorSelect.innerHTML = '<option value="">Vendedores indisponíveis</option>';
             mostrarAlerta(erro.message);
         }
     };
@@ -255,6 +331,40 @@
             mostrarAlerta(erro.message);
         }
     };
+
+    formCliente?.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        pesquisarClientes();
+    });
+
+    resultadosClientes?.addEventListener("click", async (evento) => {
+        const botao = evento.target.closest("[data-cliente-id]");
+        if (!botao) return;
+        try {
+            const payload = await post(app.dataset.selecionarClienteUrl, {
+                cliente_id: botao.dataset.clienteId,
+            });
+            renderVenda(payload.venda);
+            resultadosClientes.innerHTML = "";
+            buscaCliente.value = "";
+            mostrarAlerta("Cliente selecionado.", "success");
+        } catch (erro) {
+            mostrarAlerta(erro.message);
+        }
+    });
+
+    vendedorSelect?.addEventListener("change", async () => {
+        if (!vendedorSelect.value) return;
+        try {
+            const payload = await post(app.dataset.selecionarVendedorUrl, {
+                vendedor_id: vendedorSelect.value,
+            });
+            renderVenda(payload.venda);
+            mostrarAlerta("Vendedor selecionado.", "success");
+        } catch (erro) {
+            mostrarAlerta(erro.message);
+        }
+    });
 
     formBusca.addEventListener("submit", (evento) => {
         evento.preventDefault();
@@ -343,6 +453,6 @@
     });
 
     if (caixaAberto) {
-        carregarEstado();
+        carregarVendedores().then(carregarEstado);
     }
 })();
