@@ -25,6 +25,13 @@ from pdv.models import (
 )
 from pdv.services.cliente_consumidor import obter_ou_criar_cliente_consumidor
 from clientes.models import Cliente
+from beneficios.selectors import get_resumo_beneficios
+from beneficios.services.estrategia import (
+    calcular_desconto_voucher,
+    get_melhor_voucher,
+)
+from cashback.services.compra import calcular_cashback
+from core.services import garantir_configuracao_sistema
 from pdv.services.vendas import (
     adicionar_item_venda,
     alterar_item_venda,
@@ -144,6 +151,70 @@ def _serializar_cliente(cliente):
     }
 
 
+
+def _serializar_beneficios(venda):
+    if venda is None or venda.cliente is None:
+        return {
+            "cashback_disponivel": "0.00",
+            "voucher_recomendado": None,
+            "desconto_recomendado": "0.00",
+            "cashback_previsto": "0.00",
+            "percentual_cashback": "0.00",
+        }
+
+    resumo = get_resumo_beneficios(
+        matriz=venda.matriz,
+        cliente=venda.cliente,
+    )
+    configuracao = garantir_configuracao_sistema(matriz=venda.matriz)
+    valor_compra = Decimal(venda.total or 0)
+
+    voucher = None
+    desconto = Decimal("0.00")
+    if valor_compra > 0:
+        voucher = get_melhor_voucher(
+            matriz=venda.matriz,
+            cliente=venda.cliente,
+            valor_compra=valor_compra,
+        )
+        if voucher is not None:
+            desconto = calcular_desconto_voucher(
+                voucher=voucher,
+                valor_compra=valor_compra,
+            )
+
+    cashback_previsto = Decimal("0.00")
+    if valor_compra >= configuracao.valor_minimo_compra:
+        cashback_previsto = calcular_cashback(
+            valor_compra=valor_compra,
+            percentual=configuracao.percentual_cashback,
+        )
+
+    voucher_serializado = None
+    if voucher is not None:
+        voucher_serializado = {
+            "id": voucher.pk,
+            "codigo": voucher.codigo,
+            "nome": voucher.nome,
+            "tipo": voucher.tipo,
+            "valor": str(voucher.valor) if voucher.valor is not None else None,
+            "percentual": (
+                str(voucher.percentual)
+                if voucher.percentual is not None
+                else None
+            ),
+            "data_fim": voucher.data_fim.isoformat(),
+        }
+
+    return {
+        "cashback_disponivel": str(resumo["cashback_disponivel"]),
+        "voucher_recomendado": voucher_serializado,
+        "desconto_recomendado": str(desconto),
+        "cashback_previsto": str(cashback_previsto),
+        "percentual_cashback": str(configuracao.percentual_cashback),
+    }
+
+
 def _serializar_venda(venda):
     if venda is None:
         return {
@@ -155,6 +226,7 @@ def _serializar_venda(venda):
             "total": "0.00",
             "cliente": None,
             "vendedor": None,
+            "beneficios": _serializar_beneficios(None),
             "itens": [],
         }
 
@@ -173,6 +245,7 @@ def _serializar_venda(venda):
         "total": str(venda.total),
         "cliente": _serializar_cliente(venda.cliente),
         "vendedor": _serializar_usuario(venda.vendedor),
+        "beneficios": _serializar_beneficios(venda),
         "itens": [_serializar_item(item) for item in itens],
     }
 

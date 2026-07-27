@@ -1,14 +1,20 @@
+import uuid
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
+from cashback.models import LancamentoCashback
 from clientes.models import Cliente
+from core.models import ConfiguracaoSistema
 from empresas.models import Loja, Matriz
 from pdv.models import Caixa, SessaoCaixa
 from produtos.choices import StatusProduto
 from produtos.models import Produto, UnidadeMedida
+from vouchers.models import Voucher
 
 
 class FrenteCaixaWebTests(TestCase):
@@ -82,6 +88,37 @@ class FrenteCaixaWebTests(TestCase):
             cpf="222.222.222-22",
             telefone="(11) 99999-2222",
             email="cliente.pdv@example.com",
+        )
+        self.configuracao = ConfiguracaoSistema.objects.create(
+            matriz=self.matriz,
+            percentual_cashback=Decimal("5.00"),
+            valor_minimo_compra=Decimal("0.00"),
+        )
+        hoje = timezone.localdate()
+        self.lancamento_cashback = LancamentoCashback.objects.create(
+            matriz=self.matriz,
+            loja=self.loja,
+            chave_idempotencia=uuid.uuid4(),
+            cliente=self.cliente_pdv,
+            valor_compra=Decimal("100.00"),
+            valor_base_cashback=Decimal("100.00"),
+            percentual_cashback=Decimal("10.00"),
+            valor_cashback=Decimal("10.00"),
+            valor_utilizado=Decimal("2.00"),
+            data_compra=hoje,
+            data_liberacao=hoje,
+            data_expiracao=hoje + timedelta(days=30),
+        )
+        self.voucher = Voucher.objects.create(
+            matriz=self.matriz,
+            cliente=self.cliente_pdv,
+            codigo="PDV10",
+            nome="Voucher PDV",
+            tipo=Voucher.Tipo.PERCENTUAL,
+            percentual=Decimal("10.00"),
+            data_inicio=hoje,
+            data_fim=hoje + timedelta(days=30),
+            limite_utilizacao=1,
         )
         self.client.force_login(self.usuario)
 
@@ -161,3 +198,44 @@ class FrenteCaixaWebTests(TestCase):
         venda = resposta.json()["venda"]
         self.assertEqual(venda["cliente"]["id"], self.cliente_pdv.id)
         self.assertEqual(venda["vendedor"]["id"], self.vendedor.id)
+
+    def test_beneficios_do_cliente_sao_exibidos_no_estado(self):
+        self.client.post(
+            reverse("pdv:selecionar_cliente"),
+            {"cliente_id": self.cliente_pdv.id},
+        )
+
+        resposta = self.client.get(reverse("pdv:estado_venda"))
+        beneficios = resposta.json()["venda"]["beneficios"]
+
+        self.assertEqual(beneficios["cashback_disponivel"], "8")
+        self.assertEqual(beneficios["cashback_previsto"], "0.00")
+        self.assertIsNone(beneficios["voucher_recomendado"])
+
+    def test_voucher_recomendado_e_desconto_atualizam_com_total(self):
+        self.client.post(
+            reverse("pdv:selecionar_cliente"),
+            {"cliente_id": self.cliente_pdv.id},
+        )
+        resposta = self.client.post(
+            reverse("pdv:adicionar_item"),
+            {"produto_id": self.produto.id, "quantidade": "2.000"},
+        )
+
+        beneficios = resposta.json()["venda"]["beneficios"]
+        self.assertEqual(beneficios["voucher_recomendado"]["id"], self.voucher.id)
+        self.assertEqual(beneficios["desconto_recomendado"], "4.00")
+
+    def test_cashback_previsto_reutiliza_configuracao_da_matriz(self):
+        self.client.post(
+            reverse("pdv:selecionar_cliente"),
+            {"cliente_id": self.cliente_pdv.id},
+        )
+        resposta = self.client.post(
+            reverse("pdv:adicionar_item"),
+            {"produto_id": self.produto.id, "quantidade": "3.000"},
+        )
+
+        beneficios = resposta.json()["venda"]["beneficios"]
+        self.assertEqual(beneficios["percentual_cashback"], "5.00")
+        self.assertEqual(beneficios["cashback_previsto"], "3.00")

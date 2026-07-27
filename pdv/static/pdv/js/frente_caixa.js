@@ -15,6 +15,10 @@
     const clienteDocumento = document.getElementById("pdv-cliente-documento");
     const vendedorSelect = document.getElementById("pdv-vendedor");
     const vendedorAtual = document.getElementById("pdv-vendedor-atual");
+    const cashbackDisponivel = document.getElementById("pdv-cashback-disponivel");
+    const voucherRecomendado = document.getElementById("pdv-voucher-recomendado");
+    const descontoRecomendado = document.getElementById("pdv-desconto-recomendado");
+    const cashbackPrevisto = document.getElementById("pdv-cashback-previsto");
     const vazio = document.getElementById("pdv-vazio");
     const alerta = document.getElementById("pdv-alerta");
     const caixaAberto = app.dataset.caixaAberto === "true";
@@ -194,6 +198,28 @@
             if (vendedorSelect.querySelector(`option[value="${venda.vendedor.id}"]`)) {
                 vendedorSelect.value = String(venda.vendedor.id);
             }
+        }
+
+        const beneficios = venda.beneficios || {};
+        cashbackDisponivel.textContent = moeda(
+            beneficios.cashback_disponivel || "0.00"
+        );
+        descontoRecomendado.textContent = moeda(
+            beneficios.desconto_recomendado || "0.00"
+        );
+        cashbackPrevisto.textContent = moeda(
+            beneficios.cashback_previsto || "0.00"
+        );
+
+        if (beneficios.voucher_recomendado) {
+            voucherRecomendado.textContent =
+                `${beneficios.voucher_recomendado.codigo} — ` +
+                `${beneficios.voucher_recomendado.nome}`;
+            voucherRecomendado.title =
+                `Validade: ${beneficios.voucher_recomendado.data_fim}`;
+        } else {
+            voucherRecomendado.textContent = "Nenhum";
+            voucherRecomendado.removeAttribute("title");
         }
     };
 
