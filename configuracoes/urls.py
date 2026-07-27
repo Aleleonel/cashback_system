@@ -19,4 +19,14 @@ urlpatterns = [
         views.clientes_cashback,
         name="clientes_cashback",
     ),
+    path(
+        "vendas-comissoes/",
+        views.vendas_comissoes,
+        name="vendas_comissoes",
+    ),
+    path(
+        "vendas-comissoes/regras-comerciais/",
+        views.regras_comerciais,
+        name="regras_comerciais",
+    ),
 ]

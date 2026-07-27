@@ -54,6 +54,8 @@ codigo="usuarios",
         titulo="Vendas e comissões",
         descricao="Regras de venda, vendedores e cálculo de comissões.",
         icone="bi-receipt",
+            url_name="configuracoes:vendas_comissoes",
+            disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="caixa_pagamentos",
