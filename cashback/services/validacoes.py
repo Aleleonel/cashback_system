@@ -58,12 +58,30 @@ def validar_limite_beneficios(
         )
 
 
+def validar_regras_cliente_voucher(*, voucher, cliente=None):
+    if cliente is None:
+        return
+
+    if (
+        voucher.cliente_id is not None
+        and voucher.cliente_id != cliente.id
+    ):
+        raise ValidationError('Este voucher pertence a outro cliente.')
+
+    if voucher.uso_unico_por_cliente:
+        from vouchers.models import UsoVoucher
+
+        if UsoVoucher.objects.filter(voucher=voucher, cliente=cliente).exists():
+            raise ValidationError('Este cliente ja utilizou este voucher.')
+
+
 def validar_voucher_pre_venda(
     *,
     matriz,
     loja,
     codigo_voucher,
     valor_compra,
+    cliente=None,
 ):
     voucher = get_voucher_por_codigo(
         matriz=matriz,
@@ -77,6 +95,11 @@ def validar_voucher_pre_venda(
 
     if not valido:
         raise ValidationError(mensagem)
+
+    validar_regras_cliente_voucher(
+        voucher=voucher,
+        cliente=cliente,
+    )
 
     lojas_permitidas = voucher.lojas_permitidas.all()
 

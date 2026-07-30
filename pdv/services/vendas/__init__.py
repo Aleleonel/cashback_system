@@ -1,4 +1,5 @@
-﻿from .caixa import (
+﻿from .cancelamento import cancelar_venda
+from .caixa import (
     calcular_valor_movimenta_caixa,
     registrar_movimentacao_caixa_venda,
 )
@@ -21,6 +22,7 @@ __all__ = [
     "alterar_item_venda",
     "calcular_valor_movimenta_caixa",
     "cancelar_item_venda",
+    "cancelar_venda",
     "finalizar_venda",
     "liberar_reserva_item",
     "obter_reserva_ativa_item",

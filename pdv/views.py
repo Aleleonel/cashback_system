@@ -1,3 +1,7 @@
+from vouchers.models import UsoVoucher, Voucher
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+from django.db import transaction
 from decimal import Decimal
 
 from django.contrib import messages
@@ -6,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import JsonResponse
+import json
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
@@ -26,16 +31,20 @@ from pdv.models import (
 from pdv.services.cliente_consumidor import obter_ou_criar_cliente_consumidor
 from clientes.models import Cliente
 from beneficios.selectors import get_resumo_beneficios
-from beneficios.services.estrategia import (
-    calcular_desconto_voucher,
-    get_melhor_voucher,
-)
+from beneficios.services.estrategia import calcular_desconto_voucher
 from cashback.services.compra import calcular_cashback
 from core.services import garantir_configuracao_sistema
 from pdv.services.vendas import (
     adicionar_item_venda,
     alterar_item_venda,
     cancelar_item_venda,
+    finalizar_venda,
+)
+from pdv.services.vendas.cancelamento import cancelar_venda
+from pdv.services.vendas.beneficios import resolver_beneficio_da_venda
+from pdv.services.vendas.fechamento import (
+    fechar_venda_web,
+    serializar_formas_pagamento,
 )
 from produtos.models import Produto
 from produtos.selectors.produtos import get_produto, get_produto_por_codigo, get_produtos
@@ -169,26 +178,28 @@ def _serializar_beneficios(venda):
     configuracao = garantir_configuracao_sistema(matriz=venda.matriz)
     valor_compra = Decimal(venda.total or 0)
 
+    vouchers_cliente = [
+        voucher
+        for voucher in resumo.get("vouchers_disponiveis", [])
+        if voucher.cliente_id == venda.cliente_id
+    ]
+
     voucher = None
     desconto = Decimal("0.00")
     if valor_compra > 0:
-        voucher = get_melhor_voucher(
-            matriz=venda.matriz,
-            cliente=venda.cliente,
-            valor_compra=valor_compra,
-        )
-        if voucher is not None:
-            desconto = calcular_desconto_voucher(
-                voucher=voucher,
+        for candidato in vouchers_cliente:
+            desconto_candidato = calcular_desconto_voucher(
+                voucher=candidato,
                 valor_compra=valor_compra,
             )
+            if voucher is None or desconto_candidato > desconto:
+                voucher = candidato
+                desconto = desconto_candidato
 
-    cashback_previsto = Decimal("0.00")
-    if valor_compra >= configuracao.valor_minimo_compra:
-        cashback_previsto = calcular_cashback(
-            valor_compra=valor_compra,
-            percentual=configuracao.percentual_cashback,
-        )
+    cashback_previsto = calcular_cashback(
+        valor_compra=valor_compra,
+        percentual=configuracao.percentual_cashback,
+    )
 
     voucher_serializado = None
     if voucher is not None:
@@ -198,11 +209,7 @@ def _serializar_beneficios(venda):
             "nome": voucher.nome,
             "tipo": voucher.tipo,
             "valor": str(voucher.valor) if voucher.valor is not None else None,
-            "percentual": (
-                str(voucher.percentual)
-                if voucher.percentual is not None
-                else None
-            ),
+            "percentual": str(voucher.percentual) if voucher.percentual is not None else None,
             "data_fim": voucher.data_fim.isoformat(),
         }
 
@@ -219,6 +226,9 @@ def _serializar_venda(venda):
     if venda is None:
         return {
             "id": None,
+            "status": None,
+            "status_display": "Nova venda",
+            "finalizada_em": None,
             "quantidade_itens": "0.000",
             "subtotal": "0.00",
             "desconto": "0.00",
@@ -238,6 +248,13 @@ def _serializar_venda(venda):
     )
     return {
         "id": venda.pk,
+        "status": venda.status,
+        "status_display": venda.get_status_display(),
+        "finalizada_em": (
+            venda.finalizada_em.isoformat()
+            if venda.finalizada_em is not None
+            else None
+        ),
         "quantidade_itens": str(venda.quantidade_itens),
         "subtotal": str(venda.subtotal),
         "desconto": str(venda.desconto),
@@ -626,3 +643,124 @@ def cancelar_item(request, item_id):
         )
 
     return JsonResponse({"ok": True, "venda": _serializar_venda(venda)})
+
+
+@login_required
+@require_GET
+def opcoes_fechamento(request):
+    venda, matriz, _, sessao = _obter_venda_atual(request, criar=False)
+    if sessao is None or matriz is None:
+        return JsonResponse({"ok": False, "erro": "Abra o caixa antes de fechar a venda."}, status=409)
+    if venda is None:
+        return JsonResponse({"ok": False, "erro": "Venda atual não encontrada."}, status=404)
+    return JsonResponse({
+        "ok": True,
+        "venda": _serializar_venda(venda),
+        "formas_pagamento": serializar_formas_pagamento(matriz=matriz),
+    })
+
+
+@login_required
+@require_POST
+def finalizar_venda_web(request):
+    venda, _, _, sessao = _obter_venda_atual(request, criar=False)
+    if sessao is None:
+        return JsonResponse({"ok": False, "erro": "Abra o caixa antes de finalizar."}, status=409)
+    if venda is None:
+        return JsonResponse({"ok": False, "erro": "Venda atual não encontrada."}, status=404)
+    try:
+        dados = json.loads(request.body.decode("utf-8") or "{}")
+        venda_finalizada = fechar_venda_web(
+            venda=venda,
+            usuario=request.user,
+            pagamentos=dados.get("pagamentos") or [],
+            tipo_beneficio=dados.get("tipo_beneficio") or "nenhum",
+            valor_cashback=dados.get("valor_cashback") or "0",
+            codigo_voucher=dados.get("codigo_voucher") or "",
+            request=request,
+        )
+    except (json.JSONDecodeError, TypeError, ValueError, ValidationError) as exc:
+        mensagem = "Dados inválidos." if isinstance(exc, json.JSONDecodeError) else _erro_validacao(exc)
+        return JsonResponse({"ok": False, "erro": mensagem}, status=400)
+    return JsonResponse({
+        "ok": True,
+        "mensagem": "Venda finalizada com sucesso.",
+        "venda": _serializar_venda(venda_finalizada),
+    })
+
+
+# PDV-04.2 V5 - VOUCHER E CANCELAMENTO
+@login_required
+@require_POST
+def validar_voucher_venda_web(request):
+    venda, _, _, _ = _obter_venda_atual(request, criar=False)
+    if venda is None:
+        return JsonResponse(
+            {"ok": False, "erro": "Nenhuma venda em andamento."},
+            status=404,
+        )
+
+    codigo = (request.POST.get("codigo") or "").strip().upper()
+    if not codigo:
+        return JsonResponse(
+            {"ok": False, "erro": "Informe o codigo do voucher."},
+            status=400,
+        )
+
+    try:
+        beneficio = resolver_beneficio_da_venda(
+            matriz=venda.matriz,
+            loja=venda.loja,
+            cliente=venda.cliente,
+            valor_compra=venda.total,
+            tipo_beneficio="voucher",
+            valor_cashback=Decimal("0.00"),
+            codigo_voucher=codigo,
+        )
+    except ValidationError as exc:
+        erro = _erro_validacao(exc)
+        status = 404 if "nao encontrado" in erro.lower() else 400
+        return JsonResponse({"ok": False, "erro": erro}, status=status)
+
+    voucher = beneficio.voucher
+    return JsonResponse({
+        "ok": True,
+        "voucher": {
+            "id": voucher.pk,
+            "codigo": voucher.codigo,
+            "nome": voucher.nome,
+            "cliente": voucher.cliente.nome if voucher.cliente_id else None,
+            "desconto": str(beneficio.valor),
+            "data_fim": voucher.data_fim.isoformat(),
+        },
+    })
+
+
+@login_required
+@require_POST
+def cancelar_venda_web(request):
+    venda, _, _, _ = _obter_venda_atual(request, criar=False)
+
+    if venda is None:
+        return JsonResponse({
+            "ok": True,
+            "mensagem": "Nao havia venda em andamento.",
+        })
+
+    try:
+        cancelar_venda(
+            venda=venda,
+            usuario=request.user,
+            request=request,
+            motivo=request.POST.get("motivo") or "Venda cancelada na frente de caixa.",
+        )
+    except ValidationError as exc:
+        return JsonResponse(
+            {"ok": False, "erro": _erro_validacao(exc)},
+            status=400,
+        )
+
+    return JsonResponse({
+        "ok": True,
+        "mensagem": "Venda cancelada. O caixa esta pronto para uma nova venda.",
+    })
