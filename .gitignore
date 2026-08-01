@@ -1,40 +1,68 @@
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
+# Ambientes e segredos
 venv/
+.venv/
+env/
 .env
+.env.*
 
+# Banco local
 db.sqlite3
-*.sqlite3 
+*.sqlite3
 *.db
+*.sqlite3-journal
 
+# Django
 media/
 staticfiles/
 
+# IDE e sistema
 .vscode/
 .idea/
-temp_chatgpt/
+.DS_Store
+Thumbs.db
 
-__pycache__/
-*.py[cod]
+# Artefatos do fluxo assistido
+/temp_chatgpt/
+/tem_chatgpt/
+/backups/
+/backup_*/
+/resultado_*.txt
+/diagnostico_*.txt
+/aplicacao_*.txt
+/consulta_*.txt
+/validacao_*.txt
 
-tem_chatgpt/
+# Scripts temporarios gerados na raiz
+/[0-9]*_*.ps1
+/diagnostico_*.ps1
+/aplicar_*.ps1
+/corrigir_*.ps1
+/validar_*.ps1
+/instalar_*.ps1
+/coleta_*.ps1
 
-# Scripts temporários
-*.ps1
-
-# Relatórios
-*.txt
-
-# Backups
+# Backups e temporarios
 *.bak
 *.bak_*
-
-# Pasta de backups
-backups/
-
-# Logs de diagnóstico
-diagnostico_*.txt
-aplicacao_*.txt
-consulta_*.txt
-validacao_*.txt
+*.tmp
+*.log
+/diagnosticos/
+/pdv05_1_frente_caixa_pacote/
+/cashback_release_pipeline/
+/.pdv*_ultimo_backup.txt
+/entrega*.txt
+/etapa*.txt
+/testes_*.txt
+/traceback*.txt
+/PLANO_PDV04C_*.txt
+/LEIA-ME*.txt
