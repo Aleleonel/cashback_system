@@ -1,0 +1,77 @@
+<!-- PDV-04F.1 - TIMELINE OPERACIONAL -->
+<section class="card border-0 shadow-sm h-100">
+    <div class="card-header bg-white border-bottom py-3">
+        <h2 class="h6 mb-1">
+            <i class="bi bi-clock-history me-2 text-primary"></i>Linha do tempo
+        </h2>
+        <p class="text-muted small mb-0">Principais eventos registrados para esta venda.</p>
+    </div>
+
+    <div class="card-body">
+        <div class="venda-timeline">
+            <div class="venda-timeline__item">
+                <div class="venda-timeline__marcador bg-primary">
+                    <i class="bi bi-cart-plus text-white"></i>
+                </div>
+                <div class="venda-timeline__conteudo">
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <strong>Venda criada</strong>
+                        <time class="text-muted small">{{ venda.criada_em|date:"d/m/Y H:i:s" }}</time>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        Operação iniciada por
+                        {% if venda.operador %}
+                            {{ venda.operador.get_full_name|default:venda.operador.username }}
+                        {% else %}
+                            usuário não informado
+                        {% endif %}.
+                    </div>
+                </div>
+            </div>
+
+            {% if venda.finalizada_em %}
+                <div class="venda-timeline__item">
+                    <div class="venda-timeline__marcador bg-success">
+                        <i class="bi bi-check-lg text-white"></i>
+                    </div>
+                    <div class="venda-timeline__conteudo">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <strong>Venda finalizada</strong>
+                            <time class="text-muted small">{{ venda.finalizada_em|date:"d/m/Y H:i:s" }}</time>
+                        </div>
+                        <div class="text-muted small mt-1">Pagamentos confirmados e operação concluída.</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if venda.cancelada_em or venda.status == 'cancelada' %}
+                <div class="venda-timeline__item venda-timeline__item--ultimo">
+                    <div class="venda-timeline__marcador bg-danger">
+                        <i class="bi bi-x-lg text-white"></i>
+                    </div>
+                    <div class="venda-timeline__conteudo">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <strong>Venda cancelada</strong>
+                            {% if venda.cancelada_em %}
+                                <time class="text-muted small">{{ venda.cancelada_em|date:"d/m/Y H:i:s" }}</time>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small mt-1">Operação encerrada com status de cancelamento.</div>
+                    </div>
+                </div>
+            {% elif venda.finalizada_em %}
+                <div class="venda-timeline__item venda-timeline__item--ultimo">
+                    <div class="venda-timeline__marcador bg-body-secondary">
+                        <i class="bi bi-archive text-secondary"></i>
+                    </div>
+                    <div class="venda-timeline__conteudo">
+                        <strong>Documento disponível para consulta</strong>
+                        <div class="text-muted small mt-1">
+                            Venda preservada para histórico, auditoria e impressão.
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>

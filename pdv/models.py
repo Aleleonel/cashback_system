@@ -141,6 +141,11 @@ class SessaoCaixa(models.Model):
                 condition=Q(status=StatusSessaoCaixa.ABERTA),
                 name="uq_pdv_uma_sessao_aberta_por_caixa",
             ),
+            models.UniqueConstraint(
+                fields=["operador_abertura"],
+                condition=Q(status=StatusSessaoCaixa.ABERTA),
+                name="uq_pdv_uma_sessao_aberta_por_operador",
+            ),
             models.CheckConstraint(
                 condition=Q(valor_abertura__gte=0),
                 name="ck_pdv_sessao_valor_abertura_nao_negativo",

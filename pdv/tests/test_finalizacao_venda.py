@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -133,3 +133,46 @@ class FinalizacaoVendaOrquestradorTests(TestCase):
         confirmar_mock.assert_not_called()
         caixa_mock.assert_not_called()
         auditoria_mock.assert_not_called()
+
+    def test_helper_atribui_numero_positivo(self):
+        from pdv.services.vendas.finalizacao import (
+            _atribuir_numero_venda,
+        )
+
+        numero = _atribuir_numero_venda(venda=self.venda)
+
+        self.assertEqual(numero, 1)
+        self.assertEqual(self.venda.numero, 1)
+
+    def test_helper_preserva_numero_existente(self):
+        from pdv.services.vendas.finalizacao import (
+            _atribuir_numero_venda,
+        )
+
+        self.venda.numero = 50
+
+        numero = _atribuir_numero_venda(venda=self.venda)
+
+        self.assertEqual(numero, 50)
+        self.assertEqual(self.venda.numero, 50)
+
+    def test_finalizador_chama_numeracao_antes_de_salvar(self):
+        from pathlib import Path
+
+        service = Path(
+            "pdv/services/vendas/finalizacao.py"
+        ).read_text(encoding="utf-8")
+
+        inicio = service.index(
+            "def _finalizar_modelo(*, venda):"
+        )
+        trecho = service[inicio:inicio + 900]
+
+        self.assertIn(
+            "_atribuir_numero_venda(venda=venda)",
+            trecho,
+        )
+        self.assertIn(
+            '\"numero\"',
+            trecho,
+        )

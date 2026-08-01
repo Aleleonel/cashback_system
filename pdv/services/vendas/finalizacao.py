@@ -1,8 +1,10 @@
-﻿from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Max
 from django.utils import timezone
 
 from estoque.services import confirmar_reserva_estoque
+from empresas.models import Loja
 from pdv.choices import StatusOperacaoVenda
 from pdv.models import Venda
 from pdv.services.cliente_consumidor import obter_ou_criar_cliente_consumidor
@@ -58,13 +60,39 @@ def _confirmar_reservas(*, venda, usuario=None, request=None):
     return resultados
 
 
+
+
+# PDV-04E.3.1 - NUMERACAO SEQUENCIAL POR LOJA
+def _atribuir_numero_venda(*, venda):
+    if venda.numero is not None:
+        return venda.numero
+
+    Loja.objects.select_for_update().get(pk=venda.loja_id)
+
+    maior_numero = (
+        Venda.objects
+        .filter(
+            loja_id=venda.loja_id,
+            numero__isnull=False,
+        )
+        .aggregate(maior=Max("numero"))
+        ["maior"]
+        or 0
+    )
+
+    venda.numero = maior_numero + 1
+    return venda.numero
+
+
 def _finalizar_modelo(*, venda):
+    _atribuir_numero_venda(venda=venda)
     venda.status = StatusOperacaoVenda.FINALIZADA
     venda.finalizada_em = timezone.now()
     venda.full_clean()
     venda.save(
         update_fields=[
             "cliente",
+            "numero",
             "status",
             "finalizada_em",
             "subtotal",

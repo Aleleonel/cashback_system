@@ -96,17 +96,60 @@
         </div>
 
         <a href="{% url 'pdv:inicio' %}"
-           class="nav-link {% if request.resolver_match.namespace == 'pdv' %}active bg-primary text-white{% else %}text-white{% endif %}"
+           class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'inicio' %}active bg-primary text-white{% else %}text-white{% endif %}"
            data-menu-pdv-frente-caixa="true">
             <i class="bi bi-calculator me-2"></i>
             Frente de Caixa
         </a>
+
+        <!-- PDV-04E.3 - HISTORICO DE VENDAS -->
+        <a
+            href="{% url 'pdv:historico_vendas' %}"
+            class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'historico_vendas' or request.resolver_match.url_name == 'detalhe_venda' %}active bg-primary text-white{% else %}text-white{% endif %}"
+            data-menu-pdv-historico-vendas="true"
+        >
+            <i class="bi bi-receipt-cutoff me-2"></i>
+            Histórico de Vendas
+        </a>
+
         {% if pode_ver_produtos %}
         <a href="{% url 'produtos:lista_produtos' %}" class="nav-link text-white">
             <i class="bi bi-box-seam me-2"></i>
             Produtos
         </a>
         {% endif %}
+
+
+    <!-- PDV-04E.2 - SECAO CAIXA -->
+    <li class="nav-item mt-3">
+        <span class="nav-link text-white-50 text-uppercase small fw-semibold">
+            <i class="bi bi-cash-stack me-2"></i>Caixa
+        </span>
+    </li>
+    <li class="nav-item">
+        <a
+            href="{% url 'pdv:abrir_caixa' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'abrir_caixa' %}text-white fw-semibold active{% else %}text-white-50{% endif %}"
+        >
+            <i class="bi bi-unlock me-2"></i>Abrir Caixa
+        </a>
+    </li>
+    <li class="nav-item">
+        <a
+            href="{% url 'pdv:fechar_caixa' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'fechar_caixa' %}text-white fw-semibold active{% else %}text-white-50{% endif %}"
+        >
+            <i class="bi bi-lock me-2"></i>Fechar Caixa
+        </a>
+    </li>
+    <li class="nav-item">
+        <a
+            href="{% url 'pdv:historico_fechamentos' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'historico_fechamentos' %}text-white fw-semibold active{% else %}text-white-50{% endif %}"
+        >
+            <i class="bi bi-clock-history me-2"></i>Histórico de Fechamentos
+        </a>
+    </li>
 
         <a href="{% url 'estoque:lista_movimentacoes' %}" class="nav-link text-white" data-menu-pdv-estoque="true">
             <i class="bi bi-boxes me-2"></i>

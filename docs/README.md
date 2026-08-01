@@ -1,56 +1,12 @@
-﻿# Cashback System
+# Documentação Oficial
 
-Sistema SaaS multiempresa para gestao de clientes, cashback, campanhas, vouchers e relatorios.
+Esta pasta contém apenas documentação oficial e vigente do Cashback System.
 
-## Estrutura principal
+## Estrutura
 
-- Plataforma: administracao do SaaS pelo superuser.
-- Matriz: empresa cliente.
-- Loja: unidade operacional vinculada a uma matriz.
-- Usuario operacional: usuario vinculado a uma matriz e uma ou mais lojas.
+- `pdv/`: regras, consolidação e documentação do módulo PDV;
+- `pdv/changelog/`: histórico oficial de alterações;
+- `pdv/homologacao/`: registros formais de homologação;
+- `engenharia/`: padrões e automações oficiais do projeto.
 
-## Contextos do sistema
-
-### Plataforma
-
-Acesso exclusivo para `is_superuser=True`.
-
-O superuser nao deve estar vinculado a matriz ou loja.
-
-Acessa:
-
-- Painel Master
-- Nova Empresa
-- Matrizes
-- Lojas
-- Auditoria
-- Django Admin
-
-### Operacao
-
-Acesso para usuarios vinculados a uma matriz.
-
-Acessa:
-
-- Dashboard
-- Clientes
-- Cashback
-- Campanhas
-- Vouchers
-- Relatorios
-
-## Validacao obrigatoria
-
-Antes de qualquer commit ou merge:
-
-python manage.py check
-python manage.py test
-
-## Estado atual
-
-- RBAC implementado.
-- Painel Master implementado.
-- Auditoria inicial implementada.
-- Wizard Nova Empresa implementado.
-- StatusOperacional centralizado em core/choices.py.
-- Matriz e Loja usam status como fonte unica da verdade.
+Diagnósticos, relatórios de execução, tracebacks e backups são mantidos fora do repositório.

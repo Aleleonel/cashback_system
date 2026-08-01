@@ -1,0 +1,74 @@
+<!-- PDV-04F.1 - CABECALHO PROFISSIONAL -->
+<section class="card border-0 shadow-sm overflow-hidden mb-4 venda-documento__cabecalho">
+    <div class="card-body p-0">
+        <div class="p-4 p-xl-5 bg-body-tertiary border-bottom">
+            <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-start gap-4">
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="badge rounded-pill text-bg-dark px-3 py-2">VENDA</span>
+                        {% if venda.status == 'finalizada' %}
+                            <span class="badge rounded-pill text-bg-success px-3 py-2">
+                                <i class="bi bi-check-circle-fill me-1"></i>Finalizada
+                            </span>
+                        {% elif venda.status == 'cancelada' %}
+                            <span class="badge rounded-pill text-bg-danger px-3 py-2">
+                                <i class="bi bi-x-circle-fill me-1"></i>Cancelada
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill text-bg-secondary px-3 py-2">
+                                {{ venda.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="display-6 fw-bold mb-2">Venda #{{ venda.numero|default:"—" }}</h1>
+
+                    <div class="d-flex flex-wrap gap-3 text-muted">
+                        <span><i class="bi bi-shop me-1"></i>{{ venda.loja.nome }}</span>
+                        <span><i class="bi bi-calendar3 me-1"></i>{{ venda.criada_em|date:"d/m/Y H:i" }}</span>
+                        <span class="font-monospace small">ID {{ venda.uuid }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 no-print">
+                    <a href="{% url 'pdv:historico_vendas' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Voltar
+                    </a>
+                    <a href="{% url 'pdv:cupom_venda_nao_fiscal' venda.uuid %}?auto=1" class="btn btn-dark" target="_blank" rel="noopener">
+                        <i class="bi bi-receipt-cutoff me-1"></i>Imprimir cupom
+                    </a>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-0">
+            <div class="col-6 col-lg-3 border-end border-bottom border-lg-bottom-0">
+                <div class="p-3 p-xl-4">
+                    <div class="text-muted small mb-1">Total da venda</div>
+                    <div class="h4 fw-bold mb-0">R$ {{ venda.total|floatformat:2 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 border-end border-bottom border-lg-bottom-0">
+                <div class="p-3 p-xl-4">
+                    <div class="text-muted small mb-1">Quantidade de itens</div>
+                    <div class="h4 fw-bold mb-0">{{ venda.quantidade_itens|floatformat:3 }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 border-end">
+                <div class="p-3 p-xl-4">
+                    <div class="text-muted small mb-1">Modalidade</div>
+                    <div class="fw-semibold">{{ venda.get_modalidade_display }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 p-xl-4">
+                    <div class="text-muted small mb-1">Emissão</div>
+                    <div class="fw-semibold">{{ venda.get_tipo_emissao_display }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

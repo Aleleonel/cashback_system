@@ -1,17 +1,23 @@
+import json
 import uuid
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.models import PermissaoUsuario
 from cashback.models import LancamentoCashback
 from clientes.models import Cliente
 from core.models import ConfiguracaoSistema
 from empresas.models import Loja, Matriz
-from pdv.models import Caixa, SessaoCaixa
+from pdv.choices import StatusOperacaoVenda
+from pdv.constants import PERMISSAO_PDV_AUTORIZAR_DESCONTO
+from pdv.models import Caixa, SessaoCaixa, Venda
 from produtos.choices import StatusProduto
 from produtos.models import Produto, UnidadeMedida
 from vouchers.models import Voucher
@@ -31,6 +37,10 @@ class FrenteCaixaWebTests(TestCase):
             matriz=self.matriz,
         )
         self.usuario.lojas.add(self.loja)
+        PermissaoUsuario.objects.get_or_create(
+            usuario=self.usuario,
+            permissao=PERMISSAO_PDV_AUTORIZAR_DESCONTO,
+        )
         self.caixa = Caixa.objects.create(
             matriz=self.matriz,
             loja=self.loja,
@@ -239,3 +249,105 @@ class FrenteCaixaWebTests(TestCase):
         beneficios = resposta.json()["venda"]["beneficios"]
         self.assertEqual(beneficios["percentual_cashback"], "5.00")
         self.assertEqual(beneficios["cashback_previsto"], "3.00")
+
+    @patch("pdv.views.fechar_venda_web")
+    def test_endpoint_finaliza_com_payload_seguro(self, fechar_mock):
+        resposta_item = self.client.post(
+            reverse("pdv:adicionar_item"),
+            {"produto_id": self.produto.id, "quantidade": "1.000"},
+        )
+        venda_id = resposta_item.json()["venda"]["id"]
+        venda = Venda.objects.get(pk=venda_id)
+
+        def fechar_simulado(**kwargs):
+            venda_recebida = kwargs["venda"]
+            venda_recebida.status = StatusOperacaoVenda.FINALIZADA
+            venda_recebida.finalizada_em = timezone.now()
+            venda_recebida.save(
+                update_fields=["status", "finalizada_em", "atualizada_em"]
+            )
+            return venda_recebida
+
+        fechar_mock.side_effect = fechar_simulado
+        payload = {
+            "tipo_beneficio": "nenhum",
+            "valor_cashback": "0.00",
+            "codigo_voucher": "",
+            "pagamentos": [
+                {
+                    "forma_pagamento_id": 1,
+                    "valor": "20.00",
+                    "parcelas": 1,
+                    "valor_recebido": "",
+                }
+            ],
+        }
+
+        resposta = self.client.post(
+            reverse("pdv:finalizar_venda"),
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTrue(resposta.json()["ok"])
+        self.assertEqual(
+            resposta.json()["venda"]["status"],
+            StatusOperacaoVenda.FINALIZADA,
+        )
+        fechar_mock.assert_called_once()
+        chamada = fechar_mock.call_args.kwargs
+        self.assertEqual(chamada["venda"].pk, venda_id)
+        self.assertEqual(chamada["usuario"], self.usuario)
+        self.assertEqual(chamada["tipo_beneficio"], "nenhum")
+        self.assertEqual(chamada["pagamentos"], payload["pagamentos"])
+        self.assertIsNotNone(chamada["request"])
+
+    @patch("pdv.views.fechar_venda_web")
+    def test_endpoint_rejeita_fechamento_sem_pagamentos(self, fechar_mock):
+        self.client.post(
+            reverse("pdv:adicionar_item"),
+            {"produto_id": self.produto.id, "quantidade": "1.000"},
+        )
+        fechar_mock.side_effect = ValidationError({
+            "pagamentos": "A venda deve possuir pelo menos um pagamento."
+        })
+
+        resposta = self.client.post(
+            reverse("pdv:finalizar_venda"),
+            data=json.dumps({
+                "tipo_beneficio": "nenhum",
+                "pagamentos": [],
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(resposta.status_code, 400)
+        self.assertFalse(resposta.json()["ok"])
+        self.assertIn("pagamento", resposta.json()["erro"].lower())
+        fechar_mock.assert_called_once()
+
+    def test_endpoint_rejeita_json_invalido(self):
+        self.client.post(
+            reverse("pdv:adicionar_item"),
+            {"produto_id": self.produto.id, "quantidade": "1.000"},
+        )
+
+        resposta = self.client.post(
+            reverse("pdv:finalizar_venda"),
+            data="{json-invalido",
+            content_type="application/json",
+        )
+
+        self.assertEqual(resposta.status_code, 400)
+        self.assertFalse(resposta.json()["ok"])
+        self.assertIn("inválidos", resposta.json()["erro"].lower())
+
+    def test_endpoint_finalizacao_exige_venda_atual(self):
+        resposta = self.client.post(reverse("pdv:finalizar_venda"))
+
+        self.assertEqual(resposta.status_code, 404)
+        self.assertFalse(resposta.json()["ok"])
+
+
+# PDV-04.2 V5 - TESTES VOUCHER/CANCELAMENTO
