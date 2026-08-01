@@ -1,0 +1,54 @@
+.table-responsive {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+}
+
+.table {
+    margin-bottom: 0;
+    color: var(--ui-text);
+    vertical-align: middle;
+}
+
+.table > :not(caption) > * > * {
+    padding: 0.85rem 1rem;
+    border-bottom-color: var(--ui-border);
+}
+
+.table thead th {
+    color: var(--ui-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+    background: var(--ui-surface-muted);
+    border-bottom-width: 1px;
+}
+
+.table tbody tr {
+    transition: background-color var(--ui-transition-fast);
+}
+
+.table-hover > tbody > tr:hover > * {
+    --bs-table-bg-state: #f8fbff;
+}
+
+/* === UI-01C.3: TABELAS PAGINACAO BADGES - INICIO === */
+.table-responsive{border-radius:var(--ui-radius-lg,.875rem)}
+.table{--bs-table-bg:transparent;--bs-table-color:var(--ui-color-text,#212529);--bs-table-border-color:rgba(33,37,41,.08);--bs-table-striped-bg:rgba(33,37,41,.025);--bs-table-hover-bg:rgba(33,37,41,.04);margin-bottom:0;vertical-align:middle}
+.table>:not(caption)>*>*{padding:.875rem 1rem;border-bottom-width:1px}
+.table thead th{color:#475467;background:#f8f9fa;font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.table tbody td{color:var(--ui-color-text,#212529);font-size:.9375rem}
+.table tbody tr:last-child>*{border-bottom-width:0}
+.table-hover>tbody>tr{transition:background-color 140ms ease}
+.table caption{padding:.75rem 1rem;color:var(--ui-color-text-muted,#6c757d);font-size:.8125rem}
+.table .btn{white-space:nowrap}.table-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.375rem}
+.table-empty,.empty-state{padding:2.5rem 1rem;color:var(--ui-color-text-muted,#6c757d);text-align:center}
+.badge{--bs-badge-padding-x:.65em;--bs-badge-padding-y:.45em;--bs-badge-font-size:.75em;--bs-badge-font-weight:600;--bs-badge-border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:.25rem;line-height:1;letter-spacing:.01em}
+.badge.text-bg-success,.badge.bg-success{color:#166534!important;background:#dcfce7!important}.badge.text-bg-danger,.badge.bg-danger{color:#991b1b!important;background:#fee2e2!important}.badge.text-bg-warning,.badge.bg-warning{color:#854d0e!important;background:#fef3c7!important}.badge.text-bg-info,.badge.bg-info{color:#075985!important;background:#e0f2fe!important}.badge.text-bg-secondary,.badge.bg-secondary{color:#475467!important;background:#eaecf0!important}.badge.text-bg-dark,.badge.bg-dark{color:#fff!important;background:#212529!important}
+.pagination{--bs-pagination-padding-x:.75rem;--bs-pagination-padding-y:.5rem;--bs-pagination-font-size:.875rem;--bs-pagination-color:#344054;--bs-pagination-bg:#fff;--bs-pagination-border-color:rgba(33,37,41,.1);--bs-pagination-hover-color:#101828;--bs-pagination-hover-bg:#f8f9fa;--bs-pagination-hover-border-color:rgba(33,37,41,.14);--bs-pagination-focus-color:#101828;--bs-pagination-focus-bg:#fff;--bs-pagination-focus-box-shadow:0 0 0 .2rem rgba(33,37,41,.1);--bs-pagination-active-color:#fff;--bs-pagination-active-bg:#212529;--bs-pagination-active-border-color:#212529;--bs-pagination-disabled-color:#98a2b3;--bs-pagination-disabled-bg:#f8f9fa;--bs-pagination-disabled-border-color:rgba(33,37,41,.08);flex-wrap:wrap;gap:.375rem;margin-bottom:0}
+.page-item:first-child .page-link,.page-item:last-child .page-link,.page-link{border-radius:var(--ui-radius-md,.625rem)}
+.page-link{display:inline-flex;align-items:center;justify-content:center;min-width:2.375rem;min-height:2.375rem;font-weight:600;box-shadow:none}
+@media(max-width:767.98px){.table>:not(caption)>*>*{padding:.75rem}.table thead th,.table tbody td{font-size:.8125rem}.table-actions{justify-content:flex-start}.pagination{justify-content:center}}
+@media(prefers-reduced-motion:reduce){.table-hover>tbody>tr{transition:none}}
+/* === UI-01C.3: TABELAS PAGINACAO BADGES - FIM === */

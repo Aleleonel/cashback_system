@@ -1,0 +1,230 @@
+.form-label {
+    margin-bottom: 0.375rem;
+    color: var(--ui-heading);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.form-control,
+.form-select {
+    min-height: 42px;
+    color: var(--ui-text);
+    background-color: var(--ui-surface);
+    border-color: var(--ui-border-strong);
+    border-radius: var(--ui-radius-md);
+}
+
+textarea.form-control {
+    min-height: 110px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+}
+
+.form-control::placeholder {
+    color: #94a3b8;
+}
+
+.form-text {
+    color: var(--ui-text-muted);
+}
+
+.form-check-input:checked {
+    background-color: var(--ui-primary);
+    border-color: var(--ui-primary);
+}
+
+/* === UI-01C.2: FORMULARIOS - INICIO === */
+
+/*
+ * Padronizacao visual de formularios Bootstrap.
+ * Escopo: campos, selects, labels, textos auxiliares, grupos,
+ * checkbox, radio e estados de validacao.
+ */
+
+/* Labels e textos auxiliares */
+.form-label {
+    margin-bottom: 0.5rem;
+    color: var(--ui-color-text, #212529);
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.form-text {
+    margin-top: 0.375rem;
+    color: var(--ui-color-text-muted, #6c757d);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+/* Campos principais */
+.form-control,
+.form-select {
+    min-height: 2.75rem;
+    border-color: rgba(33, 37, 41, 0.16);
+    border-radius: var(--ui-radius-md, 0.625rem);
+    background-color: #ffffff;
+    color: var(--ui-color-text, #212529);
+    box-shadow: none;
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        background-color 160ms ease;
+}
+
+.form-control {
+    padding: 0.6875rem 0.875rem;
+}
+
+.form-select {
+    padding-top: 0.6875rem;
+    padding-bottom: 0.6875rem;
+}
+
+textarea.form-control {
+    min-height: 7rem;
+    resize: vertical;
+}
+
+.form-control::placeholder {
+    color: #98a2b3;
+    opacity: 1;
+}
+
+/* Foco */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: rgba(33, 37, 41, 0.42);
+    box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.10);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #ffffff;
+}
+
+/* Estados desabilitado e somente leitura */
+.form-control:disabled,
+.form-select:disabled,
+.form-control[readonly] {
+    border-color: rgba(33, 37, 41, 0.10);
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+/* Input groups */
+.input-group {
+    border-radius: var(--ui-radius-md, 0.625rem);
+}
+
+.input-group-text {
+    border-color: rgba(33, 37, 41, 0.16);
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 500;
+}
+
+.input-group > .form-control,
+.input-group > .form-select,
+.input-group > .input-group-text,
+.input-group > .btn {
+    min-height: 2.75rem;
+}
+
+/* Checkbox e radio */
+.form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    min-height: 1.5rem;
+    padding-left: 0;
+}
+
+.form-check-input {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0.125rem 0 0;
+    border-color: rgba(33, 37, 41, 0.28);
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    border-color: #212529;
+    background-color: #212529;
+}
+
+.form-check-label {
+    color: var(--ui-color-text, #212529);
+    line-height: 1.45;
+    cursor: pointer;
+}
+
+/* Estados de validacao */
+.form-control.is-valid,
+.was-validated .form-control:valid,
+.form-select.is-valid,
+.was-validated .form-select:valid {
+    border-color: #16a34a;
+    background-image: none;
+}
+
+.form-control.is-invalid,
+.was-validated .form-control:invalid,
+.form-select.is-invalid,
+.was-validated .form-select:invalid {
+    border-color: #dc2626;
+    background-image: none;
+}
+
+.form-control.is-valid:focus,
+.was-validated .form-control:valid:focus,
+.form-select.is-valid:focus,
+.was-validated .form-select:valid:focus {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 0.2rem rgba(22, 163, 74, 0.12);
+}
+
+.form-control.is-invalid:focus,
+.was-validated .form-control:invalid:focus,
+.form-select.is-invalid:focus,
+.was-validated .form-select:invalid:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.12);
+}
+
+.valid-feedback,
+.invalid-feedback {
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.valid-feedback {
+    color: #15803d;
+}
+
+.invalid-feedback {
+    color: #b91c1c;
+}
+
+/* Espacamento consistente */
+form .mb-3:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Preferencia por movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+    .form-control,
+    .form-select {
+        transition: none;
+    }
+}
+
+/* === UI-01C.2: FORMULARIOS - FIM === */

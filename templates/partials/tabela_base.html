@@ -1,0 +1,22 @@
+{% comment %}
+UI-03.2A — Estrutura base reutilizável para tabelas de listagem.
+
+Parâmetros:
+- tabela_classes: classes adicionais ou substitutas da tabela.
+- tabela_aria_label: descrição acessível opcional.
+
+Observação:
+Este componente fornece apenas a estrutura visual comum.
+Cabeçalho, corpo e paginação permanecem nos templates consumidores.
+{% endcomment %}
+
+<!-- UI-03.2A: COMPONENTE TABELA BASE - INICIO -->
+<div class="table-responsive">
+    <table
+        class="{{ tabela_classes|default:'table table-hover align-middle mb-0' }}"
+        {% if tabela_aria_label %}aria-label="{{ tabela_aria_label }}"{% endif %}
+    >
+        {% include tabela_conteudo %}
+    </table>
+</div>
+<!-- UI-03.2A: COMPONENTE TABELA BASE - FIM -->

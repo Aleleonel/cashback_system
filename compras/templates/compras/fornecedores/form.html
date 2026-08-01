@@ -1,0 +1,48 @@
+﻿{% extends "ui/page.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block page_class %} compras-page{% endblock %}
+
+{% block page_header %}
+{% url "compras:listar_fornecedores" as url_voltar_fornecedores %}
+{% include "partials/cabecalho_pagina.html" with titulo=titulo subtitulo="Preencha os dados cadastrais e comerciais do fornecedor." icone="bi-truck" acao_url=url_voltar_fornecedores acao_texto="Voltar" acao_icone="bi-arrow-left" %}
+{% endblock %}
+
+{% block page_content %}
+<div class="card shadow-sm border-0">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="card-body p-4">
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row g-4">
+                {% for field in form %}
+                <div class="col-12 {% if field.field.widget.input_type != 'checkbox' %}col-lg-6{% endif %}">
+                    {% include "partials/campo_formulario.html" with campo=field %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card-footer bg-white d-flex flex-wrap justify-content-end gap-2 px-4 py-3">
+            <a
+                href="{% url 'compras:listar_fornecedores' %}"
+                class="btn btn-outline-secondary"
+            >
+                Cancelar
+            </a>
+
+            <button type="submit" class="btn btn-dark">
+                <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                Salvar fornecedor
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "ui/page.html" %}
+{% load static %}
+
+{% block title %}Cargos | RH{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'rh/css/rh.css' %}">
+{% endblock %}
+
+{% block page_class %} rh-cargos-page{% endblock %}
+
+{% block page_header %}
+<header class="ui-page-header">
+        <div class="ui-page-header__content">
+            <span class="ui-page-header__eyebrow">Recursos Humanos</span>
+            <h1 class="ui-page-header__title">Cadastro de cargos</h1>
+            <p class="ui-page-header__description">Gerencie os cargos utilizados na estrutura organizacional.</p>
+        </div>
+
+        <div class="ui-page-header__actions">
+            <a href="{% url 'rh:cargo_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Novo cargo
+            </a>
+        </div>
+    </header>
+{% endblock %}
+
+{% block page_content %}
+<section class="ui-panel">
+        <div class="ui-panel__header">
+            <div>
+                <h2 class="ui-panel__title">Cargos cadastrados</h2>
+                <p class="ui-panel__caption">
+                    {{ cargos|length }} registro{{ cargos|length|pluralize }}
+                </p>
+            </div>
+        </div>
+
+        {% if cargos %}
+        <div class="table-responsive">
+            <table class="table rh-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Cargo</th>
+                        <th scope="col">Descrição</th>
+                        <th scope="col">Matriz</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cargo in cargos %}
+                    <tr>
+                        <td>
+                            <div class="rh-record-primary">
+                                <span class="rh-record-icon">
+                                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                                </span>
+                                <strong>{{ cargo.nome }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="rh-muted">
+                                {{ cargo.descricao|default:"Sem descrição"|truncatechars:90 }}
+                            </span>
+                        </td>
+                        <td>{{ cargo.matriz|default:"—" }}</td>
+                        <td>
+                            {% if cargo.ativo %}
+                            <span class="rh-status rh-status-active">
+                                <span class="rh-status-dot"></span>
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="rh-status rh-status-inactive">
+                                <span class="rh-status-dot"></span>
+                                Inativo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="rh-actions">
+                                <a
+                                    href="{% url 'rh:cargo_update' cargo.pk %}"
+                                    class="ui-icon-button"
+                                    title="Editar cargo"
+                                    aria-label="Editar cargo {{ cargo.nome }}"
+                                >
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+
+                                <a
+                                    href="{% url 'rh:cargo_delete' cargo.pk %}"
+                                    class="ui-icon-button ui-icon-button--danger"
+                                    title="Excluir cargo"
+                                    aria-label="Excluir cargo {{ cargo.nome }}"
+                                >
+                                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="ui-empty-state">
+            <span class="ui-empty-state__icon">
+                <i class="bi bi-person-badge" aria-hidden="true"></i>
+            </span>
+            <h2 class="ui-empty-state__title">Nenhum cargo cadastrado</h2>
+            <p class="ui-empty-state__description">Cadastre o primeiro cargo para organizar a estrutura do RH.</p>
+            <a href="{% url 'rh:cargo_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Cadastrar cargo
+            </a>
+        </div>
+        {% endif %}
+    </section>
+{% endblock %}

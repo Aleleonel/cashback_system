@@ -59,11 +59,15 @@ INSTALLED_APPS = [
 
     # Apps do projeto
     'core',
+    'configuracoes',
     'accounts',
     'empresas',
     'clientes',
     'produtos.apps.ProdutosConfig',
     'estoque.apps.EstoqueConfig',
+    'compras.apps.ComprasConfig',
+    'pdv.apps.PdvConfig',
+    'rh.apps.RhConfig',
     'cashback',
     'vouchers',
     'campanhas',
@@ -173,4 +177,3 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-

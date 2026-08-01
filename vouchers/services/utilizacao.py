@@ -40,6 +40,14 @@ def registrar_uso_voucher(
     if voucher_bloqueado.total_utilizado >= voucher_bloqueado.limite_utilizacao:
         raise ValidationError('Voucher sem utilizações disponíveis.')
 
+    from cashback.services.validacoes import validar_regras_cliente_voucher
+
+    validar_regras_cliente_voucher(
+        voucher=voucher_bloqueado,
+        cliente=cliente,
+    )
+
+
     lojas_permitidas = voucher_bloqueado.lojas_permitidas.all()
 
     if lojas_permitidas.exists():

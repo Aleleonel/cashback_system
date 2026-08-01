@@ -1,0 +1,127 @@
+.pdv-page {
+    max-width: 1800px;
+}
+
+.pdv-page .card-header {
+    padding: 1rem 1.25rem;
+}
+
+.pdv-product-empty {
+    background: var(--ui-body-bg);
+    min-height: 165px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.pdv-sidebar-stack {
+    display: grid;
+    gap: 1rem;
+}
+
+.pdv-total-card {
+    border: 0;
+}
+
+.pdv-total-value {
+    margin-top: 0.25rem;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--ui-heading);
+}
+
+.pdv-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: #fff;
+    color: var(--ui-text-muted);
+    font-size: 0.8125rem;
+}
+
+.pdv-shortcuts kbd {
+    margin-right: 0.25rem;
+}
+
+@media (min-width: 1400px) {
+    .pdv-sidebar-stack {
+        position: sticky;
+        top: 1rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pdv-page {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .pdv-shortcuts {
+        display: none;
+    }
+
+    .pdv-page .input-group-lg {
+        flex-wrap: wrap;
+    }
+
+    .pdv-page .input-group-lg .form-control {
+        min-width: calc(100% - 3.5rem);
+    }
+
+    .pdv-page .input-group-lg .btn {
+        width: 100%;
+        margin-top: 0.5rem;
+        border-radius: var(--bs-border-radius-lg) !important;
+    }
+}
+
+/* PDV-05.1 - Frente de Caixa funcional */
+
+.pdv-search-results {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.pdv-product-result {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: #fff;
+    text-align: left;
+}
+
+.pdv-product-result:hover,
+.pdv-product-result:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.pdv-product-result span {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.pdv-product-result small {
+    color: var(--ui-text-muted);
+}
+
+.pdv-quantidade,
+.pdv-desconto-item {
+    min-width: 6.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .pdv-product-result {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

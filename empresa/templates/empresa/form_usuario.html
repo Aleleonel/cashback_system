@@ -112,11 +112,7 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check">
-                            {{ form.ativo }}
-                            {{ form.ativo.label_tag }}
-                            {{ form.ativo.errors }}
-                        </div>
+                        {% include "partials/form_checkbox.html" with campo=form.ativo %}
                     </div>
 
                 </div>

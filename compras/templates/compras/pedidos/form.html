@@ -1,0 +1,47 @@
+{% extends "ui/page.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block page_content %}
+{% url "compras:listar_pedidos_compra" as url_voltar_pedidos %}
+
+<section class="border rounded-3 bg-white shadow-sm overflow-hidden">
+    {% include "partials/cabecalho_pagina.html" with titulo=titulo subtitulo="Informe os dados principais para registrar o pedido de compra." icone="bi-cart3" acao_url=url_voltar_pedidos acao_texto="Voltar" acao_icone="bi-arrow-left" %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="p-4">
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-4" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row g-4">
+                {% for field in form %}
+                <div class="col-12 {% if field.field.widget.input_type != 'checkbox' %}col-lg-6{% endif %}">
+                    {% include "partials/campo_formulario.html" with campo=field %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="border-top bg-body-tertiary d-flex flex-wrap justify-content-end gap-2 px-4 py-3">
+            <a
+                href="{{ url_voltar_pedidos }}"
+                class="btn btn-outline-secondary"
+            >
+                Cancelar
+            </a>
+
+            <button type="submit" class="btn btn-dark">
+                <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                Salvar pedido
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}

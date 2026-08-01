@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <a href="{% url 'configuracoes:vendas_comissoes' %}" class="text-decoration-none small">
+                <i class="bi bi-arrow-left me-1"></i>Vendas e comissões
+            </a>
+            <div class="text-uppercase text-secondary small fw-semibold mt-3 mb-1">
+                Configurações comerciais
+            </div>
+            <h1 class="h3 mb-1"><i class="bi bi-sliders me-2"></i>Regras Comerciais</h1>
+            <p class="text-secondary mb-0">
+                Defina os parâmetros gerais utilizados pelas operações comerciais.
+            </p>
+        </div>
+        <span class="badge text-bg-light border px-3 py-2">
+            {% if contexto_configuracoes.escopo == "plataforma" %}
+                Escopo: Plataforma
+            {% else %}
+                Escopo: {{ contexto_configuracoes.matriz.nome }}
+            {% endif %}
+        </span>
+    </div>
+
+    {% if not pode_editar_regras %}
+    <div class="alert alert-warning">
+        <strong>Seleção de empresa necessária.</strong>
+        Para alterar as regras comerciais, acesse um contexto de matriz.
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-12 col-xl-6">
+                <section class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="h5 mb-4"><i class="bi bi-box-seam me-2"></i>Atacado</h2>
+
+                        <div class="form-check form-switch mb-4">
+                            {{ form.atacado_ativo }}
+                            <label class="form-check-label" for="{{ form.atacado_ativo.id_for_label }}">
+                                {{ form.atacado_ativo.label }}
+                            </label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.pedido_minimo_atacado.id_for_label }}">
+                                {{ form.pedido_minimo_atacado.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                {{ form.pedido_minimo_atacado }}
+                            </div>
+                            {% for erro in form.pedido_minimo_atacado.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div>
+                            <label class="form-label" for="{{ form.desconto_atacado_percentual.id_for_label }}">
+                                {{ form.desconto_atacado_percentual.label }}
+                            </label>
+                            <div class="input-group">
+                                {{ form.desconto_atacado_percentual }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                            {% for erro in form.desconto_atacado_percentual.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-6">
+                <section class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="h5 mb-4"><i class="bi bi-toggles me-2"></i>Recursos comerciais</h2>
+                        {% for campo in form %}
+                            {% if campo.name != "atacado_ativo" and campo.name != "pedido_minimo_atacado" and campo.name != "desconto_atacado_percentual" %}
+                            <div class="form-check form-switch mb-3">
+                                {{ campo }}
+                                <label class="form-check-label" for="{{ campo.id_for_label }}">
+                                    {{ campo.label }}
+                                </label>
+                                {% for erro in campo.errors %}
+                                <div class="text-danger small mt-1">{{ erro }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a href="{% url 'configuracoes:vendas_comissoes' %}" class="btn btn-outline-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary" {% if not pode_editar_regras %}disabled{% endif %}>
+                <i class="bi bi-check-lg me-1"></i>Salvar regras
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

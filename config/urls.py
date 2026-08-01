@@ -7,6 +7,10 @@ from accounts.views import CashbackLoginView
 
 
 urlpatterns = [
+    path('configuracoes/', include('configuracoes.urls')),
+    path('pdv/', include('pdv.urls')),
+    path('rh/', include('rh.urls')),
+    path('estoque/', include('estoque.urls')),
     path('', lambda request: redirect('cashback:nova_compra')),
     path('admin/', admin.site.urls),
     path('cashback/', include('cashback.urls')),
@@ -14,6 +18,7 @@ urlpatterns = [
     path('dashboard/', include('relatorios.urls')),
     path('campanhas/', include('campanhas.urls')),
     path('produtos/', include('produtos.urls')),
+    path('compras/', include('compras.urls')),
 
     path(
         'login/',

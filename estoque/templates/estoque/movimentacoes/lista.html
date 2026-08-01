@@ -1,0 +1,47 @@
+{% extends 'ui/page.html' %}
+
+{% block title %}Estoque{% endblock %}
+
+{% block page_class %}
+estoque-page movimentacoes-page
+{% endblock %}
+
+{% block page_header %}
+{% include 'partials/cabecalho_pagina.html' with titulo='Estoque' subtitulo='Consulte e registre as movimentações do estoque.' icone='bi-boxes' %}
+{% endblock %}
+
+{% block page_content %}
+
+    <div class="card-body border-bottom">
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="{% url 'estoque:dashboard_estoque' %}">
+                <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>
+                Dashboard
+            </a>
+            <a class="btn btn-primary" href="{% url 'estoque:criar_entrada_estoque' %}">
+                <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>
+                Nova entrada
+            </a>
+            <a class="btn btn-outline-primary" href="{% url 'estoque:criar_saida_estoque' %}">
+                <i class="bi bi-box-arrow-up me-1" aria-hidden="true"></i>
+                Nova saída
+            </a>
+            <a class="btn btn-outline-primary" href="{% url 'estoque:criar_transferencia_estoque' %}">
+                <i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>
+                Transferência
+            </a>
+            <a class="btn btn-outline-secondary" href="{% url 'estoque:criar_ajuste_estoque' %}">
+                <i class="bi bi-sliders me-1" aria-hidden="true"></i>
+                Ajuste
+            </a>
+        </div>
+    </div>
+
+    {% url 'estoque:lista_movimentacoes' as url_limpar_estoque %}
+
+    {% include 'partials/toolbar_lista.html' with toolbar_titulo='Localizar movimentações' toolbar_subtitulo='Pesquise as movimentações registradas no estoque.' toolbar_icone='bi-search' toolbar_rotulo_busca='Buscar movimentação' toolbar_placeholder_busca='Produto, documento ou referência' toolbar_url_limpar=url_limpar_estoque %}
+
+    {% include 'partials/tabela_base.html' with tabela_conteudo='estoque/movimentacoes/_tabela_conteudo.html' tabela_aria_label='Lista de movimentações de estoque' %}
+
+    {% include 'partials/paginacao.html' %}
+{% endblock %}

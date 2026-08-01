@@ -1,0 +1,597 @@
+{% extends "ui/page.html" %}
+
+{% block title %}
+    Pedido PC-{{ pedido.numero|stringformat:"06d" }}
+{% endblock %}
+
+{% block page_content %}
+<div class="ui-page-stack" data-ui-pedido-detalhe="true">
+
+    <div
+        class="d-flex flex-column flex-lg-row
+               justify-content-between align-items-lg-start
+               gap-3 mb-4"
+    >
+        <div>
+            <div class="text-muted small mb-1">
+                Compras / Pedidos de compra
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h1 class="h3 mb-0">
+                    Pedido PC-{{ pedido.numero|stringformat:"06d" }}
+                </h1>
+
+                {% if pedido.status == "rascunho" %}
+                    <span class="badge text-bg-secondary">
+                        {{ pedido.get_status_display }}
+                    </span>
+                {% elif pedido.status == "enviado" %}
+                    <span class="badge text-bg-primary">
+                        {{ pedido.get_status_display }}
+                    </span>
+                {% elif pedido.status == "parcial" %}
+                    <span class="badge text-bg-warning">
+                        {{ pedido.get_status_display }}
+                    </span>
+                {% elif pedido.status == "recebido" %}
+                    <span class="badge text-bg-success">
+                        {{ pedido.get_status_display }}
+                    </span>
+                {% elif pedido.status == "cancelado" %}
+                    <span class="badge text-bg-danger">
+                        {{ pedido.get_status_display }}
+                    </span>
+                {% else %}
+                    <span class="badge text-bg-light">
+                        {{ pedido.get_status_display }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <p class="text-muted mb-0 mt-2">
+                Fornecedor: {{ pedido.fornecedor }}
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a
+                href="{% url 'compras:listar_pedidos_compra' %}"
+                class="btn btn-outline-secondary"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Voltar
+            </a>
+
+            {% if pedido.status == "rascunho" %}
+                <a
+                    href="{% url 'compras:editar_pedido_compra' pedido.uuid %}"
+                    class="btn btn-outline-primary"
+                >
+                    <i class="bi bi-pencil me-1"></i>
+                    Editar
+                </a>
+            {% endif %}
+
+            {% if pedido.status == "enviado" or pedido.status == "parcial" %}
+                <a
+                    href="{% url 'compras:receber_pedido_compra' pedido.uuid %}"
+                    class="btn btn-success"
+                >
+                    <i class="bi bi-box-arrow-in-down me-1"></i>
+                    Receber mercadorias
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="ui-panel__body">
+                    <div class="text-muted small mb-1">
+                        Fornecedor
+                    </div>
+                    <div class="fw-semibold">
+                        {{ pedido.fornecedor }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="ui-panel__body">
+                    <div class="text-muted small mb-1">
+                        Data de emissão
+                    </div>
+                    <div class="fw-semibold">
+                        {{ pedido.data_emissao|date:"d/m/Y" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="ui-panel__body">
+                    <div class="text-muted small mb-1">
+                        Previsão de entrega
+                    </div>
+                    <div class="fw-semibold">
+                        {{ pedido.previsao_entrega|date:"d/m/Y"|default:"Não informada" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="ui-panel__body">
+                    <div class="text-muted small mb-1">
+                        Total do pedido
+                    </div>
+                    <div class="h5 mb-0 fw-bold">
+                        R$ {{ pedido.total|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+
+            <section
+                class="ui-panel ui-panel--spaced"
+                data-ui-pedido-itens="true"
+            >
+                <div
+                    class="ui-panel__header
+                           d-flex justify-content-between
+                           align-items-center py-3"
+                >
+                    <div>
+                        <h2 class="h5 mb-1">
+                            Itens do pedido
+                        </h2>
+                        <div class="text-muted small">
+                            Produtos incluídos nesta compra
+                        </div>
+                    </div>
+
+                    <span class="badge text-bg-light">
+                        {{ pedido.itens.count }} item{{ pedido.itens.count|pluralize:"s" }}
+                    </span>
+                </div>
+
+                <div class="ui-table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-end">Quantidade</th>
+                                <th class="text-end">Recebido</th>
+                                <th class="text-end">Pendente</th>
+                                <th class="text-end">Valor unitário</th>
+                                <th class="text-end">Subtotal</th>
+                                <th class="text-end pe-3">Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in pedido.itens.all %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold">
+                                            {{ item.produto }}
+                                        </div>
+
+                                        {% if item.observacoes %}
+                                            <div class="small text-muted mt-1">
+                                                {{ item.observacoes }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end text-nowrap">
+                                        {{ item.quantidade|floatformat:3 }}
+                                    </td>
+
+                                    <td class="text-end text-nowrap">
+                                        {{ item.quantidade_recebida|floatformat:3 }}
+                                    </td>
+
+                                    <td class="text-end text-nowrap">
+                                        {{ item.quantidade_pendente|floatformat:3 }}
+                                    </td>
+
+                                    <td class="text-end text-nowrap">
+                                        R$ {{ item.valor_unitario|floatformat:2 }}
+                                    </td>
+
+                                    <td class="text-end text-nowrap fw-semibold">
+                                        R$ {{ item.subtotal|floatformat:2 }}
+                                    </td>
+
+                                    <td class="text-end pe-3">
+                                        {% if pedido.status == "rascunho" %}
+                                            <form
+                                                method="post"
+                                                action="{% url 'compras:remover_item_pedido_compra' pedido.uuid item.id %}"
+                                                class="d-inline"
+                                            >
+                                                {% csrf_token %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Remover este item do pedido?');"
+                                                >
+                                                    <i class="bi bi-trash me-1"></i>
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted">?</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td
+                                        colspan="7"
+                                        class="text-center py-5"
+                                    >
+                                        <i
+                                            class="bi bi-bag-x
+                                                   fs-1 text-muted"
+                                        ></i>
+
+                                        <div class="fw-semibold mt-2">
+                                            Nenhum item adicionado
+                                        </div>
+
+                                        <div class="text-muted small">
+                                            Adicione produtos antes de enviar
+                                            o pedido ao fornecedor.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
+                        {% if pedido.itens.exists %}
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="5" class="text-end">
+                                        Subtotal
+                                    </th>
+                                    <th class="text-end">
+                                        R$ {{ pedido.subtotal|floatformat:2 }}
+                                    </th>
+                                    <th></th>
+                                </tr>
+
+                                <tr>
+                                    <th colspan="5" class="text-end">
+                                        Frete
+                                    </th>
+                                    <th class="text-end">
+                                        R$ {{ pedido.frete|floatformat:2 }}
+                                    </th>
+                                    <th></th>
+                                </tr>
+
+                                <tr>
+                                    <th colspan="5" class="text-end">
+                                        Desconto
+                                    </th>
+                                    <th class="text-end">
+                                        R$ {{ pedido.desconto|floatformat:2 }}
+                                    </th>
+                                    <th></th>
+                                </tr>
+
+                                <tr>
+                                    <th colspan="5" class="text-end fs-6">
+                                        Total
+                                    </th>
+                                    <th class="text-end fs-6">
+                                        R$ {{ pedido.total|floatformat:2 }}
+                                    </th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </section>
+
+
+            {% if pedido.status == "rascunho" %}
+                <section
+                    class="ui-panel ui-panel--spaced"
+                    data-ui-adicionar-item="true"
+                >
+                    <div class="ui-panel__header">
+                        <h2 class="h5 mb-1">
+                            Adicionar item
+                        </h2>
+                        <div class="text-muted small">
+                            Inclua um produto no pedido de compra
+                        </div>
+                    </div>
+
+                    <div class="ui-panel__body">
+                        <form
+                            method="post"
+                            action="{% url 'compras:adicionar_item_pedido_compra' pedido.uuid %}"
+                        >
+                            {% csrf_token %}
+
+                            {% if item_form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for erro in item_form.non_field_errors %}
+                                        <div>{{ erro }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="row g-3">
+                                {% for field in item_form %}
+                                    <div
+                                        class="{% if field.name == 'produto' %}col-12{% elif field.name == 'observacoes' %}col-12{% else %}col-md-6{% endif %}"
+                                    >
+                                        {% include "partials/campo_formulario.html" with campo=field %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                >
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    Adicionar item
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            {% endif %}
+
+
+            <section
+                class="ui-panel"
+                data-ui-recebimentos="true"
+            >
+                <div class="ui-panel__header">
+                    <h2 class="h5 mb-1">
+                        Recebimentos e devoluções
+                    </h2>
+                    <div class="text-muted small">
+                        Histórico de entradas vinculadas ao pedido
+                    </div>
+                </div>
+
+                <div class="ui-panel__body">
+                    {% for recebimento in pedido.recebimentos.all %}
+                        <div
+                            class="border rounded-3 p-3
+                                   {% if not forloop.last %}mb-3{% endif %}"
+                        >
+                            <div
+                                class="d-flex flex-column flex-md-row
+                                       justify-content-between gap-3"
+                            >
+                                <div>
+                                    <div class="fw-semibold">
+                                        Recebimento #{{ recebimento.id }}
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        <i class="bi bi-shop me-1"></i>
+                                        {{ recebimento.loja }}
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        <i class="bi bi-calendar-check me-1"></i>
+                                        {{ recebimento.recebido_em|date:"d/m/Y H:i" }}
+                                    </div>
+
+                                    {% if recebimento.documento_referencia %}
+                                        <div class="text-muted small mt-1">
+                                            Documento:
+                                            {{ recebimento.documento_referencia }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <a
+                                        href="{% url 'compras:devolver_recebimento_compra' recebimento.uuid %}"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        <i class="bi bi-arrow-return-left me-1"></i>
+                                        Devolver ao fornecedor
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4">
+                            <i
+                                class="bi bi-box-seam
+                                       fs-2 text-muted"
+                            ></i>
+
+                            <div class="fw-semibold mt-2">
+                                Nenhum recebimento registrado
+                            </div>
+
+                            <div class="text-muted small">
+                                Os recebimentos aparecerão aqui
+                                depois da entrada das mercadorias.
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+
+        <div class="col-xl-4">
+            <section class="ui-panel ui-panel--spaced">
+                <div class="ui-panel__header">
+                    <h2 class="h5 mb-0">
+                        Informações do pedido
+                    </h2>
+                </div>
+
+                <div class="ui-panel__body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5 text-muted fw-normal">
+                            Condição
+                        </dt>
+                        <dd class="col-sm-7 text-sm-end">
+                            {{ pedido.condicao_pagamento|default:"Não informada" }}
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted fw-normal">
+                            Frete
+                        </dt>
+                        <dd class="col-sm-7 text-sm-end">
+                            R$ {{ pedido.frete|floatformat:2 }}
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted fw-normal">
+                            Desconto
+                        </dt>
+                        <dd class="col-sm-7 text-sm-end">
+                            R$ {{ pedido.desconto|floatformat:2 }}
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted fw-normal">
+                            Criado em
+                        </dt>
+                        <dd class="col-sm-7 text-sm-end">
+                            {{ pedido.criado_em|date:"d/m/Y H:i" }}
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted fw-normal">
+                            Atualizado em
+                        </dt>
+                        <dd class="col-sm-7 text-sm-end mb-0">
+                            {{ pedido.atualizado_em|date:"d/m/Y H:i" }}
+                        </dd>
+                    </dl>
+
+                    {% if pedido.observacoes %}
+                        <hr>
+
+                        <div class="text-muted small mb-1">
+                            Observações
+                        </div>
+
+                        <div class="small">
+                            {{ pedido.observacoes|linebreaksbr }}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+
+            <section class="ui-panel">
+                <div class="ui-panel__header">
+                    <h2 class="h5 mb-0">
+                        Ações do pedido
+                    </h2>
+                </div>
+
+                <div class="ui-panel__body">
+                    {% if pedido.status == "rascunho" %}
+                        <div class="d-grid gap-2">
+                            <form
+                                method="post"
+                                action="{% url 'compras:enviar_pedido_compra' pedido.uuid %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-success w-100"
+                                    onclick="return confirm('Enviar este pedido ao fornecedor?');"
+                                >
+                                    <i class="bi bi-send me-1"></i>
+                                    Enviar ao fornecedor
+                                </button>
+                            </form>
+
+                            <form
+                                method="post"
+                                action="{% url 'compras:cancelar_pedido_compra' pedido.uuid %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-outline-danger w-100"
+                                    onclick="return confirm('Cancelar este pedido?');"
+                                >
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Cancelar pedido
+                                </button>
+                            </form>
+                        </div>
+
+                    {% elif pedido.status != "recebido" and pedido.status != "cancelado" %}
+                        <div class="d-grid gap-2">
+                            {% if pedido.status == "enviado" or pedido.status == "parcial" %}
+                                <a
+                                    href="{% url 'compras:receber_pedido_compra' pedido.uuid %}"
+                                    class="btn btn-success"
+                                >
+                                    <i class="bi bi-box-arrow-in-down me-1"></i>
+                                    Receber mercadorias
+                                </a>
+                            {% endif %}
+
+                            <form
+                                method="post"
+                                action="{% url 'compras:cancelar_pedido_compra' pedido.uuid %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-outline-danger w-100"
+                                    onclick="return confirm('Cancelar este pedido?');"
+                                >
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Cancelar pedido
+                                </button>
+                            </form>
+                        </div>
+
+                    {% elif pedido.status == "recebido" %}
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Pedido totalmente recebido.
+                        </div>
+
+                    {% elif pedido.status == "cancelado" %}
+                        <div class="alert alert-secondary mb-0">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Pedido cancelado.
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

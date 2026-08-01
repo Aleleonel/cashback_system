@@ -56,24 +56,15 @@
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-check mt-4">
-                            {{ form.aceita_email }}
-                            {{ form.aceita_email.label_tag }}
-                        </div>
+                        {% include "partials/form_checkbox.html" with campo=form.aceita_email %}
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-check mt-4">
-                            {{ form.aceita_sms }}
-                            {{ form.aceita_sms.label_tag }}
-                        </div>
+                        {% include "partials/form_checkbox.html" with campo=form.aceita_sms %}
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-check mt-4">
-                            {{ form.ativo }}
-                            {{ form.ativo.label_tag }}
-                        </div>
+                        {% include "partials/form_checkbox.html" with campo=form.ativo %}
                     </div>
 
                 </div>

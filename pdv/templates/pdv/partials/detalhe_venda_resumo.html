@@ -1,0 +1,45 @@
+<!-- PDV-04F.1 - RESUMO FINANCEIRO -->
+<section class="card border-0 shadow-sm h-100 venda-resumo">
+    <div class="card-header bg-white border-bottom py-3">
+        <h2 class="h6 mb-1">
+            <i class="bi bi-calculator me-2 text-primary"></i>Resumo financeiro
+        </h2>
+        <p class="text-muted small mb-0">Composição final da operação.</p>
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="text-muted">Subtotal</span>
+            <strong>R$ {{ venda.subtotal|floatformat:2 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="text-muted">Descontos</span>
+            <strong>R$ {{ venda.desconto|floatformat:2 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="text-muted">Acréscimos</span>
+            <strong>R$ {{ venda.acrescimo|floatformat:2 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+            <span class="fw-semibold">Total da venda</span>
+            <strong class="fs-4 text-primary">R$ {{ venda.total|floatformat:2 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="text-muted">Total pago</span>
+            <strong>R$ {{ resumo_pagamentos.total_pago|floatformat:2 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+            <span class="text-muted">Troco</span>
+            <strong>R$ {{ resumo_pagamentos.total_troco|floatformat:2 }}</strong>
+        </div>
+
+        {% if venda.observacao %}
+            <div class="alert alert-light border mt-3 mb-0">
+                <div class="fw-semibold small mb-1">
+                    <i class="bi bi-chat-left-text me-1"></i>Observações
+                </div>
+                <div class="small">{{ venda.observacao }}</div>
+            </div>
+        {% endif %}
+    </div>
+</section>

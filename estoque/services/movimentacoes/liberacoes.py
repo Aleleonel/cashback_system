@@ -1,4 +1,4 @@
-﻿from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
@@ -88,7 +88,7 @@ def _registrar_auditoria_liberacao(
         recurso='estoque.reserva',
         recurso_id=reserva.uuid,
         descricao=(
-            f'LiberaÃ§Ã£o de reserva de estoque: '
+            f'Liberação de reserva de estoque: '
             f'produto={reserva.produto.codigo_interno}; '
             f'quantidade={reserva.quantidade}; '
             f'saldo_disponivel_anterior={saldo_disponivel_anterior}; '

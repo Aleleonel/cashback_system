@@ -1,0 +1,16 @@
+{% extends "ui/page.html" %}
+
+{% block title %}Pedidos de compra{% endblock %}
+{% block page_class %}compras-pedidos{% endblock %}
+
+{% block page_header %}
+{% url "compras:criar_pedido_compra" as url_novo %}
+{% include "partials/cabecalho_pagina.html" with titulo="Pedidos de compra" subtitulo="Consulte e acompanhe os pedidos de compra." icone="bi-cart3" acao_url=url_novo acao_texto="Novo pedido" acao_icone="bi-plus-lg" %}
+{% endblock %}
+
+{% block page_content %}
+{% url "compras:listar_pedidos_compra" as url_limpar %}
+{% include "partials/toolbar_lista.html" with toolbar_titulo="Localizar pedidos" toolbar_subtitulo="Pesquise por número, fornecedor ou CNPJ." toolbar_icone="bi-search" toolbar_rotulo_busca="Buscar pedido" toolbar_placeholder_busca="Número, fornecedor ou CNPJ" toolbar_url_limpar=url_limpar toolbar_exibir_status=True status_opcoes=status_choices %}
+{% include "partials/tabela_base.html" with tabela_conteudo="compras/pedidos/_tabela_conteudo.html" tabela_aria_label="Lista de pedidos de compra" %}
+{% include "partials/paginacao.html" %}
+{% endblock %}

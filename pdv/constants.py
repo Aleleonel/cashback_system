@@ -1,0 +1,11 @@
+﻿APP_NAME = "pdv"
+
+PERMISSAO_PDV_VISUALIZAR = "pdv.visualizar"
+PERMISSAO_PDV_OPERAR = "pdv.operar"
+PERMISSAO_PDV_ABRIR_CAIXA = "pdv.abrir_caixa"
+PERMISSAO_PDV_FECHAR_CAIXA = "pdv.fechar_caixa"
+PERMISSAO_PDV_SUPRIMENTO = "pdv.suprimento"
+PERMISSAO_PDV_SANGRIA = "pdv.sangria"
+PERMISSAO_PDV_CANCELAR_VENDA = "pdv.cancelar_venda"
+PERMISSAO_PDV_AUTORIZAR_DESCONTO = "pdv.autorizar_desconto"
+PERMISSAO_PDV_AUTORIZAR_BRINDE = "pdv.autorizar_brinde"

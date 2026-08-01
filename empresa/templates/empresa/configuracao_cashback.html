@@ -58,11 +58,7 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check">
-                            {{ form.enviar_email_saldo }}
-                            {{ form.enviar_email_saldo.label_tag }}
-                            {{ form.enviar_email_saldo.errors }}
-                        </div>
+                        {% include "partials/form_checkbox.html" with campo=form.enviar_email_saldo %}
                     </div>
 
                 </div>

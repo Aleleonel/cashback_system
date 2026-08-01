@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de Vendas | Cashback System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% include 'partials/cabecalho_pagina.html' with titulo='Histórico de Vendas' subtitulo='Consulte vendas concluídas, pagamentos, clientes e operadores.' icone='bi-receipt-cutoff' %}
+
+    {% if messages %}
+        <div class="mb-3" aria-live="polite">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h2 class="h6 mb-1">Filtros</h2>
+            <p class="text-muted small mb-0">Combine os campos para localizar uma venda.</p>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_data_inicio">Data inicial</label>
+                    <input type="date" class="form-control" id="id_data_inicio" name="data_inicio" value="{{ filtros.data_inicio }}">
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_data_fim">Data final</label>
+                    <input type="date" class="form-control" id="id_data_fim" name="data_fim" value="{{ filtros.data_fim }}">
+                </div>
+                <div class="col-6 col-md-3 col-xl-1">
+                    <label class="form-label" for="id_numero">Venda</label>
+                    <input type="number" min="1" class="form-control" id="id_numero" name="numero" value="{{ filtros.numero }}" placeholder="Nº">
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label" for="id_cliente">Cliente</label>
+                    <input type="search" class="form-control" id="id_cliente" name="cliente" value="{{ filtros.cliente }}" placeholder="Nome, CPF, telefone ou e-mail">
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_status">Status</label>
+                    <select class="form-select" id="id_status" name="status">
+                        <option value="">Todos</option>
+                        {% for valor, nome in status_opcoes %}
+                            <option value="{{ valor }}" {% if filtros.status == valor %}selected{% endif %}>{{ nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_forma_pagamento">Pagamento</label>
+                    <select class="form-select" id="id_forma_pagamento" name="forma_pagamento">
+                        <option value="">Todos</option>
+                        {% for forma in formas_pagamento %}
+                            <option value="{{ forma.pk }}" {% if filtros.forma_pagamento == forma.pk|stringformat:'s' %}selected{% endif %}>{{ forma.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_vendedor">Vendedor</label>
+                    <select class="form-select" id="id_vendedor" name="vendedor">
+                        <option value="">Todos</option>
+                        {% for usuario in vendedores %}
+                            <option value="{{ usuario.pk }}" {% if filtros.vendedor == usuario.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ usuario.get_full_name|default:usuario.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_operador">Operador</label>
+                    <select class="form-select" id="id_operador" name="operador">
+                        <option value="">Todos</option>
+                        {% for usuario in operadores %}
+                            <option value="{{ usuario.pk }}" {% if filtros.operador == usuario.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ usuario.get_full_name|default:usuario.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_caixa">Caixa</label>
+                    <select class="form-select" id="id_caixa" name="caixa">
+                        <option value="">Todos</option>
+                        {% for caixa in caixas %}
+                            <option value="{{ caixa.pk }}" {% if filtros.caixa == caixa.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ caixa.loja.nome }} — {{ caixa.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="id_loja">Loja</label>
+                    <select class="form-select" id="id_loja" name="loja">
+                        <option value="">Todas</option>
+                        {% for loja in lojas %}
+                            <option value="{{ loja.pk }}" {% if filtros.loja == loja.pk|stringformat:'s' %}selected{% endif %}>{{ loja.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-xl-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'pdv:historico_vendas' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Vendas</div>
+                <div class="h4 mb-0">{{ totais.total_vendas }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Valor total</div>
+                <div class="h5 mb-0">R$ {{ totais.valor_total|floatformat:2 }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Descontos</div>
+                <div class="h5 mb-0">R$ {{ totais.total_descontos|floatformat:2 }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Acréscimos</div>
+                <div class="h5 mb-0">R$ {{ totais.total_acrescimos|floatformat:2 }}</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h2 class="h6 mb-1">Vendas concretizadas</h2>
+                <p class="text-muted small mb-0">{{ page_obj.paginator.count }} registro(s) encontrado(s).</p>
+            </div>
+            <a href="{% url 'pdv:inicio' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Voltar ao PDV
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nº</th><th>Data</th><th>Cliente</th>
+                        <th>Vendedor / Operador</th><th>Caixa / Loja</th>
+                        <th>Pagamento</th><th class="text-end">Total</th>
+                        <th>Status</th><th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in vendas %}
+                        <tr>
+                            <td class="fw-semibold">#{{ venda.numero|default:"—" }}</td>
+                            <td class="text-nowrap">
+                                {% if venda.finalizada_em %}
+                                    {{ venda.finalizada_em|date:"d/m/Y H:i" }}
+                                {% elif venda.cancelada_em %}
+                                    {{ venda.cancelada_em|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    {{ venda.criada_em|date:"d/m/Y H:i" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if venda.cliente %}
+                                    <div class="fw-semibold">{{ venda.cliente.nome|default:"Consumidor" }}</div>
+                                    {% if venda.cliente.cpf %}<div class="text-muted small">{{ venda.cliente.cpf }}</div>{% endif %}
+                                {% else %}
+                                    <div class="fw-semibold text-muted">Cliente nÃ£o informado</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <span class="text-muted">Vendedor:</span>
+                                    {% if venda.vendedor %}
+                                        {{ venda.vendedor.get_full_name|default:venda.vendedor.username }}
+                                    {% else %}
+                                        <span class="text-muted">NÃ£o informado</span>
+                                    {% endif %}
+                                </div>
+                                <div class="small">
+                                    <span class="text-muted">Operador:</span>
+                                    {% if venda.operador %}
+                                        {{ venda.operador.get_full_name|default:venda.operador.username }}
+                                    {% else %}
+                                        <span class="text-muted">NÃ£o informado</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if venda.sessao_caixa %}
+                                    <div class="fw-semibold">{{ venda.sessao_caixa.caixa.nome }}</div>
+                                {% else %}
+                                    <div class="text-muted">Sem caixa</div>
+                                {% endif %}
+                                <div class="text-muted small">{{ venda.loja.nome }}</div>
+                            </td>
+                            <td>
+                                {% for pagamento in venda.pagamentos.all %}
+                                    <span class="badge text-bg-light border me-1 mb-1">{{ pagamento.forma_pagamento.nome }}</span>
+                                {% empty %}
+                                    <span class="text-muted">—</span>
+                                {% endfor %}
+                            </td>
+                            <td class="text-end fw-semibold text-nowrap">R$ {{ venda.total|floatformat:2 }}</td>
+                            <td>
+                                {% if venda.status == 'finalizada' %}
+                                    <span class="badge text-bg-success">Finalizada</span>
+                                {% else %}
+                                    <span class="badge text-bg-danger">Cancelada</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'pdv:detalhe_venda' venda.uuid %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye me-1"></i>Visualizar
+                                </a>
+                                <a href="{% url 'pdv:cupom_venda_nao_fiscal' venda.uuid %}?auto=1&via=2" class="btn btn-outline-dark btn-sm" target="_blank" rel="noopener">
+                                    <i class="bi bi-printer me-1"></i>Reimprimir
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="text-muted mt-2 mb-0">Nenhuma venda encontrada com os filtros informados.</p>
+                        </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="card-footer bg-white">
+                <nav aria-label="Paginação do histórico de vendas">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}">Próxima</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

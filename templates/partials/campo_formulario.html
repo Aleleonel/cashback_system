@@ -1,23 +1,14 @@
-﻿{% if campo.field.widget.input_type == 'checkbox' %}
-<div class="form-check">
-    {{ campo }}
-    {{ campo.label_tag }}
-
-    {% if campo.help_text %}
-    <div class="form-text">
-        {{ campo.help_text }}
-    </div>
-    {% endif %}
-
-    {% for erro in campo.errors %}
-    <div class="text-danger small">
-        {{ erro }}
-    </div>
-    {% endfor %}
-</div>
+{% if campo.field.widget.input_type == 'checkbox' %}
+    {% include "partials/form_checkbox.html" with campo=campo %}
 {% else %}
 <div>
-    {{ campo.label_tag }}
+    <label
+        for="{{ campo.id_for_label }}"
+        class="form-label fw-semibold"
+    >
+        {{ campo.label }}
+    </label>
+
     {{ campo }}
 
     {% if campo.help_text %}
@@ -27,7 +18,7 @@
     {% endif %}
 
     {% for erro in campo.errors %}
-    <div class="text-danger small">
+    <div class="text-danger small mt-1">
         {{ erro }}
     </div>
     {% endfor %}
