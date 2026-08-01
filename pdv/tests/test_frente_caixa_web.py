@@ -1,4 +1,4 @@
-﻿import json
+import json
 import uuid
 from datetime import timedelta
 from decimal import Decimal
@@ -10,11 +10,13 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.models import PermissaoUsuario
 from cashback.models import LancamentoCashback
 from clientes.models import Cliente
 from core.models import ConfiguracaoSistema
 from empresas.models import Loja, Matriz
 from pdv.choices import StatusOperacaoVenda
+from pdv.constants import PERMISSAO_PDV_AUTORIZAR_DESCONTO
 from pdv.models import Caixa, SessaoCaixa, Venda
 from produtos.choices import StatusProduto
 from produtos.models import Produto, UnidadeMedida
@@ -35,6 +37,10 @@ class FrenteCaixaWebTests(TestCase):
             matriz=self.matriz,
         )
         self.usuario.lojas.add(self.loja)
+        PermissaoUsuario.objects.get_or_create(
+            usuario=self.usuario,
+            permissao=PERMISSAO_PDV_AUTORIZAR_DESCONTO,
+        )
         self.caixa = Caixa.objects.create(
             matriz=self.matriz,
             loja=self.loja,
