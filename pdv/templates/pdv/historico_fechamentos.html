@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de Fechamentos | Cashback System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% include 'partials/cabecalho_pagina.html' with titulo='Histórico de Fechamentos' subtitulo='Consulte as sessões de caixa e confira valores, operadores e diferenças.' icone='bi-clock-history' %}
+
+    {% if messages %}
+        <div class="mb-3" aria-live="polite">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="id_data_inicio">Data inicial</label>
+                    <input type="date" class="form-control" id="id_data_inicio" name="data_inicio" value="{{ filtros.data_inicio }}">
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="id_data_fim">Data final</label>
+                    <input type="date" class="form-control" id="id_data_fim" name="data_fim" value="{{ filtros.data_fim }}">
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="id_caixa">Caixa</label>
+                    <select class="form-select" id="id_caixa" name="caixa">
+                        <option value="">Todos</option>
+                        {% for caixa in caixas %}
+                            <option value="{{ caixa.pk }}" {% if filtros.caixa == caixa.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ caixa.loja.nome }} — {{ caixa.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="id_operador">Operador</label>
+                    <select class="form-select" id="id_operador" name="operador">
+                        <option value="">Todos</option>
+                        {% for operador in operadores %}
+                            <option value="{{ operador.pk }}" {% if filtros.operador == operador.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ operador.get_full_name|default:operador.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="id_status">Status</label>
+                    <select class="form-select" id="id_status" name="status">
+                        <option value="">Todos</option>
+                        {% for valor, nome in status_opcoes %}
+                            <option value="{{ valor }}" {% if filtros.status == valor %}selected{% endif %}>{{ nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-xl-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'pdv:historico_fechamentos' %}" class="btn btn-outline-secondary" title="Limpar filtros">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Sessões</div>
+                    <div class="h4 mb-0">{{ totais.total_sessoes }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Abertura</div>
+                    <div class="h5 mb-0">R$ {{ totais.total_abertura|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Calculado</div>
+                    <div class="h5 mb-0">R$ {{ totais.total_calculado|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Informado</div>
+                    <div class="h5 mb-0">R$ {{ totais.total_informado|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Diferença acumulada</div>
+                    <div class="h5 mb-0 {% if totais.total_diferenca < 0 %}text-danger{% elif totais.total_diferenca > 0 %}text-warning{% else %}text-success{% endif %}">
+                        R$ {{ totais.total_diferenca|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h2 class="h6 mb-1">Sessões de caixa</h2>
+                <p class="text-muted small mb-0">{{ page_obj.paginator.count }} registro(s) encontrado(s).</p>
+            </div>
+            <a href="{% url 'pdv:inicio' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Voltar ao PDV
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Abertura</th>
+                        <th>Fechamento</th>
+                        <th>Caixa / Loja</th>
+                        <th>Operadores</th>
+                        <th class="text-end">Abertura</th>
+                        <th class="text-end">Calculado</th>
+                        <th class="text-end">Informado</th>
+                        <th class="text-end">Diferença</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sessao in sessoes %}
+                        <tr>
+                            <td class="text-nowrap">{{ sessao.aberta_em|date:"d/m/Y H:i" }}</td>
+                            <td class="text-nowrap">
+                                {% if sessao.fechada_em %}
+                                    {{ sessao.fechada_em|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ sessao.caixa.nome }}</div>
+                                <div class="text-muted small">{{ sessao.caixa.loja.nome }}</div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <span class="text-muted">Abriu:</span>
+                                    {{ sessao.operador_abertura.get_full_name|default:sessao.operador_abertura.username }}
+                                </div>
+                                <div class="small">
+                                    <span class="text-muted">Fechou:</span>
+                                    {% if sessao.operador_fechamento %}
+                                        {{ sessao.operador_fechamento.get_full_name|default:sessao.operador_fechamento.username }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-end text-nowrap">R$ {{ sessao.valor_abertura|floatformat:2 }}</td>
+                            <td class="text-end text-nowrap">
+                                {% if sessao.valor_fechamento_calculado is not None %}
+                                    R$ {{ sessao.valor_fechamento_calculado|floatformat:2 }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="text-end text-nowrap">
+                                {% if sessao.valor_fechamento_informado is not None %}
+                                    R$ {{ sessao.valor_fechamento_informado|floatformat:2 }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="text-end text-nowrap fw-semibold {% if sessao.diferenca_fechamento < 0 %}text-danger{% elif sessao.diferenca_fechamento > 0 %}text-warning{% else %}text-success{% endif %}">
+                                {% if sessao.diferenca_fechamento is not None %}
+                                    R$ {{ sessao.diferenca_fechamento|floatformat:2 }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if sessao.status == 'fechada' %}
+                                    <span class="badge text-bg-success">Fechada</span>
+                                {% elif sessao.status == 'aberta' %}
+                                    <span class="badge text-bg-primary">Aberta</span>
+                                {% else %}
+                                    <span class="badge text-bg-secondary">{{ sessao.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="bi bi-inbox fs-1 text-muted"></i>
+                                <p class="text-muted mt-2 mb-0">Nenhum fechamento encontrado com os filtros informados.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="card-footer bg-white">
+                <nav aria-label="Paginação do histórico">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}">Próxima</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% if segunda_via %}Segunda via - {% endif %}Cupom #{{ venda.numero }}</title>
+<style>
+:root{font-family:"Courier New",Courier,monospace;font-size:12px;color:#000;background:#fff}
+*{box-sizing:border-box}html,body{width:80mm;min-height:100%;margin:0;padding:0;background:#fff;color:#000}
+body{padding:3mm 4mm 7mm}.cupom{width:72mm;margin:0 auto}.center{text-align:center}.bold{font-weight:700}.small{font-size:10px}.tiny{font-size:9px}.break{overflow-wrap:anywhere;word-break:break-word}
+.brand{padding-bottom:1.5mm}.brand-name{font-size:16px;font-weight:700;line-height:1.15;text-transform:uppercase}.brand-company{font-size:10px;margin-top:.8mm}
+.document-title{border:2px solid #000;padding:1.8mm;margin:2mm 0;text-align:center}.document-title__main{font-size:14px;font-weight:700;letter-spacing:.4px}.document-title__sub{font-size:10px;margin-top:.5mm}
+.second-copy{font-size:13px;font-weight:700;border-bottom:1px solid #000;padding-bottom:1mm;margin-bottom:1mm}
+.separator{border-top:1px dashed #000;margin:2mm 0}.separator-strong{border-top:2px solid #000;margin:2mm 0}
+.info{display:grid;gap:.7mm}.info-line{display:grid;grid-template-columns:auto 1fr;gap:1.5mm}.section-title{font-weight:700;text-align:center;letter-spacing:1px;margin-bottom:1mm}
+.item{margin-bottom:2.3mm;break-inside:avoid}.item-head{display:grid;grid-template-columns:18px 1fr;gap:1mm;font-weight:700}.item-code{font-size:9px;margin-left:19px;margin-top:.4mm}
+.money-row{display:grid;grid-template-columns:1fr auto;gap:2mm}.item-values{margin-left:19px;margin-top:.8mm}
+.leader-row{display:flex;align-items:baseline;gap:1mm}.leader-row__label{white-space:nowrap}.leader-row__dots{flex:1;border-bottom:1px dotted #000;transform:translateY(-2px)}.leader-row__value{white-space:nowrap;text-align:right}
+.total-box{border-top:2px solid #000;border-bottom:2px solid #000;padding:1.7mm 0;margin:1.5mm 0}.total-box .leader-row{font-size:15px;font-weight:700}.payment{margin-bottom:1.5mm}
+.verification{border:1px solid #000;padding:1.5mm;margin-top:2mm}.verification-code{font-size:13px;font-weight:700;letter-spacing:1px}
+.footer{margin-top:2.5mm;text-align:center}.footer-main{font-size:12px;font-weight:700}.footer-note{font-size:9px;margin-top:1mm}.cut-space{height:7mm}
+.actions{width:72mm;margin:0 auto 3mm;display:flex;justify-content:center;gap:2mm;font-family:Arial,sans-serif}.actions a,.actions button{border:1px solid #222;background:#fff;color:#000;padding:2mm 3mm;text-decoration:none;cursor:pointer;border-radius:3px;font-size:12px}.actions button{background:#111;color:#fff}
+@page{size:80mm auto;margin:0}
+@media print{html,body{width:80mm!important;margin:0!important;padding:0!important}body{padding:2mm 4mm 5mm!important}.cupom{width:72mm!important;margin:0 auto!important}.actions{display:none!important}}
+</style>
+</head>
+<body>
+<div class="actions">
+<a href="{% url 'pdv:detalhe_venda' venda.uuid %}">Voltar</a>
+<button type="button" onclick="window.print()">Imprimir</button>
+</div>
+<main class="cupom">
+<header class="brand center">
+<div class="brand-name break">{{ venda.loja.nome }}</div>
+{% if venda.matriz.nome and venda.matriz.nome != venda.loja.nome %}<div class="brand-company break">{{ venda.matriz.nome }}</div>{% endif %}
+{% if venda.loja.cnpj %}<div>CNPJ: {{ venda.loja.cnpj }}</div>{% elif venda.matriz.cnpj %}<div>CNPJ: {{ venda.matriz.cnpj }}</div>{% endif %}
+{% if venda.loja.telefone %}<div>Telefone: {{ venda.loja.telefone }}</div>{% endif %}
+</header>
+{% if segunda_via %}<div class="second-copy center">SEGUNDA VIA</div>{% endif %}
+<section class="document-title"><div class="document-title__main">CUPOM DE VENDA</div><div class="document-title__sub">DOCUMENTO NÃO FISCAL</div></section>
+{% if venda.status == 'cancelada' %}<div class="document-title"><div class="document-title__main">VENDA CANCELADA</div></div>{% endif %}
+<section class="info">
+<div class="info-line"><span class="bold">VENDA</span><span>#{{ venda.numero|default:"—" }}</span></div>
+<div class="info-line"><span class="bold">DATA</span><span>{% if venda.finalizada_em %}{{ venda.finalizada_em|date:"d/m/Y H:i:s" }}{% elif venda.cancelada_em %}{{ venda.cancelada_em|date:"d/m/Y H:i:s" }}{% else %}{{ venda.criada_em|date:"d/m/Y H:i:s" }}{% endif %}</span></div>
+{% if venda.sessao_caixa %}<div class="info-line"><span class="bold">CAIXA</span><span>{{ venda.sessao_caixa.caixa.nome }}</span></div>{% endif %}
+<div class="info-line"><span class="bold">OPERADOR</span><span class="break">{% if venda.operador %}{{ venda.operador.get_full_name|default:venda.operador.username }}{% else %}Não informado{% endif %}</span></div>
+<div class="info-line"><span class="bold">VENDEDOR</span><span class="break">{% if venda.vendedor %}{{ venda.vendedor.get_full_name|default:venda.vendedor.username }}{% else %}Não informado{% endif %}</span></div>
+</section>
+<div class="separator"></div>
+<section><div class="section-title">CLIENTE</div>{% if venda.cliente %}<div class="break bold">{{ venda.cliente.nome }}</div>{% if venda.cliente.cpf %}<div>CPF: {{ venda.cliente.cpf }}</div>{% endif %}{% if venda.cliente.telefone %}<div>Telefone: {{ venda.cliente.telefone }}</div>{% endif %}{% else %}<div>Consumidor não identificado</div>{% endif %}</section>
+<div class="separator"></div>
+<section><div class="section-title">ITENS DA VENDA</div>
+{% for item in itens %}
+<div class="item"><div class="item-head"><span>{{ item.sequencia }}.</span><span class="break">{{ item.produto.nome }}{% if item.cancelado %} [CANCELADO]{% endif %}</span></div>
+{% if item.produto.codigo_interno %}<div class="item-code">Cód. {{ item.produto.codigo_interno }}</div>{% endif %}
+<div class="money-row item-values"><span>{{ item.quantidade|floatformat:3 }} x R$ {{ item.preco_unitario|floatformat:2 }}</span><span>R$ {{ item.total|floatformat:2 }}</span></div>
+{% if item.desconto > 0 %}<div class="money-row item-values small"><span>Desconto</span><span>- R$ {{ item.desconto|floatformat:2 }}</span></div>{% endif %}
+{% if item.acrescimo > 0 %}<div class="money-row item-values small"><span>Acréscimo</span><span>R$ {{ item.acrescimo|floatformat:2 }}</span></div>{% endif %}</div>
+{% empty %}<div>Nenhum item registrado.</div>{% endfor %}</section>
+<div class="separator-strong"></div>
+<section>
+<div class="leader-row"><span class="leader-row__label">Subtotal</span><span class="leader-row__dots"></span><span class="leader-row__value">R$ {{ venda.subtotal|floatformat:2 }}</span></div>
+{% if venda.desconto > 0 %}<div class="leader-row"><span class="leader-row__label">Descontos</span><span class="leader-row__dots"></span><span class="leader-row__value">- R$ {{ venda.desconto|floatformat:2 }}</span></div>{% endif %}
+{% if venda.acrescimo > 0 %}<div class="leader-row"><span class="leader-row__label">Acréscimos</span><span class="leader-row__dots"></span><span class="leader-row__value">R$ {{ venda.acrescimo|floatformat:2 }}</span></div>{% endif %}
+<div class="total-box"><div class="leader-row"><span class="leader-row__label">TOTAL</span><span class="leader-row__dots"></span><span class="leader-row__value">R$ {{ venda.total|floatformat:2 }}</span></div></div>
+</section>
+<section><div class="section-title">PAGAMENTOS</div>
+{% for pagamento in pagamentos %}
+<div class="payment"><div class="leader-row"><span class="leader-row__label">{{ pagamento.forma_pagamento.nome }}{% if pagamento.parcelas > 1 %} {{ pagamento.parcelas }}x{% endif %}</span><span class="leader-row__dots"></span><span class="leader-row__value">R$ {{ pagamento.valor|floatformat:2 }}</span></div>
+{% if pagamento.valor_recebido is not None %}<div class="money-row small"><span>Valor recebido</span><span>R$ {{ pagamento.valor_recebido|floatformat:2 }}</span></div>{% endif %}
+{% if pagamento.troco > 0 %}<div class="money-row small"><span>Troco</span><span>R$ {{ pagamento.troco|floatformat:2 }}</span></div>{% endif %}</div>
+{% empty %}<div>Nenhum pagamento registrado.</div>{% endfor %}
+<div class="separator"></div><div class="leader-row bold"><span class="leader-row__label">Total pago</span><span class="leader-row__dots"></span><span class="leader-row__value">R$ {{ total_pago|floatformat:2 }}</span></div>
+{% if total_troco > 0 %}<div class="leader-row bold"><span class="leader-row__label">Troco total</span><span class="leader-row__dots"></span><span class="leader-row__value">R$ {{ total_troco|floatformat:2 }}</span></div>{% endif %}
+</section>
+{% if venda.observacao %}<div class="separator"></div><section><div class="section-title">OBSERVAÇÕES</div><div class="break">{{ venda.observacao }}</div></section>{% endif %}
+<section class="verification center"><div class="small">CÓDIGO DE VERIFICAÇÃO</div><div class="verification-code">V{{ venda.numero|default:"0" }}-{{ venda.id }}</div><div class="tiny break">{{ venda.uuid }}</div></section>
+<footer class="footer"><div class="footer-main">OBRIGADO PELA PREFERÊNCIA!</div><div>Volte sempre.</div><div class="footer-note">Este documento não possui valor fiscal.</div>{% if segunda_via %}<div class="footer-note bold">Documento reimpresso em segunda via.</div>{% endif %}</footer>
+<div class="cut-space"></div>
+</main>
+{% if imprimir_automaticamente %}<script>window.addEventListener("load",function(){window.setTimeout(function(){window.print()},250)});</script>{% endif %}
+</body>
+</html>

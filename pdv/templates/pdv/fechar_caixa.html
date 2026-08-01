@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Fechar Caixa | Cashback System
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("form-fechamento-caixa");
+    const botao = document.getElementById("btn-confirmar-fechamento");
+    const spinner = document.getElementById("spinner-fechamento");
+    const texto = document.getElementById("texto-confirmar-fechamento");
+
+    if (!form || !botao) return;
+
+    form.addEventListener("submit", function () {
+        botao.disabled = true;
+        if (spinner) spinner.classList.remove("d-none");
+        if (texto) texto.textContent = "Fechando caixa...";
+    });
+});
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Fechamento de caixa</h1>
+            <p class="text-muted mb-0">
+                Confira o valor calculado e informe o valor contado.
+            </p>
+        </div>
+        <a href="{% url 'pdv:inicio' %}" class="btn btn-outline-secondary">
+            Voltar ao PDV
+        </a>
+    </div>
+
+        <!-- PDV-04E.1 - MENSAGENS OPERACIONAIS -->
+        {% if messages %}
+            <div class="mb-4" aria-live="polite">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row mb-4">
+                <dt class="col-sm-4">Caixa</dt>
+                <dd class="col-sm-8">{{ sessao.caixa }}</dd>
+
+                <dt class="col-sm-4">Operador de abertura</dt>
+                <dd class="col-sm-8">{{ sessao.operador_abertura }}</dd>
+
+                <dt class="col-sm-4">Valor de abertura</dt>
+                <dd class="col-sm-8">R$ {{ sessao.valor_abertura|floatformat:2 }}</dd>
+
+                <dt class="col-sm-4">Saldo calculado</dt>
+                <dd class="col-sm-8 fw-bold">R$ {{ valor_calculado|floatformat:2 }}</dd>
+            </dl>
+
+            <!-- PDV-04E.1 - FECHAMENTO PROFISSIONAL -->
+            <form method="post" action="{% url 'pdv:confirmar_fechamento_caixa' %}" id="form-fechamento-caixa">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="id_valor_fechamento" class="form-label fw-semibold">
+                        Valor contado
+                    </label>
+                    <input
+                        type="text"
+                        inputmode="decimal"
+                        class="form-control"
+                        id="id_valor_fechamento"
+                        name="valor_fechamento"
+                        value="{{ valor_fechamento_inicial }}"
+                        data-moeda="brl"
+                        placeholder="R$ 0,00"
+                        autocomplete="off"
+                        required
+                    >
+                    <div class="form-text">
+                        Preenchido com o saldo esperado. Ajuste somente se a contagem fisica for diferente.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_observacao_fechamento" class="form-label fw-semibold">
+                        Observacao
+                    </label>
+                    <textarea
+                        class="form-control"
+                        id="id_observacao_fechamento"
+                        name="observacao_fechamento"
+                        rows="3"
+                        maxlength="1000"
+                    >{{ observacao_fechamento_inicial }}</textarea>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <a href="{% url 'pdv:inicio' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger" id="btn-confirmar-fechamento">
+                        <span class="spinner-border spinner-border-sm me-2 d-none" id="spinner-fechamento" aria-hidden="true"></span>
+                        <span id="texto-confirmar-fechamento">Confirmar fechamento</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

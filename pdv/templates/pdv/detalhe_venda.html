@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Venda #{{ venda.numero }} | Cashback System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 venda-documento" id="comprovante-venda">
+    {% include "pdv/partials/detalhe_venda_cabecalho.html" %}
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-4">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h2 class="h6 mb-0"><i class="bi bi-person-vcard me-2 text-primary"></i>Cliente</h2>
+                </div>
+                <div class="card-body">
+                    {% if venda.cliente %}
+                        <div class="fw-bold fs-5 mb-2">{{ venda.cliente.nome|default:"Consumidor" }}</div>
+                        <div class="venda-info-lista">
+                            {% if venda.cliente.cpf %}<div><i class="bi bi-person-badge"></i><span>{{ venda.cliente.cpf }}</span></div>{% endif %}
+                            {% if venda.cliente.telefone %}<div><i class="bi bi-telephone"></i><span>{{ venda.cliente.telefone }}</span></div>{% endif %}
+                            {% if venda.cliente.email %}<div><i class="bi bi-envelope"></i><span>{{ venda.cliente.email }}</span></div>{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted">Cliente não informado.</div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h2 class="h6 mb-0"><i class="bi bi-people me-2 text-primary"></i>Responsáveis</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted small">Vendedor</div>
+                        <div class="fw-semibold">
+                            {% if venda.vendedor %}{{ venda.vendedor.get_full_name|default:venda.vendedor.username }}{% else %}Não informado{% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Operador do PDV</div>
+                        <div class="fw-semibold">
+                            {% if venda.operador %}{{ venda.operador.get_full_name|default:venda.operador.username }}{% else %}Não informado{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h2 class="h6 mb-0"><i class="bi bi-cash-register me-2 text-primary"></i>Caixa e sessão</h2>
+                </div>
+                <div class="card-body">
+                    {% if venda.sessao_caixa %}
+                        <div class="fw-bold fs-5 mb-2">{{ venda.sessao_caixa.caixa.nome }}</div>
+                        <div class="venda-info-lista">
+                            <div><i class="bi bi-shop"></i><span>{{ venda.loja.nome }}</span></div>
+                            <div><i class="bi bi-unlock"></i><span>Aberto em {{ venda.sessao_caixa.aberta_em|date:"d/m/Y H:i" }}</span></div>
+                            {% if venda.sessao_caixa.fechada_em %}
+                                <div><i class="bi bi-lock"></i><span>Fechado em {{ venda.sessao_caixa.fechada_em|date:"d/m/Y H:i" }}</span></div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted">Venda sem sessão de caixa vinculada.</div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h2 class="h6 mb-1"><i class="bi bi-bag-check me-2 text-primary"></i>Itens da venda</h2>
+                <p class="text-muted small mb-0">Produtos, quantidades e composição de valores.</p>
+            </div>
+            <span class="badge text-bg-light border">{{ itens|length }} linha(s)</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">#</th><th>Produto</th><th class="text-end">Quantidade</th>
+                        <th class="text-end">Preço unitário</th><th class="text-end">Desconto</th>
+                        <th class="text-end">Acréscimo</th><th class="text-end">Total</th><th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                        <tr class="{% if item.cancelado %}table-secondary{% endif %}">
+                            <td class="text-center fw-semibold">{{ item.sequencia }}</td>
+                            <td>
+                                <div class="fw-semibold {% if item.cancelado %}text-decoration-line-through{% endif %}">{{ item.produto.nome }}</div>
+                                <div class="text-muted small">{{ item.produto.codigo_interno }}</div>
+                                {% if item.observacao %}<div class="small mt-1">{{ item.observacao }}</div>{% endif %}
+                                {% if item.cancelado and item.motivo_cancelamento %}
+                                    <div class="small text-danger mt-1"><i class="bi bi-exclamation-triangle me-1"></i>{{ item.motivo_cancelamento }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ item.quantidade|floatformat:3 }}</td>
+                            <td class="text-end text-nowrap">R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                            <td class="text-end text-nowrap">R$ {{ item.desconto|floatformat:2 }}</td>
+                            <td class="text-end text-nowrap">R$ {{ item.acrescimo|floatformat:2 }}</td>
+                            <td class="text-end text-nowrap fw-bold">R$ {{ item.total|floatformat:2 }}</td>
+                            <td>{% if item.cancelado %}<span class="badge text-bg-danger">Cancelado</span>{% else %}<span class="badge text-bg-success">Vendido</span>{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-center py-5 text-muted">Nenhum item registrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-7">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h2 class="h6 mb-1"><i class="bi bi-credit-card me-2 text-primary"></i>Pagamentos</h2>
+                    <p class="text-muted small mb-0">Formas utilizadas para quitar a venda.</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>Forma</th><th class="text-end">Valor</th><th class="text-end">Parcelas</th><th class="text-end">Recebido</th><th class="text-end">Troco</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for pagamento in pagamentos %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ pagamento.forma_pagamento.nome }}</div>
+                                        <div class="text-muted small">{{ pagamento.forma_pagamento.get_tipo_display }}</div>
+                                        {% if pagamento.referencia_externa %}<div class="font-monospace small mt-1">{{ pagamento.referencia_externa }}</div>{% endif %}
+                                        {% if pagamento.observacao %}<div class="small mt-1">{{ pagamento.observacao }}</div>{% endif %}
+                                    </td>
+                                    <td class="text-end text-nowrap fw-semibold">R$ {{ pagamento.valor|floatformat:2 }}</td>
+                                    <td class="text-end">{{ pagamento.parcelas }}</td>
+                                    <td class="text-end text-nowrap">{% if pagamento.valor_recebido is not None %}R$ {{ pagamento.valor_recebido|floatformat:2 }}{% else %}—{% endif %}</td>
+                                    <td class="text-end text-nowrap">R$ {{ pagamento.troco|floatformat:2 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center py-5 text-muted">Nenhum pagamento registrado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            {% include "pdv/partials/detalhe_venda_resumo.html" %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            {% include "pdv/partials/detalhe_venda_timeline.html" %}
+        </div>
+        <div class="col-12 col-xl-4">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h2 class="h6 mb-1"><i class="bi bi-shield-check me-2 text-primary"></i>Integridade operacional</h2>
+                    <p class="text-muted small mb-0">Referências para conferência e auditoria.</p>
+                </div>
+                <div class="card-body">
+                    <dl class="row small mb-0">
+                        <dt class="col-5 text-muted">Venda</dt><dd class="col-7">#{{ venda.numero|default:"—" }}</dd>
+                        <dt class="col-5 text-muted">UUID</dt><dd class="col-7 text-break font-monospace">{{ venda.uuid }}</dd>
+                        <dt class="col-5 text-muted">Tipo</dt><dd class="col-7">{{ venda.get_tipo_operacao_display }}</dd>
+                        <dt class="col-5 text-muted">Atualização</dt><dd class="col-7">{{ venda.atualizada_em|date:"d/m/Y H:i:s" }}</dd>
+                        {% if venda.sessao_caixa %}
+                            <dt class="col-5 text-muted">Sessão</dt><dd class="col-7 text-break font-monospace">{{ venda.sessao_caixa.uuid }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+.venda-info-lista { display: grid; gap: .65rem; color: var(--bs-secondary-color); }
+.venda-info-lista > div { display: flex; align-items: flex-start; gap: .65rem; }
+.venda-info-lista i { width: 1.1rem; margin-top: .1rem; color: var(--bs-primary); }
+.venda-timeline { position: relative; }
+.venda-timeline__item { position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: 1rem; padding-bottom: 1.5rem; }
+.venda-timeline__item::before { content: ""; position: absolute; top: 2.5rem; bottom: 0; left: 1.2rem; width: 2px; background: var(--bs-border-color); }
+.venda-timeline__item--ultimo { padding-bottom: 0; }
+.venda-timeline__item--ultimo::before { display: none; }
+.venda-timeline__marcador { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; }
+.venda-timeline__conteudo { min-width: 0; padding-top: .35rem; }
+
+@media print {
+    @page { size: A4; margin: 10mm; }
+    .sidebar, .navbar, .no-print, footer { display: none !important; }
+    main, .content-wrapper, #comprovante-venda { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+    body { background: #fff !important; font-size: 10pt; }
+    .card { box-shadow: none !important; border: 1px solid #d9d9d9 !important; break-inside: avoid; }
+    .table { font-size: 9pt; }
+    .badge { border: 1px solid #777; }
+}
+</style>
+{% endblock %}

@@ -8,6 +8,18 @@
 {% endblock %}
 
 {% block content %}
+        <!-- PDV-04E.1 - MENSAGENS OPERACIONAIS -->
+        {% if messages %}
+            <div class="mb-4" aria-live="polite">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
 <div
     class="container-fluid py-4 pdv-page"
     id="pdv-app"
@@ -36,6 +48,16 @@
                     </span>
                     <span class="text-muted small">Caixa: {{ sessao_caixa.caixa.nome }}</span>
                     <span class="text-muted small">Loja: {{ loja.nome }}</span>
+
+                    <a href="{% url 'pdv:historico_fechamentos' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Histórico de Fechamentos
+                    </a>
+                    <!-- PDV-04C.1 - NAVEGACAO FECHAMENTO -->
+                    <a href="{% url 'pdv:fechar_caixa' %}" class="btn btn-outline-danger">
+                        <i class="bi bi-lock-fill me-1"></i>
+                        Fechar caixa
+                    </a>
                 {% else %}
                 <div class="alert alert-warning">
                     <span class="badge text-bg-danger">Caixa fechado</span>
@@ -51,6 +73,7 @@
                             <i class="bi bi-unlock-fill me-1"></i>
                             Abrir caixa
                         </a>
+
                     </div>
                 </div>
 {% endif %}
