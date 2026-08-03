@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Origens da mercadoria{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    {% url 'fiscal:criar_origem_mercadoria' as url_nova_origem %}
+    {% include 'partials/cabecalho_pagina.html' with titulo='Origens da mercadoria' subtitulo='Codigos oficiais de origem usados na tributacao dos produtos.' icone='bi-globe-americas' acao_url=url_nova_origem acao_texto='Nova origem' acao_icone='bi-plus-lg' %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-lg-8">
+                    <label for="id_busca" class="form-label">Buscar origem</label>
+                    <input
+                        id="id_busca"
+                        name="busca"
+                        value="{{ busca }}"
+                        class="form-control"
+                        placeholder="Codigo ou descricao"
+                    >
+                </div>
+
+                <div class="col-12 col-md-4 col-lg-2">
+                    <div class="form-check mb-2">
+                        <input
+                            id="id_ativas"
+                            name="ativas"
+                            value="1"
+                            type="checkbox"
+                            class="form-check-input"
+                            {% if somente_ativas %}checked{% endif %}
+                        >
+                        <label class="form-check-label" for="id_ativas">
+                            Somente ativas
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-8 col-lg-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark flex-grow-1">
+                        Filtrar
+                    </button>
+                    <a href="{% url 'fiscal:lista_origens_mercadoria' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" style="width: 110px;">Codigo</th>
+                        <th scope="col">Descricao</th>
+                        <th scope="col" style="width: 120px;">Status</th>
+                        <th scope="col" class="text-end" style="width: 120px;">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for origem in pagina %}
+                    <tr>
+                        <td>
+                            <span class="badge text-bg-dark fs-6">{{ origem.codigo }}</span>
+                        </td>
+                        <td>{{ origem.descricao }}</td>
+                        <td>
+                            {% if origem.ativo %}
+                            <span class="badge text-bg-success">Ativa</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">Inativa</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a
+                                href="{% url 'fiscal:editar_origem_mercadoria' origem.id %}"
+                                class="btn btn-outline-dark btn-sm"
+                            >
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-5">
+                            Nenhuma origem encontrada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagina.paginator.num_pages > 1 %}
+        <div class="card-footer">
+            {% include 'partials/paginacao.html' %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

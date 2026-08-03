@@ -1,4 +1,5 @@
-﻿from accounts.permissions import (
+from accounts.permissions import (
+    PERMISSAO_FISCAL_VISUALIZAR,
     PERMISSAO_CASHBACK_NOVA_COMPRA,
     PERMISSAO_CAMPANHAS_CONFIGURAR,
     PERMISSAO_CAMPANHAS_DISPARAR,
@@ -23,6 +24,7 @@ def menu_permissoes(request):
         return {}
 
     return {
+        'pode_ver_fiscal': usuario_tem_permissao(usuario, PERMISSAO_FISCAL_VISUALIZAR),
         'pode_ver_dashboard': usuario_tem_permissao(
             usuario,
             PERMISSAO_RELATORIOS_DASHBOARD
