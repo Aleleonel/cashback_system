@@ -39,3 +39,49 @@ from fiscal.selectors_csosn import (
     get_csosn,
     get_csosns,
 )
+
+from fiscal.selectors_cfop import (
+    get_cfop,
+    get_cfops,
+)
+
+from fiscal.selectors_ncm import (
+    get_ncm,
+    get_ncms,
+)
+
+from fiscal.selectors_cst_pis import (
+    get_cst_pis,
+    get_csts_pis,
+)
+
+from fiscal.selectors_cst_cofins import (
+    get_cst_cofins,
+    get_csts_cofins,
+)
+
+from fiscal.selectors_cst_ipi import (
+    get_cst_ipi,
+    get_csts_ipi,
+)
+
+from fiscal.selectors_cest import (
+    get_cest,
+    get_cests,
+)
+
+from fiscal.selectors_beneficio_fiscal import (
+    get_beneficio_fiscal,
+    get_beneficios_fiscais,
+)
+
+from fiscal.selectors_regra_fiscal import (
+    get_regra_fiscal,
+    get_regras_ativas_vigentes,
+    get_regras_fiscais,
+)
+
+from fiscal.services_motor_selecao import (
+    RegraFiscalAmbiguaError,
+    selecionar_regra_fiscal,
+)

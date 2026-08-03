@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+    {% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo='Configure identificacao, escopo, condicoes, resultados, parametros e vigencia.' icone='bi-diagram-3' %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header"><strong>Identificacao e escopo</strong></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.nome %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.codigo_interno %}</div>
+                    <div class="col-6 col-md-2">{% include 'partials/campo_formulario.html' with campo=form.prioridade %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.ativo %}</div>
+                    <div class="col-12">{% include 'partials/campo_formulario.html' with campo=form.descricao %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.matriz %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.loja %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.regime_tributario %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header"><strong>Condicoes de aplicacao</strong></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.tipo_operacao %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.finalidade_operacao %}</div>
+                    <div class="col-6 col-md-2">{% include 'partials/campo_formulario.html' with campo=form.uf_origem %}</div>
+                    <div class="col-6 col-md-2">{% include 'partials/campo_formulario.html' with campo=form.uf_destino %}</div>
+                    <div class="col-12 col-md-2">{% include 'partials/campo_formulario.html' with campo=form.contribuinte_icms %}</div>
+                    <div class="col-12 col-md-2">{% include 'partials/campo_formulario.html' with campo=form.consumidor_final %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.ncm %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.cest %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.cfop %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header"><strong>Resultados tributarios</strong></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.cst_icms %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.csosn %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.cst_pis %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.cst_cofins %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.cst_ipi %}</div>
+                    <div class="col-12 col-md-5">{% include 'partials/campo_formulario.html' with campo=form.beneficio_fiscal %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header"><strong>Parametros e vigencia</strong></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.aliquota_icms %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.reducao_base_icms %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.aliquota_fcp %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.aliquota_mva %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.aliquota_pis %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.aliquota_cofins %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.aliquota_ipi %}</div>
+                    <div class="col-6 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.diferimento_icms %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.vigencia_inicio %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.vigencia_fim %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-light border">
+            Esta fundacao seleciona a regra aplicavel, mas ainda nao calcula valores monetarios de tributos.
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'fiscal:lista_regras_fiscais' %}" class="btn btn-outline-secondary">Voltar</a>
+            <button type="submit" class="btn btn-dark">Salvar regra fiscal</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

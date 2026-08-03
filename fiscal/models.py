@@ -80,3 +80,19 @@ class OrigemMercadoria(models.Model):
 from fiscal.models_cst_icms import CSTICMS
 
 from fiscal.models_csosn import CSOSN
+
+from fiscal.models_cfop import CFOP
+
+from fiscal.models_ncm import NCM
+
+from fiscal.models_cst_pis import CSTPIS
+
+from fiscal.models_cst_cofins import CSTCOFINS
+
+from fiscal.models_cst_ipi import CSTIPI
+
+from fiscal.models_cest import CEST
+
+from fiscal.models_beneficio_fiscal import BeneficioFiscal
+
+from fiscal.models_regra_fiscal import RegraFiscal

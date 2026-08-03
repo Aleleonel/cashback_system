@@ -68,3 +68,19 @@ class OrigemMercadoriaForm(BootstrapModelForm):
 from fiscal.forms_cst_icms import CSTICMSForm
 
 from fiscal.forms_csosn import CSOSNForm
+
+from fiscal.forms_cfop import CFOPForm
+
+from fiscal.forms_ncm import NCMForm
+
+from fiscal.forms_cst_pis import CSTPISForm
+
+from fiscal.forms_cst_cofins import CSTCOFINSForm
+
+from fiscal.forms_cst_ipi import CSTIPIForm
+
+from fiscal.forms_cest import CESTForm
+
+from fiscal.forms_beneficio_fiscal import BeneficioFiscalForm
+
+from fiscal.forms_regra_fiscal import RegraFiscalForm

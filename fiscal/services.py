@@ -164,3 +164,55 @@ from fiscal.services_csosn import (
     criar_csosn,
     editar_csosn,
 )
+
+from fiscal.services_cfop import (
+    criar_cfop,
+    editar_cfop,
+)
+
+from fiscal.services_ncm import (
+    criar_ncm,
+    editar_ncm,
+)
+
+from fiscal.services_cst_pis import (
+    criar_cst_pis,
+    editar_cst_pis,
+)
+
+from fiscal.services_cst_cofins import (
+    criar_cst_cofins,
+    editar_cst_cofins,
+)
+
+from fiscal.services_cst_ipi import (
+    criar_cst_ipi,
+    editar_cst_ipi,
+)
+
+from fiscal.services_cest import (
+    criar_cest,
+    editar_cest,
+)
+
+from fiscal.services_beneficio_fiscal import (
+    criar_beneficio_fiscal,
+    editar_beneficio_fiscal,
+)
+
+from fiscal.services_regra_fiscal import (
+    criar_regra_fiscal,
+    editar_regra_fiscal,
+)
+
+from fiscal.services_motor_selecao import (
+    RegraFiscalAmbiguaError,
+    selecionar_regra,
+    selecionar_regra_fiscal,
+)
+
+from fiscal.services_motor_tributario import (
+    calcular_tributos,
+    quantizar_intermediario,
+    quantizar_moeda,
+)
