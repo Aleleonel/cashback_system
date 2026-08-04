@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}CFOP{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+    {% url 'fiscal:criar_cfop' as url_novo_cfop %}
+    {% include 'partials/cabecalho_pagina.html' with titulo='CFOP' subtitulo='Codigos fiscais usados nas operacoes de entrada e saida.' icone='bi-arrow-left-right' acao_url=url_novo_cfop acao_texto='Novo CFOP' acao_icone='bi-plus-lg' %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-xl-5">
+                    <label for="id_busca" class="form-label">Buscar CFOP</label>
+                    <input id="id_busca" name="busca" value="{{ busca }}" class="form-control" placeholder="Codigo ou descricao">
+                </div>
+                <div class="col-12 col-md-4 col-xl-2">
+                    <label for="id_tipo" class="form-label">Tipo</label>
+                    <select id="id_tipo" name="tipo_operacao" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, rotulo in tipos_operacao %}
+                        <option value="{{ valor }}" {% if tipo_operacao == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 col-xl-2">
+                    <label for="id_destino" class="form-label">Destino</label>
+                    <select id="id_destino" name="destino_operacao" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, rotulo in destinos_operacao %}
+                        <option value="{{ valor }}" {% if destino_operacao == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 col-xl-1">
+                    <div class="form-check mb-2">
+                        <input id="id_ativos" name="ativos" value="1" type="checkbox" class="form-check-input" {% if somente_ativos %}checked{% endif %}>
+                        <label class="form-check-label" for="id_ativos">Ativos</label>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark flex-grow-1">Filtrar</button>
+                    <a href="{% url 'fiscal:lista_cfops' %}" class="btn btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Descricao</th>
+                        <th>Tipo</th>
+                        <th>Destino</th>
+                        <th>Caracteristicas</th>
+                        <th>Status</th>
+                        <th class="text-end">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cfop in pagina %}
+                    <tr>
+                        <td><span class="badge text-bg-dark fs-6">{{ cfop.codigo }}</span></td>
+                        <td>{{ cfop.descricao }}</td>
+                        <td>{{ cfop.get_tipo_operacao_display }}</td>
+                        <td>{{ cfop.get_destino_operacao_display }}</td>
+                        <td>
+                            {% if cfop.gera_movimento_estoque %}<span class="badge text-bg-primary">Estoque</span>{% endif %}
+                            {% if cfop.permite_devolucao %}<span class="badge text-bg-warning">Devolucao</span>{% endif %}
+                            {% if cfop.permite_remessa %}<span class="badge text-bg-info">Remessa</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if cfop.ativo %}
+                            <span class="badge text-bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'fiscal:editar_cfop' cfop.id %}" class="btn btn-outline-dark btn-sm">Editar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">Nenhum CFOP encontrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagina.paginator.num_pages > 1 %}
+        <div class="card-footer">{% include 'partials/paginacao.html' %}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

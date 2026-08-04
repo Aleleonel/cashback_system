@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Beneficios fiscais{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+    {% url 'fiscal:criar_beneficio_fiscal' as url_novo %}
+    {% include 'partials/cabecalho_pagina.html' with titulo='Beneficios fiscais' subtitulo='Catalogo de homologacao para futura aplicacao pelo Motor Tributario.' icone='bi-award' acao_url=url_novo acao_texto='Novo beneficio' acao_icone='bi-plus-lg' %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-lg-4">
+                    <label class="form-label" for="id_busca">Buscar</label>
+                    <input id="id_busca" name="busca" value="{{ busca }}" class="form-control" placeholder="Codigo, descricao ou fundamento">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label" for="id_uf">UF</label>
+                    <input id="id_uf" name="uf" value="{{ uf }}" maxlength="2" class="form-control">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="id_tipo">Tipo</label>
+                    <select id="id_tipo" name="tipo_beneficio" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, rotulo in tipos_beneficio %}
+                        <option value="{{ valor }}" {% if tipo_beneficio == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="id_regime">Regime</label>
+                    <select id="id_regime" name="regime_tributario" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, rotulo in regimes_tributarios %}
+                        <option value="{{ valor }}" {% if regime_tributario == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <div class="form-check mb-2">
+                        <input id="id_ativos" name="ativos" value="1" type="checkbox" class="form-check-input" {% if somente_ativos %}checked{% endif %}>
+                        <label class="form-check-label" for="id_ativos">Somente ativos</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark flex-grow-1">Filtrar</button>
+                    <a href="{% url 'fiscal:lista_beneficios_fiscais' %}" class="btn btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Descricao</th>
+                        <th>UF</th>
+                        <th>Tipo</th>
+                        <th>Regime</th>
+                        <th>Percentuais</th>
+                        <th>Status</th>
+                        <th class="text-end">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for beneficio in pagina %}
+                    <tr>
+                        <td><span class="badge text-bg-dark">{{ beneficio.codigo }}</span></td>
+                        <td>{{ beneficio.descricao }}</td>
+                        <td>{{ beneficio.uf|default:'Nacional' }}</td>
+                        <td>{{ beneficio.get_tipo_beneficio_display }}</td>
+                        <td>{{ beneficio.get_regime_tributario_display }}</td>
+                        <td>
+                            {% if beneficio.percentual_reducao != None %}
+                            <span class="badge text-bg-info">Reducao {{ beneficio.percentual_reducao }}%</span>
+                            {% endif %}
+                            {% if beneficio.percentual_credito != None %}
+                            <span class="badge text-bg-success">Credito {{ beneficio.percentual_credito }}%</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if beneficio.ativo %}
+                            <span class="badge text-bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'fiscal:editar_beneficio_fiscal' beneficio.id %}" class="btn btn-outline-dark btn-sm">Editar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-5">Nenhum beneficio fiscal encontrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagina.paginator.num_pages > 1 %}
+        <div class="card-footer">{% include 'partials/paginacao.html' %}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

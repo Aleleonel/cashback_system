@@ -1,3 +1,10 @@
+from fiscal.constants import (
+    PERMISSAO_FISCAL_CONFIGURAR,
+    PERMISSAO_FISCAL_GERENCIAR_CADASTROS,
+    PERMISSAO_FISCAL_VISUALIZAR,
+    PERMISSOES_FISCAL,
+)
+
 # PDV-ACL-01 - IMPORTS CENTRALIZADOS
 from pdv.constants import (
     PERMISSAO_PDV_ABRIR_CAIXA,
@@ -159,6 +166,7 @@ PERMISSOES_POR_PERFIL = {
         | PERMISSOES_EMPRESA
         | PERMISSOES_VOUCHERS
         | PERMISSOES_PRODUTOS
+        | PERMISSOES_FISCAL
         | PERMISSOES_PDV
     ),
     'admin_loja': (
@@ -167,6 +175,7 @@ PERMISSOES_POR_PERFIL = {
         | PERMISSOES_CASHBACK
         | PERMISSOES_VOUCHERS
         | PERMISSOES_PRODUTOS
+        | PERMISSOES_FISCAL
         | {
             PERMISSAO_CAMPANHAS_VISUALIZAR,
             PERMISSAO_CAMPANHAS_DISPARAR,
@@ -254,6 +263,18 @@ def get_permissoes_extras_disponiveis():
 
     itens = list(_get_permissoes_extras_disponiveis_sem_pdv())
     codigos_existentes = {item["codigo"] for item in itens}
+
+    permissoes_fiscal = [
+        {"codigo": PERMISSAO_FISCAL_VISUALIZAR, "nome": "Visualizar modulo fiscal", "grupo": "Fiscal"},
+        {"codigo": PERMISSAO_FISCAL_CONFIGURAR, "nome": "Configurar parametros fiscais", "grupo": "Fiscal"},
+        {"codigo": PERMISSAO_FISCAL_GERENCIAR_CADASTROS, "nome": "Gerenciar cadastros tributarios", "grupo": "Fiscal"},
+    ]
+
+    itens.extend(
+        item for item in permissoes_fiscal
+        if item["codigo"] not in codigos_existentes
+    )
+    codigos_existentes.update(item["codigo"] for item in permissoes_fiscal)
 
     permissoes_pdv = [
         {"codigo": PERMISSAO_PDV_VISUALIZAR, "nome": "Visualizar PDV", "grupo": "PDV / Frente de Caixa"},

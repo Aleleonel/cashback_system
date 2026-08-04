@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Fiscal{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    {% include 'partials/cabecalho_pagina.html' with titulo='Fiscal' subtitulo='Cadastros e configuracoes para a futura emissao fiscal.' icone='bi-receipt' %}
+
+    <div class="alert alert-info d-flex align-items-start gap-2" role="status">
+        <i class="bi bi-info-circle mt-1"></i>
+        <div>
+            <strong>Fundacao fiscal ativa.</strong>
+            A emissao de documentos fiscais ainda nao esta liberada.
+            Esta etapa prepara cadastros, seguranca e arquitetura.
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for modulo in modulos %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex align-items-start gap-3">
+                        <span class="fs-3 text-primary" aria-hidden="true">
+                            <i class="bi {{ modulo.icone }}"></i>
+                        </span>
+                        <div>
+                            <h2 class="h5 mb-2">{{ modulo.titulo }}</h2>
+                            <p class="text-muted mb-3">{{ modulo.descricao }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto">
+                        {% if modulo.disponivel %}
+                        <a href="{% url modulo.url_name %}" class="btn btn-outline-primary">
+                            Acessar
+                        </a>
+                        {% else %}
+                        <span class="badge text-bg-secondary">Proxima etapa</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
