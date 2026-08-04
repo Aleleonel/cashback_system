@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+    {% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo='Mantenha os dados cadastrais, referencia de NCM, versao e vigencia.' icone='bi-tags' %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.codigo %}</div>
+                    <div class="col-12 col-md-5">{% include 'partials/campo_formulario.html' with campo=form.segmento %}</div>
+                    <div class="col-12 col-md-4">{% include 'partials/campo_formulario.html' with campo=form.ncm_referencia %}</div>
+                    <div class="col-12">{% include 'partials/campo_formulario.html' with campo=form.descricao %}</div>
+                    <div class="col-12 col-md-6">{% include 'partials/campo_formulario.html' with campo=form.excecao %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.versao_tabela %}</div>
+                    <div class="col-12 col-md-3">{% include 'partials/campo_formulario.html' with campo=form.ativo %}</div>
+                    <div class="col-12 col-md-6">{% include 'partials/campo_formulario.html' with campo=form.vigencia_inicio %}</div>
+                    <div class="col-12 col-md-6">{% include 'partials/campo_formulario.html' with campo=form.vigencia_fim %}</div>
+                </div>
+
+                <div class="alert alert-light border mt-4">
+                    Este cadastro ainda nao calcula ICMS-ST e nao cria vinculo direto com Produto.
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'fiscal:lista_cests' %}" class="btn btn-outline-secondary">Voltar</a>
+                    <button type="submit" class="btn btn-dark">Salvar CEST</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

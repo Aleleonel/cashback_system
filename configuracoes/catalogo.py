@@ -68,6 +68,8 @@ codigo="usuarios",
         titulo="Financeiro e fiscal",
         descricao="Contas a receber, parcelamento e emissão fiscal.",
         icone="bi-calculator",
+        url_name="fiscal:inicio",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="notificacoes",

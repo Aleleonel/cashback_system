@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Regras fiscais{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+    {% url 'fiscal:criar_regra_fiscal' as url_novo %}
+    {% include 'partials/cabecalho_pagina.html' with titulo='Regras fiscais' subtitulo='Fundacao da inteligencia tributaria. Esta etapa seleciona regras, mas ainda nao calcula valores.' icone='bi-diagram-3' acao_url=url_novo acao_texto='Nova regra' acao_icone='bi-plus-lg' %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-lg-4">
+                    <label class="form-label">Buscar</label>
+                    <input name="busca" value="{{ busca }}" class="form-control" placeholder="Codigo, nome ou descricao">
+                </div>
+                <div class="col-12 col-md-3 col-lg-2">
+                    <label class="form-label">Regime</label>
+                    <select name="regime_tributario" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, rotulo in regimes %}
+                        <option value="{{ valor }}" {% if regime_tributario == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 col-lg-2">
+                    <label class="form-label">Operacao</label>
+                    <select name="tipo_operacao" class="form-select">
+                        <option value="">Todas</option>
+                        {% for valor, rotulo in tipos %}
+                        <option value="{{ valor }}" {% if tipo_operacao == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 col-lg-2">
+                    <label class="form-label">Finalidade</label>
+                    <select name="finalidade_operacao" class="form-select">
+                        <option value="">Todas</option>
+                        {% for valor, rotulo in finalidades %}
+                        <option value="{{ valor }}" {% if finalidade_operacao == valor %}selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2 col-lg-1">
+                    <label class="form-label">UF origem</label>
+                    <input name="uf_origem" value="{{ uf_origem }}" maxlength="2" class="form-control">
+                </div>
+                <div class="col-6 col-md-2 col-lg-1">
+                    <label class="form-label">UF destino</label>
+                    <input name="uf_destino" value="{{ uf_destino }}" maxlength="2" class="form-control">
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="form-check mb-2">
+                        <input id="id_ativas" name="ativas" value="1" type="checkbox" class="form-check-input" {% if somente_ativas %}checked{% endif %}>
+                        <label for="id_ativas" class="form-check-label">Somente ativas</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4 d-flex gap-2">
+                    <button class="btn btn-dark flex-grow-1">Filtrar</button>
+                    <a href="{% url 'fiscal:lista_regras_fiscais' %}" class="btn btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Prioridade</th>
+                        <th>Codigo</th>
+                        <th>Nome</th>
+                        <th>Escopo</th>
+                        <th>Condicoes</th>
+                        <th>Resultado</th>
+                        <th>Status</th>
+                        <th class="text-end">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for regra in pagina %}
+                    <tr>
+                        <td><span class="badge text-bg-primary">{{ regra.prioridade }}</span></td>
+                        <td><span class="badge text-bg-dark">{{ regra.codigo_interno }}</span></td>
+                        <td>{{ regra.nome }}</td>
+                        <td>
+                            {% if regra.loja %}Loja: {{ regra.loja }}
+                            {% elif regra.matriz %}Matriz: {{ regra.matriz }}
+                            {% else %}Global{% endif %}
+                        </td>
+                        <td>
+                            {{ regra.get_tipo_operacao_display }} /
+                            {{ regra.get_finalidade_operacao_display }}
+                            {% if regra.uf_origem or regra.uf_destino %}
+                            <div class="small text-muted">{{ regra.uf_origem|default:'*' }} → {{ regra.uf_destino|default:'*' }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if regra.cst_icms %}CST {{ regra.cst_icms.codigo }}{% endif %}
+                            {% if regra.csosn %}CSOSN {{ regra.csosn.codigo }}{% endif %}
+                            {% if regra.cfop %}<div class="small">CFOP {{ regra.cfop.codigo }}</div>{% endif %}
+                        </td>
+                        <td>
+                            {% if regra.ativo %}
+                            <span class="badge text-bg-success">Ativa</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">Inativa</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'fiscal:editar_regra_fiscal' regra.id %}" class="btn btn-outline-dark btn-sm">Editar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-5">Nenhuma regra fiscal encontrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagina.paginator.num_pages > 1 %}
+        <div class="card-footer">{% include 'partials/paginacao.html' %}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
