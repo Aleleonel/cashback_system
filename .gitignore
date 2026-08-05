@@ -34,6 +34,7 @@ Thumbs.db
 # Artefatos do fluxo assistido
 /temp_chatgpt/
 /tem_chatgpt/
+/diagnostico/
 /backups/
 /backup_*/
 /resultado_*.txt
