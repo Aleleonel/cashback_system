@@ -1,48 +1,49 @@
 {% extends 'base.html' %}
-
-{% block title %}Fiscal{% endblock %}
-
+{% load static %}
+{% block title %}Central Fiscal{% endblock %}
+{% block extra_css %}<link href="{% static 'fiscal/css/central_fiscal.css' %}" rel="stylesheet">{% endblock %}
 {% block content %}
-<div class="container-fluid py-3">
-    {% include 'partials/cabecalho_pagina.html' with titulo='Fiscal' subtitulo='Cadastros e configuracoes para a futura emissao fiscal.' icone='bi-receipt' %}
+<div class="container-fluid py-3 fiscal-central" data-central-fiscal="true">
+<section class="fiscal-hero mb-4">
+<div><div class="d-flex align-items-center gap-2 mb-2"><span class="fiscal-hero__eyebrow">PDV-05 • Fiscal</span><span class="badge text-bg-success">Fundacao fiscal ativa</span></div><h1 class="fiscal-hero__title">Central Fiscal</h1><p class="fiscal-hero__subtitle mb-0">Cadastros, regras e indicadores que sustentam a classificação e o cálculo tributário do ERP.</p></div>
+<div class="fiscal-hero__context"><div class="small text-white-50">Contexto operacional</div><div class="fw-semibold">{{ matriz }}</div><div class="small">{% if loja %}<i class="bi bi-shop me-1"></i>{{ loja }}{% else %}<i class="bi bi-buildings me-1"></i>Visão da matriz{% endif %}</div></div>
+</section>
 
-    <div class="alert alert-info d-flex align-items-start gap-2" role="status">
-        <i class="bi bi-info-circle mt-1"></i>
-        <div>
-            <strong>Fundacao fiscal ativa.</strong>
-            A emissao de documentos fiscais ainda nao esta liberada.
-            Esta etapa prepara cadastros, seguranca e arquitetura.
-        </div>
-    </div>
+<section class="row g-3 mb-4" aria-label="Indicadores fiscais">
+{% for indicador in indicadores %}
+<div class="col-12 col-sm-6 col-xl-3"><article class="card border-0 shadow-sm h-100 fiscal-kpi"><div class="card-body"><div class="fiscal-kpi__icon text-bg-{{ indicador.tom }}"><i class="bi {{ indicador.icone }}"></i></div><div class="mt-3"><div class="text-muted small">{{ indicador.titulo }}</div><div class="fiscal-kpi__value">{{ indicador.valor }}</div><div class="small text-muted">{{ indicador.descricao }}</div></div></div></article></div>
+{% endfor %}
+</section>
 
-    <div class="row g-3">
-        {% for modulo in modulos %}
-        <div class="col-12 col-md-6 col-xl-4">
-            <article class="card h-100 shadow-sm border-0">
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex align-items-start gap-3">
-                        <span class="fs-3 text-primary" aria-hidden="true">
-                            <i class="bi {{ modulo.icone }}"></i>
-                        </span>
-                        <div>
-                            <h2 class="h5 mb-2">{{ modulo.titulo }}</h2>
-                            <p class="text-muted mb-3">{{ modulo.descricao }}</p>
-                        </div>
-                    </div>
+<div class="alert alert-info border-0 shadow-sm d-flex align-items-start gap-3 mb-4" role="status"><i class="bi bi-shield-check fs-4"></i><div><strong>Infraestrutura fiscal homologada.</strong> Fundacao fiscal ativa. A emissao fiscal ainda nao esta liberada. Os cadastros, o Motor de Seleção e o Motor Tributário estão disponíveis, mas a integração operacional permanece bloqueada.</div></div>
 
-                    <div class="mt-auto">
-                        {% if modulo.disponivel %}
-                        <a href="{% url modulo.url_name %}" class="btn btn-outline-primary">
-                            Acessar
-                        </a>
-                        {% else %}
-                        <span class="badge text-bg-secondary">Proxima etapa</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </article>
-        </div>
-        {% endfor %}
-    </div>
+<section class="mb-5">
+<div class="fiscal-section-heading"><div><div class="fiscal-section-heading__eyebrow">Cadastros oficiais</div><h2 class="h4 mb-1">Referências tributárias</h2><p class="text-muted mb-0">Tabelas usadas na classificação de produtos e operações.</p></div><span class="badge rounded-pill text-bg-light border">{{ modulos_referencia|length }} cadastros</span></div>
+<div class="row g-3 mt-1">
+{% for modulo in modulos_referencia %}
+<div class="col-12 col-md-6 col-xl-4"><article class="card border-0 shadow-sm h-100 fiscal-module-card" data-fiscal-modulo="{{ modulo.codigo }}"><div class="card-body d-flex flex-column"><div class="d-flex gap-3"><div class="fiscal-module-card__icon"><i class="bi {{ modulo.icone }}"></i></div><div><h3 class="h5 mb-1">{{ modulo.titulo }}</h3><p class="text-muted small mb-3">{{ modulo.descricao }}</p></div></div><div class="fiscal-module-card__stats mt-auto"><div><strong>{{ modulo.resumo.total }}</strong><span>Total</span></div><div><strong class="text-success">{{ modulo.resumo.ativos }}</strong><span>Ativos</span></div><div><strong class="text-secondary">{{ modulo.resumo.inativos }}</strong><span>Inativos</span></div></div><a href="{% url modulo.url_name %}" class="btn btn-outline-dark mt-3 stretched-link">Acessar cadastro <i class="bi bi-arrow-right ms-1"></i></a></div></article></div>
+{% endfor %}
+</div>
+</section>
+
+<section class="mb-5">
+<div class="fiscal-section-heading"><div><div class="fiscal-section-heading__eyebrow">Inteligência tributária</div><h2 class="h4 mb-1">Benefícios e regras fiscais</h2><p class="text-muted mb-0">Estruturas consumidas pelos motores fiscais do sistema.</p></div></div>
+<div class="row g-3 mt-1">
+{% for modulo in modulos_inteligencia %}
+<div class="col-12 col-lg-6"><article class="card border-0 shadow-sm h-100 fiscal-module-card fiscal-module-card--featured"><div class="card-body d-flex flex-column"><div class="d-flex gap-3"><div class="fiscal-module-card__icon"><i class="bi {{ modulo.icone }}"></i></div><div><h3 class="h5 mb-1">{{ modulo.titulo }}</h3><p class="text-muted mb-0">{{ modulo.descricao }}</p></div></div><div class="row g-2 mt-3"><div class="col-4"><div class="fiscal-stat-box"><strong>{{ modulo.resumo.total }}</strong><span>Total</span></div></div><div class="col-4"><div class="fiscal-stat-box"><strong class="text-success">{{ modulo.resumo.ativos }}</strong><span>Ativos</span></div></div><div class="col-4"><div class="fiscal-stat-box"><strong class="text-secondary">{{ modulo.resumo.inativos }}</strong><span>Inativos</span></div></div></div><a href="{% url modulo.url_name %}" class="btn btn-dark mt-3 stretched-link">Gerenciar {{ modulo.titulo|lower }} <i class="bi bi-arrow-right ms-1"></i></a></div></article></div>
+{% endfor %}
+</div>
+</section>
+
+<section>
+<div class="fiscal-section-heading"><div><div class="fiscal-section-heading__eyebrow">Evolução do módulo</div><h2 class="h4 mb-1">Próximas integrações</h2><p class="text-muted mb-0">Funcionalidades que utilizarão a fundação fiscal homologada.</p></div></div>
+<div class="row g-3 mt-1">
+{% for etapa in proximas_etapas %}
+<div class="col-12 col-md-4"><article class="card border h-100 fiscal-roadmap-card"><div class="card-body"><div class="d-flex justify-content-between align-items-start gap-3"><div class="fiscal-roadmap-card__icon"><i class="bi {{ etapa.icone }}"></i></div><span class="badge text-bg-secondary">{{ etapa.status }}</span></div><h3 class="h6 mt-3 mb-2">{{ etapa.titulo }}</h3><p class="small text-muted mb-0">{{ etapa.descricao }}</p></div></article></div>
+{% endfor %}
+</div>
+</section>
+
+{% if pode_gerenciar %}<div class="small text-muted mt-4"><i class="bi bi-shield-lock me-1"></i>Seu perfil possui permissão para gerenciar os cadastros fiscais.</div>{% endif %}
 </div>
 {% endblock %}

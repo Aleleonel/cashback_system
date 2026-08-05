@@ -6,12 +6,26 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from accounts.decorators import require_permission
+from accounts.services import usuario_tem_permissao
 from core.services import get_contexto_operacional_usuario
 from fiscal.constants import (
     PERMISSAO_FISCAL_GERENCIAR_CADASTROS,
     PERMISSAO_FISCAL_VISUALIZAR,
 )
 from fiscal.forms import OrigemMercadoriaForm
+from fiscal.models import (
+    BeneficioFiscal,
+    CEST,
+    CFOP,
+    CSOSN,
+    CSTCOFINS,
+    CSTICMS,
+    CSTIPI,
+    CSTPIS,
+    NCM,
+    OrigemMercadoria,
+    RegraFiscal,
+)
 from fiscal.selectors import (
     get_origem_mercadoria,
     get_origens_mercadoria,
@@ -51,109 +65,45 @@ def _obter_origem_ou_404(*, origem_id):
 @require_permission(PERMISSAO_FISCAL_VISUALIZAR)
 def inicio(request):
     contexto = get_contexto_operacional_usuario(request.user)
+    pode_gerenciar = usuario_tem_permissao(
+        request.user,
+        PERMISSAO_FISCAL_GERENCIAR_CADASTROS,
+    )
 
-    modulos = (
-        {
-            "titulo": "Origens da mercadoria",
-            "descricao": (
-                "Codigos oficiais usados na classificacao fiscal "
-                "dos produtos."
-            ),
-            "icone": "bi-globe-americas",
-            "url_name": "fiscal:lista_origens_mercadoria",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CST ICMS",
-            "descricao": "Situacoes tributarias do ICMS usadas na classificacao fiscal.",
-            "icone": "bi-percent",
-            "url_name": "fiscal:lista_csts_icms",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CSOSN",
-            "descricao": "Situacoes tributarias do Simples Nacional para classificacao fiscal.",
-            "icone": "bi-diagram-3",
-            "url_name": "fiscal:lista_csosns",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CFOP",
-            "descricao": "Codigos fiscais de operacoes e prestacoes para compras, vendas e devolucoes.",
-            "icone": "bi-arrow-left-right",
-            "url_name": "fiscal:lista_cfops",
-            "disponivel": True,
-        },
-        {
-            "titulo": "NCM",
-            "descricao": "Catalogo de classificacoes fiscais para futura vinculacao aos produtos.",
-            "icone": "bi-list-ol",
-            "url_name": "fiscal:lista_ncms",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CST PIS",
-            "descricao": "Situacoes tributarias do PIS para entradas e saidas.",
-            "icone": "bi-percent",
-            "url_name": "fiscal:lista_csts_pis",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CST COFINS",
-            "descricao": "Situacoes tributarias do COFINS para entradas e saidas.",
-            "icone": "bi-percent",
-            "url_name": "fiscal:lista_csts_cofins",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CST IPI",
-            "descricao": "Situacoes tributarias do IPI para entradas e saidas.",
-            "icone": "bi-percent",
-            "url_name": "fiscal:lista_csts_ipi",
-            "disponivel": True,
-        },
-        {
-            "titulo": "CEST",
-            "descricao": "Catalogo de produtos sujeitos a substituicao tributaria.",
-            "icone": "bi-tags",
-            "url_name": "fiscal:lista_cests",
-            "disponivel": True,
-        },
-        {
-            "titulo": "Beneficios fiscais",
-            "descricao": "Catalogo de beneficios, desoneracoes, reducoes e creditos fiscais.",
-            "icone": "bi-award",
-            "url_name": "fiscal:lista_beneficios_fiscais",
-            "disponivel": True,
-        },
-        {
-            "titulo": "Regras fiscais",
-            "descricao": "Condicoes, resultados e parametros para selecao tributaria.",
-            "icone": "bi-diagram-3",
-            "url_name": "fiscal:lista_regras_fiscais",
-            "disponivel": True,
-        },
-        {
-            "titulo": "Demais cadastros tributarios",
-            "descricao": "CFOP, CST, CSOSN, CEST e regras fiscais.",
-            "icone": "bi-journal-text",
-            "url_name": "",
-            "disponivel": False,
-        },
-        {
-            "titulo": "Produtos fiscais",
-            "descricao": "Parametros tributarios vinculados aos produtos.",
-            "icone": "bi-box-seam",
-            "url_name": "",
-            "disponivel": False,
-        },
-        {
-            "titulo": "Emissao fiscal",
-            "descricao": "Preparacao para NFC-e, contingencia e DANFE.",
-            "icone": "bi-receipt",
-            "url_name": "",
-            "disponivel": False,
-        },
+    def resumo(model):
+        total = model.objects.count()
+        ativos = model.objects.filter(ativo=True).count()
+        return {"total": total, "ativos": ativos, "inativos": total - ativos}
+
+    referencias = (
+        {"codigo": "origens", "titulo": "Origens da mercadoria", "descricao": "Codigos oficiais de origem usados na tributacao dos produtos.", "icone": "bi-globe-americas", "url_name": "fiscal:lista_origens_mercadoria", "resumo": resumo(OrigemMercadoria)},
+        {"codigo": "cst_icms", "titulo": "CST ICMS", "descricao": "Situacoes tributarias do ICMS para empresas do regime normal.", "icone": "bi-percent", "url_name": "fiscal:lista_csts_icms", "resumo": resumo(CSTICMS)},
+        {"codigo": "csosn", "titulo": "CSOSN", "descricao": "Situacoes tributarias aplicaveis ao Simples Nacional.", "icone": "bi-diagram-3", "url_name": "fiscal:lista_csosns", "resumo": resumo(CSOSN)},
+        {"codigo": "cfop", "titulo": "CFOP", "descricao": "Codigos fiscais de entradas, saidas, devolucoes e remessas.", "icone": "bi-arrow-left-right", "url_name": "fiscal:lista_cfops", "resumo": resumo(CFOP)},
+        {"codigo": "ncm", "titulo": "NCM", "descricao": "Classificacao fiscal oficial das mercadorias.", "icone": "bi-list-ol", "url_name": "fiscal:lista_ncms", "resumo": resumo(NCM)},
+        {"codigo": "cst_pis", "titulo": "CST PIS", "descricao": "Situacoes tributarias do PIS para entradas e saidas.", "icone": "bi-p-circle", "url_name": "fiscal:lista_csts_pis", "resumo": resumo(CSTPIS)},
+        {"codigo": "cst_cofins", "titulo": "CST COFINS", "descricao": "Situacoes tributarias da COFINS para entradas e saidas.", "icone": "bi-c-circle", "url_name": "fiscal:lista_csts_cofins", "resumo": resumo(CSTCOFINS)},
+        {"codigo": "cst_ipi", "titulo": "CST IPI", "descricao": "Situacoes tributarias do IPI para operacoes com produtos.", "icone": "bi-building", "url_name": "fiscal:lista_csts_ipi", "resumo": resumo(CSTIPI)},
+        {"codigo": "cest", "titulo": "CEST", "descricao": "Classificacao de mercadorias sujeitas a substituicao tributaria.", "icone": "bi-tags", "url_name": "fiscal:lista_cests", "resumo": resumo(CEST)},
+    )
+
+    inteligencia = (
+        {"codigo": "beneficios", "titulo": "Beneficios fiscais", "descricao": "Desoneracoes, reducoes, creditos e fundamentos legais.", "icone": "bi-award", "url_name": "fiscal:lista_beneficios_fiscais", "resumo": resumo(BeneficioFiscal)},
+        {"codigo": "regras", "titulo": "Regras fiscais", "descricao": "Condicoes e parametros utilizados pelo Motor de Selecao Fiscal.", "icone": "bi-diagram-3-fill", "url_name": "fiscal:lista_regras_fiscais", "resumo": resumo(RegraFiscal)},
+    )
+
+    proximas_etapas = (
+        {"titulo": "Simulador fiscal", "descricao": "Selecao de regra e memoria de calculo em ambiente de homologacao.", "icone": "bi-calculator", "status": "Proxima aplicacao"},
+        {"titulo": "Produtos fiscais", "descricao": "Vinculacao de NCM, CEST e origem ao cadastro de produtos.", "icone": "bi-box-seam", "status": "Planejado"},
+        {"titulo": "Emissao fiscal", "descricao": "Preparacao de NFC-e, NF-e, contingencia e documentos auxiliares.", "icone": "bi-receipt-cutoff", "status": "Planejado"},
+    )
+
+    todos = (*referencias, *inteligencia)
+    indicadores = (
+        {"titulo": "Cadastros disponiveis", "valor": len(todos), "icone": "bi-collection", "descricao": "Referencias e inteligencia", "tom": "primary"},
+        {"titulo": "Registros fiscais", "valor": sum(x["resumo"]["total"] for x in todos), "icone": "bi-database", "descricao": "Total cadastrado", "tom": "dark"},
+        {"titulo": "Registros ativos", "valor": sum(x["resumo"]["ativos"] for x in todos), "icone": "bi-check-circle", "descricao": "Disponiveis para uso", "tom": "success"},
+        {"titulo": "Regras ativas", "valor": inteligencia[1]["resumo"]["ativos"], "icone": "bi-diagram-3", "descricao": "Motor de selecao", "tom": "info"},
     )
 
     return render(
@@ -162,10 +112,14 @@ def inicio(request):
         {
             "matriz": contexto["matriz"],
             "loja": contexto.get("loja"),
-            "modulos": modulos,
+            "pode_gerenciar": pode_gerenciar,
+            "indicadores": indicadores,
+            "modulos_referencia": referencias,
+            "modulos_inteligencia": inteligencia,
+            "proximas_etapas": proximas_etapas,
+            "modulos": todos,
         },
     )
-
 
 @login_required
 @require_permission(PERMISSAO_FISCAL_VISUALIZAR)

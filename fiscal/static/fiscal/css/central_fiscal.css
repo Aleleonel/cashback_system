@@ -1,0 +1,16 @@
+.fiscal-central{--fiscal-ink:#172033;--fiscal-soft:#f4f7fb;--fiscal-border:rgba(23,32,51,.1)}
+.fiscal-hero{align-items:center;background:radial-gradient(circle at top right,rgba(255,255,255,.2),transparent 35%),linear-gradient(135deg,#172033,#243b68);border-radius:1.25rem;color:#fff;display:flex;gap:2rem;justify-content:space-between;padding:2rem}
+.fiscal-hero__eyebrow,.fiscal-section-heading__eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.fiscal-hero__eyebrow{color:rgba(255,255,255,.72)}
+.fiscal-hero__title{font-size:clamp(1.8rem,4vw,2.75rem);font-weight:750;letter-spacing:-.03em;margin-bottom:.5rem}.fiscal-hero__subtitle{color:rgba(255,255,255,.78);max-width:680px}
+.fiscal-hero__context{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:1rem;min-width:230px;padding:1rem 1.25rem}
+.fiscal-kpi{border:1px solid var(--fiscal-border)!important;transition:transform 160ms ease}.fiscal-kpi:hover{transform:translateY(-2px)}
+.fiscal-kpi__icon,.fiscal-module-card__icon,.fiscal-roadmap-card__icon{align-items:center;border-radius:.85rem;display:inline-flex;height:3rem;justify-content:center;width:3rem}
+.fiscal-kpi__value{color:var(--fiscal-ink);font-size:1.9rem;font-weight:750;line-height:1.1}
+.fiscal-section-heading{align-items:end;display:flex;gap:1rem;justify-content:space-between}.fiscal-section-heading__eyebrow{color:#65728a}
+.fiscal-module-card{border:1px solid var(--fiscal-border)!important;overflow:hidden;position:relative;transition:all 160ms ease}.fiscal-module-card:hover{border-color:rgba(13,110,253,.32)!important;box-shadow:0 .75rem 1.75rem rgba(23,32,51,.12)!important;transform:translateY(-3px)}
+.fiscal-module-card--featured{background:linear-gradient(135deg,rgba(13,110,253,.04),transparent 55%),#fff}
+.fiscal-module-card__icon{background:#edf3ff;color:#0d6efd;font-size:1.25rem;flex:0 0 auto}
+.fiscal-module-card__stats{background:var(--fiscal-soft);border-radius:.85rem;display:grid;gap:.5rem;grid-template-columns:repeat(3,1fr);padding:.75rem}
+.fiscal-module-card__stats>div,.fiscal-stat-box{text-align:center}.fiscal-module-card__stats strong,.fiscal-stat-box strong{display:block;font-size:1.05rem}.fiscal-module-card__stats span,.fiscal-stat-box span{color:#6c757d;display:block;font-size:.72rem;text-transform:uppercase}
+.fiscal-stat-box{background:var(--fiscal-soft);border-radius:.75rem;padding:.75rem .5rem}.fiscal-roadmap-card{background:#fafbfd;border-color:var(--fiscal-border)!important}.fiscal-roadmap-card__icon{background:#eef0f4;color:#5e687a;font-size:1.25rem}
+@media(max-width:767.98px){.fiscal-hero{align-items:stretch;flex-direction:column;padding:1.35rem}.fiscal-hero__context{min-width:0}.fiscal-section-heading{align-items:flex-start;flex-direction:column}}
