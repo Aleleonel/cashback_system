@@ -1,11 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}CFOP{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'fiscal/css/cadastros_fiscais.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-3">
+<div class="container-fluid py-3 fiscal-cadastro-page" data-fiscal-lista="true">
     {% url 'fiscal:criar_cfop' as url_novo_cfop %}
     {% include 'partials/cabecalho_pagina.html' with titulo='CFOP' subtitulo='Codigos fiscais usados nas operacoes de entrada e saida.' icone='bi-arrow-left-right' acao_url=url_novo_cfop acao_texto='Novo CFOP' acao_icone='bi-plus-lg' %}
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 fiscal-list-card">
         <div class="card-body border-bottom">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-12 col-xl-5">
@@ -44,7 +50,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 fiscal-table">
                 <thead class="table-light">
                     <tr>
                         <th>Codigo</th>

@@ -1,10 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}CST ICMS{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'fiscal/css/cadastros_fiscais.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-3">
+<div class="container-fluid py-3 fiscal-cadastro-page" data-fiscal-lista="true">
     {% url 'fiscal:criar_cst_icms' as url_novo_cst %}
     {% include 'partials/cabecalho_pagina.html' with titulo='CST ICMS' subtitulo='Situacoes tributarias do ICMS para classificacao fiscal.' icone='bi-percent' acao_url=url_novo_cst acao_texto='Novo CST' acao_icone='bi-plus-lg' %}
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 fiscal-list-card">
         <div class="card-body border-bottom">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-12 col-lg-8"><label for="id_busca" class="form-label">Buscar CST ICMS</label><input id="id_busca" name="busca" value="{{ busca }}" class="form-control" placeholder="Codigo ou descricao"></div>
@@ -12,7 +18,7 @@
                 <div class="col-12 col-md-8 col-lg-2 d-flex gap-2"><button type="submit" class="btn btn-dark flex-grow-1">Filtrar</button><a href="{% url 'fiscal:lista_csts_icms' %}" class="btn btn-outline-secondary">Limpar</a></div>
             </form>
         </div>
-        <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Codigo</th><th>Descricao</th><th>Caracteristicas</th><th>Status</th><th class="text-end">Acoes</th></tr></thead><tbody>
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0 fiscal-table"><thead class="table-light"><tr><th>Codigo</th><th>Descricao</th><th>Caracteristicas</th><th>Status</th><th class="text-end">Acoes</th></tr></thead><tbody>
         {% for cst in pagina %}<tr><td><span class="badge text-bg-dark fs-6">{{ cst.codigo }}</span></td><td>{{ cst.descricao }}</td><td>{% if cst.exige_aliquota %}<span class="badge text-bg-primary">Aliquota</span>{% endif %} {% if cst.permite_reducao_base %}<span class="badge text-bg-info">Reducao</span>{% endif %} {% if cst.permite_diferimento %}<span class="badge text-bg-warning">Diferimento</span>{% endif %} {% if cst.permite_substituicao_tributaria %}<span class="badge text-bg-secondary">ST</span>{% endif %}</td><td>{% if cst.ativo %}<span class="badge text-bg-success">Ativo</span>{% else %}<span class="badge text-bg-secondary">Inativo</span>{% endif %}</td><td class="text-end"><a href="{% url 'fiscal:editar_cst_icms' cst.id %}" class="btn btn-outline-dark btn-sm">Editar</a></td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-5">Nenhum CST ICMS encontrado.</td></tr>{% endfor %}
         </tbody></table></div>
         {% if pagina.paginator.num_pages > 1 %}<div class="card-footer">{% include 'partials/paginacao.html' %}</div>{% endif %}
