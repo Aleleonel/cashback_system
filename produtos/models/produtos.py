@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -180,6 +180,89 @@ class Produto(models.Model):
         auto_now=True
     )
 
+    # PDV-05B - Classificacao fiscal estruturada.
+    # Todos os vinculos sao opcionais durante a transicao.
+    origem_mercadoria = models.ForeignKey(
+        "fiscal.OrigemMercadoria",
+        verbose_name="Origem da mercadoria",
+        on_delete=models.PROTECT,
+        related_name="produtos_classificados",
+        null=True,
+        blank=True,
+    )
+    ncm_fiscal = models.ForeignKey(
+        "fiscal.NCM",
+        verbose_name="NCM oficial",
+        on_delete=models.PROTECT,
+        related_name="produtos_classificados",
+        null=True,
+        blank=True,
+    )
+    cest = models.ForeignKey(
+        "fiscal.CEST",
+        verbose_name="CEST",
+        on_delete=models.PROTECT,
+        related_name="produtos_classificados",
+        null=True,
+        blank=True,
+    )
+    cst_icms = models.ForeignKey(
+        "fiscal.CSTICMS",
+        verbose_name="CST ICMS padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+    csosn = models.ForeignKey(
+        "fiscal.CSOSN",
+        verbose_name="CSOSN padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+    cst_pis = models.ForeignKey(
+        "fiscal.CSTPIS",
+        verbose_name="CST PIS padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+    cst_cofins = models.ForeignKey(
+        "fiscal.CSTCOFINS",
+        verbose_name="CST COFINS padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+    cst_ipi = models.ForeignKey(
+        "fiscal.CSTIPI",
+        verbose_name="CST IPI padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+    beneficio_fiscal = models.ForeignKey(
+        "fiscal.BeneficioFiscal",
+        verbose_name="Beneficio fiscal padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+    regra_fiscal_padrao = models.ForeignKey(
+        "fiscal.RegraFiscal",
+        verbose_name="Regra fiscal padrao",
+        on_delete=models.PROTECT,
+        related_name="produtos_padrao",
+        null=True,
+        blank=True,
+    )
+
     class Meta:
         ordering = ['nome']
         constraints = [
@@ -308,3 +391,27 @@ class Produto(models.Model):
 
     def __str__(self):
         return f'{self.codigo_interno} - {self.nome}'
+
+    @property
+    def ncm_efetivo(self):
+        # Prioriza o cadastro oficial e preserva o NCM textual legado.
+        if self.ncm_fiscal_id:
+            return self.ncm_fiscal.codigo
+        return self.ncm
+
+    @property
+    def possui_configuracao_fiscal(self):
+        return any(
+            (
+                self.origem_mercadoria_id,
+                self.ncm_fiscal_id,
+                self.cest_id,
+                self.cst_icms_id,
+                self.csosn_id,
+                self.cst_pis_id,
+                self.cst_cofins_id,
+                self.cst_ipi_id,
+                self.beneficio_fiscal_id,
+                self.regra_fiscal_padrao_id,
+            )
+        )
