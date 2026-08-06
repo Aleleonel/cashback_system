@@ -1,13 +1,19 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Origens da mercadoria{% endblock %}
 
+
+{% block extra_css %}
+<link href="{% static 'fiscal/css/cadastros_fiscais.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-3">
+<div class="container-fluid py-3 fiscal-cadastro-page" data-fiscal-lista="true">
     {% url 'fiscal:criar_origem_mercadoria' as url_nova_origem %}
     {% include 'partials/cabecalho_pagina.html' with titulo='Origens da mercadoria' subtitulo='Codigos oficiais de origem usados na tributacao dos produtos.' icone='bi-globe-americas' acao_url=url_nova_origem acao_texto='Nova origem' acao_icone='bi-plus-lg' %}
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 fiscal-list-card">
         <div class="card-body border-bottom">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-12 col-lg-8">
@@ -49,7 +55,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 fiscal-table">
                 <thead class="table-light">
                     <tr>
                         <th scope="col" style="width: 110px;">Codigo</th>

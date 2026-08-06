@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{{ titulo }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'fiscal/css/cadastros_fiscais.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-3">
+<div class="container-fluid py-3 fiscal-cadastro-page" data-fiscal-formulario="true">
     {% include 'partials/cabecalho_pagina.html' with titulo=titulo subtitulo='Configure identificacao, escopo, condicoes, resultados, parametros e vigencia.' icone='bi-diagram-3' %}
 
     <form method="post" novalidate>
@@ -10,7 +16,7 @@
         <div class="alert alert-danger">{{ form.non_field_errors }}</div>
         {% endif %}
 
-        <div class="card shadow-sm border-0 mb-3">
+        <div class="card shadow-sm border-0 mb-3 fiscal-form-card">
             <div class="card-header"><strong>Identificacao e escopo</strong></div>
             <div class="card-body">
                 <div class="row g-3">
@@ -26,7 +32,7 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 mb-3">
+        <div class="card shadow-sm border-0 mb-3 fiscal-form-card">
             <div class="card-header"><strong>Condicoes de aplicacao</strong></div>
             <div class="card-body">
                 <div class="row g-3">
@@ -43,7 +49,7 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 mb-3">
+        <div class="card shadow-sm border-0 mb-3 fiscal-form-card">
             <div class="card-header"><strong>Resultados tributarios</strong></div>
             <div class="card-body">
                 <div class="row g-3">
@@ -57,7 +63,7 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 mb-3">
+        <div class="card shadow-sm border-0 mb-3 fiscal-form-card">
             <div class="card-header"><strong>Parametros e vigencia</strong></div>
             <div class="card-body">
                 <div class="row g-3">
@@ -79,7 +85,7 @@
             Esta fundacao seleciona a regra aplicavel, mas ainda nao calcula valores monetarios de tributos.
         </div>
 
-        <div class="d-flex justify-content-between">
+        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2 mt-4 fiscal-form-actions">
             <a href="{% url 'fiscal:lista_regras_fiscais' %}" class="btn btn-outline-secondary">Voltar</a>
             <button type="submit" class="btn btn-dark">Salvar regra fiscal</button>
         </div>

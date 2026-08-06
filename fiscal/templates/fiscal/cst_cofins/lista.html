@@ -1,11 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}CST COFINS{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'fiscal/css/cadastros_fiscais.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-3">
+<div class="container-fluid py-3 fiscal-cadastro-page" data-fiscal-lista="true">
     {% url 'fiscal:criar_cst_cofins' as url_novo %}
     {% include 'partials/cabecalho_pagina.html' with titulo='CST COFINS' subtitulo='Catalogo de situacoes tributarias do COFINS. O calculo sera implementado no Motor Tributario.' icone='bi-percent' acao_url=url_novo acao_texto='Novo CST COFINS' acao_icone='bi-plus-lg' %}
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 fiscal-list-card">
         <div class="card-body border-bottom">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-12 col-lg-6">
@@ -35,7 +41,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 fiscal-table">
                 <thead class="table-light">
                     <tr>
                         <th>Codigo</th>

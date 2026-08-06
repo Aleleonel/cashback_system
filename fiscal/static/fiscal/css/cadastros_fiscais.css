@@ -1,0 +1,101 @@
+
+.fiscal-cadastro-page {
+    --fiscal-border: rgba(23, 32, 51, 0.11);
+    --fiscal-soft: #f7f9fc;
+    --fiscal-ink: #172033;
+}
+
+.fiscal-list-card,
+.fiscal-form-card {
+    border: 1px solid var(--fiscal-border) !important;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.fiscal-list-card > .card-body.border-bottom {
+    background: var(--fiscal-soft);
+}
+
+.fiscal-list-card .form-label,
+.fiscal-form-card .form-label {
+    color: var(--fiscal-ink);
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
+}
+
+.fiscal-list-card .form-control,
+.fiscal-list-card .form-select,
+.fiscal-form-card .form-control,
+.fiscal-form-card .form-select {
+    min-height: 2.65rem;
+}
+
+.fiscal-table {
+    --bs-table-hover-bg: rgba(13, 110, 253, 0.035);
+    font-size: 0.92rem;
+}
+
+.fiscal-table thead th {
+    background: #f7f9fc;
+    border-bottom-color: var(--fiscal-border);
+    color: #566176;
+    font-size: 0.74rem;
+    font-weight: 750;
+    letter-spacing: 0.045em;
+    padding-bottom: 0.85rem;
+    padding-top: 0.85rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.fiscal-table tbody td {
+    border-bottom-color: rgba(23, 32, 51, 0.07);
+    padding-bottom: 0.85rem;
+    padding-top: 0.85rem;
+}
+
+.fiscal-form-card .card-body {
+    padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.fiscal-form-card .alert-light {
+    background: #f7f9fc;
+    border-color: var(--fiscal-border) !important;
+    color: #566176;
+}
+
+.fiscal-form-actions {
+    border-top: 1px solid var(--fiscal-border);
+    padding-top: 1.25rem;
+}
+
+.fiscal-form-actions .btn {
+    min-width: 9rem;
+}
+
+.fiscal-cadastro-page .card-footer {
+    background: #fff;
+    border-top-color: var(--fiscal-border);
+}
+
+.fiscal-cadastro-page .pagination {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+@media (max-width: 767.98px) {
+    .fiscal-cadastro-page {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    .fiscal-table {
+        font-size: 0.86rem;
+        min-width: 720px;
+    }
+
+    .fiscal-form-actions .btn {
+        min-width: 0;
+        width: 100%;
+    }
+}
