@@ -1,0 +1,45 @@
+
+.produto-fiscal-panel {
+    background: linear-gradient(135deg, rgba(13, 110, 253, .035), transparent 45%), #fff;
+    border: 1px solid rgba(23, 32, 51, .11);
+    border-radius: 1rem;
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.produto-fiscal-panel__header {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.produto-fiscal-panel__eyebrow {
+    color: #65728a;
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .07em;
+    margin-bottom: .2rem;
+    text-transform: uppercase;
+}
+
+.produto-fiscal-group {
+    border-bottom: 1px solid rgba(23, 32, 51, .09);
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+}
+
+.produto-fiscal-group:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.produto-fiscal-group .form-select,
+.produto-fiscal-group .form-control {
+    min-height: 2.7rem;
+}
+
+@media (max-width: 767.98px) {
+    .produto-fiscal-panel__header {
+        flex-direction: column;
+    }
+}

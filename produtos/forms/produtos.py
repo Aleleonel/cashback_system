@@ -1,4 +1,4 @@
-﻿from django import forms
+from django import forms
 from django.db.models import Q
 
 from core.forms import BootstrapModelForm
@@ -64,6 +64,16 @@ class ProdutoForm(BootstrapModelForm):
             'controla_estoque',
             'estoque_minimo',
             'status',
+            "origem_mercadoria",
+            "ncm_fiscal",
+            "cest",
+            "cst_icms",
+            "csosn",
+            "cst_pis",
+            "cst_cofins",
+            "cst_ipi",
+            "beneficio_fiscal",
+            "regra_fiscal_padrao",
         ]
 
         widgets = {
@@ -142,6 +152,7 @@ class ProdutoForm(BootstrapModelForm):
             self.instance.matriz = matriz
 
         self._configurar_relacionamentos()
+        self._configurar_campos_fiscais()
 
     def _configurar_relacionamentos(self):
         if self.matriz is None:
@@ -255,7 +266,7 @@ class ProdutoForm(BootstrapModelForm):
             self.cleaned_data.get('descricao') or ''
         ).strip()
 
-    def clean(self):
+    def _clean_produto_base(self):
         dados = super().clean()
 
         peso_liquido = dados.get(
@@ -280,4 +291,48 @@ class ProdutoForm(BootstrapModelForm):
 
         return dados
 
+    def clean(self):
+        cleaned_data = self._clean_produto_base()
+        if cleaned_data is None:
+            cleaned_data = self.cleaned_data
+        return self._validar_configuracao_fiscal(
+            cleaned_data
+        )
 
+    def _configurar_campos_fiscais(self):
+        for nome in (
+            "origem_mercadoria",
+            "ncm_fiscal",
+            "cest",
+            "cst_icms",
+            "csosn",
+            "cst_pis",
+            "cst_cofins",
+            "cst_ipi",
+            "beneficio_fiscal",
+            "regra_fiscal_padrao",
+        ):
+            campo = self.fields.get(nome)
+            if campo is None:
+                continue
+            atual_id = getattr(self.instance, f'{nome}_id', None)
+            filtro = Q(ativo=True)
+            if atual_id:
+                filtro |= Q(pk=atual_id)
+            campo.queryset = campo.queryset.filter(filtro).distinct()
+            campo.required = False
+
+    def _validar_configuracao_fiscal(self, cleaned_data):
+        cst_icms = cleaned_data.get('cst_icms')
+        csosn = cleaned_data.get('csosn')
+        if cst_icms and csosn:
+            mensagem = 'Informe CST ICMS ou CSOSN, nao os dois simultaneamente.'
+            self.add_error('cst_icms', mensagem)
+            self.add_error('csosn', mensagem)
+
+        ncm = cleaned_data.get('ncm_fiscal')
+        cest = cleaned_data.get('cest')
+        if ncm and cest and cest.ncm_referencia and cest.ncm_referencia != ncm.codigo:
+            self.add_error('cest', 'O CEST selecionado possui outro NCM de referencia.')
+
+        return cleaned_data
