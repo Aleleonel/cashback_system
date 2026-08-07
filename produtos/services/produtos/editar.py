@@ -1,4 +1,4 @@
-﻿from django.db import transaction
+from django.db import transaction
 
 from produtos.services.auditoria import auditar_edicao
 
@@ -25,6 +25,16 @@ CAMPOS_EDITAVEIS = [
     'comprimento_cm',
     'controla_estoque',
     'estoque_minimo',
+    'origem_mercadoria',
+    'ncm_fiscal',
+    'cest',
+    'cst_icms',
+    'csosn',
+    'cst_pis',
+    'cst_cofins',
+    'cst_ipi',
+    'beneficio_fiscal',
+    'regra_fiscal_padrao',
     'status',
 ]
 
