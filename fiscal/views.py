@@ -9,6 +9,7 @@ from accounts.decorators import require_permission
 from accounts.services import usuario_tem_permissao
 from core.services import get_contexto_operacional_usuario
 from fiscal.constants import (
+    PERMISSAO_FISCAL_CONFIGURAR,
     PERMISSAO_FISCAL_GERENCIAR_CADASTROS,
     PERMISSAO_FISCAL_VISUALIZAR,
 )
@@ -70,6 +71,11 @@ def inicio(request):
         PERMISSAO_FISCAL_GERENCIAR_CADASTROS,
     )
 
+    pode_configurar = usuario_tem_permissao(
+        request.user,
+        PERMISSAO_FISCAL_CONFIGURAR,
+    )
+
     def resumo(model):
         total = model.objects.count()
         ativos = model.objects.filter(ativo=True).count()
@@ -113,6 +119,7 @@ def inicio(request):
             "matriz": contexto["matriz"],
             "loja": contexto.get("loja"),
             "pode_gerenciar": pode_gerenciar,
+            "pode_configurar": pode_configurar,
             "indicadores": indicadores,
             "modulos_referencia": referencias,
             "modulos_inteligencia": inteligencia,

@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import views_configuracao_fiscal
 from . import views_csosn
 from . import views_cfop
 from . import views_ncm
@@ -17,6 +18,11 @@ app_name = "fiscal"
 
 urlpatterns = [
     path("", views.inicio, name="inicio"),
+    path(
+        "configuracao-matriz/",
+        views_configuracao_fiscal.configuracao_fiscal_matriz_view,
+        name="configuracao_fiscal_matriz",
+    ),
     path(
         "origens-mercadoria/",
         views.lista_origens_mercadoria,

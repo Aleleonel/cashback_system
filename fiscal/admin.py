@@ -382,3 +382,5 @@ class RegraFiscalAdmin(admin.ModelAdmin):
         if obj is not None:
             fields.append("codigo_interno")
         return tuple(fields)
+
+from fiscal import admin_configuracao_fiscal  # noqa: F401

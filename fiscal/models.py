@@ -96,3 +96,5 @@ from fiscal.models_cest import CEST
 from fiscal.models_beneficio_fiscal import BeneficioFiscal
 
 from fiscal.models_regra_fiscal import RegraFiscal
+
+from fiscal.models_configuracao_fiscal import ConfiguracaoFiscalMatriz

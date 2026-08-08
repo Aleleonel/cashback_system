@@ -1,4 +1,7 @@
-﻿from django.contrib import messages
+from produtos.services.fiscal.painel_produto_fiscal import (
+    montar_painel_fiscal_produto,
+)
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
@@ -165,14 +168,24 @@ def detalhe_produto(
         produto_id=produto_id,
     )
 
+    uf_destino = request.GET.get('uf_destino', '').strip()
+
+    painel_fiscal = montar_painel_fiscal_produto(
+        produto=produto,
+        matriz=contexto['matriz'],
+        loja=contexto.get('loja'),
+        uf_destino=uf_destino,
+    )
+
     return render(
         request,
         'produtos/produtos/detalhe.html',
         {
             'produto': produto,
+            'painel_fiscal': painel_fiscal,
+            'uf_destino': uf_destino,
         }
     )
-
 
 @login_required
 @require_permission(

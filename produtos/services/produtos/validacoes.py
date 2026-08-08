@@ -1,4 +1,4 @@
-﻿from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
 
@@ -434,6 +434,16 @@ def preparar_dados_produto(
             valor=dados.get('estoque_minimo'),
             casas='0.000',
         ),
+        'origem_mercadoria': dados.get('origem_mercadoria'),
+        'ncm_fiscal': dados.get('ncm_fiscal'),
+        'cest': dados.get('cest'),
+        'cst_icms': dados.get('cst_icms'),
+        'csosn': dados.get('csosn'),
+        'cst_pis': dados.get('cst_pis'),
+        'cst_cofins': dados.get('cst_cofins'),
+        'cst_ipi': dados.get('cst_ipi'),
+        'beneficio_fiscal': dados.get('beneficio_fiscal'),
+        'regra_fiscal_padrao': dados.get('regra_fiscal_padrao'),
         'status': dados.get(
             'status',
             produto_excluido.status

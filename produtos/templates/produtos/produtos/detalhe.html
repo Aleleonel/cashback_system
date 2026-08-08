@@ -167,6 +167,106 @@
                 </dl>
             </div>
 
+            <div class="col-12">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div>
+                                <h2 class="h6 mb-1">Classificação fiscal efetiva</h2>
+                                <div class="text-muted small">
+                                    Consulta somente leitura. A regra final é definida pelo Motor Fiscal.
+                                </div>
+                            </div>
+                            <span class="badge text-bg-secondary">
+                                {{ painel_fiscal.status_label }}
+                            </span>
+                        </div>
+
+                        <form method="get" class="row g-2 align-items-end mb-4">
+                            <div class="col-sm-4 col-md-3">
+                                <label for="uf_destino" class="form-label small">
+                                    UF de destino
+                                </label>
+                                <input
+                                    id="uf_destino"
+                                    name="uf_destino"
+                                    type="text"
+                                    maxlength="2"
+                                    value="{{ uf_destino }}"
+                                    class="form-control form-control-sm text-uppercase"
+                                    placeholder="Ex.: RJ"
+                                >
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-sm btn-outline-dark">
+                                    Consultar tributação
+                                </button>
+                            </div>
+                        </form>
+
+                        {% if painel_fiscal.alertas %}
+                        <div class="alert alert-warning py-2" role="alert">
+                            {% for alerta in painel_fiscal.alertas %}
+                            <div>{{ alerta }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <dl class="row mb-0 small">
+                            <dt class="col-md-3">Regime</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.regime_tributario|default:'—' }}</dd>
+
+                            <dt class="col-md-3">Origem / Destino</dt>
+                            <dd class="col-md-3">
+                                {{ painel_fiscal.uf_origem|default:'—' }}
+                                /
+                                {{ painel_fiscal.uf_destino|default:'—' }}
+                            </dd>
+
+                            <dt class="col-md-3">Regra aplicada</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.regra|default:'—' }}</dd>
+
+                            <dt class="col-md-3">Origem da regra</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.origem_regra|default:'—' }}</dd>
+
+                            <dt class="col-md-3">NCM</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.ncm|default:'—' }}</dd>
+
+                            <dt class="col-md-3">CEST</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.cest|default:'—' }}</dd>
+
+                            <dt class="col-md-3">ICMS</dt>
+                            <dd class="col-md-3">
+                                {% if painel_fiscal.csosn %}
+                                CSOSN {{ painel_fiscal.csosn }}
+                                {% elif painel_fiscal.cst_icms %}
+                                CST {{ painel_fiscal.cst_icms }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-md-3">PIS</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.cst_pis|default:'—' }}</dd>
+
+                            <dt class="col-md-3">COFINS</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.cst_cofins|default:'—' }}</dd>
+
+                            <dt class="col-md-3">IPI</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.cst_ipi|default:'—' }}</dd>
+
+                            <dt class="col-md-3">Benefício fiscal</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.beneficio|default:'—' }}</dd>
+
+                            <dt class="col-md-3">Origem da mercadoria</dt>
+                            <dd class="col-md-3">{{ painel_fiscal.origem_mercadoria|default:'—' }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+
+
             {% if produto.descricao %}
             <div class="col-12">
                 <h2 class="h6">Descrição</h2>
