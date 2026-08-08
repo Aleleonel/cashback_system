@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Configuração Fiscal da Matriz{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="text-muted small mb-1">Fiscal</div>
+            <h1 class="h3 mb-1">Configuração Fiscal da Matriz</h1>
+            <p class="text-muted mb-0">
+                Defina os parâmetros fiscais padrão usados pelo Motor Fiscal.
+            </p>
+        </div>
+
+        <a href="{% url 'fiscal:inicio' %}" class="btn btn-outline-secondary">
+            Voltar à Central Fiscal
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Matriz atual</div>
+                    <div class="fw-semibold mt-1">{{ matriz.nome }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Situação</div>
+                    <div class="fw-semibold mt-1">
+                        {% if configurada %}
+                            Configurada
+                        {% else %}
+                            Não configurada
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Estado</div>
+                    <div class="fw-semibold mt-1">
+                        {% if configuracao and configuracao.ativa %}
+                            Ativa
+                        {% elif configuracao %}
+                            Inativa
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Pronta para operação</div>
+                    <div class="fw-semibold mt-1">
+                        {% if pronta_para_operacao %}
+                            Sim
+                        {% else %}
+                            Não
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light border mb-4">
+        <strong>Como esta configuração é usada:</strong>
+        o Motor Fiscal utiliza apenas configurações ativas.
+        Uma configuração inativa continua disponível nesta tela para edição
+        e reativação.
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.regime_tributario.id_for_label }}" class="form-label">
+                            {{ form.regime_tributario.label }}
+                        </label>
+                        {{ form.regime_tributario }}
+                        {% for erro in form.regime_tributario.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            Regime fiscal padrão da matriz.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="{{ form.uf_origem.id_for_label }}" class="form-label">
+                            {{ form.uf_origem.label }}
+                        </label>
+                        {{ form.uf_origem }}
+                        {% for erro in form.uf_origem.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            UF usada como origem no contexto tributário.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            {{ form.ativa }}
+                            <label class="form-check-label" for="{{ form.ativa.id_for_label }}">
+                                {{ form.ativa.label }}
+                            </label>
+                            {% for erro in form.ativa.errors %}
+                                <div class="text-danger small mt-1">{{ erro }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {{ form.contribuinte_icms }}
+                            <label class="form-check-label" for="{{ form.contribuinte_icms.id_for_label }}">
+                                {{ form.contribuinte_icms.label }}
+                            </label>
+                        </div>
+                        {% for erro in form.contribuinte_icms.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            Valor padrão quando a operação não informar essa condição.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {{ form.consumidor_final_padrao }}
+                            <label class="form-check-label" for="{{ form.consumidor_final_padrao.id_for_label }}">
+                                {{ form.consumidor_final_padrao.label }}
+                            </label>
+                        </div>
+                        {% for erro in form.consumidor_final_padrao.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            Fallback usado quando a operação não definir consumidor final.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                            {{ form.observacoes.label }}
+                        </label>
+                        {{ form.observacoes }}
+                        {% for erro in form.observacoes.errors %}
+                            <div class="text-danger small mt-1">{{ erro }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            Anotações administrativas sobre a configuração.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{% url 'fiscal:inicio' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Salvar configuração
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

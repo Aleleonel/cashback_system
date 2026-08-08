@@ -71,16 +71,29 @@
 
         {% else %}
 
-        <div class="text-uppercase text-white-50 small mt-2 mb-1">
-            Operação
-        </div>
 
         {% if pode_ver_dashboard %}
+
+        <div class="sidebar-section-heading" data-sidebar-section="visao-geral" data-sidebar-icon="bi-speedometer2">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
+                Visão Geral
+            </div>
+        </div>
+
         <a href="{% url 'relatorios:dashboard' %}" class="nav-link text-white">
             <i class="bi bi-speedometer2 me-2"></i>
             Dashboard
         </a>
         {% endif %}
+
+
+        <div class="sidebar-section-heading" data-sidebar-section="vendas" data-sidebar-icon="bi-basket" data-menu-secao-pdv="true">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
+                Vendas
+            </div>
+        </div>
 
         {% if pode_nova_compra %}
         <a href="{% url 'cashback:nova_compra' %}" class="nav-link text-white">
@@ -89,6 +102,14 @@
         </a>
         {% endif %}
 
+
+        <div class="sidebar-section-heading" data-sidebar-section="clientes" data-sidebar-icon="bi-people">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
+                Clientes
+            </div>
+        </div>
+
         {% if pode_ver_clientes %}
         <a href="{% url 'clientes:lista_clientes' %}" class="nav-link text-white">
             <i class="bi bi-people me-2"></i>
@@ -96,9 +117,14 @@
         </a>
         {% endif %}
 
-        <div class="text-uppercase text-white-50 small mt-4 mb-1" data-menu-secao-pdv="true">
-            PDV
-        </div>
+        {% if pode_gerenciar_vouchers %}
+        <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
+            <i class="bi bi-ticket-perforated me-2"></i>
+            Vouchers
+        </a>
+        {% endif %}
+
+
 
         <a href="{% url 'pdv:inicio' %}"
            class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'inicio' %}active bg-primary text-white{% else %}text-white{% endif %}"
@@ -117,6 +143,14 @@
             Histórico de Vendas
         </a>
 
+
+        <div class="sidebar-section-heading" data-sidebar-section="produtos-estoque" data-sidebar-icon="bi-box-seam">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
+                Produtos e Estoque
+            </div>
+        </div>
+
         {% if pode_ver_produtos %}
         <a href="{% url 'produtos:lista_produtos' %}" class="nav-link text-white">
             <i class="bi bi-box-seam me-2"></i>
@@ -124,13 +158,19 @@
         </a>
         {% endif %}
 
+        <a href="{% url 'estoque:lista_movimentacoes' %}" class="nav-link text-white" data-menu-pdv-estoque="true">
+            <i class="bi bi-boxes me-2"></i>
+            Estoque
+        </a>
+
+
 
     <!-- PDV-04E.2 - SECAO CAIXA -->
-    <li class="nav-item mt-3">
-        <span class="nav-link text-white-50 text-uppercase small fw-semibold">
-            <i class="bi bi-cash-stack me-2"></i>Caixa
-        </span>
-    </li>
+        <div class="sidebar-section-heading"
+             data-sidebar-section="caixa"
+             data-sidebar-icon="bi-cash-stack">
+            Caixa
+        </div>
     <li class="nav-item">
         <a
             href="{% url 'pdv:abrir_caixa' %}"
@@ -156,16 +196,17 @@
         </a>
     </li>
 
-        <a href="{% url 'estoque:lista_movimentacoes' %}" class="nav-link text-white" data-menu-pdv-estoque="true">
-            <i class="bi bi-boxes me-2"></i>
-            Estoque
-        </a>
 
         <!-- UI-COMPRAS-INICIO -->
-        <div class="mt-2 mb-1 px-3">
-            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">
+
+        <div class="sidebar-section-heading" data-sidebar-section="compras" data-sidebar-icon="bi-bag-check">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
                 Compras
             </div>
+        </div>
+
+        <div class="mt-2 mb-1 px-3">
         </div>
 
         <a href="{% url 'compras:listar_fornecedores' %}"
@@ -184,9 +225,14 @@
         <!-- UI-COMPRAS-FIM -->
 
         {% if pode_ver_fiscal %}
-        <div class="mt-4 mb-1 px-3">
-            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">Fiscal</div>
+
+        <div class="sidebar-section-heading" data-sidebar-section="fiscal" data-sidebar-icon="bi-receipt">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
+                Fiscal
+            </div>
         </div>
+
         <a href="{% url 'fiscal:inicio' %}" class="nav-link {% if request.resolver_match.namespace == 'fiscal' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-receipt me-2"></i>
             Central Fiscal
@@ -194,12 +240,37 @@
         {% endif %}
 
 
-        {% if pode_gerenciar_vouchers %}
-        <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
-            <i class="bi bi-ticket-perforated me-2"></i>
-            Vouchers
+
+
+        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
+
+        <div class="sidebar-section-heading" data-sidebar-section="minha-empresa" data-sidebar-icon="bi-building">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
+                Minha Empresa
+            </div>
+        </div>
+
+
+        <a href="{% url 'empresa:dashboard' %}" class="nav-link text-white-50">
+            <i class="bi bi-building-gear me-2"></i>
+            Painel da Empresa
+        </a>
+
+        {% if request.user.perfil == 'admin_loja' or request.user.perfil == 'master' %}
+        <!-- CFG-01.01-CENTRAL-CONFIGURACOES-EMPRESA -->
+        <a href="{% url 'configuracoes:inicio' %}"
+           class="nav-link {% if request.resolver_match.namespace == 'configuracoes' %}active bg-primary text-white{% else %}text-white-50{% endif %}">
+            <i class="bi bi-sliders me-2"></i>
+            Configurações
         </a>
         {% endif %}
+        {% endif %}
+
+
+
+
+
 
         {% if pode_importar_clientes or pode_importar_produtos %}
         <div class="text-uppercase text-white-50 small mt-4 mb-1">
@@ -221,59 +292,16 @@
         </a>
         {% endif %}
 
-        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
-        <div class="text-uppercase text-white-50 small mt-4 mb-1">
-            Minha Empresa
-        </div>
-
-        <a href="{% url 'empresa:dashboard' %}" class="nav-link text-white-50">
-            <i class="bi bi-building-gear me-2"></i>
-            Painel da Empresa
-        </a>
-
-        {% if request.user.perfil == 'admin_loja' or request.user.perfil == 'master' %}
-        <!-- CFG-01.01-CENTRAL-CONFIGURACOES-EMPRESA -->
-        <a href="{% url 'configuracoes:inicio' %}"
-           class="nav-link {% if request.resolver_match.namespace == 'configuracoes' %}active bg-primary text-white{% else %}text-white-50{% endif %}">
-            <i class="bi bi-sliders me-2"></i>
-            Configurações
-        </a>
-        {% endif %}
-        {% endif %}
-
-        {% if pode_empresa_lojas %}
-        <a href="{% url 'empresa:lista_lojas' %}" class="nav-link text-white-50">
-            <i class="bi bi-shop me-2"></i>
-            Lojas
-        </a>
-        {% endif %}
-
-        {% if pode_empresa_usuarios %}
-        <a href="{% url 'empresa:lista_usuarios' %}" class="nav-link text-white-50">
-            <i class="bi bi-people me-2"></i>
-            Usuários
-        </a>
-        {% endif %}
-
-        {% if pode_empresa_cashback %}
-        <a href="{% url 'empresa:configurar_cashback' %}" class="nav-link text-white-50">
-            <i class="bi bi-cash-coin me-2"></i>
-            Config. Cashback
-        </a>
-        {% endif %}
-
-        {% if pode_empresa_lojas or pode_empresa_usuarios or pode_empresa_cashback %}
-        <a href="{% url 'empresa:auditoria' %}" class="nav-link text-white-50">
-            <i class="bi bi-shield-check me-2"></i>
-            Auditoria
-        </a>
-        {% endif %}
-
         <!-- UI-RH-INICIO -->
-        <div class="mt-4 mb-1 px-3">
-            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">
+
+        <div class="sidebar-section-heading" data-sidebar-section="recursos-humanos" data-sidebar-icon="bi-people">
+            <div class="text-uppercase text-white-50 small fw-semibold"
+                 style="letter-spacing: .06em;">
                 Recursos Humanos
             </div>
+        </div>
+
+        <div class="mt-4 mb-1 px-3">
         </div>
 
         <a href="{% url 'rh:cargo_list' %}"
