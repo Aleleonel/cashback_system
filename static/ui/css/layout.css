@@ -297,3 +297,94 @@ aside.bg-dark nav[data-sidebar-drawers-ready="true"] {
 }
 
 /* FIM UI-01.006 - GAVETAS INTELIGENTES DA SIDEBAR */
+
+
+/* UI-174-SIDEBAR-ACCORDION-INICIO */
+aside.bg-dark {
+    padding: .75rem !important;
+}
+
+aside.bg-dark nav[data-sidebar-drawers-ready="true"] {
+    gap: 0 !important;
+    margin-top: .75rem;
+    border-top: 1px solid rgba(255,255,255,.10);
+}
+
+aside.bg-dark .sidebar-drawer {
+    margin: 0;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+aside.bg-dark .sidebar-drawer__trigger,
+aside.bg-dark .sidebar-drawer__trigger--spaced {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: .7rem .65rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255,255,255,.90);
+}
+
+aside.bg-dark .sidebar-drawer__trigger:hover,
+aside.bg-dark .sidebar-drawer.is-open > .sidebar-drawer__trigger {
+    background: rgba(255,255,255,.06);
+    color: #fff;
+}
+
+aside.bg-dark .sidebar-drawer__label-wrap {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    gap: .65rem;
+}
+
+aside.bg-dark .sidebar-drawer__icon {
+    width: 1rem;
+    flex: 0 0 1rem;
+    text-align: center;
+    font-size: .9rem;
+    opacity: .9;
+}
+
+aside.bg-dark .sidebar-drawer__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .88rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+aside.bg-dark .sidebar-drawer__chevron {
+    font-size: .72rem;
+    opacity: .75;
+}
+
+aside.bg-dark .sidebar-drawer__content {
+    padding: 0 0 .25rem;
+}
+
+aside.bg-dark .sidebar-drawer__content > .nav-link,
+aside.bg-dark .sidebar-drawer__content > .nav-item .nav-link {
+    margin: 0;
+    padding: .55rem .65rem .55rem 2.25rem;
+    border-radius: .35rem;
+    font-size: .84rem;
+}
+
+aside.bg-dark .sidebar-drawer__content > .nav-link > i,
+aside.bg-dark .sidebar-drawer__content > .nav-item .nav-link > i {
+    width: 1rem;
+    margin-right: .45rem !important;
+    text-align: center;
+    opacity: .82;
+}
+
+aside.bg-dark .sidebar-section-heading {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+/* UI-174-SIDEBAR-ACCORDION-FIM */

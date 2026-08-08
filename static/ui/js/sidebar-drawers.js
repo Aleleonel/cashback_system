@@ -22,7 +22,14 @@
         ["empresa", "minha-empresa"],
         ["recursos humanos", "rh"],
         ["rh", "rh"],
-        ["campanhas", "campanhas"]
+        ["campanhas", "campanhas"],
+        ["visão geral", "visao-geral"],
+        ["visao geral", "visao-geral"],
+        ["vendas", "vendas"],
+        ["clientes", "clientes"],
+        ["produtos e estoque", "produtos-estoque"],
+        ["caixa", "caixa"],
+        ["fiscal", "fiscal"]
     ]);
 
     function normalizeText(value) {
@@ -37,6 +44,10 @@
     function getSectionKey(element) {
         if (!element || element.matches("a, button")) {
             return null;
+        }
+
+        if (element.dataset.sidebarSection) {
+            return element.dataset.sidebarSection;
         }
 
         const normalized = normalizeText(element.textContent);
@@ -68,15 +79,26 @@
         trigger.setAttribute("aria-controls", contentId);
         trigger.setAttribute("aria-expanded", "false");
 
+        const labelWrap = document.createElement("span");
+        labelWrap.className = "sidebar-drawer__label-wrap";
+
+        const icon = document.createElement("i");
+        const iconClass = originalHeading.dataset.sidebarIcon || "bi-folder2";
+        icon.className = "bi " + iconClass + " sidebar-drawer__icon";
+        icon.setAttribute("aria-hidden", "true");
+
         const labelElement = document.createElement("span");
         labelElement.className = "sidebar-drawer__label";
         labelElement.textContent = label;
+
+        labelWrap.appendChild(icon);
+        labelWrap.appendChild(labelElement);
 
         const chevron = document.createElement("i");
         chevron.className = "bi bi-chevron-down sidebar-drawer__chevron";
         chevron.setAttribute("aria-hidden", "true");
 
-        trigger.appendChild(labelElement);
+        trigger.appendChild(labelWrap);
         trigger.appendChild(chevron);
 
         const originalClassName = originalHeading.className || "";
