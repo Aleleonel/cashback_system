@@ -98,3 +98,9 @@ from fiscal.models_beneficio_fiscal import BeneficioFiscal
 from fiscal.models_regra_fiscal import RegraFiscal
 
 from fiscal.models_configuracao_fiscal import ConfiguracaoFiscalMatriz
+
+# Documento fiscal eletronico interno.
+from fiscal.models_documento_fiscal import (
+    DocumentoFiscal,
+    SequenciaDocumentoFiscal,
+)  # noqa: E402,F401

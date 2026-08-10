@@ -384,3 +384,6 @@ class RegraFiscalAdmin(admin.ModelAdmin):
         return tuple(fields)
 
 from fiscal import admin_configuracao_fiscal  # noqa: F401
+
+# Registros administrativos do documento fiscal.
+from fiscal import admin_documento_fiscal  # noqa: E402,F401
