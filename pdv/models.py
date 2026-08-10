@@ -750,3 +750,6 @@ class MovimentacaoCaixa(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.valor}"
+
+# Snapshot fiscal historico da venda.
+from pdv.models_fiscal import ItemVendaFiscal, VendaFiscal  # noqa: E402,F401
