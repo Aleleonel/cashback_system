@@ -5,6 +5,7 @@ from typing import Any
 from fiscal.domain.selecao_fiscal import (
     ContextoSelecaoFiscal,
     EstadoSelecaoFiscal,
+    ResultadoSelecaoFiscal,
 )
 from fiscal.services_motor_selecao import selecionar_regra
 
@@ -35,6 +36,7 @@ class ProdutoFiscalResolvido:
     motivo_selecao: str = ""
     alertas: tuple[str, ...] = ()
     memoria_decisao: dict[str, Any] | None = None
+    resultado_selecao_fiscal: ResultadoSelecaoFiscal | None = None
 
     @property
     def valido(self) -> bool:
@@ -152,6 +154,24 @@ def resolver_produto_fiscal(
         contexto=contexto,
     )
 
+    if regra is not None and resultado is None:
+        resultado = ResultadoSelecaoFiscal(
+            estado=EstadoSelecaoFiscal.SELECIONADA,
+            regra=regra,
+            codigo_regra=str(
+                getattr(regra, "codigo_interno", "") or ""
+            ),
+            prioridade=getattr(regra, "prioridade", None),
+            criterios_atendidos=("regra_fiscal_padrao",),
+            candidatas_avaliadas=1,
+            memoria_decisao={
+                "origem": "regra_fiscal_padrao",
+                "codigo_regra": str(
+                    getattr(regra, "codigo_interno", "") or ""
+                ),
+            },
+        )
+
     ncm_produto = getattr(produto, "ncm_fiscal", None)
     ncm_legado = getattr(produto, "ncm", None)
 
@@ -263,4 +283,5 @@ def resolver_produto_fiscal(
         motivo_selecao=motivo,
         alertas=tuple(alertas),
         memoria_decisao=memoria,
+        resultado_selecao_fiscal=resultado,
     )
