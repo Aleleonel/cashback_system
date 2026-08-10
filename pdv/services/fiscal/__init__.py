@@ -1,3 +1,6 @@
+from pdv.services.fiscal.finalizacao_fiscal import (
+    preparar_e_persistir_snapshot_fiscal_venda,
+)
 from pdv.services.fiscal.snapshot_venda import (
     DadosItemVendaFiscal,
     DadosVendaFiscal,
@@ -8,6 +11,7 @@ from pdv.services.fiscal.snapshot_venda import (
 )
 
 __all__ = [
+    "preparar_e_persistir_snapshot_fiscal_venda",
     "DadosItemVendaFiscal",
     "DadosVendaFiscal",
     "construir_dados_item_venda_fiscal",
