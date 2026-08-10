@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from fiscal.models_regra_fiscal import UFS_VALIDAS
 from pdv.choices import (
     StatusOperacaoVenda,
     StatusSessaoCaixa,
@@ -19,6 +20,18 @@ STATUS_FINALIZAVEIS = {
 
 def validar_venda_para_finalizacao(*, venda, permitir_fiscal=False):
     errors = {}
+
+    if venda.tipo_emissao == TipoEmissaoVenda.FISCAL:
+        venda.uf_destino = (
+            getattr(venda, "uf_destino", "") or ""
+        ).strip().upper()
+
+        if not venda.uf_destino:
+            errors["uf_destino"] = (
+                "Informe a UF de destino para uma venda fiscal."
+            )
+        elif venda.uf_destino not in UFS_VALIDAS:
+            errors["uf_destino"] = "Informe uma UF brasileira valida."
 
     if venda.tipo_operacao != TipoOperacaoVenda.VENDA:
         errors["tipo_operacao"] = "Somente uma operacao de venda pode ser finalizada."

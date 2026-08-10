@@ -8,6 +8,7 @@ from django.db.models import Q
 
 from clientes.models import Cliente
 from empresas.models import Loja, Matriz
+from fiscal.models_regra_fiscal import UFS_VALIDAS
 from produtos.models import Produto
 
 from .choices import (
@@ -302,6 +303,13 @@ class Venda(models.Model):
         default=TipoEmissaoVenda.NAO_FISCAL,
         db_index=True,
     )
+
+    uf_destino = models.CharField(
+        "UF de destino",
+        max_length=2,
+        blank=True,
+        default="",
+    )
     subtotal = models.DecimalField(
         max_digits=14,
         decimal_places=2,
@@ -379,6 +387,18 @@ class Venda(models.Model):
 
     def clean(self):
         errors = {}
+
+        self.uf_destino = (self.uf_destino or "").strip().upper()
+
+        if self.uf_destino and self.uf_destino not in UFS_VALIDAS:
+            errors["uf_destino"] = "Informe uma UF brasileira valida."
+        elif (
+            self.tipo_emissao == TipoEmissaoVenda.FISCAL
+            and not self.uf_destino
+        ):
+            errors["uf_destino"] = (
+                "Informe a UF de destino para uma venda fiscal."
+            )
         if self.loja_id and self.matriz_id and self.loja.matriz_id != self.matriz_id:
             errors["loja"] = "A loja deve pertencer a matriz informada."
 
@@ -750,3 +770,6 @@ class MovimentacaoCaixa(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.valor}"
+
+# Snapshot fiscal historico da venda.
+from pdv.models_fiscal import ItemVendaFiscal, VendaFiscal  # noqa: E402,F401

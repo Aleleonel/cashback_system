@@ -5,8 +5,14 @@ from django.utils import timezone
 
 from estoque.services import confirmar_reserva_estoque
 from empresas.models import Loja
-from pdv.choices import StatusOperacaoVenda
+from pdv.choices import (
+    StatusOperacaoVenda,
+    TipoEmissaoVenda,
+)
 from pdv.models import Venda
+from pdv.services.fiscal.finalizacao_fiscal import (
+    preparar_e_persistir_snapshot_fiscal_venda,
+)
 from pdv.services.cliente_consumidor import obter_ou_criar_cliente_consumidor
 
 from .auditoria import registrar_auditoria_finalizacao_venda
@@ -127,7 +133,19 @@ def finalizar_venda(*, venda, usuario=None, request=None):
         return venda
 
     _associar_cliente_consumidor(venda=venda)
-    validar_venda_para_finalizacao(venda=venda)
+    permitir_fiscal = (
+        venda.tipo_emissao == TipoEmissaoVenda.FISCAL
+    )
+
+    validar_venda_para_finalizacao(
+        venda=venda,
+        permitir_fiscal=permitir_fiscal,
+    )
+
+    if permitir_fiscal:
+        preparar_e_persistir_snapshot_fiscal_venda(
+            venda=venda,
+        )
 
     _confirmar_reservas(
         venda=venda,
