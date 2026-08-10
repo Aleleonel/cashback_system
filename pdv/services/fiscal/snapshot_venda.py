@@ -252,9 +252,16 @@ def construir_dados_item_venda_fiscal(
 
     origem = _obter(
         produto_fiscal,
-        "origem_mercadoria",
-        "",
+        "origem",
+        None,
     )
+
+    if origem is None:
+        origem = _obter(
+            produto_fiscal,
+            "origem_mercadoria",
+            "",
+        )
 
     cfop = _obter(regra, "cfop", "")
 
