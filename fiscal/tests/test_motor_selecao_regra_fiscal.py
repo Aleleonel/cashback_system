@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from empresas.models import Loja, Matriz
 from fiscal.domain import ContextoSelecaoFiscal, EstadoSelecaoFiscal
-from fiscal.models import CSTICMS, RegraFiscal
+from fiscal.models import CFOP, CSTICMS, RegraFiscal
 from fiscal.services_motor_selecao import selecionar_regra
 
 
@@ -134,4 +134,55 @@ class MotorSelecaoFiscalTests(TestCase):
         self.assertEqual(
             resultado.memoria_decisao["regra_selecionada"],
             "REG-MEMORIA",
+        )
+
+
+    def test_cfop_da_regra_nao_restringe_contexto_sem_cfop(self):
+        cfop = CFOP.objects.get(codigo="5102")
+        regra = self.criar_regra(
+            "REG-CFOP-SAIDA",
+            cfop=cfop,
+        )
+
+        resultado = selecionar_regra(self.contexto())
+
+        self.assertEqual(
+            resultado.estado,
+            EstadoSelecaoFiscal.SELECIONADA,
+        )
+        self.assertEqual(resultado.regra, regra)
+
+    def test_cfop_da_regra_casa_quando_contexto_informa_mesmo_cfop(self):
+        cfop = CFOP.objects.get(codigo="5102")
+        regra = self.criar_regra(
+            "REG-CFOP-5102",
+            cfop=cfop,
+        )
+
+        resultado = selecionar_regra(
+            self.contexto(cfop=cfop)
+        )
+
+        self.assertEqual(
+            resultado.estado,
+            EstadoSelecaoFiscal.SELECIONADA,
+        )
+        self.assertEqual(resultado.regra, regra)
+
+    def test_cfop_da_regra_restringe_quando_contexto_informa_outro_cfop(self):
+        cfop_regra = CFOP.objects.get(codigo="5102")
+        cfop_contexto = CFOP.objects.get(codigo="6102")
+
+        self.criar_regra(
+            "REG-CFOP-5102",
+            cfop=cfop_regra,
+        )
+
+        resultado = selecionar_regra(
+            self.contexto(cfop=cfop_contexto)
+        )
+
+        self.assertEqual(
+            resultado.estado,
+            EstadoSelecaoFiscal.NAO_ENCONTRADA,
         )

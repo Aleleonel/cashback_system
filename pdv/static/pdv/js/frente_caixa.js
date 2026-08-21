@@ -660,6 +660,10 @@
             const opcaoNenhum = document.querySelector('input[name="pdv-beneficio"][value="nenhum"]');
             if (opcaoNenhum && !voucherAplicado) opcaoNenhum.checked = true;
             document.getElementById("pdv-fechamento-cashback-valor").value = "";
+            const emissaoNaoFiscal = document.querySelector('input[name="pdv-tipo-emissao"][value="nao_fiscal"]');
+            if (emissaoNaoFiscal) emissaoNaoFiscal.checked = true;
+            const ufDestino = document.getElementById("pdv-uf-destino");
+            if (ufDestino) ufDestino.value = "";
             document.getElementById("pdv-pagamentos").innerHTML = "";
             adicionarPagamento(totalLiquido().toFixed(2));
 
@@ -685,6 +689,15 @@
                     ? `Os pagamentos excedem o total em ${moeda(resumo.excedente)}.`
                     : `Ainda falta receber ${moeda(resumo.restante)}.`
             );
+            botao.disabled = false;
+            return;
+        }
+
+        const tipoEmissao = document.querySelector('input[name="pdv-tipo-emissao"]:checked')?.value || "nao_fiscal";
+        const ufDestino = (document.getElementById("pdv-uf-destino")?.value || "").trim().toUpperCase();
+
+        if (tipoEmissao === "fiscal" && !ufDestino) {
+            erroFechamento("Informe a UF de destino para a venda fiscal.");
             botao.disabled = false;
             return;
         }
@@ -728,6 +741,8 @@
         }));
         try {
             const payload = await postJson(app.dataset.finalizarUrl, {
+                tipo_emissao: tipoEmissao,
+                uf_destino: tipoEmissao === "fiscal" ? ufDestino : "",
                 tipo_beneficio: beneficio.tipo,
                 desconto_geral: beneficio.valor.toFixed(2),
                 valor_cashback: beneficio.tipo === "cashback" ? beneficio.valor.toFixed(2) : "0.00",

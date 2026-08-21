@@ -1,3 +1,4 @@
+from fiscal import views_homologacao
 from django.urls import path
 
 from . import views
@@ -17,6 +18,16 @@ from . import views_cst_icms
 app_name = "fiscal"
 
 urlpatterns = [
+    path(
+        "homologacao/venda/<uuid:venda_uuid>/",
+        views_homologacao.homologacao_documento_fiscal,
+        name="homologacao_documento_fiscal",
+    ),
+    path(
+        "homologacao/venda/<uuid:venda_uuid>/preparar/",
+        views_homologacao.preparar_documento_fiscal_homologacao,
+        name="preparar_documento_fiscal_homologacao",
+    ),
     path("", views.inicio, name="inicio"),
     path(
         "configuracao-matriz/",

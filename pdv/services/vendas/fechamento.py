@@ -189,6 +189,8 @@ def fechar_venda_web(
     venda,
     usuario,
     pagamentos,
+    tipo_emissao="nao_fiscal",
+    uf_destino="",
     tipo_beneficio="nenhum",
     valor_cashback="0",
     codigo_voucher="",
@@ -200,6 +202,10 @@ def fechar_venda_web(
 
     if venda.status == StatusOperacaoVenda.FINALIZADA:
         return venda
+
+    venda.tipo_emissao = (tipo_emissao or "nao_fiscal").strip()
+    venda.uf_destino = (uf_destino or "").strip().upper()
+
     if tipo_beneficio not in {"nenhum", "voucher", "cashback"}:
         raise ValidationError({"beneficio": "Escolha um benefÃ­cio vÃ¡lido."})
 
@@ -219,7 +225,8 @@ def fechar_venda_web(
     venda.recalcular_totais(salvar=False)
     venda.full_clean()
     venda.save(update_fields=[
-        "desconto_geral", "desconto", "total", "status", "atualizada_em"
+        "tipo_emissao", "uf_destino", "desconto_geral", "desconto", "total",
+        "status", "atualizada_em"
     ])
 
     _registrar_pagamentos(venda, pagamentos)

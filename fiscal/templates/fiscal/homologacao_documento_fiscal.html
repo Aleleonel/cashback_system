@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Homologação fiscal da venda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Homologação fiscal</h1>
+            <p class="text-muted mb-0">
+                Venda {% if venda.numero %}#{{ venda.numero }}{% else %}{{ venda.uuid }}{% endif %}
+                · ambiente de homologação
+            </p>
+        </div>
+        <a class="btn btn-outline-secondary" href="{% url 'pdv:detalhe_venda' venda.uuid %}">
+            Voltar para a venda
+        </a>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>Ambiente de homologação.</strong>
+        Esta tela prepara o documento localmente. Não transmite para a SEFAZ e não autoriza NFC-e.
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Venda</div>
+                    <div class="fw-semibold">
+                        {% if venda.numero %}#{{ venda.numero }}{% else %}{{ venda.uuid }}{% endif %}
+                    </div>
+                    <div class="small mt-2">Status: {{ venda.get_status_display }}</div>
+                    <div class="small">Emissão: {{ venda.get_tipo_emissao_display }}</div>
+                    <div class="small">Loja: {{ venda.loja }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Snapshot fiscal</div>
+                    {% if venda_fiscal %}
+                        <div class="fw-semibold text-success">OK</div>
+                        <div class="small mt-2">{{ venda_fiscal.uf_origem }} → {{ venda_fiscal.uf_destino }}</div>
+                        <div class="small">Regime: {{ venda_fiscal.regime_tributario }}</div>
+                    {% else %}
+                        <div class="fw-semibold text-danger">AUSENTE</div>
+                        <div class="small mt-2">Nenhum snapshot fiscal foi persistido para esta venda.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small">Parâmetros da homologação</div>
+                    <div class="small mt-2">Modelo: NFC-e ({{ modelo_homologacao }})</div>
+                    <div class="small">Ambiente: {{ ambiente_homologacao }}</div>
+                    <div class="small">Série: {{ serie_homologacao }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if venda.tipo_emissao == "nao_fiscal" %}
+        <div class="alert alert-info">Venda não fiscal. Consulta disponível somente para conferência.</div>
+    {% endif %}
+
+    {% if venda_fiscal %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Totais do snapshot fiscal</strong>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Base operação</span>R$ {{ venda_fiscal.total_base_operacao }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Base ICMS</span>R$ {{ venda_fiscal.total_base_icms }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">ICMS</span>R$ {{ venda_fiscal.total_icms }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">FCP</span>R$ {{ venda_fiscal.total_fcp }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Base PIS</span>R$ {{ venda_fiscal.total_base_pis }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">PIS</span>R$ {{ venda_fiscal.total_pis }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Base COFINS</span>R$ {{ venda_fiscal.total_base_cofins }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">COFINS</span>R$ {{ venda_fiscal.total_cofins }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Base IPI</span>R$ {{ venda_fiscal.total_base_ipi }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">IPI</span>R$ {{ venda_fiscal.total_ipi }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Tributos</span>R$ {{ venda_fiscal.total_tributos }}</div>
+                    <div class="col-6 col-lg-3"><span class="text-muted d-block small">Resolvido em</span>{{ venda_fiscal.resolvida_em|date:"d/m/Y H:i:s" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Itens fiscais</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>NCM</th>
+                            <th>CEST</th>
+                            <th>CFOP</th>
+                            <th>ICMS</th>
+                            <th>PIS</th>
+                            <th>COFINS</th>
+                            <th>IPI</th>
+                            <th class="text-end">Qtd.</th>
+                            <th class="text-end">Produtos</th>
+                            <th class="text-end">Tributos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in itens_fiscais %}
+                            <tr>
+                                <td>{{ item.item_venda.produto }}</td>
+                                <td>{{ item.ncm_codigo|default:"—" }}</td>
+                                <td>{{ item.cest_codigo|default:"—" }}</td>
+                                <td>{{ item.cfop_codigo|default:"—" }}</td>
+                                <td>{{ item.cst_icms_codigo|default:item.csosn_codigo|default:"—" }}</td>
+                                <td>{{ item.cst_pis_codigo|default:"—" }}</td>
+                                <td>{{ item.cst_cofins_codigo|default:"—" }}</td>
+                                <td>{{ item.cst_ipi_codigo|default:"—" }}</td>
+                                <td class="text-end">{{ item.quantidade }}</td>
+                                <td class="text-end">R$ {{ item.valor_produtos }}</td>
+                                <td class="text-end">R$ {{ item.total_tributos }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center text-muted py-4">Nenhum item fiscal encontrado.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Documento fiscal</strong>
+            {% if documento %}
+                <span class="badge text-bg-primary">{{ documento.get_status_display }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if documento %}
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-lg-4"><span class="text-muted d-block small">UUID</span>{{ documento.uuid }}</div>
+                    <div class="col-6 col-lg-2"><span class="text-muted d-block small">Modelo</span>{{ documento.modelo }}</div>
+                    <div class="col-6 col-lg-2"><span class="text-muted d-block small">Série</span>{{ documento.serie }}</div>
+                    <div class="col-6 col-lg-2"><span class="text-muted d-block small">Número</span>{{ documento.numero|default:"—" }}</div>
+                    <div class="col-6 col-lg-2"><span class="text-muted d-block small">Ambiente</span>{{ documento.ambiente }}</div>
+                    <div class="col-12 col-lg-4"><span class="text-muted d-block small">Idempotência</span><code>{{ idempotency_key_truncada }}</code></div>
+                    <div class="col-12 col-lg-4"><span class="text-muted d-block small">Chave de acesso</span>{{ documento.chave_acesso|default:"Ainda não disponível" }}</div>
+                    <div class="col-12 col-lg-4"><span class="text-muted d-block small">Protocolo</span>{{ documento.protocolo_autorizacao|default:"Ainda não disponível" }}</div>
+                </div>
+            {% else %}
+                <p class="text-muted">Documento fiscal ainda não preparado.</p>
+            {% endif %}
+
+            <div class="small text-muted mb-3">
+                XML rascunho: não exibido · XML assinado: não exibido · XML autorizado: não exibido
+            </div>
+
+            {% if pode_preparar %}
+                <form method="post" action="{% url 'fiscal:preparar_documento_fiscal_homologacao' venda.uuid %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        Preparar documento fiscal
+                    </button>
+                    {% if documento and documento.status == "preparado" %}
+                        <span class="text-muted small ms-2">
+                            Repetir esta ação deve manter o mesmo documento e número.
+                        </span>
+                    {% endif %}
+                </form>
+            {% else %}
+                <div class="alert alert-secondary mb-0">
+                    Preparação indisponível para o estado atual desta venda.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

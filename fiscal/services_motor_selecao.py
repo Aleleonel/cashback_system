@@ -118,8 +118,13 @@ def _filtrar_candidatas(contexto):
     regras = regras.filter(
         Q(ncm__isnull=True) | Q(ncm=contexto.ncm),
         Q(cest__isnull=True) | Q(cest=contexto.cest),
-        Q(cfop__isnull=True) | Q(cfop=contexto.cfop),
     )
+
+    if contexto.cfop is not None:
+        regras = regras.filter(
+            Q(cfop__isnull=True) | Q(cfop=contexto.cfop),
+        )
+
     _registrar_etapa(memoria, "classificacao_fiscal", regras)
 
     candidatas = list(regras)

@@ -719,6 +719,8 @@ def finalizar_venda_web(request):
             venda=venda,
             usuario=request.user,
             pagamentos=dados.get("pagamentos") or [],
+            tipo_emissao=dados.get("tipo_emissao") or "nao_fiscal",
+            uf_destino=dados.get("uf_destino") or "",
             tipo_beneficio=dados.get("tipo_beneficio") or "nenhum",
             valor_cashback=dados.get("valor_cashback") or "0",
             codigo_voucher=dados.get("codigo_voucher") or "",

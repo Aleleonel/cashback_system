@@ -49,6 +49,9 @@ def _codigo(objeto):
     if objeto is None:
         return ""
 
+    if isinstance(objeto, str):
+        return objeto
+
     for campo in (
         "codigo",
         "codigo_interno",
@@ -283,19 +286,19 @@ def construir_dados_item_venda_fiscal(
         cfop_codigo=str(_codigo(cfop) or cfop or ""),
         cfop_descricao=_descricao(cfop),
         cst_icms_codigo=str(
-            _obter(regra, "cst_icms", "") or ""
+            _codigo(_obter(regra, "cst_icms", "")) or ""
         ),
         csosn_codigo=str(
-            _obter(regra, "csosn", "") or ""
+            _codigo(_obter(regra, "csosn", "")) or ""
         ),
         cst_pis_codigo=str(
-            _obter(regra, "cst_pis", "") or ""
+            _codigo(_obter(regra, "cst_pis", "")) or ""
         ),
         cst_cofins_codigo=str(
-            _obter(regra, "cst_cofins", "") or ""
+            _codigo(_obter(regra, "cst_cofins", "")) or ""
         ),
         cst_ipi_codigo=str(
-            _obter(regra, "cst_ipi", "") or ""
+            _codigo(_obter(regra, "cst_ipi", "")) or ""
         ),
         beneficio_fiscal_codigo=str(
             _codigo(beneficio)

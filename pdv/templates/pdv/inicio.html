@@ -353,6 +353,29 @@
           </div></div>
         </div>
 
+        <h6>Tipo de documento</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="border rounded p-3 w-100 h-100">
+              <input class="form-check-input me-2" type="radio" name="pdv-tipo-emissao" value="nao_fiscal" checked>
+              <span class="fw-semibold">Não fiscal</span>
+              <div class="small text-muted mt-1">Mantém o fechamento sem emissão de NFC-e.</div>
+            </label>
+          </div>
+          <div class="col-md-6">
+            <label class="border rounded p-3 w-100 h-100">
+              <input class="form-check-input me-2" type="radio" name="pdv-tipo-emissao" value="fiscal">
+              <span class="fw-semibold">Fiscal — NFC-e</span>
+              <div class="small text-muted mt-1">Executa a preparação fiscal antes de estoque e caixa.</div>
+            </label>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="pdv-uf-destino">UF de destino</label>
+            <input class="form-control text-uppercase" id="pdv-uf-destino" type="text" maxlength="2" autocomplete="off" placeholder="Ex.: SP">
+            <div class="form-text">Obrigatória somente para venda fiscal.</div>
+          </div>
+        </div>
+
         <h6>Benefício</h6>
         <div class="row g-3 mb-4">
           <div class="col-md-4"><label class="border rounded p-3 w-100">
