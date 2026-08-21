@@ -16,6 +16,7 @@ from fiscal.dto_documento_fiscal import (
     DadosPagamentoDocumentoFiscal,
 )
 from fiscal.models_documento_fiscal import DocumentoFiscal
+from fiscal.services_chave_acesso import identificar_documento_fiscal_nfce
 from fiscal.services_documento_fiscal import (
     reservar_proximo_numero_documento_fiscal,
     transicionar_documento_fiscal,
@@ -399,6 +400,16 @@ def obter_ou_criar_documento_fiscal_rascunho(
         return documento, False
 
 
+def _identificar_nfce_no_pipeline(*, documento, venda_fiscal):
+    return identificar_documento_fiscal_nfce(
+        documento=documento,
+        data_emissao=(
+            venda_fiscal.venda.finalizada_em
+            or documento.criado_em
+        ),
+    )
+
+
 @transaction.atomic
 def preparar_documento_fiscal(
     *,
@@ -430,6 +441,15 @@ def preparar_documento_fiscal(
     )
 
     if documento.status == StatusDocumentoFiscal.PREPARADO:
+        if (
+            documento.modelo == ModeloDocumentoFiscal.NFCE
+            and not getattr(documento, "chave_acesso", "")
+        ):
+            _identificar_nfce_no_pipeline(
+                documento=documento,
+                venda_fiscal=venda_fiscal,
+            )
+
         dados = construir_dados_documento_fiscal(
             venda_fiscal=venda_fiscal,
             modelo=documento.modelo,
@@ -474,6 +494,15 @@ def preparar_documento_fiscal(
                 ambiente=documento.ambiente,
                 serie=documento.serie,
             )
+        )
+
+    if (
+        documento.modelo == ModeloDocumentoFiscal.NFCE
+        and not getattr(documento, "chave_acesso", "")
+    ):
+        _identificar_nfce_no_pipeline(
+            documento=documento,
+            venda_fiscal=venda_fiscal,
         )
 
     documento.full_clean()

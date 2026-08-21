@@ -192,6 +192,10 @@ class PrepararDocumentoFiscalServiceTests(TestCase):
 
     @patch(
         "fiscal.services_preparacao_documento_fiscal."
+        "_identificar_nfce_no_pipeline"
+    )
+    @patch(
+        "fiscal.services_preparacao_documento_fiscal."
         "transicionar_documento_fiscal"
     )
     @patch(
@@ -217,6 +221,7 @@ class PrepararDocumentoFiscalServiceTests(TestCase):
         validar,
         reservar,
         transicionar,
+        identificar_nfce,
     ):
         venda_fiscal = self.venda_fiscal_fake()
         documento = self.documento_fake(
@@ -256,12 +261,20 @@ class PrepararDocumentoFiscalServiceTests(TestCase):
         self.assertTrue(validar.called)
         reservar.assert_called_once()
         transicionar.assert_called_once()
+        identificar_nfce.assert_called_once_with(
+            documento=documento,
+            venda_fiscal=venda_fiscal,
+        )
 
         primeira_validacao = validar.call_args_list[0]
         self.assertIsNone(
             primeira_validacao.kwargs["dados"].numero
         )
 
+    @patch(
+        "fiscal.services_preparacao_documento_fiscal."
+        "_identificar_nfce_no_pipeline"
+    )
     @patch(
         "fiscal.services_preparacao_documento_fiscal."
         "transicionar_documento_fiscal"
@@ -289,6 +302,7 @@ class PrepararDocumentoFiscalServiceTests(TestCase):
         validar,
         reservar,
         transicionar,
+        identificar_nfce,
     ):
         venda_fiscal = self.venda_fiscal_fake()
         documento = self.documento_fake(
@@ -321,6 +335,10 @@ class PrepararDocumentoFiscalServiceTests(TestCase):
         self.assertEqual(dados.numero, 123)
         reservar.assert_not_called()
         transicionar.assert_not_called()
+        identificar_nfce.assert_called_once_with(
+            documento=documento,
+            venda_fiscal=venda_fiscal,
+        )
         validar.assert_called_once()
 
     @patch(
