@@ -9,8 +9,11 @@ from fiscal.choices_documento_fiscal import (
     StatusDocumentoFiscal,
 )
 from fiscal.dto_documento_fiscal import (
+    DadosDestinatarioDocumentoFiscal,
     DadosDocumentoFiscal,
+    DadosEmitenteDocumentoFiscal,
     DadosItemDocumentoFiscal,
+    DadosPagamentoDocumentoFiscal,
 )
 from fiscal.models_documento_fiscal import DocumentoFiscal
 from fiscal.services_documento_fiscal import (
@@ -84,7 +87,19 @@ def _validar_parametros_preparacao(
         raise ValidationError(errors)
 
 
+def _codigo_unidade_comercial(produto):
+    unidade = getattr(produto, "unidade_medida", None)
+    for atributo in ("sigla", "codigo", "abreviacao", "nome"):
+        valor = _texto(getattr(unidade, atributo, ""))
+        if valor:
+            return valor
+    return ""
+
+
 def _item_snapshot_para_dto(item_fiscal):
+    item_venda = item_fiscal.item_venda
+    produto = item_venda.produto
+
     return DadosItemDocumentoFiscal(
         item_venda_id=item_fiscal.item_venda_id,
         origem_mercadoria_codigo=_texto(
@@ -138,8 +153,82 @@ def _item_snapshot_para_dto(item_fiscal):
         aliquota_ipi=item_fiscal.aliquota_ipi,
         valor_ipi=item_fiscal.valor_ipi,
         valor_total_tributos=item_fiscal.valor_total_tributos,
+        codigo_produto=(
+            _texto(getattr(produto, "codigo_interno", ""))
+            or _texto(getattr(produto, "sku", ""))
+            or str(produto.pk)
+        ),
+        descricao_produto=(
+            _texto(getattr(produto, "nome", ""))
+            or _texto(getattr(produto, "descricao", ""))
+        ),
+        unidade_comercial=_codigo_unidade_comercial(produto),
+        gtin=_texto(getattr(produto, "gtin", "")),
     )
 
+
+
+def _construir_emitente_documento_fiscal(venda):
+    try:
+        configuracao = venda.loja.configuracao_emissao_fiscal
+    except Exception:
+        return None
+
+    if not configuracao.ativa:
+        return None
+
+    return DadosEmitenteDocumentoFiscal(
+        cnpj=_texto(getattr(venda.loja, "cnpj", "")),
+        razao_social=_texto(configuracao.razao_social),
+        nome_fantasia=_texto(configuracao.nome_fantasia),
+        inscricao_estadual=_texto(configuracao.inscricao_estadual),
+        crt=_texto(configuracao.crt),
+        logradouro=_texto(configuracao.logradouro),
+        numero=_texto(configuracao.numero),
+        complemento=_texto(configuracao.complemento),
+        bairro=_texto(configuracao.bairro),
+        codigo_municipio_ibge=_texto(configuracao.codigo_municipio_ibge),
+        municipio=_texto(configuracao.municipio),
+        uf=_texto(configuracao.uf),
+        cep=_texto(configuracao.cep),
+    )
+
+
+def _construir_destinatario_documento_fiscal(venda):
+    cliente = getattr(venda, "cliente", None)
+    if cliente is None:
+        return None
+
+    cpf = _texto(getattr(cliente, "cpf_normalizado", ""))
+    if not cpf:
+        cpf = "".join(ch for ch in _texto(getattr(cliente, "cpf", "")) if ch.isdigit())
+
+    if not cpf or cpf.upper() == "CONSUMIDOR":
+        return None
+
+    return DadosDestinatarioDocumentoFiscal(
+        cpf_cnpj=cpf,
+        nome=_texto(getattr(cliente, "nome", "")),
+        email=_texto(getattr(cliente, "email", "")),
+    )
+
+
+def _construir_pagamentos_documento_fiscal(venda):
+    pagamentos = []
+    for pagamento in (
+        venda.pagamentos.select_related("forma_pagamento").order_by("criado_em", "id")
+    ):
+        forma = pagamento.forma_pagamento
+        pagamentos.append(
+            DadosPagamentoDocumentoFiscal(
+                codigo=_texto(getattr(forma, "codigo", "")),
+                tipo=_texto(getattr(forma, "tipo", "")),
+                descricao=_texto(getattr(forma, "nome", "")),
+                valor=pagamento.valor,
+                troco=pagamento.troco,
+            )
+        )
+    return tuple(pagamentos)
 
 def construir_dados_documento_fiscal(
     *,
@@ -156,7 +245,11 @@ def construir_dados_documento_fiscal(
     for item_venda in (
         venda.itens
         .filter(cancelado=False)
-        .select_related("fiscal")
+        .select_related(
+            "fiscal",
+            "produto",
+            "produto__unidade_medida",
+        )
         .order_by("id")
     ):
         try:
@@ -209,6 +302,9 @@ def construir_dados_documento_fiscal(
         total_ipi=venda_fiscal.total_ipi,
         total_tributos=venda_fiscal.total_tributos,
         itens=tuple(itens),
+        emitente=_construir_emitente_documento_fiscal(venda),
+        destinatario=_construir_destinatario_documento_fiscal(venda),
+        pagamentos=_construir_pagamentos_documento_fiscal(venda),
     )
 
 

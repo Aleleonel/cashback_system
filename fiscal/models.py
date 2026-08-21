@@ -104,3 +104,5 @@ from fiscal.models_documento_fiscal import (
     DocumentoFiscal,
     SequenciaDocumentoFiscal,
 )  # noqa: E402,F401
+
+from fiscal.models_emissao_fiscal import ConfiguracaoEmissaoFiscalLoja  # noqa: F401
