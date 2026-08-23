@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from decimal import Decimal
 
 
@@ -85,8 +85,9 @@ class DadosItemDocumentoFiscal:
     descricao_produto: str = ""
     unidade_comercial: str = ""
     gtin: str = ""
-
-
+    # 195F2A1 - contrato explicito para serializacao ICMS
+    modalidade_base_icms: str = ""
+    percentual_reducao_base_icms: Decimal = Decimal("0")
 @dataclass(frozen=True, slots=True)
 class DadosDocumentoFiscal:
     venda_fiscal_id: int
@@ -119,3 +120,4 @@ class DadosDocumentoFiscal:
     emitente: DadosEmitenteDocumentoFiscal | None = None
     destinatario: DadosDestinatarioDocumentoFiscal | None = None
     pagamentos: tuple[DadosPagamentoDocumentoFiscal, ...] = ()
+

@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -235,6 +235,21 @@ class ItemVendaFiscal(models.Model):
         max_length=300,
         blank=True,
     )
+    # 195F2A3C_START
+    beneficio_fiscal_tipo = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+    )
+    beneficio_exige_motivo_desoneracao = models.BooleanField(
+        default=False,
+    )
+    beneficio_motivo_desoneracao = models.CharField(
+        max_length=2,
+        blank=True,
+        default="",
+    )
+    # 195F2A3C_END
     regra_fiscal_codigo = models.CharField(
         max_length=80,
         blank=True,

@@ -1,4 +1,4 @@
-from decimal import (
+﻿from decimal import (
     Decimal,
     ROUND_HALF_UP,
 )
@@ -311,11 +311,33 @@ def calcular_tributos(
         "regra": {
             "codigo": regra.codigo_interno,
             "prioridade": regra.prioridade,
+            # 195F2A3B_START
             "beneficio_fiscal": (
                 regra.beneficio_fiscal.codigo
                 if regra.beneficio_fiscal_id
                 else None
             ),
+            "beneficio_fiscal_tipo": (
+                regra.beneficio_fiscal.tipo_beneficio
+                if regra.beneficio_fiscal_id
+                else None
+            ),
+            "beneficio_fiscal_descricao": (
+                regra.beneficio_fiscal.descricao
+                if regra.beneficio_fiscal_id
+                else None
+            ),
+            "beneficio_exige_motivo_desoneracao": (
+                regra.beneficio_fiscal.exige_motivo_desoneracao
+                if regra.beneficio_fiscal_id
+                else False
+            ),
+            "beneficio_motivo_desoneracao": (
+                regra.beneficio_fiscal.motivo_desoneracao_padrao
+                if regra.beneficio_fiscal_id
+                else None
+            ),
+            # 195F2A3B_END
         },
         "selecao_fiscal": (
             contexto.resultado_selecao_fiscal
@@ -404,3 +426,4 @@ def calcular_tributos(
         memoria_calculo=memoria,
         avisos=tuple(avisos),
     )
+

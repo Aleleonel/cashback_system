@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+﻿from dataclasses import asdict, dataclass
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -139,6 +139,26 @@ def _validar_resultado_calculo(resultado):
         )
 
 
+# 195F2A3C_START
+def _memoria_regra_beneficio(resultado_calculo):
+    memoria = getattr(resultado_calculo, "memoria_calculo", None) or {}
+    regra = memoria.get("regra") or {}
+
+    return {
+        "tipo": str(
+            regra.get("beneficio_fiscal_tipo") or ""
+        ),
+        "exige_motivo": bool(
+            regra.get(
+                "beneficio_exige_motivo_desoneracao",
+                False,
+            )
+        ),
+        "motivo": str(
+            regra.get("beneficio_motivo_desoneracao") or ""
+        ),
+    }
+# 195F2A3C_END
 @dataclass(frozen=True, slots=True)
 class DadosItemVendaFiscal:
     regra_fiscal_id_original: int | None
@@ -159,6 +179,9 @@ class DadosItemVendaFiscal:
 
     beneficio_fiscal_codigo: str
     beneficio_fiscal_descricao: str
+    beneficio_fiscal_tipo: str
+    beneficio_exige_motivo_desoneracao: bool
+    beneficio_motivo_desoneracao: str
     regra_fiscal_codigo: str
     regra_fiscal_descricao: str
 
@@ -305,6 +328,21 @@ def construir_dados_item_venda_fiscal(
         ),
         beneficio_fiscal_descricao=_descricao(
             beneficio
+        ),
+        beneficio_fiscal_tipo=(
+            _memoria_regra_beneficio(
+                resultado_calculo
+            )["tipo"]
+        ),
+        beneficio_exige_motivo_desoneracao=(
+            _memoria_regra_beneficio(
+                resultado_calculo
+            )["exige_motivo"]
+        ),
+        beneficio_motivo_desoneracao=(
+            _memoria_regra_beneficio(
+                resultado_calculo
+            )["motivo"]
         ),
         regra_fiscal_codigo=str(
             _obter(regra, "codigo_interno", "") or ""
