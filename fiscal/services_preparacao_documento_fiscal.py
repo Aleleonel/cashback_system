@@ -1,4 +1,4 @@
-﻿from hashlib import sha256
+from hashlib import sha256
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -142,6 +142,21 @@ def _item_snapshot_para_dto(item_fiscal):
         modalidade_base_icms="3",
         percentual_reducao_base_icms=(
             item_fiscal.percentual_reducao_base_icms
+        ),
+        beneficio_fiscal_codigo=_texto(
+            item_fiscal.beneficio_fiscal_codigo
+        ),
+        beneficio_fiscal_descricao=_texto(
+            item_fiscal.beneficio_fiscal_descricao
+        ),
+        beneficio_fiscal_tipo=_texto(
+            item_fiscal.beneficio_fiscal_tipo
+        ),
+        beneficio_exige_motivo_desoneracao=bool(
+            item_fiscal.beneficio_exige_motivo_desoneracao
+        ),
+        beneficio_motivo_desoneracao=_texto(
+            item_fiscal.beneficio_motivo_desoneracao
         ),
         aliquota_icms=item_fiscal.aliquota_icms,
         valor_icms=item_fiscal.valor_icms,

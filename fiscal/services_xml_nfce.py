@@ -497,6 +497,17 @@ def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
     v_frete = sum((_decimal_xml(_attr_xml(i, "frete", default=0)) for i in itens), Decimal("0"))
     v_seg = sum((_decimal_xml(_attr_xml(i, "seguro", default=0)) for i in itens), Decimal("0"))
     v_outro = sum((_decimal_xml(_attr_xml(i, "outras_despesas", default=0)) for i in itens), Decimal("0"))
+
+    # 195F2A4C2 - totais ICMS derivados exclusivamente do snapshot/DTO.
+    # O serializador nao recalcula base, aliquota ou imposto.
+    v_bc = sum(
+        (_decimal_xml(_attr_xml(i, "base_icms", default=0)) for i in itens),
+        Decimal("0"),
+    )
+    v_icms = sum(
+        (_decimal_xml(_attr_xml(i, "valor_icms", default=0)) for i in itens),
+        Decimal("0"),
+    )
     v_nf = v_prod - v_desc + v_frete + v_seg + v_outro
 
     if v_nf < 0:
@@ -506,7 +517,7 @@ def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
     icms = ET.SubElement(total, _tag("ICMSTot"))
 
     campos = (
-        ("vBC", 0), ("vICMS", 0), ("vICMSDeson", 0), ("vFCP", 0),
+        ("vBC", v_bc), ("vICMS", v_icms), ("vICMSDeson", 0), ("vFCP", 0),
         ("vBCST", 0), ("vST", 0), ("vFCPST", 0), ("vFCPSTRet", 0),
         ("vProd", v_prod), ("vFrete", v_frete), ("vSeg", v_seg),
         ("vDesc", v_desc), ("vII", 0), ("vIPI", 0), ("vIPIDevol", 0),
@@ -663,3 +674,4 @@ def adicionar_icms_item_nfce(imposto: ET.Element, *, item):
 
     return icms00
 # 195F2A2_END
+

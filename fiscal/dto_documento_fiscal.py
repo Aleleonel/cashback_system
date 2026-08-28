@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from decimal import Decimal
 
 
@@ -88,6 +88,12 @@ class DadosItemDocumentoFiscal:
     # 195F2A1 - contrato explicito para serializacao ICMS
     modalidade_base_icms: str = ""
     percentual_reducao_base_icms: Decimal = Decimal("0")
+    # 195F2A4A - beneficio fiscal congelado disponivel ao serializador
+    beneficio_fiscal_codigo: str = ""
+    beneficio_fiscal_descricao: str = ""
+    beneficio_fiscal_tipo: str = ""
+    beneficio_exige_motivo_desoneracao: bool = False
+    beneficio_motivo_desoneracao: str = ""
 @dataclass(frozen=True, slots=True)
 class DadosDocumentoFiscal:
     venda_fiscal_id: int
