@@ -2,6 +2,7 @@ from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 from core.choices import StatusOperacional
 from empresas.models import Loja
+from fiscal.models_emissao_fiscal import ConfiguracaoEmissaoFiscalLoja
 from core.models import ConfiguracaoSistema
 from accounts.models import PermissaoUsuario
 from django.contrib.auth import get_user_model
@@ -72,6 +73,79 @@ def editar_loja_empresa(
     )
 
     return loja
+
+
+def avaliar_prontidao_fiscal_loja(loja):
+    """Avalia dados nao secretos necessarios para a filial emitir NFC-e."""
+    from copy import copy
+    from django.core.exceptions import ValidationError
+
+    try:
+        configuracao = loja.configuracao_emissao_fiscal
+    except ConfiguracaoEmissaoFiscalLoja.DoesNotExist:
+        return {"status":"incompleta","label":"Incompleta","detalhe":"Configuracao fiscal ainda nao cadastrada.","pendencias":("Configuracao fiscal de emissao nao cadastrada.",)}
+
+    if not configuracao.ativa:
+        return {"status":"inativa","label":"Inativa","detalhe":"Configuracao fiscal cadastrada, mas desativada.","pendencias":("Configuracao fiscal de emissao esta inativa.",)}
+
+    pendencias = []
+    cnpj = "".join(ch for ch in str(getattr(loja, "cnpj", "") or "") if ch.isdigit())
+    if len(cnpj) != 14:
+        pendencias.append("CNPJ da filial deve possuir 14 digitos.")
+
+    configuracao_validacao = copy(configuracao)
+    try:
+        configuracao_validacao.full_clean()
+    except ValidationError as exc:
+        if hasattr(exc, "message_dict"):
+            for campo, mensagens in exc.message_dict.items():
+                for mensagem in mensagens:
+                    pendencias.append(f"{campo}: {mensagem}")
+        else:
+            pendencias.extend(str(mensagem) for mensagem in exc.messages)
+
+    try:
+        serie = int(configuracao.serie_nfce)
+    except (TypeError, ValueError):
+        serie = 0
+    if not 1 <= serie <= 999:
+        pendencias.append("Serie NFC-e deve estar entre 1 e 999 para composicao da chave de acesso.")
+
+    if pendencias:
+        return {"status":"pendencias","label":"Com pendencias","detalhe":"Dados fiscais precisam ser corrigidos antes da emissao NFC-e.","pendencias":tuple(pendencias)}
+
+    return {"status":"configurada","label":"Pronta","detalhe":"Dados fiscais nao secretos prontos para emissao NFC-e.","pendencias":()}
+
+def salvar_configuracao_fiscal_loja_empresa(*, loja, dados, usuario_executor, request=None):
+    try:
+        configuracao = loja.configuracao_emissao_fiscal
+        criada = False
+    except ConfiguracaoEmissaoFiscalLoja.DoesNotExist:
+        configuracao = ConfiguracaoEmissaoFiscalLoja(loja=loja)
+        criada = True
+
+    campos = [
+        "razao_social", "nome_fantasia", "inscricao_estadual", "logradouro",
+        "numero", "complemento", "bairro", "municipio", "codigo_municipio_ibge",
+        "uf", "cep", "crt", "ambiente_nfce", "serie_nfce", "ativa",
+    ]
+    for campo in campos:
+        setattr(configuracao, campo, dados[campo])
+
+    configuracao.full_clean()
+    configuracao.save()
+
+    registrar_auditoria(
+        usuario=usuario_executor,
+        matriz=loja.matriz,
+        loja=loja,
+        acao=RegistroAuditoria.ACAO_CRIAR if criada else RegistroAuditoria.ACAO_EDITAR,
+        recurso="empresa.loja.configuracao_fiscal",
+        recurso_id=configuracao.id,
+        descricao=("Configuracao fiscal da loja criada pela empresa." if criada else "Configuracao fiscal da loja atualizada pela empresa."),
+        request=request,
+    )
+    return configuracao
 
 
 def alternar_status_loja_empresa(

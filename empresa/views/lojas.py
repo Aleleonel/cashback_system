@@ -1,20 +1,24 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import require_permission
 from accounts.permissions import PERMISSAO_EMPRESA_LOJAS_GERENCIAR
 from core.choices import StatusOperacional
 from core.services import get_contexto_operacional_usuario
-from empresa.forms import LojaEmpresaForm
+from empresa.forms import ConfiguracaoFiscalLojaEmpresaForm, LojaEmpresaForm
 from empresa.selectors import get_lojas_empresa
 from empresa.services import (
     alternar_status_loja_empresa,
     criar_loja_empresa,
     editar_loja_empresa,
+    salvar_configuracao_fiscal_loja_empresa,
 )
 from empresas.models import Loja
+from fiscal.models_emissao_fiscal import ConfiguracaoEmissaoFiscalLoja
+from empresa.services import avaliar_prontidao_fiscal_loja
 
 
 @login_required
@@ -31,6 +35,13 @@ def lista_lojas_empresa(request):
         busca=busca,
         status=status
     )
+
+    for loja in lojas:
+        prontidao = avaliar_prontidao_fiscal_loja(loja)
+        loja.prontidao_fiscal_status = prontidao["status"]
+        loja.prontidao_fiscal_label = prontidao["label"]
+        loja.prontidao_fiscal_detalhe = prontidao["detalhe"]
+        loja.prontidao_fiscal_pendencias = prontidao["pendencias"]
 
     paginator = Paginator(lojas, 50)
     page = request.GET.get('page')
@@ -63,37 +74,40 @@ def criar_loja_empresa_view(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
 
+    configurar_fiscal = request.method == 'POST' and request.POST.get('configurar_fiscal') == '1'
+
     if request.method == 'POST':
-        form = LojaEmpresaForm(
-            request.POST,
-            matriz=contexto['matriz']
-        )
+        form = LojaEmpresaForm(request.POST, matriz=contexto['matriz'])
+        fiscal_form = ConfiguracaoFiscalLojaEmpresaForm(request.POST) if configurar_fiscal else ConfiguracaoFiscalLojaEmpresaForm()
+        fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
-        if form.is_valid():
-            criar_loja_empresa(
-                matriz=contexto['matriz'],
-                dados=form.cleaned_data,
-                usuario_executor=request.user,
-                request=request
-            )
-
+        if form.is_valid() and fiscal_valido:
+            with transaction.atomic():
+                loja = criar_loja_empresa(
+                    matriz=contexto['matriz'], dados=form.cleaned_data,
+                    usuario_executor=request.user, request=request
+                )
+                if configurar_fiscal:
+                    salvar_configuracao_fiscal_loja_empresa(
+                        loja=loja, dados=fiscal_form.cleaned_data,
+                        usuario_executor=request.user, request=request
+                    )
             messages.success(
                 request,
-                'Loja criada com sucesso.'
+                'Loja e configuracao fiscal criadas com sucesso.' if configurar_fiscal
+                else 'Loja criada com sucesso. A configuracao fiscal permanece incompleta.'
             )
-
             return redirect('empresa:lista_lojas')
-
     else:
-        form = LojaEmpresaForm(
-            matriz=contexto['matriz']
-        )
+        form = LojaEmpresaForm(matriz=contexto['matriz'])
+        fiscal_form = ConfiguracaoFiscalLojaEmpresaForm()
 
     return render(
-        request,
-        'empresa/form_loja.html',
+        request, 'empresa/form_loja.html',
         {
-            'form': form,
+            'form': form, 'fiscal_form': fiscal_form,
+            'configurar_fiscal': configurar_fiscal,
+            'configuracao_fiscal_existente': False,
             'titulo': 'Nova Loja',
         }
     )
@@ -111,41 +125,52 @@ def editar_loja_empresa_view(request, loja_id):
         matriz=contexto['matriz']
     )
 
+    try:
+        configuracao_fiscal = loja.configuracao_emissao_fiscal
+    except ConfiguracaoEmissaoFiscalLoja.DoesNotExist:
+        configuracao_fiscal = None
+
+    configuracao_fiscal_existente = configuracao_fiscal is not None
+    configurar_fiscal = configuracao_fiscal_existente or (
+        request.method == 'POST' and request.POST.get('configurar_fiscal') == '1'
+    )
+
     if request.method == 'POST':
-        form = LojaEmpresaForm(
-            request.POST,
-            instance=loja,
-            matriz=contexto['matriz']
+        form = LojaEmpresaForm(request.POST, instance=loja, matriz=contexto['matriz'])
+        fiscal_form = (
+            ConfiguracaoFiscalLojaEmpresaForm(request.POST, instance=configuracao_fiscal)
+            if configurar_fiscal else ConfiguracaoFiscalLojaEmpresaForm()
         )
+        fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
-        if form.is_valid():
-            editar_loja_empresa(
-                loja=loja,
-                dados=form.cleaned_data,
-                usuario_executor=request.user,
-                request=request
-            )
-
+        if form.is_valid() and fiscal_valido:
+            with transaction.atomic():
+                editar_loja_empresa(
+                    loja=loja, dados=form.cleaned_data,
+                    usuario_executor=request.user, request=request
+                )
+                if configurar_fiscal:
+                    salvar_configuracao_fiscal_loja_empresa(
+                        loja=loja, dados=fiscal_form.cleaned_data,
+                        usuario_executor=request.user, request=request
+                    )
             messages.success(
                 request,
-                'Loja atualizada com sucesso.'
+                'Loja e configuracao fiscal atualizadas com sucesso.' if configurar_fiscal
+                else 'Loja atualizada. A configuracao fiscal permanece incompleta.'
             )
-
             return redirect('empresa:lista_lojas')
-
     else:
-        form = LojaEmpresaForm(
-            instance=loja,
-            matriz=contexto['matriz']
-        )
+        form = LojaEmpresaForm(instance=loja, matriz=contexto['matriz'])
+        fiscal_form = ConfiguracaoFiscalLojaEmpresaForm(instance=configuracao_fiscal)
 
     return render(
-        request,
-        'empresa/form_loja.html',
+        request, 'empresa/form_loja.html',
         {
-            'form': form,
-            'titulo': 'Editar Loja',
-            'loja': loja,
+            'form': form, 'fiscal_form': fiscal_form,
+            'configurar_fiscal': configurar_fiscal,
+            'configuracao_fiscal_existente': configuracao_fiscal_existente,
+            'titulo': 'Editar Loja', 'loja': loja,
         }
     )
 

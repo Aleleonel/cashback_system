@@ -48,7 +48,7 @@ def get_lojas_empresa(
 
     lojas = Loja.objects.filter(
         matriz=matriz
-    ).order_by(
+    ).select_related("configuracao_emissao_fiscal").order_by(
         'nome'
     )
 

@@ -1,78 +1,89 @@
 {% extends 'base.html' %}
-
 {% block content %}
-
 <div class="container-fluid py-4">
-
-    <div class="card shadow-sm border-0">
-
-        <div class="card-header bg-white">
-            <strong>
-                <i class="bi bi-shop-window me-2"></i>
-                {{ titulo }}
-            </strong>
-            <div class="text-muted small">
-                Cadastro de loja da sua empresa.
-            </div>
-        </div>
-
-        <div class="card-body">
-
-            <form method="post" novalidate>
-                {% csrf_token %}
-
-                {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {{ form.non_field_errors }}
-                </div>
-                {% endif %}
-
-                <div class="row g-3">
-
-                    <div class="col-md-6">
-                        {{ form.nome.label_tag }}
-                        {{ form.nome }}
-                        {{ form.nome.errors }}
-                    </div>
-
-                    <div class="col-md-3">
-                        {{ form.cnpj.label_tag }}
-                        {{ form.cnpj }}
-                        {{ form.cnpj.errors }}
-                    </div>
-
-                    <div class="col-md-3">
-                        {{ form.telefone.label_tag }}
-                        {{ form.telefone }}
-                        {{ form.telefone.errors }}
-                    </div>
-
-                    <div class="col-md-4">
-                        {{ form.status.label_tag }}
-                        {{ form.status }}
-                        {{ form.status.errors }}
-                    </div>
-
-                </div>
-
-                <div class="d-flex justify-content-between mt-4">
-
-                    <a href="{% url 'empresa:lista_lojas' %}" class="btn btn-outline-secondary">
-                        Voltar
-                    </a>
-
-                    <button type="submit" class="btn btn-dark">
-                        Salvar Loja
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white">
+      <strong><i class="bi bi-shop-window me-2"></i>{{ titulo }}</strong>
+      <div class="text-muted small">Cadastro da filial e configuracao fiscal para emissao NFC-e.</div>
     </div>
+    <div class="card-body">
+      <form method="post" novalidate data-configuracao-fiscal-loja="195cfg3a">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        {% if fiscal_form.non_field_errors %}<div class="alert alert-danger">{{ fiscal_form.non_field_errors }}</div>{% endif %}
 
+        <h6 class="border-bottom pb-2 mb-3">Dados da filial</h6>
+        <div class="row g-3">
+          <div class="col-md-6">{{ form.nome.label_tag }}{{ form.nome }}{{ form.nome.errors }}</div>
+          <div class="col-md-3">{{ form.cnpj.label_tag }}{{ form.cnpj }}{{ form.cnpj.errors }}</div>
+          <div class="col-md-3">{{ form.telefone.label_tag }}{{ form.telefone }}{{ form.telefone.errors }}</div>
+          <div class="col-md-4">{{ form.status.label_tag }}{{ form.status }}{{ form.status.errors }}</div>
+        </div>
+
+        <div class="card border mt-4">
+          <div class="card-header bg-light d-flex justify-content-between align-items-start gap-3">
+            <div>
+              <strong><i class="bi bi-receipt-cutoff me-2"></i>Configuracao fiscal da filial</strong>
+              <div class="text-muted small">Dados do emitente utilizados na NFC-e. Certificado e CSC serao configurados em etapa propria.</div>
+            </div>
+            {% if configuracao_fiscal_existente %}<span class="badge bg-success">Configurada</span>{% else %}<span class="badge bg-warning text-dark">Incompleta</span>{% endif %}
+          </div>
+          <div class="card-body">
+            {% if not configuracao_fiscal_existente %}
+            <div class="form-check form-switch mb-4 ps-3 pe-3">
+              <input class="form-check-input position-static m-0 me-2 mt-1 float-none" type="checkbox" role="switch" id="configurar_fiscal" name="configurar_fiscal" value="1" {% if configurar_fiscal %}checked{% endif %}>
+              <label class="form-check-label" for="configurar_fiscal">Preencher a configuracao fiscal agora</label>
+              <div class="form-text">A filial pode ser cadastrada sem estes dados, mas nao estara pronta para emissao fiscal.</div>
+            </div>
+            {% else %}<input type="hidden" name="configurar_fiscal" value="1">{% endif %}
+
+            <fieldset id="campos-configuracao-fiscal" {% if not configuracao_fiscal_existente and not configurar_fiscal %}disabled{% endif %}>
+              <h6 class="mb-3">Identificacao fiscal</h6>
+              <div class="row g-3">
+                <div class="col-md-6">{{ fiscal_form.razao_social.label_tag }}{{ fiscal_form.razao_social }}{{ fiscal_form.razao_social.errors }}</div>
+                <div class="col-md-6">{{ fiscal_form.nome_fantasia.label_tag }}{{ fiscal_form.nome_fantasia }}{{ fiscal_form.nome_fantasia.errors }}</div>
+                <div class="col-md-4">{{ fiscal_form.inscricao_estadual.label_tag }}{{ fiscal_form.inscricao_estadual }}{{ fiscal_form.inscricao_estadual.errors }}</div>
+                <div class="col-md-4">{{ fiscal_form.crt.label_tag }}{{ fiscal_form.crt }}{{ fiscal_form.crt.errors }}</div>
+              </div>
+
+              <h6 class="border-top pt-4 mt-4 mb-3">Endereco fiscal</h6>
+              <div class="row g-3">
+                <div class="col-md-8">{{ fiscal_form.logradouro.label_tag }}{{ fiscal_form.logradouro }}{{ fiscal_form.logradouro.errors }}</div>
+                <div class="col-md-4">{{ fiscal_form.numero.label_tag }}{{ fiscal_form.numero }}{{ fiscal_form.numero.errors }}</div>
+                <div class="col-md-5">{{ fiscal_form.complemento.label_tag }}{{ fiscal_form.complemento }}{{ fiscal_form.complemento.errors }}</div>
+                <div class="col-md-7">{{ fiscal_form.bairro.label_tag }}{{ fiscal_form.bairro }}{{ fiscal_form.bairro.errors }}</div>
+                <div class="col-md-5">{{ fiscal_form.municipio.label_tag }}{{ fiscal_form.municipio }}{{ fiscal_form.municipio.errors }}</div>
+                <div class="col-md-3">{{ fiscal_form.codigo_municipio_ibge.label_tag }}{{ fiscal_form.codigo_municipio_ibge }}{{ fiscal_form.codigo_municipio_ibge.errors }}</div>
+                <div class="col-md-2">{{ fiscal_form.uf.label_tag }}{{ fiscal_form.uf }}{{ fiscal_form.uf.errors }}</div>
+                <div class="col-md-2">{{ fiscal_form.cep.label_tag }}{{ fiscal_form.cep }}{{ fiscal_form.cep.errors }}</div>
+              </div>
+
+              <h6 class="border-top pt-4 mt-4 mb-3">Emissao NFC-e</h6>
+              <div class="row g-3 align-items-end">
+                <div class="col-md-5">{{ fiscal_form.ambiente_nfce.label_tag }}{{ fiscal_form.ambiente_nfce }}{{ fiscal_form.ambiente_nfce.errors }}</div>
+                <div class="col-md-3">{{ fiscal_form.serie_nfce.label_tag }}{{ fiscal_form.serie_nfce }}{{ fiscal_form.serie_nfce.errors }}</div>
+                <div class="col-md-4"><div class="form-check mb-2">{{ fiscal_form.ativa }}{{ fiscal_form.ativa.label_tag }}</div>{{ fiscal_form.ativa.errors }}</div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'empresa:lista_lojas' %}" class="btn btn-outline-secondary">Voltar</a>
+          <button type="submit" class="btn btn-dark">Salvar Loja</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
-
+<script>
+(function () {
+  const toggle = document.getElementById("configurar_fiscal");
+  const fieldset = document.getElementById("campos-configuracao-fiscal");
+  if (!toggle || !fieldset) return;
+  const sincronizar = function () { fieldset.disabled = !toggle.checked; };
+  toggle.addEventListener("change", sincronizar);
+  sincronizar();
+})();
+</script>
 {% endblock %}
