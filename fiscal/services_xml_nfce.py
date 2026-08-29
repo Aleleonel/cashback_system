@@ -488,6 +488,8 @@ def adicionar_detalhes_produtos_nfce(inf_nfe: ET.Element, *, itens):
         # O grupo imposto sera preenchido na 195F2.
         imposto = ET.SubElement(det, _tag("imposto"))
         adicionar_icms_item_nfce(imposto, item=item)
+        adicionar_pis_item_nfce(imposto, item=item)
+        adicionar_cofins_item_nfce(imposto, item=item)
 
 
 def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
@@ -508,6 +510,9 @@ def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
         (_decimal_xml(_attr_xml(i, "valor_icms", default=0)) for i in itens),
         Decimal("0"),
     )
+    # 195F2B3 - totais PIS/COFINS exclusivamente do snapshot/DTO.
+    v_pis = sum((_decimal_xml(_attr_xml(i, "valor_pis", default=0)) for i in itens), Decimal("0"))
+    v_cofins = sum((_decimal_xml(_attr_xml(i, "valor_cofins", default=0)) for i in itens), Decimal("0"))
     v_nf = v_prod - v_desc + v_frete + v_seg + v_outro
 
     if v_nf < 0:
@@ -521,7 +526,7 @@ def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
         ("vBCST", 0), ("vST", 0), ("vFCPST", 0), ("vFCPSTRet", 0),
         ("vProd", v_prod), ("vFrete", v_frete), ("vSeg", v_seg),
         ("vDesc", v_desc), ("vII", 0), ("vIPI", 0), ("vIPIDevol", 0),
-        ("vPIS", 0), ("vCOFINS", 0), ("vOutro", v_outro), ("vNF", v_nf),
+        ("vPIS", v_pis), ("vCOFINS", v_cofins), ("vOutro", v_outro), ("vNF", v_nf),
     )
     for nome, valor in campos:
         _subelement_text(icms, nome, format_decimal(valor, 2))
@@ -675,3 +680,63 @@ def adicionar_icms_item_nfce(imposto: ET.Element, *, item):
     return icms00
 # 195F2A2_END
 
+# 195F2B2_START
+def adicionar_pis_item_nfce(imposto: ET.Element, *, item):
+    """Serializa exclusivamente PIS CST 01 (PISAliq), sem recalculo."""
+    cst = _texto_xml(_attr_xml(item, "cst_pis_codigo"))
+    if not cst:
+        return None
+    if cst != "01":
+        raise NFCeXMLError(f"CST PIS {cst} ainda nao suportado pela 195F2B2.")
+
+    base = _attr_xml(item, "base_pis", default=None)
+    aliquota = _attr_xml(item, "aliquota_pis", default=None)
+    valor = _attr_xml(item, "valor_pis", default=None)
+    if base is None:
+        raise NFCeXMLError("Base PIS obrigatoria para PIS CST 01.")
+    if aliquota is None:
+        raise NFCeXMLError("Aliquota PIS obrigatoria para PIS CST 01.")
+    if valor is None:
+        raise NFCeXMLError("Valor PIS obrigatorio para PIS CST 01.")
+
+    base = _decimal_xml(base)
+    aliquota = _decimal_xml(aliquota)
+    valor = _decimal_xml(valor)
+    pis = ET.SubElement(imposto, _tag("PIS"))
+    pis_aliq = ET.SubElement(pis, _tag("PISAliq"))
+    _subelement_text(pis_aliq, "CST", "01")
+    _subelement_text(pis_aliq, "vBC", format_decimal(base, 2))
+    _subelement_text(pis_aliq, "pPIS", format_decimal(aliquota, 4))
+    _subelement_text(pis_aliq, "vPIS", format_decimal(valor, 2))
+    return pis_aliq
+
+
+def adicionar_cofins_item_nfce(imposto: ET.Element, *, item):
+    """Serializa exclusivamente COFINS CST 01 (COFINSAliq), sem recalculo."""
+    cst = _texto_xml(_attr_xml(item, "cst_cofins_codigo"))
+    if not cst:
+        return None
+    if cst != "01":
+        raise NFCeXMLError(f"CST COFINS {cst} ainda nao suportado pela 195F2B2.")
+
+    base = _attr_xml(item, "base_cofins", default=None)
+    aliquota = _attr_xml(item, "aliquota_cofins", default=None)
+    valor = _attr_xml(item, "valor_cofins", default=None)
+    if base is None:
+        raise NFCeXMLError("Base COFINS obrigatoria para COFINS CST 01.")
+    if aliquota is None:
+        raise NFCeXMLError("Aliquota COFINS obrigatoria para COFINS CST 01.")
+    if valor is None:
+        raise NFCeXMLError("Valor COFINS obrigatorio para COFINS CST 01.")
+
+    base = _decimal_xml(base)
+    aliquota = _decimal_xml(aliquota)
+    valor = _decimal_xml(valor)
+    cofins = ET.SubElement(imposto, _tag("COFINS"))
+    cofins_aliq = ET.SubElement(cofins, _tag("COFINSAliq"))
+    _subelement_text(cofins_aliq, "CST", "01")
+    _subelement_text(cofins_aliq, "vBC", format_decimal(base, 2))
+    _subelement_text(cofins_aliq, "pCOFINS", format_decimal(aliquota, 4))
+    _subelement_text(cofins_aliq, "vCOFINS", format_decimal(valor, 2))
+    return cofins_aliq
+# 195F2B2_END
