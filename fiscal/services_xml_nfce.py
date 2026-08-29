@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 from xml.etree import ElementTree as ET
@@ -519,10 +519,17 @@ def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
         raise NFCeXMLError("Total da NFC-e nao pode ser negativo.")
 
     total = ET.SubElement(inf_nfe, _tag("total"))
+    # 195F2C2A_START - total FCP congelado
+    v_fcp = sum(
+        (_decimal_xml(_attr_xml(i, "valor_fcp", default=0)) for i in itens),
+        Decimal("0"),
+    )
+    # 195F2C2A_END - total FCP congelado
+
     icms = ET.SubElement(total, _tag("ICMSTot"))
 
     campos = (
-        ("vBC", v_bc), ("vICMS", v_icms), ("vICMSDeson", 0), ("vFCP", 0),
+        ("vBC", v_bc), ("vICMS", v_icms), ("vICMSDeson", 0), ("vFCP", v_fcp),
         ("vBCST", 0), ("vST", 0), ("vFCPST", 0), ("vFCPSTRet", 0),
         ("vProd", v_prod), ("vFrete", v_frete), ("vSeg", v_seg),
         ("vDesc", v_desc), ("vII", 0), ("vIPI", 0), ("vIPIDevol", 0),
@@ -668,6 +675,30 @@ def adicionar_icms_item_nfce(imposto: ET.Element, *, item):
     valor_icms = _decimal_xml(valor_icms)
 
     icms = ET.SubElement(imposto, _tag("ICMS"))
+    # 195F2C2A_START - FCP CST00 congelado
+    base_fcp = _decimal_xml(_attr_xml(item, "base_fcp", default=0))
+    aliquota_fcp_raw = _attr_xml(item, "aliquota_fcp", default=None)
+    valor_fcp = _decimal_xml(_attr_xml(item, "valor_fcp", default=0))
+
+    possui_fcp = (
+        base_fcp != Decimal("0")
+        or valor_fcp != Decimal("0")
+        or aliquota_fcp_raw not in (None, "")
+    )
+
+    aliquota_fcp = None
+    if possui_fcp:
+        if aliquota_fcp_raw in (None, ""):
+            raise NFCeXMLError("Aliquota FCP obrigatoria para ICMS00 quando houver FCP.")
+        aliquota_fcp = _decimal_xml(aliquota_fcp_raw)
+        if base_fcp <= Decimal("0"):
+            raise NFCeXMLError("Base FCP obrigatoria para ICMS00 quando houver FCP.")
+        if aliquota_fcp <= Decimal("0"):
+            raise NFCeXMLError("Aliquota FCP deve ser maior que zero para ICMS00.")
+        if valor_fcp < Decimal("0"):
+            raise NFCeXMLError("Valor FCP invalido para ICMS00.")
+    # 195F2C2A_END - FCP CST00 congelado
+
     icms00 = ET.SubElement(icms, _tag("ICMS00"))
 
     _subelement_text(icms00, "orig", origem)
@@ -676,6 +707,12 @@ def adicionar_icms_item_nfce(imposto: ET.Element, *, item):
     _subelement_text(icms00, "vBC", format_decimal(base_icms, 2))
     _subelement_text(icms00, "pICMS", format_decimal(aliquota, 4))
     _subelement_text(icms00, "vICMS", format_decimal(valor_icms, 2))
+    # 195F2C2A_START - campos FCP CST00
+    if possui_fcp:
+
+        _subelement_text(icms00, "pFCP", format_decimal(aliquota_fcp, 4))
+        _subelement_text(icms00, "vFCP", format_decimal(valor_fcp, 2))
+    # 195F2C2A_END - campos FCP CST00
 
     return icms00
 # 195F2A2_END
