@@ -541,6 +541,21 @@ def adicionar_total_nfce(inf_nfe: ET.Element, *, itens):
     return v_nf
 
 
+# 195F2E3_START - Transporte minimo NFC-e
+def adicionar_transporte_nfce(inf_nfe: ET.Element):
+    """
+    Serializa o grupo X de transporte para a NFC-e atual.
+
+    O contrato fiscal vigente exige o grupo transp e o campo modFrete.
+    Enquanto o sistema nao possuir contrato proprio de entrega/transporte,
+    a NFC-e e emitida sem ocorrencia de transporte (modFrete=9).
+    """
+    transp = ET.SubElement(inf_nfe, _tag("transp"))
+    _subelement_text(transp, "modFrete", "9")
+    return transp
+
+
+# 195F2E3_END - Transporte minimo NFC-e
 def adicionar_pagamentos_nfce(inf_nfe: ET.Element, *, pagamentos):
     pagamentos = tuple(pagamentos or ())
     if not pagamentos:
@@ -595,6 +610,7 @@ def gerar_xml_nfce_195f1c(
         inf_nfe, itens=getattr(dados, "itens", ())
     )
     adicionar_total_nfce(inf_nfe, itens=getattr(dados, "itens", ()))
+    adicionar_transporte_nfce(inf_nfe)
     adicionar_pagamentos_nfce(
         inf_nfe, pagamentos=getattr(dados, "pagamentos", ())
     )
