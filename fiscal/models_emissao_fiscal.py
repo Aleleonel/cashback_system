@@ -30,6 +30,15 @@ class ConfiguracaoEmissaoFiscalLoja(models.Model):
         default=AmbienteDocumentoFiscal.HOMOLOGACAO,
     )
     serie_nfce = models.PositiveSmallIntegerField(default=1)
+    certificado_a1_referencia = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text=(
+            "Referencia nao secreta para localizar o certificado A1 fora do repositorio. "
+            "Nao armazene senha, chave privada ou conteudo do certificado neste campo."
+        ),
+    )
     ativa = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)

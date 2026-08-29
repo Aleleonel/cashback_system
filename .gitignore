@@ -67,3 +67,12 @@ Thumbs.db
 /traceback*.txt
 /PLANO_PDV04C_*.txt
 /LEIA-ME*.txt
+# 195F3D - certificados digitais e chaves privadas nunca entram no Git
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+certificados/
+certificates/
