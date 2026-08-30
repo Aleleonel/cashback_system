@@ -106,6 +106,17 @@ class DocumentoFiscal(models.Model):
         default="",
     )
 
+    numero_recibo = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+    )
+
+    xml_retorno = models.TextField(
+        blank=True,
+        default="",
+    )
+
     data_autorizacao = models.DateTimeField(
         null=True,
         blank=True,

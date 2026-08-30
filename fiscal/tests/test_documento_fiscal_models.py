@@ -87,6 +87,12 @@ class DocumentoFiscalModelTests(SimpleTestCase):
             erro.exception.message_dict,
         )
 
+    def test_campos_retorno_sefaz_iniciam_vazios(self):
+        from fiscal.models_documento_fiscal import DocumentoFiscal
+
+        documento = DocumentoFiscal()
+        self.assertEqual(documento.numero_recibo, "")
+        self.assertEqual(documento.xml_retorno, "")
 
 class SequenciaDocumentoFiscalModelTests(SimpleTestCase):
     def test_defaults(self):
