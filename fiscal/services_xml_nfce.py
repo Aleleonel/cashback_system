@@ -579,6 +579,37 @@ def adicionar_pagamentos_nfce(inf_nfe: ET.Element, *, pagamentos):
     return pag
 
 
+# 195F3J_START - infNFeSupl / QR-Code v3 online
+def adicionar_inf_nfe_supl_qrcode_v3_online(
+    nfe: ET.Element,
+    *,
+    chave_acesso: str,
+    ambiente: str,
+    uf: str = "SP",
+) -> ET.Element:
+    """Adiciona o grupo suplementar da NFC-e para QR-Code v3 em emissao online."""
+    chave = str(chave_acesso or "").strip()
+    if len(chave) != 44 or not chave.isdigit():
+        raise NFCeXMLError("Chave de acesso invalida para QR-Code NFC-e.")
+
+    uf_normalizada = str(uf or "").strip().upper()
+    if uf_normalizada != "SP":
+        raise NFCeXMLError("QR-Code v3 configurado nesta etapa somente para SP.")
+
+    tp_amb = _tp_ambiente_xml(ambiente)
+    if tp_amb == "1":
+        base_qrcode = "https://www.nfce.fazenda.sp.gov.br/qrcode"
+        url_chave = "https://www.nfce.fazenda.sp.gov.br/consulta"
+    else:
+        base_qrcode = "https://www.homologacao.nfce.fazenda.sp.gov.br/qrcode"
+        url_chave = "https://www.homologacao.nfce.fazenda.sp.gov.br/consulta"
+
+    inf_nfe_supl = ET.SubElement(nfe, _tag("infNFeSupl"))
+    _subelement_text(inf_nfe_supl, "qrCode", f"{base_qrcode}?p={chave}|3|{tp_amb}")
+    _subelement_text(inf_nfe_supl, "urlChave", url_chave)
+    return inf_nfe_supl
+# 195F3J_END - infNFeSupl / QR-Code v3 online
+
 def gerar_xml_nfce_195f1c(
     *,
     documento,
@@ -614,6 +645,13 @@ def gerar_xml_nfce_195f1c(
     adicionar_pagamentos_nfce(
         inf_nfe, pagamentos=getattr(dados, "pagamentos", ())
     )
+    adicionar_inf_nfe_supl_qrcode_v3_online(
+        nfe,
+        chave_acesso=documento.chave_acesso,
+        ambiente=documento.ambiente,
+        uf=getattr(dados, "uf_origem", ""),
+    )
+
     return serializar_xml(nfe)
 # 195F1C_END
 # 195F2A2_START

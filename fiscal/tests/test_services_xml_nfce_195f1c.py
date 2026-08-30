@@ -34,6 +34,7 @@ def pagamento(tipo="pix", valor="19.50", troco="0.00"):
 
 def dados(itens=None, pagamentos=None):
     return SimpleNamespace(emitente=emitente(), destinatario=None,
+        uf_origem="SP",
         itens=tuple(itens if itens is not None else [item()]),
         pagamentos=tuple(pagamentos if pagamentos is not None else [pagamento()]))
 
