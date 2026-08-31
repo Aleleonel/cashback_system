@@ -27,15 +27,22 @@ from empresa.services import avaliar_prontidao_fiscal_loja
 
 # 195F3NQ_A1_VIEW
 def _persistir_upload_a1_se_informado(*, loja, fiscal_form):
-    arquivo=fiscal_form.cleaned_data.get('certificado_a1_arquivo')
-    if not arquivo: return
-    cfg=ConfiguracaoEmissaoFiscalLoja.objects.get(loja=loja); anterior=str(cfg.certificado_a1_referencia or '').strip()
-    nova=armazenar_certificado_a1(loja_id=loja.pk,arquivo=arquivo,senha=fiscal_form.cleaned_data.get('certificado_a1_senha'))
+    arquivo = fiscal_form.cleaned_data.get('certificado_a1_arquivo')
+    if not arquivo:
+        return None
+    cfg = ConfiguracaoEmissaoFiscalLoja.objects.get(loja=loja)
+    anterior = str(cfg.certificado_a1_referencia or '').strip()
+    nova = armazenar_certificado_a1(loja_id=loja.pk, arquivo=arquivo, senha=fiscal_form.cleaned_data.get('certificado_a1_senha'))
     try:
-        cfg.certificado_a1_referencia=nova; cfg.full_clean(); cfg.save(update_fields=['certificado_a1_referencia','atualizado_em'])
+        cfg.certificado_a1_referencia = nova
+        cfg.full_clean()
+        cfg.save(update_fields=['certificado_a1_referencia', 'atualizado_em'])
     except Exception:
-        remover_certificado_a1_por_referencia(nova); raise
-    if anterior and anterior!=nova: remover_certificado_a1_por_referencia(anterior)
+        remover_certificado_a1_por_referencia(nova)
+        raise
+    if anterior and anterior != nova:
+        transaction.on_commit(lambda referencia=anterior: remover_certificado_a1_por_referencia(referencia))
+    return nova
 
 @login_required
 @require_permission(PERMISSAO_EMPRESA_LOJAS_GERENCIAR)
@@ -98,20 +105,27 @@ def criar_loja_empresa_view(request):
         fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
         if form.is_valid() and fiscal_valido:
-            with transaction.atomic():
-                loja = criar_loja_empresa(
-                    matriz=contexto['matriz'], dados=form.cleaned_data,
-                    usuario_executor=request.user, request=request
-                )
-                if configurar_fiscal:
-                    salvar_configuracao_fiscal_loja_empresa(
-                        loja=loja, dados=fiscal_form.cleaned_data,
+            nova_referencia_a1 = None
+            try:
+                with transaction.atomic():
+                    loja = criar_loja_empresa(
+                        matriz=contexto['matriz'], dados=form.cleaned_data,
                         usuario_executor=request.user, request=request
                     )
-            try:
-                _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
+                    if configurar_fiscal:
+                        salvar_configuracao_fiscal_loja_empresa(
+                            loja=loja, dados=fiscal_form.cleaned_data,
+                            usuario_executor=request.user, request=request
+                        )
+                        nova_referencia_a1 = _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
             except (ValidationError, CertificadoA1Error) as exc:
+                if nova_referencia_a1:
+                    remover_certificado_a1_por_referencia(nova_referencia_a1)
                 fiscal_form.add_error('certificado_a1_arquivo', str(exc))
+            except Exception:
+                if nova_referencia_a1:
+                    remover_certificado_a1_por_referencia(nova_referencia_a1)
+                raise
             else:
                 messages.success(
                     request,
@@ -165,20 +179,27 @@ def editar_loja_empresa_view(request, loja_id):
         fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
         if form.is_valid() and fiscal_valido:
-            with transaction.atomic():
-                editar_loja_empresa(
-                    loja=loja, dados=form.cleaned_data,
-                    usuario_executor=request.user, request=request
-                )
-                if configurar_fiscal:
-                    salvar_configuracao_fiscal_loja_empresa(
-                        loja=loja, dados=fiscal_form.cleaned_data,
+            nova_referencia_a1 = None
+            try:
+                with transaction.atomic():
+                    editar_loja_empresa(
+                        loja=loja, dados=form.cleaned_data,
                         usuario_executor=request.user, request=request
                     )
-            try:
-                _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
+                    if configurar_fiscal:
+                        salvar_configuracao_fiscal_loja_empresa(
+                            loja=loja, dados=fiscal_form.cleaned_data,
+                            usuario_executor=request.user, request=request
+                        )
+                        nova_referencia_a1 = _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
             except (ValidationError, CertificadoA1Error) as exc:
+                if nova_referencia_a1:
+                    remover_certificado_a1_por_referencia(nova_referencia_a1)
                 fiscal_form.add_error('certificado_a1_arquivo', str(exc))
+            except Exception:
+                if nova_referencia_a1:
+                    remover_certificado_a1_por_referencia(nova_referencia_a1)
+                raise
             else:
                 messages.success(
                     request,
