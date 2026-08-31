@@ -54,6 +54,10 @@ class LojaEmpresaForm(forms.ModelForm):
     
 
 class ConfiguracaoFiscalLojaEmpresaForm(forms.ModelForm):
+
+    # 195F3NQ_A1_FORM
+    certificado_a1_arquivo = forms.FileField(required=False,label='Certificado Digital A1 (.pfx ou .p12)',widget=forms.ClearableFileInput(attrs={'class':'form-control','accept':'.pfx,.p12'}))
+    certificado_a1_senha = forms.CharField(required=False,label='Senha do certificado A1',strip=False,widget=forms.PasswordInput(attrs={'class':'form-control','autocomplete':'new-password'},render_value=False),help_text='Usada somente para validar o certificado; nao e armazenada.')
     """Configuracao operacional de emissao NFC-e da filial."""
 
     CRT_CHOICES = (
@@ -110,6 +114,16 @@ class ConfiguracaoFiscalLojaEmpresaForm(forms.ModelForm):
 
     def clean_codigo_municipio_ibge(self):
         return "".join(c for c in (self.cleaned_data.get("codigo_municipio_ibge") or "") if c.isdigit())
+
+    def clean(self):
+        cleaned = super().clean()
+        arquivo = cleaned.get('certificado_a1_arquivo')
+        senha = cleaned.get('certificado_a1_senha')
+        if arquivo and not senha:
+            self.add_error('certificado_a1_senha', 'Informe a senha do certificado A1 selecionado.')
+        if senha and not arquivo:
+            self.add_error('certificado_a1_arquivo', 'Selecione o arquivo .pfx ou .p12 correspondente a senha informada.')
+        return cleaned
 
 
 class ConfiguracaoCashbackEmpresaForm(forms.ModelForm):

@@ -1,3 +1,5 @@
+from fiscal.services_certificado_a1 import CertificadoA1Error
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -18,8 +20,22 @@ from empresa.services import (
 )
 from empresas.models import Loja
 from fiscal.models_emissao_fiscal import ConfiguracaoEmissaoFiscalLoja
+from fiscal.services_armazenamento_certificado_a1 import armazenar_certificado_a1, remover_certificado_a1_por_referencia
 from empresa.services import avaliar_prontidao_fiscal_loja
 
+
+
+# 195F3NQ_A1_VIEW
+def _persistir_upload_a1_se_informado(*, loja, fiscal_form):
+    arquivo=fiscal_form.cleaned_data.get('certificado_a1_arquivo')
+    if not arquivo: return
+    cfg=ConfiguracaoEmissaoFiscalLoja.objects.get(loja=loja); anterior=str(cfg.certificado_a1_referencia or '').strip()
+    nova=armazenar_certificado_a1(loja_id=loja.pk,arquivo=arquivo,senha=fiscal_form.cleaned_data.get('certificado_a1_senha'))
+    try:
+        cfg.certificado_a1_referencia=nova; cfg.full_clean(); cfg.save(update_fields=['certificado_a1_referencia','atualizado_em'])
+    except Exception:
+        remover_certificado_a1_por_referencia(nova); raise
+    if anterior and anterior!=nova: remover_certificado_a1_por_referencia(anterior)
 
 @login_required
 @require_permission(PERMISSAO_EMPRESA_LOJAS_GERENCIAR)
@@ -78,7 +94,7 @@ def criar_loja_empresa_view(request):
 
     if request.method == 'POST':
         form = LojaEmpresaForm(request.POST, matriz=contexto['matriz'])
-        fiscal_form = ConfiguracaoFiscalLojaEmpresaForm(request.POST) if configurar_fiscal else ConfiguracaoFiscalLojaEmpresaForm()
+        fiscal_form = ConfiguracaoFiscalLojaEmpresaForm(request.POST, request.FILES) if configurar_fiscal else ConfiguracaoFiscalLojaEmpresaForm()
         fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
         if form.is_valid() and fiscal_valido:
@@ -92,12 +108,17 @@ def criar_loja_empresa_view(request):
                         loja=loja, dados=fiscal_form.cleaned_data,
                         usuario_executor=request.user, request=request
                     )
-            messages.success(
-                request,
-                'Loja e configuracao fiscal criadas com sucesso.' if configurar_fiscal
-                else 'Loja criada com sucesso. A configuracao fiscal permanece incompleta.'
-            )
-            return redirect('empresa:lista_lojas')
+            try:
+                _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
+            except (ValidationError, CertificadoA1Error) as exc:
+                fiscal_form.add_error('certificado_a1_arquivo', str(exc))
+            else:
+                messages.success(
+                    request,
+                    'Loja e configuracao fiscal criadas com sucesso.' if configurar_fiscal
+                    else 'Loja criada com sucesso. A configuracao fiscal permanece incompleta.'
+                )
+                return redirect('empresa:lista_lojas')
     else:
         form = LojaEmpresaForm(matriz=contexto['matriz'])
         fiscal_form = ConfiguracaoFiscalLojaEmpresaForm()
@@ -138,7 +159,7 @@ def editar_loja_empresa_view(request, loja_id):
     if request.method == 'POST':
         form = LojaEmpresaForm(request.POST, instance=loja, matriz=contexto['matriz'])
         fiscal_form = (
-            ConfiguracaoFiscalLojaEmpresaForm(request.POST, instance=configuracao_fiscal)
+            ConfiguracaoFiscalLojaEmpresaForm(request.POST, request.FILES, instance=configuracao_fiscal)
             if configurar_fiscal else ConfiguracaoFiscalLojaEmpresaForm()
         )
         fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
@@ -154,12 +175,17 @@ def editar_loja_empresa_view(request, loja_id):
                         loja=loja, dados=fiscal_form.cleaned_data,
                         usuario_executor=request.user, request=request
                     )
-            messages.success(
-                request,
-                'Loja e configuracao fiscal atualizadas com sucesso.' if configurar_fiscal
-                else 'Loja atualizada. A configuracao fiscal permanece incompleta.'
-            )
-            return redirect('empresa:lista_lojas')
+            try:
+                _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
+            except (ValidationError, CertificadoA1Error) as exc:
+                fiscal_form.add_error('certificado_a1_arquivo', str(exc))
+            else:
+                messages.success(
+                    request,
+                    'Loja e configuracao fiscal atualizadas com sucesso.' if configurar_fiscal
+                    else 'Loja atualizada. A configuracao fiscal permanece incompleta.'
+                )
+                return redirect('empresa:lista_lojas')
     else:
         form = LojaEmpresaForm(instance=loja, matriz=contexto['matriz'])
         fiscal_form = ConfiguracaoFiscalLojaEmpresaForm(instance=configuracao_fiscal)

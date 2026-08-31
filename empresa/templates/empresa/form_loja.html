@@ -7,7 +7,7 @@
       <div class="text-muted small">Cadastro da filial e configuracao fiscal para emissao NFC-e.</div>
     </div>
     <div class="card-body">
-      <form method="post" novalidate data-configuracao-fiscal-loja="195cfg3a">
+      <form method="post" enctype="multipart/form-data" novalidate data-configuracao-fiscal-loja="195cfg3a">
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
         {% if fiscal_form.non_field_errors %}<div class="alert alert-danger">{{ fiscal_form.non_field_errors }}</div>{% endif %}
@@ -63,6 +63,10 @@
                 <div class="col-md-5">{{ fiscal_form.ambiente_nfce.label_tag }}{{ fiscal_form.ambiente_nfce }}{{ fiscal_form.ambiente_nfce.errors }}</div>
                 <div class="col-md-3">{{ fiscal_form.serie_nfce.label_tag }}{{ fiscal_form.serie_nfce }}{{ fiscal_form.serie_nfce.errors }}</div>
                 <div class="col-md-4"><div class="form-check mb-2">{{ fiscal_form.ativa }}{{ fiscal_form.ativa.label_tag }}</div>{{ fiscal_form.ativa.errors }}</div>
+            <!-- 195F3NQ_A1_TEMPLATE -->
+            <div class="col-12"><h6 class="border-top pt-4 mt-4 mb-3">Certificado Digital A1</h6><div class="text-muted small mb-3">Arquivo privado .pfx/.p12. A senha e usada apenas na validacao e nao e armazenada.</div></div>
+            <div class="col-md-7">{{ fiscal_form.certificado_a1_arquivo.label_tag }}{{ fiscal_form.certificado_a1_arquivo }}{{ fiscal_form.certificado_a1_arquivo.errors }}</div>
+            <div class="col-md-5">{{ fiscal_form.certificado_a1_senha.label_tag }}{{ fiscal_form.certificado_a1_senha }}{% if fiscal_form.certificado_a1_senha.help_text %}<div class="form-text">{{ fiscal_form.certificado_a1_senha.help_text }}</div>{% endif %}{{ fiscal_form.certificado_a1_senha.errors }}</div>
               </div>
             </fieldset>
           </div>
