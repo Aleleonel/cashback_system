@@ -50,6 +50,8 @@ class AutorizacaoXMLNFCeTests(SimpleTestCase):
         self.assertEqual(retorno.codigo_status, "100")
         self.assertEqual(retorno.protocolo, "135260000000001")
         self.assertEqual(retorno.chave_acesso, CHAVE)
+        self.assertEqual(retorno.ambiente, "2")
+        self.assertEqual(retorno.versao_aplicacao, "TESTE")
         self.assertIn("<protNFe", retorno.xml_protocolo)
 
     def test_interpreta_rejeicao_do_protocolo(self):
@@ -90,6 +92,16 @@ class AutorizacaoXMLNFCeTests(SimpleTestCase):
                 self.assertFalse(retorno.autorizado)
                 self.assertEqual(retorno.codigo_status, cstat)
 
+    def test_autorizado_rejeita_chave_com_formato_invalido(self):
+        xml = ('<retEnviNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><cStat>104</cStat><xMotivo>Lote processado</xMotivo><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><verAplic>TESTE</verAplic><chNFe>123</chNFe><dhRecbto>2026-08-30T10:00:00-03:00</dhRecbto><nProt>135260000000001</nProt><cStat>100</cStat><xMotivo>Autorizado</xMotivo></infProt></protNFe></retEnviNFe>')
+        with self.assertRaisesMessage(AutorizacaoXMLNFCeError, "chNFe invalida"):
+            interpretar_ret_envi_nfe(xml_retorno=xml)
+
+    def test_autorizado_rejeita_tpamb_invalido(self):
+        xml = ('<retEnviNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><cStat>104</cStat><xMotivo>Lote processado</xMotivo><protNFe versao="4.00"><infProt><tpAmb>9</tpAmb><verAplic>TESTE</verAplic>' + f'<chNFe>{CHAVE}</chNFe><dhRecbto>2026-08-30T10:00:00-03:00</dhRecbto><nProt>135260000000001</nProt><cStat>100</cStat><xMotivo>Autorizado</xMotivo></infProt></protNFe></retEnviNFe>')
+        with self.assertRaisesMessage(AutorizacaoXMLNFCeError, "tpAmb invalido"):
+            interpretar_ret_envi_nfe(xml_retorno=xml)
+
     def test_nfe_proc_rejeita_chave_divergente(self):
         protocolo = '<protNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><infProt>' + f'<chNFe>{"9" * 44}</chNFe><nProt>135260000000001</nProt><cStat>100</cStat><xMotivo>Autorizado</xMotivo></infProt></protNFe>'
         with self.assertRaisesMessage(AutorizacaoXMLNFCeError, "Chave do protocolo difere"):
@@ -105,6 +117,7 @@ class AutorizacaoXMLNFCeTests(SimpleTestCase):
             '<retEnviNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
             '<cStat>104</cStat><xMotivo>Lote processado</xMotivo>'
             '<protNFe versao="4.00"><infProt>'
+            '<tpAmb>2</tpAmb><verAplic>TESTE</verAplic>'
             f'<chNFe>{CHAVE}</chNFe>'
             '<dhRecbto>2026-08-30T10:00:00-03:00</dhRecbto>'
             '<nProt>135260000000001</nProt>'

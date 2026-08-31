@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from unittest.mock import patch
 
 from fiscal.choices_documento_fiscal import (
@@ -161,6 +162,31 @@ class AutorizacaoDocumentoFiscalTests(IntegracaoPersistenciaXMLNFCeTests):
         documento = registrar_retorno_autorizacao(documento=documento, xml_retorno=self._retorno(documento, cstat="204", motivo="Duplicidade de NF-e", protocolo=""))
         self.assertEqual(documento.status, StatusDocumentoFiscal.REJEITADO)
         self.assertEqual(documento.codigo_status, "204")
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_bloqueia_dhrecbto_invalido_sem_autorizar(self):
+        documento = iniciar_transmissao_documento_fiscal(
+            documento=self._documento_assinado()
+        )
+        retorno = self._retorno(documento).replace("2026-08-30T10:00:00-03:00", "data-invalida")
+        with self.assertRaisesMessage(ValidationError, "dhRecbto"):
+            registrar_retorno_autorizacao(documento=documento, xml_retorno=retorno)
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_bloqueia_ambiente_divergente_sem_autorizar(self):
+        documento = iniciar_transmissao_documento_fiscal(
+            documento=self._documento_assinado()
+        )
+        retorno = self._retorno(documento).replace(
+            "<protNFe versao=\"4.00\"><infProt><tpAmb>2</tpAmb>",
+            "<protNFe versao=\"4.00\"><infProt><tpAmb>1</tpAmb>",
+        )
+        with self.assertRaisesMessage(ValidationError, "Ambiente retornado"):
+            registrar_retorno_autorizacao(documento=documento, xml_retorno=retorno)
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
         self.assertEqual(documento.xml_autorizado, "")
 
     def test_bloqueia_chave_divergente(self):

@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 
-from fiscal.choices_documento_fiscal import StatusDocumentoFiscal
+from fiscal.choices_documento_fiscal import AmbienteDocumentoFiscal, StatusDocumentoFiscal
 from fiscal.models_documento_fiscal import DocumentoFiscal
 from fiscal.services_autorizacao_xml import (
     interpretar_ret_envi_nfe,
@@ -49,8 +49,14 @@ def registrar_retorno_autorizacao(*, documento, xml_retorno):
     documento.numero_recibo = retorno.numero_recibo
 
     if retorno.autorizado:
-        if retorno.chave_acesso and retorno.chave_acesso != documento.chave_acesso:
+        if retorno.chave_acesso != documento.chave_acesso:
             raise ValidationError({"chave_acesso": "Chave retornada pela SEFAZ difere do documento."})
+        ambiente_esperado = {AmbienteDocumentoFiscal.PRODUCAO: "1", AmbienteDocumentoFiscal.HOMOLOGACAO: "2"}.get(documento.ambiente)
+        if ambiente_esperado is None or retorno.ambiente != ambiente_esperado:
+            raise ValidationError({"ambiente": "Ambiente retornado pela SEFAZ difere do documento."})
+        data_autorizacao = parse_datetime(retorno.data_recebimento)
+        if data_autorizacao is None:
+            raise ValidationError({"data_autorizacao": "dhRecbto retornado pela SEFAZ e invalido."})
         documento.xml_autorizado = montar_nfe_proc(
             xml_assinado=documento.xml_assinado,
             xml_protocolo=retorno.xml_protocolo,
@@ -62,7 +68,7 @@ def registrar_retorno_autorizacao(*, documento, xml_retorno):
             codigo_status=retorno.codigo_status,
             motivo_status=retorno.motivo_status,
             protocolo_autorizacao=retorno.protocolo,
-            data_autorizacao=parse_datetime(retorno.data_recebimento) if retorno.data_recebimento else None,
+            data_autorizacao=data_autorizacao,
             salvar=True,
         )
         return documento

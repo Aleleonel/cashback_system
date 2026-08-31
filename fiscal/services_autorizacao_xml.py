@@ -19,6 +19,8 @@ class RetornoAutorizacaoNFCe:
     numero_recibo: str = ""
     data_recebimento: str = ""
     chave_acesso: str = ""
+    ambiente: str = ""
+    versao_aplicacao: str = ""
     xml_protocolo: str = ""
 
     @property
@@ -78,15 +80,23 @@ def interpretar_ret_envi_nfe(*, xml_retorno: str) -> RetornoAutorizacaoNFCe:
     protocolo = (inf.findtext("nfe:nProt", namespaces=NS) or "").strip()
     data_recebimento = (inf.findtext("nfe:dhRecbto", namespaces=NS) or "").strip()
     chave_acesso = (inf.findtext("nfe:chNFe", namespaces=NS) or "").strip()
+    ambiente = (inf.findtext("nfe:tpAmb", namespaces=NS) or "").strip()
+    versao_aplicacao = (inf.findtext("nfe:verAplic", namespaces=NS) or "").strip()
     xml_protocolo = etree.tostring(prot, encoding="unicode", xml_declaration=False)
     if codigo == "100":
         ausentes = []
         if not chave_acesso: ausentes.append("chNFe")
         if not data_recebimento: ausentes.append("dhRecbto")
         if not protocolo: ausentes.append("nProt")
+        if not ambiente: ausentes.append("tpAmb")
+        if not versao_aplicacao: ausentes.append("verAplic")
         if ausentes:
             raise AutorizacaoXMLNFCeError("Retorno autorizado incompleto: " + ", ".join(ausentes) + ".")
-    return RetornoAutorizacaoNFCe(codigo_status=codigo, motivo_status=motivo, protocolo=protocolo, data_recebimento=data_recebimento, chave_acesso=chave_acesso, numero_recibo=numero_recibo, xml_protocolo=xml_protocolo)
+        if len(chave_acesso) != 44 or not chave_acesso.isdigit():
+            raise AutorizacaoXMLNFCeError("Retorno autorizado possui chNFe invalida.")
+        if ambiente not in ("1", "2"):
+            raise AutorizacaoXMLNFCeError("Retorno autorizado possui tpAmb invalido.")
+    return RetornoAutorizacaoNFCe(codigo_status=codigo, motivo_status=motivo, protocolo=protocolo, data_recebimento=data_recebimento, chave_acesso=chave_acesso, numero_recibo=numero_recibo, ambiente=ambiente, versao_aplicacao=versao_aplicacao, xml_protocolo=xml_protocolo)
 
 
 def montar_nfe_proc(*, xml_assinado: str, xml_protocolo: str) -> str:
