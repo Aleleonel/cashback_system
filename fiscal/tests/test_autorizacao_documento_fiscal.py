@@ -1,3 +1,5 @@
+from fiscal.services_autorizacao_documento_fiscal import reconciliar_retorno_consulta_protocolo
+from fiscal.services_autorizacao_xml import AutorizacaoXMLNFCeError
 from django.core.exceptions import ValidationError
 from unittest.mock import patch
 
@@ -203,3 +205,86 @@ class AutorizacaoDocumentoFiscalTests(IntegracaoPersistenciaXMLNFCeTests):
                 documento=documento,
                 xml_retorno=retorno,
             )
+    def _retorno_consulta_protocolo(self, documento, cstat="100", motivo="Autorizado o uso da NF-e", chave=None, ambiente="2", data="2026-08-31T10:00:00-03:00", protocolo="135260000000001", versao_aplicacao="TESTE"):
+        chave = documento.chave_acesso if chave is None else chave
+        return (
+            '<retConsSitNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
+            f'<tpAmb>{ambiente}</tpAmb><verAplic>{versao_aplicacao}</verAplic><cStat>{cstat}</cStat><xMotivo>{motivo}</xMotivo><chNFe>{chave}</chNFe>'
+            '<protNFe versao="4.00"><infProt>'
+            f'<tpAmb>{ambiente}</tpAmb><verAplic>{versao_aplicacao}</verAplic><chNFe>{chave}</chNFe><dhRecbto>{data}</dhRecbto><nProt>{protocolo}</nProt><cStat>{cstat}</cStat><xMotivo>{motivo}</xMotivo>'
+            '</infProt></protNFe></retConsSitNFe>'
+        )
+
+    def _retorno_consulta_sem_protocolo(self, documento, cstat="217", motivo="NF-e nao consta"):
+        return (
+            '<retConsSitNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><tpAmb>2</tpAmb><verAplic>TESTE</verAplic>'
+            f'<cStat>{cstat}</cStat><xMotivo>{motivo}</xMotivo><chNFe>{documento.chave_acesso}</chNFe></retConsSitNFe>'
+        )
+
+    def test_reconciliacao_consulta_autorizada(self):
+        documento = iniciar_transmissao_documento_fiscal(documento=self._documento_assinado())
+        tentativa = documento.tentativa_atual
+        documento = reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_protocolo(documento))
+        self.assertEqual(documento.status, StatusDocumentoFiscal.AUTORIZADO)
+        self.assertEqual(documento.codigo_status, "100")
+        self.assertEqual(documento.protocolo_autorizacao, "135260000000001")
+        self.assertIsNotNone(documento.data_autorizacao)
+        self.assertIn("<nfeProc", documento.xml_autorizado)
+        self.assertIn("<protNFe", documento.xml_autorizado)
+        self.assertEqual(documento.tentativa_atual, tentativa)
+
+    def test_reconciliacao_consulta_217_mantem_transmitindo(self):
+        documento = iniciar_transmissao_documento_fiscal(documento=self._documento_assinado())
+        tentativa = documento.tentativa_atual
+        reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_sem_protocolo(documento))
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
+        self.assertEqual(documento.tentativa_atual, tentativa)
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_reconciliacao_consulta_chave_divergente_rollback(self):
+        documento = iniciar_transmissao_documento_fiscal(documento=self._documento_assinado())
+        tentativa = documento.tentativa_atual
+        with self.assertRaisesMessage(ValidationError, "Chave consultada pela SEFAZ difere"):
+            reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_protocolo(documento, chave="9" * 44))
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
+        self.assertEqual(documento.tentativa_atual, tentativa)
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_reconciliacao_consulta_ambiente_divergente_rollback(self):
+        documento = iniciar_transmissao_documento_fiscal(documento=self._documento_assinado())
+        tentativa = documento.tentativa_atual
+        with self.assertRaisesMessage(ValidationError, "Ambiente consultado na SEFAZ difere"):
+            reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_protocolo(documento, ambiente="1"))
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
+        self.assertEqual(documento.tentativa_atual, tentativa)
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_reconciliacao_consulta_dhrecbto_invalido_rollback(self):
+        documento = iniciar_transmissao_documento_fiscal(documento=self._documento_assinado())
+        tentativa = documento.tentativa_atual
+        with self.assertRaisesMessage(ValidationError, "dhRecbto consultado"):
+            reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_protocolo(documento, data="data-invalida"))
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
+        self.assertEqual(documento.tentativa_atual, tentativa)
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_reconciliacao_consulta_protocolo_incompleto_nao_autoriza(self):
+        documento = iniciar_transmissao_documento_fiscal(documento=self._documento_assinado())
+        tentativa = documento.tentativa_atual
+        with self.assertRaisesMessage(AutorizacaoXMLNFCeError, "Consulta autorizada incompleta"):
+            reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_protocolo(documento, protocolo=""))
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.TRANSMITINDO)
+        self.assertEqual(documento.tentativa_atual, tentativa)
+        self.assertEqual(documento.xml_autorizado, "")
+
+    def test_reconciliacao_consulta_exige_transmitindo(self):
+        documento = self._documento_assinado()
+        with self.assertRaisesMessage(ValidationError, "Reconciliacao exige documento em transmissao"):
+            reconciliar_retorno_consulta_protocolo(documento=documento, xml_retorno=self._retorno_consulta_sem_protocolo(documento))
+        documento.refresh_from_db()
+        self.assertEqual(documento.status, StatusDocumentoFiscal.PENDENTE_TRANSMISSAO)

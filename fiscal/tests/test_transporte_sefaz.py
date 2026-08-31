@@ -104,6 +104,22 @@ class TransporteSefazTests(SimpleTestCase):
         with self.assertRaisesRegex(TransporteSefazError,"sem retEnviNFe unico"):
             extrair_ret_envi_nfe(xml)
 
+    def test_consulta_protocolo_base(self):
+        chave="35260812345678000199650010000000011000000010"
+        self.assertIn("NFeConsultaProtocolo4.asmx",endpoint_consulta_protocolo_nfce_sp("homologacao"))
+        xml=montar_cons_sit_nfe(chave_acesso=chave,ambiente="homologacao");raiz=etree.fromstring(xml.encode())
+        self.assertEqual("{http://www.portalfiscal.inf.br/nfe}consSitNFe",raiz.tag);self.assertEqual("4.00",raiz.get("versao"))
+        self.assertEqual("2",raiz.find("{http://www.portalfiscal.inf.br/nfe}tpAmb").text);self.assertEqual("CONSULTAR",raiz.find("{http://www.portalfiscal.inf.br/nfe}xServ").text);self.assertEqual(chave,raiz.find("{http://www.portalfiscal.inf.br/nfe}chNFe").text)
+        env=etree.fromstring(montar_envelope_soap12_consulta_protocolo(xml));self.assertEqual(1,len(env.xpath("//*[local-name()='nfeDadosMsg']")))
+    def test_consulta_protocolo_chave_invalida(self):
+        with self.assertRaisesRegex(TransporteSefazError,"chNFe invalida"): montar_cons_sit_nfe(chave_acesso="123",ambiente="homologacao")
+    def test_consulta_protocolo_extracao_e_transporte_mockado(self):
+        chave="35260812345678000199650010000000011000000010";ret='<retConsSitNFe xmlns="'+NFE_NS+'" versao="4.00"><tpAmb>2</tpAmb><verAplic>TESTE</verAplic><cStat>217</cStat><xMotivo>NF-e nao consta</xMotivo><chNFe>'+chave+'</chNFe></retConsSitNFe>';soap=('<s:Envelope xmlns:s="'+SOAP12_NS+'"><s:Body>'+ret+'</s:Body></s:Envelope>').encode()
+        self.assertIn("<cStat>217</cStat>",extrair_ret_cons_sit_nfe(soap));cap={}
+        def op(req,context=None,timeout=None): cap["req"]=req;cap["timeout"]=timeout;return Resp(soap)
+        r=transmitir_consulta_protocolo_nfce_sp(chave_acesso=chave,ambiente="homologacao",certificado_a1=A1(),timeout=8,opener=op)
+        self.assertEqual(200,r.http_status);self.assertEqual("POST",cap["req"].get_method());self.assertIn(CONSULTA_SOAP_ACTION,cap["req"].get_header("Content-type"))
+
     def test_pems_temporarios_removidos_se_load_cert_chain_falhar(self):
         import glob
         import tempfile

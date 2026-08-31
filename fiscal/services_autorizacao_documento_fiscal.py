@@ -5,6 +5,7 @@ from django.utils.dateparse import parse_datetime
 from fiscal.choices_documento_fiscal import AmbienteDocumentoFiscal, StatusDocumentoFiscal
 from fiscal.models_documento_fiscal import DocumentoFiscal
 from fiscal.services_autorizacao_xml import (
+    interpretar_ret_cons_sit_nfe,
     interpretar_ret_envi_nfe,
     montar_envi_nfe,
     montar_nfe_proc,
@@ -81,4 +82,26 @@ def registrar_retorno_autorizacao(*, documento, xml_retorno):
         motivo_status=retorno.motivo_status,
         salvar=True,
     )
+    return documento
+
+@transaction.atomic
+def reconciliar_retorno_consulta_protocolo(*, documento, xml_retorno):
+    documento = DocumentoFiscal.objects.select_for_update().get(pk=documento.pk)
+    if documento.status != StatusDocumentoFiscal.TRANSMITINDO:
+        raise ValidationError({"status": "Reconciliacao exige documento em transmissao."})
+    retorno = interpretar_ret_cons_sit_nfe(xml_retorno=xml_retorno)
+    if not retorno.autorizado:
+        return documento
+    if retorno.chave_acesso != documento.chave_acesso:
+        raise ValidationError({"chave_acesso": "Chave consultada pela SEFAZ difere do documento."})
+    ambiente_esperado = {AmbienteDocumentoFiscal.PRODUCAO:"1", AmbienteDocumentoFiscal.HOMOLOGACAO:"2"}.get(documento.ambiente)
+    if ambiente_esperado is None or retorno.ambiente != ambiente_esperado:
+        raise ValidationError({"ambiente": "Ambiente consultado na SEFAZ difere do documento."})
+    data_autorizacao = parse_datetime(retorno.data_recebimento)
+    if data_autorizacao is None:
+        raise ValidationError({"data_autorizacao": "dhRecbto consultado na SEFAZ e invalido."})
+    documento.xml_autorizado = montar_nfe_proc(xml_assinado=documento.xml_assinado, xml_protocolo=retorno.xml_protocolo)
+    documento.xml_retorno = str(xml_retorno or "")
+    documento.save(update_fields=("xml_retorno","xml_autorizado","atualizado_em"))
+    transicionar_documento_fiscal(documento=documento, novo_status=StatusDocumentoFiscal.AUTORIZADO, codigo_status=retorno.codigo_status, motivo_status=retorno.motivo_status, protocolo_autorizacao=retorno.protocolo, data_autorizacao=data_autorizacao, salvar=True)
     return documento

@@ -99,6 +99,42 @@ def interpretar_ret_envi_nfe(*, xml_retorno: str) -> RetornoAutorizacaoNFCe:
     return RetornoAutorizacaoNFCe(codigo_status=codigo, motivo_status=motivo, protocolo=protocolo, data_recebimento=data_recebimento, chave_acesso=chave_acesso, numero_recibo=numero_recibo, ambiente=ambiente, versao_aplicacao=versao_aplicacao, xml_protocolo=xml_protocolo)
 
 
+def interpretar_ret_cons_sit_nfe(*, xml_retorno: str) -> RetornoAutorizacaoNFCe:
+    try:
+        raiz = etree.fromstring(str(xml_retorno or "").encode("utf-8"))
+    except (etree.XMLSyntaxError, ValueError) as exc:
+        raise AutorizacaoXMLNFCeError("XML de consulta da SEFAZ invalido.") from exc
+    if raiz.tag != f"{{{NFE_NS}}}retConsSitNFe":
+        raise AutorizacaoXMLNFCeError("Retorno deve possuir raiz retConsSitNFe.")
+    codigo = (raiz.findtext("nfe:cStat", namespaces=NS) or "").strip()
+    motivo = (raiz.findtext("nfe:xMotivo", namespaces=NS) or "").strip()
+    chave = (raiz.findtext("nfe:chNFe", namespaces=NS) or "").strip()
+    ambiente = (raiz.findtext("nfe:tpAmb", namespaces=NS) or "").strip()
+    versao = (raiz.findtext("nfe:verAplic", namespaces=NS) or "").strip()
+    prot = raiz.find("nfe:protNFe", namespaces=NS)
+    if prot is None:
+        return RetornoAutorizacaoNFCe(codigo_status=codigo, motivo_status=motivo, chave_acesso=chave, ambiente=ambiente, versao_aplicacao=versao)
+    inf = prot.find("nfe:infProt", namespaces=NS)
+    if inf is None:
+        raise AutorizacaoXMLNFCeError("protNFe sem infProt.")
+    codigo = (inf.findtext("nfe:cStat", namespaces=NS) or "").strip()
+    motivo = (inf.findtext("nfe:xMotivo", namespaces=NS) or "").strip()
+    protocolo = (inf.findtext("nfe:nProt", namespaces=NS) or "").strip()
+    data = (inf.findtext("nfe:dhRecbto", namespaces=NS) or "").strip()
+    chave = (inf.findtext("nfe:chNFe", namespaces=NS) or "").strip()
+    ambiente = (inf.findtext("nfe:tpAmb", namespaces=NS) or "").strip()
+    versao = (inf.findtext("nfe:verAplic", namespaces=NS) or "").strip()
+    xml_protocolo = etree.tostring(prot, encoding="unicode", xml_declaration=False)
+    if codigo == "100":
+        ausentes = [nome for nome, valor in (("chNFe",chave),("dhRecbto",data),("nProt",protocolo),("tpAmb",ambiente),("verAplic",versao)) if not valor]
+        if ausentes:
+            raise AutorizacaoXMLNFCeError("Consulta autorizada incompleta: " + ", ".join(ausentes) + ".")
+        if len(chave) != 44 or not chave.isdigit():
+            raise AutorizacaoXMLNFCeError("Consulta autorizada possui chNFe invalida.")
+        if ambiente not in ("1","2"):
+            raise AutorizacaoXMLNFCeError("Consulta autorizada possui tpAmb invalido.")
+    return RetornoAutorizacaoNFCe(codigo_status=codigo, motivo_status=motivo, protocolo=protocolo, data_recebimento=data, chave_acesso=chave, ambiente=ambiente, versao_aplicacao=versao, xml_protocolo=xml_protocolo)
+
 def montar_nfe_proc(*, xml_assinado: str, xml_protocolo: str) -> str:
     try:
         nfe = etree.fromstring(str(xml_assinado or "").encode("utf-8"))

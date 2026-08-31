@@ -1,3 +1,4 @@
+from fiscal.services_autorizacao_documento_fiscal import iniciar_transmissao_documento_fiscal
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -12,6 +13,7 @@ from fiscal.services_assinatura_documento_fiscal import assinar_documento_fiscal
 from fiscal.services_execucao_autorizacao import (
     ExecucaoAutorizacaoError,
     executar_autorizacao_nfce_sp,
+    executar_consulta_protocolo_nfce_sp,
 )
 from fiscal.services_geracao_xml_documento_fiscal import (
     gerar_e_persistir_xml_rascunho_nfce,
@@ -220,3 +222,93 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         self.assertNotIn("senha_certificado_a1", nomes)
         self.assertNotIn("senha_certificado", nomes)
         self.assertNotIn("senha_a1", nomes)
+    def _retorno_consulta_execucao(self, documento, cstat='100', motivo='Autorizado o uso da NF-e'):
+        if cstat == '100':
+            return (
+                '<retConsSitNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
+                '<tpAmb>2</tpAmb><verAplic>TESTE</verAplic><cStat>100</cStat><xMotivo>Autorizado</xMotivo>'
+                f'<chNFe>{documento.chave_acesso}</chNFe>'
+                '<protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><verAplic>TESTE</verAplic>'
+                f'<chNFe>{documento.chave_acesso}</chNFe>'
+                '<dhRecbto>2026-08-31T13:00:00-03:00</dhRecbto><nProt>135260000000002</nProt>'
+                '<cStat>100</cStat><xMotivo>Autorizado o uso da NF-e</xMotivo></infProt></protNFe>'
+                '</retConsSitNFe>'
+            )
+        return (
+            '<retConsSitNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
+            '<tpAmb>2</tpAmb><verAplic>TESTE</verAplic>'
+            f'<cStat>{cstat}</cStat><xMotivo>{motivo}</xMotivo>'
+            f'<chNFe>{documento.chave_acesso}</chNFe></retConsSitNFe>'
+        )
+
+    def test_consulta_protocolo_autorizada_mockada(self):
+        documento = self._documento_assinado()
+        self._configurar_a1()
+        documento = iniciar_transmissao_documento_fiscal(documento=documento)
+        tentativa = documento.tentativa_atual
+        certificado = SimpleNamespace()
+        carregador = Mock(return_value=certificado)
+        observado = {}
+        def transmissor(**kwargs):
+            documento.refresh_from_db()
+            observado['status'] = documento.status
+            observado['tentativa'] = documento.tentativa_atual
+            connection = transaction.get_connection()
+            observado['atomic_blocks'] = [getattr(block, '_from_testcase', False) for block in getattr(connection, 'atomic_blocks', [])]
+            observado.update(kwargs)
+            return SimpleNamespace(xml_retorno=self._retorno_consulta_execucao(documento), http_status=200)
+        resultado = executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='senha-consulta', timeout=11.0, carregador_certificado=carregador, transmissor=transmissor)
+        resultado.refresh_from_db()
+        self.assertEqual(StatusDocumentoFiscal.AUTORIZADO, resultado.status)
+        self.assertEqual(tentativa, resultado.tentativa_atual)
+        self.assertEqual(StatusDocumentoFiscal.TRANSMITINDO, observado['status'])
+        self.assertEqual(tentativa, observado['tentativa'])
+        self.assertTrue(observado['atomic_blocks'])
+        self.assertTrue(all(observado['atomic_blocks']))
+        self.assertEqual(documento.chave_acesso, observado['chave_acesso'])
+        self.assertEqual('homologacao', observado['ambiente'])
+        self.assertEqual(certificado, observado['certificado_a1'])
+        self.assertEqual(11.0, observado['timeout'])
+        self.assertEqual('135260000000002', resultado.protocolo_autorizacao)
+        self.assertIn('<nfeProc', resultado.xml_autorizado)
+        carregador.assert_called_once_with(referencia='teste-a1.pfx', senha='senha-consulta')
+
+    def test_consulta_protocolo_217_nao_incrementa(self):
+        documento = self._documento_assinado()
+        self._configurar_a1()
+        documento = iniciar_transmissao_documento_fiscal(documento=documento)
+        tentativa = documento.tentativa_atual
+        transmissor = Mock(return_value=SimpleNamespace(xml_retorno=self._retorno_consulta_execucao(documento, cstat='217', motivo='NF-e nao consta'), http_status=200))
+        resultado = executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='senha-consulta', carregador_certificado=Mock(return_value=SimpleNamespace()), transmissor=transmissor)
+        resultado.refresh_from_db()
+        self.assertEqual(StatusDocumentoFiscal.TRANSMITINDO, resultado.status)
+        self.assertEqual(tentativa, resultado.tentativa_atual)
+        self.assertEqual('', resultado.xml_autorizado)
+        transmissor.assert_called_once()
+
+    def test_consulta_protocolo_exige_transmitindo_antes_da_rede(self):
+        documento = self._documento_assinado()
+        self._configurar_a1()
+        transmissor = Mock()
+        carregador = Mock(return_value=SimpleNamespace())
+        with self.assertRaisesRegex(ExecucaoAutorizacaoError, 'exige documento em transmissao'):
+            executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='x', carregador_certificado=carregador, transmissor=transmissor)
+        documento.refresh_from_db()
+        self.assertEqual(StatusDocumentoFiscal.PENDENTE_TRANSMISSAO, documento.status)
+        self.assertEqual(0, documento.tentativa_atual)
+        transmissor.assert_not_called()
+        carregador.assert_not_called()
+
+    def test_consulta_protocolo_atomic_explicito_bloqueia_rede(self):
+        documento = self._documento_assinado()
+        self._configurar_a1()
+        documento = iniciar_transmissao_documento_fiscal(documento=documento)
+        tentativa = documento.tentativa_atual
+        transmissor = Mock()
+        with transaction.atomic():
+            with self.assertRaisesRegex(ExecucaoAutorizacaoError, 'Transporte SEFAZ nao pode ocorrer dentro de transaction.atomic'):
+                executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='x', carregador_certificado=Mock(return_value=SimpleNamespace()), transmissor=transmissor)
+        documento.refresh_from_db()
+        self.assertEqual(StatusDocumentoFiscal.TRANSMITINDO, documento.status)
+        self.assertEqual(tentativa, documento.tentativa_atual)
+        transmissor.assert_not_called()
