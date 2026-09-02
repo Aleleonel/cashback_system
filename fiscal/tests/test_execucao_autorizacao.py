@@ -54,7 +54,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         ):
             documento = assinar_documento_fiscal(
                 documento=documento,
-                senha_certificado="segredo-teste",
+                resolvedor_senha=lambda referencia: "segredo-teste",
             )
         documento.refresh_from_db()
         self.assertEqual(StatusDocumentoFiscal.PENDENTE_TRANSMISSAO, documento.status)
@@ -106,7 +106,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
 
         resultado = executar_autorizacao_nfce_sp(
             documento=documento,
-            senha_certificado_a1="senha-nao-persistir",
+            resolvedor_senha=lambda referencia: "senha-nao-persistir",
             timeout=9.0,
             carregador_certificado=carregador,
             transmissor=transmissor,
@@ -134,7 +134,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         with self.assertRaisesRegex(RuntimeError, "falha-local-a1"):
             executar_autorizacao_nfce_sp(
                 documento=documento,
-                senha_certificado_a1="x",
+                resolvedor_senha=lambda referencia: "x",
                 carregador_certificado=falhar_certificado,
                 transmissor=transmissor,
             )
@@ -155,7 +155,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         ):
             executar_autorizacao_nfce_sp(
                 documento=documento,
-                senha_certificado_a1="x",
+                resolvedor_senha=lambda referencia: "x",
                 carregador_certificado=Mock(),
                 transmissor=Mock(),
             )
@@ -179,7 +179,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         with self.assertRaisesRegex(RuntimeError, "timeout-sintetico"):
             executar_autorizacao_nfce_sp(
                 documento=documento,
-                senha_certificado_a1="x",
+                resolvedor_senha=lambda referencia: "x",
                 carregador_certificado=Mock(return_value=SimpleNamespace()),
                 transmissor=transmissor,
             )
@@ -203,7 +203,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
             ):
                 executar_autorizacao_nfce_sp(
                     documento=documento,
-                    senha_certificado_a1="x",
+                    resolvedor_senha=lambda referencia: "x",
                     carregador_certificado=Mock(return_value=SimpleNamespace()),
                     transmissor=transmissor,
                 )
@@ -257,7 +257,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
             observado['atomic_blocks'] = [getattr(block, '_from_testcase', False) for block in getattr(connection, 'atomic_blocks', [])]
             observado.update(kwargs)
             return SimpleNamespace(xml_retorno=self._retorno_consulta_execucao(documento), http_status=200)
-        resultado = executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='senha-consulta', timeout=11.0, carregador_certificado=carregador, transmissor=transmissor)
+        resultado = executar_consulta_protocolo_nfce_sp(documento=documento, resolvedor_senha=lambda referencia: 'senha-consulta', timeout=11.0, carregador_certificado=carregador, transmissor=transmissor)
         resultado.refresh_from_db()
         self.assertEqual(StatusDocumentoFiscal.AUTORIZADO, resultado.status)
         self.assertEqual(tentativa, resultado.tentativa_atual)
@@ -279,7 +279,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         documento = iniciar_transmissao_documento_fiscal(documento=documento)
         tentativa = documento.tentativa_atual
         transmissor = Mock(return_value=SimpleNamespace(xml_retorno=self._retorno_consulta_execucao(documento, cstat='217', motivo='NF-e nao consta'), http_status=200))
-        resultado = executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='senha-consulta', carregador_certificado=Mock(return_value=SimpleNamespace()), transmissor=transmissor)
+        resultado = executar_consulta_protocolo_nfce_sp(documento=documento, resolvedor_senha=lambda referencia: 'senha-consulta', carregador_certificado=Mock(return_value=SimpleNamespace()), transmissor=transmissor)
         resultado.refresh_from_db()
         self.assertEqual(StatusDocumentoFiscal.TRANSMITINDO, resultado.status)
         self.assertEqual(tentativa, resultado.tentativa_atual)
@@ -292,7 +292,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         transmissor = Mock()
         carregador = Mock(return_value=SimpleNamespace())
         with self.assertRaisesRegex(ExecucaoAutorizacaoError, 'exige documento em transmissao'):
-            executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='x', carregador_certificado=carregador, transmissor=transmissor)
+            executar_consulta_protocolo_nfce_sp(documento=documento, resolvedor_senha=lambda referencia: 'x', carregador_certificado=carregador, transmissor=transmissor)
         documento.refresh_from_db()
         self.assertEqual(StatusDocumentoFiscal.PENDENTE_TRANSMISSAO, documento.status)
         self.assertEqual(0, documento.tentativa_atual)
@@ -307,7 +307,7 @@ class ExecucaoAutorizacaoTests(IntegracaoPersistenciaXMLNFCeTests.__bases__[0]):
         transmissor = Mock()
         with transaction.atomic():
             with self.assertRaisesRegex(ExecucaoAutorizacaoError, 'Transporte SEFAZ nao pode ocorrer dentro de transaction.atomic'):
-                executar_consulta_protocolo_nfce_sp(documento=documento, senha_certificado_a1='x', carregador_certificado=Mock(return_value=SimpleNamespace()), transmissor=transmissor)
+                executar_consulta_protocolo_nfce_sp(documento=documento, resolvedor_senha=lambda referencia: 'x', carregador_certificado=Mock(return_value=SimpleNamespace()), transmissor=transmissor)
         documento.refresh_from_db()
         self.assertEqual(StatusDocumentoFiscal.TRANSMITINDO, documento.status)
         self.assertEqual(tentativa, documento.tentativa_atual)

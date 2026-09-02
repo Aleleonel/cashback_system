@@ -51,7 +51,7 @@ class AssinaturaDocumentoFiscalTests(TestCase):
 
         retorno=assinar_documento_fiscal(
             documento=documento,
-            senha_certificado="segredo",
+            resolvedor_senha=lambda referencia: "segredo",
         )
 
         carregar.assert_called_once_with(
@@ -80,7 +80,7 @@ class AssinaturaDocumentoFiscalTests(TestCase):
         with self.assertRaises(ValidationError):
             assinar_documento_fiscal(
                 documento=documento,
-                senha_certificado="segredo",
+                resolvedor_senha=lambda referencia: "segredo",
             )
 
     def test_rejeita_xml_rascunho_ausente(self):
@@ -94,7 +94,7 @@ class AssinaturaDocumentoFiscalTests(TestCase):
         with self.assertRaises(ValidationError):
             assinar_documento_fiscal(
                 documento=documento,
-                senha_certificado="segredo",
+                resolvedor_senha=lambda referencia: "segredo",
             )
 
     @patch("fiscal.services_assinatura_documento_fiscal.ConfiguracaoEmissaoFiscalLoja.objects.get")
@@ -110,5 +110,5 @@ class AssinaturaDocumentoFiscalTests(TestCase):
         with self.assertRaises(ValidationError):
             assinar_documento_fiscal(
                 documento=documento,
-                senha_certificado="segredo",
+                resolvedor_senha=lambda referencia: "segredo",
             )

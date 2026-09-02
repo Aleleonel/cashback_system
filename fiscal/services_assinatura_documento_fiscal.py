@@ -6,11 +6,16 @@ from fiscal.models_documento_fiscal import DocumentoFiscal
 from fiscal.models_emissao_fiscal import ConfiguracaoEmissaoFiscalLoja
 from fiscal.services_assinatura_xml import assinar_xml_nfe
 from fiscal.services_certificado_a1 import carregar_certificado_a1
+from fiscal.services_secrets_certificado_a1 import resolver_senha_certificado_a1
 from fiscal.services_documento_fiscal import transicionar_documento_fiscal
 
 
 @transaction.atomic
-def assinar_documento_fiscal(*, documento, senha_certificado):
+def assinar_documento_fiscal(
+    *,
+    documento,
+    resolvedor_senha=resolver_senha_certificado_a1,
+):
     """Assina o XML preparado e o deixa pendente para futura transmissao."""
     documento = (
         DocumentoFiscal.objects
@@ -49,6 +54,10 @@ def assinar_documento_fiscal(*, documento, senha_certificado):
             "certificado_a1": "Referencia do certificado A1 nao configurada para a loja."
         })
 
+    referencia_segredo = str(
+        getattr(configuracao, 'certificado_a1_segredo_referencia', '') or ''
+    ).strip()
+    senha_certificado = resolvedor_senha(referencia_segredo)
     certificado_a1 = carregar_certificado_a1(
         referencia=referencia,
         senha=senha_certificado,

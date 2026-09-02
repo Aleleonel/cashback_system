@@ -61,7 +61,7 @@ class AutorizacaoDocumentoFiscalTests(IntegracaoPersistenciaXMLNFCeTests):
         ):
             documento = assinar_documento_fiscal(
                 documento=documento,
-                senha_certificado="senha-so-teste",
+                resolvedor_senha=lambda referencia: "senha-so-teste",
             )
 
         documento.refresh_from_db()

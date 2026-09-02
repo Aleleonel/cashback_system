@@ -8,6 +8,7 @@ from fiscal.services_autorizacao_documento_fiscal import (
     registrar_retorno_autorizacao,
 )
 from fiscal.services_certificado_a1 import carregar_certificado_a1
+from fiscal.services_secrets_certificado_a1 import resolver_senha_certificado_a1
 from fiscal.choices_documento_fiscal import StatusDocumentoFiscal
 from fiscal.services_transporte_sefaz import (
     transmitir_autorizacao_nfce_sp,
@@ -30,8 +31,8 @@ def _ha_bloco_atomico_de_aplicacao() -> bool:
 def executar_autorizacao_nfce_sp(
     *,
     documento,
-    senha_certificado_a1: str,
     timeout: float = 30.0,
+    resolvedor_senha=resolver_senha_certificado_a1,
     carregador_certificado=carregar_certificado_a1,
     transmissor=transmitir_autorizacao_nfce_sp,
 ):
@@ -56,6 +57,10 @@ def executar_autorizacao_nfce_sp(
             "Referencia do certificado A1 nao configurada."
         )
 
+    referencia_segredo = str(
+        getattr(configuracao, 'certificado_a1_segredo_referencia', '') or ''
+    ).strip()
+    senha_certificado_a1 = resolvedor_senha(referencia_segredo)
     certificado_a1 = carregador_certificado(
         referencia=referencia,
         senha=senha_certificado_a1,
@@ -85,8 +90,8 @@ def executar_autorizacao_nfce_sp(
 def executar_consulta_protocolo_nfce_sp(
     *,
     documento,
-    senha_certificado_a1: str,
     timeout: float = 30.0,
+    resolvedor_senha=resolver_senha_certificado_a1,
     carregador_certificado=carregar_certificado_a1,
     transmissor=transmitir_consulta_protocolo_nfce_sp,
 ):
@@ -122,6 +127,10 @@ def executar_consulta_protocolo_nfce_sp(
             'Referencia do certificado A1 nao configurada.'
         )
 
+    referencia_segredo = str(
+        getattr(configuracao, 'certificado_a1_segredo_referencia', '') or ''
+    ).strip()
+    senha_certificado_a1 = resolvedor_senha(referencia_segredo)
     certificado_a1 = carregador_certificado(
         referencia=referencia,
         senha=senha_certificado_a1,

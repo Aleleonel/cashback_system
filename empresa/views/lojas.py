@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from fiscal.services_certificado_a1 import CertificadoA1Error
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -21,28 +23,79 @@ from empresa.services import (
 from empresas.models import Loja
 from fiscal.models_emissao_fiscal import ConfiguracaoEmissaoFiscalLoja
 from fiscal.services_armazenamento_certificado_a1 import armazenar_certificado_a1, remover_certificado_a1_por_referencia
+from fiscal.services_secrets_certificado_a1 import (
+    SegredoCertificadoA1Error,
+    armazenar_senha_certificado_a1,
+    remover_senha_certificado_a1,
+)
 from empresa.services import avaliar_prontidao_fiscal_loja
 
 
 
 # 195F3NQ_A1_VIEW
+@dataclass(frozen=True)
+class UploadA1Persistido:
+    referencia_certificado: str | None
+    referencia_segredo: str | None
+
+
+def _remover_upload_a1_persistido(upload):
+    if upload.referencia_certificado:
+        remover_certificado_a1_por_referencia(upload.referencia_certificado)
+    if upload.referencia_segredo:
+        remover_senha_certificado_a1(upload.referencia_segredo)
+
+
 def _persistir_upload_a1_se_informado(*, loja, fiscal_form):
     arquivo = fiscal_form.cleaned_data.get('certificado_a1_arquivo')
     if not arquivo:
-        return None
+        return UploadA1Persistido(None, None)
+
+    senha = fiscal_form.cleaned_data.get('certificado_a1_senha')
     cfg = ConfiguracaoEmissaoFiscalLoja.objects.get(loja=loja)
-    anterior = str(cfg.certificado_a1_referencia or '').strip()
-    nova = armazenar_certificado_a1(loja_id=loja.pk, arquivo=arquivo, senha=fiscal_form.cleaned_data.get('certificado_a1_senha'))
+    certificado_anterior = str(cfg.certificado_a1_referencia or '').strip()
+    segredo_anterior = str(
+        cfg.certificado_a1_segredo_referencia or ''
+    ).strip()
+    novo_certificado = armazenar_certificado_a1(
+        loja_id=loja.pk,
+        arquivo=arquivo,
+        senha=senha,
+    )
     try:
-        cfg.certificado_a1_referencia = nova
-        cfg.full_clean()
-        cfg.save(update_fields=['certificado_a1_referencia', 'atualizado_em'])
+        novo_segredo = armazenar_senha_certificado_a1(
+            loja_id=loja.pk,
+            senha=senha,
+        )
     except Exception:
-        remover_certificado_a1_por_referencia(nova)
+        remover_certificado_a1_por_referencia(novo_certificado)
         raise
-    if anterior and anterior != nova:
-        transaction.on_commit(lambda referencia=anterior: remover_certificado_a1_por_referencia(referencia))
-    return nova
+
+    try:
+        cfg.certificado_a1_referencia = novo_certificado
+        cfg.certificado_a1_segredo_referencia = novo_segredo
+        cfg.full_clean()
+        cfg.save(update_fields=[
+            'certificado_a1_referencia',
+            'certificado_a1_segredo_referencia',
+            'atualizado_em',
+        ])
+    except Exception:
+        remover_certificado_a1_por_referencia(novo_certificado)
+        remover_senha_certificado_a1(novo_segredo)
+        raise
+
+    if certificado_anterior and certificado_anterior != novo_certificado:
+        transaction.on_commit(
+            lambda referencia=certificado_anterior:
+            remover_certificado_a1_por_referencia(referencia)
+        )
+    if segredo_anterior and segredo_anterior != novo_segredo:
+        transaction.on_commit(
+            lambda referencia=segredo_anterior:
+            remover_senha_certificado_a1(referencia)
+        )
+    return UploadA1Persistido(novo_certificado, novo_segredo)
 
 @login_required
 @require_permission(PERMISSAO_EMPRESA_LOJAS_GERENCIAR)
@@ -105,7 +158,7 @@ def criar_loja_empresa_view(request):
         fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
         if form.is_valid() and fiscal_valido:
-            nova_referencia_a1 = None
+            upload_a1_persistido = UploadA1Persistido(None, None)
             try:
                 with transaction.atomic():
                     loja = criar_loja_empresa(
@@ -117,14 +170,12 @@ def criar_loja_empresa_view(request):
                             loja=loja, dados=fiscal_form.cleaned_data,
                             usuario_executor=request.user, request=request
                         )
-                        nova_referencia_a1 = _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
-            except (ValidationError, CertificadoA1Error) as exc:
-                if nova_referencia_a1:
-                    remover_certificado_a1_por_referencia(nova_referencia_a1)
+                        upload_a1_persistido = _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
+            except (ValidationError, CertificadoA1Error, SegredoCertificadoA1Error) as exc:
+                _remover_upload_a1_persistido(upload_a1_persistido)
                 fiscal_form.add_error('certificado_a1_arquivo', str(exc))
             except Exception:
-                if nova_referencia_a1:
-                    remover_certificado_a1_por_referencia(nova_referencia_a1)
+                _remover_upload_a1_persistido(upload_a1_persistido)
                 raise
             else:
                 messages.success(
@@ -179,7 +230,7 @@ def editar_loja_empresa_view(request, loja_id):
         fiscal_valido = fiscal_form.is_valid() if configurar_fiscal else True
 
         if form.is_valid() and fiscal_valido:
-            nova_referencia_a1 = None
+            upload_a1_persistido = UploadA1Persistido(None, None)
             try:
                 with transaction.atomic():
                     editar_loja_empresa(
@@ -191,14 +242,12 @@ def editar_loja_empresa_view(request, loja_id):
                             loja=loja, dados=fiscal_form.cleaned_data,
                             usuario_executor=request.user, request=request
                         )
-                        nova_referencia_a1 = _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
-            except (ValidationError, CertificadoA1Error) as exc:
-                if nova_referencia_a1:
-                    remover_certificado_a1_por_referencia(nova_referencia_a1)
+                        upload_a1_persistido = _persistir_upload_a1_se_informado(loja=loja, fiscal_form=fiscal_form)
+            except (ValidationError, CertificadoA1Error, SegredoCertificadoA1Error) as exc:
+                _remover_upload_a1_persistido(upload_a1_persistido)
                 fiscal_form.add_error('certificado_a1_arquivo', str(exc))
             except Exception:
-                if nova_referencia_a1:
-                    remover_certificado_a1_por_referencia(nova_referencia_a1)
+                _remover_upload_a1_persistido(upload_a1_persistido)
                 raise
             else:
                 messages.success(

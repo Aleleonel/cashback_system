@@ -39,6 +39,15 @@ class ConfiguracaoEmissaoFiscalLoja(models.Model):
             "Nao armazene senha, chave privada ou conteudo do certificado neste campo."
         ),
     )
+    certificado_a1_segredo_referencia = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text=(
+            "Referencia opaca do secret da senha A1. "
+            "Nunca armazene a senha neste campo."
+        ),
+    )
     ativa = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
