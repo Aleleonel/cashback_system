@@ -10,37 +10,17 @@ from cryptography.x509.oid import NameOID
 from django.test import SimpleTestCase
 
 from fiscal.services_certificado_a1 import CertificadoA1Error, carregar_certificado_a1
+from fiscal.tests.fixtures_certificado_a1 import criar_pkcs12_sintetico
 
 
 class CarregadorCertificadoA1Tests(SimpleTestCase):
     SENHA = "senha-teste-195f3k"
 
     def _criar_pkcs12(self, pasta: str) -> Path:
-        chave = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        nome = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "195F3K Teste A1")])
-        agora = datetime.datetime.now(datetime.timezone.utc)
-        certificado = (
-            x509.CertificateBuilder()
-            .subject_name(nome)
-            .issuer_name(nome)
-            .public_key(chave.public_key())
-            .serial_number(x509.random_serial_number())
-            .not_valid_before(agora - datetime.timedelta(minutes=1))
-            .not_valid_after(agora + datetime.timedelta(days=1))
-            .sign(chave, hashes.SHA256())
+        return criar_pkcs12_sintetico(
+            pasta,
+            senha=self.SENHA,
         )
-        blob = pkcs12.serialize_key_and_certificates(
-            name=b"195F3K",
-            key=chave,
-            cert=certificado,
-            cas=None,
-            encryption_algorithm=serialization.BestAvailableEncryption(
-                self.SENHA.encode("utf-8")
-            ),
-        )
-        caminho = Path(pasta) / "certificado_teste_195f3k.pfx"
-        caminho.write_bytes(blob)
-        return caminho
 
     def test_carrega_pkcs12_com_chave_rsa_e_certificado(self):
         with tempfile.TemporaryDirectory() as pasta:
