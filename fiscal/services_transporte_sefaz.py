@@ -21,6 +21,19 @@ ENDPOINTS_SP = {"homologacao":"https://homologacao.nfce.fazenda.sp.gov.br/ws/NFe
 class TransporteSefazError(Exception):
     pass
 
+def _bloquear_producao_nao_habilitada(ambiente: str) -> None:
+    """
+    Guarda operacional temporaria da fase de homologacao.
+
+    Enquanto a liberacao de producao nao possuir um mecanismo explicito,
+    separado e auditavel, qualquer operacao de rede em ambiente de producao
+    deve falhar antes de preparar TLS ou abrir conexao.
+    """
+    if ambiente == "producao":
+        raise TransporteSefazError(
+            "Transmissao NFC-e em producao bloqueada: habilitacao explicita ausente."
+        )
+
 @dataclass(frozen=True)
 class RespostaTransporteSefaz:
     xml_retorno: str
@@ -76,6 +89,7 @@ def _ssl_contexto_a1(certificado_a1) -> ssl.SSLContext:
         if cp and os.path.exists(cp): os.remove(cp)
 
 def transmitir_autorizacao_nfce_sp(*,xml_envi_nfe:str,ambiente:str,certificado_a1,timeout:float=30.0,opener:Callable=urllib.request.urlopen)->RespostaTransporteSefaz:
+    _bloquear_producao_nao_habilitada(ambiente)
     soap=montar_envelope_soap12_autorizacao(xml_envi_nfe)
     ctx=_ssl_contexto_a1(certificado_a1)
     ct='application/soap+xml; charset=utf-8; action="'+SOAP_ACTION+'"'
@@ -136,6 +150,7 @@ def extrair_ret_cons_sit_nfe(xml_soap: bytes) -> str:
     return etree.tostring(retornos[0],encoding="unicode")
 
 def transmitir_consulta_protocolo_nfce_sp(*,chave_acesso:str,ambiente:str,certificado_a1,timeout:float=30.0,opener:Callable=urllib.request.urlopen)->RespostaTransporteSefaz:
+    _bloquear_producao_nao_habilitada(ambiente)
     consulta=montar_cons_sit_nfe(chave_acesso=chave_acesso,ambiente=ambiente);soap=montar_envelope_soap12_consulta_protocolo(consulta);ctx=_ssl_contexto_a1(certificado_a1)
     ct='application/soap+xml; charset=utf-8; action="'+CONSULTA_SOAP_ACTION+'"';req=urllib.request.Request(endpoint_consulta_protocolo_nfce_sp(ambiente),data=soap,headers={"Content-Type":ct},method="POST")
     try:
