@@ -61,20 +61,48 @@
                 {% else %}
                 <div class="alert alert-warning">
                     <span class="badge text-bg-danger">Caixa fechado</span>
-                    <p class="mb-0 mt-2">
-                        Abra uma sessão de caixa para iniciar vendas.
-                    </p>
-                    <div class="mt-3">
-                        <a
-                            href="{% url 'pdv:abrir_caixa' %}"
-                            class="btn btn-success"
-                            data-acao-abrir-caixa="true"
-                        >
-                            <i class="bi bi-unlock-fill me-1"></i>
-                            Abrir caixa
-                        </a>
 
-                    </div>
+                    {% if not pode_operar_pdv %}
+                        <p class="mb-0 mt-2">O perfil administrativo não opera sessão de caixa.</p>
+                    {% elif loja %}
+                        <p class="mb-1 mt-2"><strong>Loja operacional:</strong> {{ loja.nome }}</p>
+                        <p class="mb-0">Abra uma sessão de caixa para iniciar vendas.</p>
+                        <div class="mt-3 d-flex flex-wrap gap-2">
+                            <a href="{% url 'pdv:abrir_caixa' %}" class="btn btn-success" data-acao-abrir-caixa="true">
+                                <i class="bi bi-unlock-fill me-1"></i> Abrir caixa
+                            </a>
+                            {% if lojas_operacionais|length > 1 %}
+                                <form method="post" action="{% url 'pdv:selecionar_loja_operacional' %}" class="d-flex flex-wrap gap-2">
+                                    {% csrf_token %}
+                                    <select name="loja_operacional_id" class="form-select" required>
+                                        {% for loja_opcao in lojas_operacionais %}
+                                            <option value="{{ loja_opcao.pk }}" {% if loja_opcao.pk == loja.pk %}selected{% endif %}>{{ loja_opcao.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-outline-primary" type="submit">Trocar loja</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="mb-2 mt-2">Selecione a loja para iniciar a operação do PDV.</p>
+                        {% if lojas_operacionais %}
+                            <form method="post" action="{% url 'pdv:selecionar_loja_operacional' %}" class="mt-3">
+                                {% csrf_token %}
+                                <label class="form-label">Selecione a loja</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <select name="loja_operacional_id" class="form-select" required>
+                                        <option value="">Selecione a loja</option>
+                                        {% for loja_opcao in lojas_operacionais %}
+                                            <option value="{{ loja_opcao.pk }}">{{ loja_opcao.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-primary" type="submit">Confirmar loja</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <p class="mb-0 text-danger">Nenhuma loja operacional está autorizada para este usuário.</p>
+                        {% endif %}
+                    {% endif %}
                 </div>
 {% endif %}
                 <span class="text-muted small">Operador: {{ request.user.username }}</span>

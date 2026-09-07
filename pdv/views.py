@@ -81,28 +81,55 @@ def _formatar_valor_monetario_br(valor):
     return f"R$ {texto}"
 
 
+def _usuario_pode_operar_pdv(user):
+    return (
+        getattr(user, "perfil", None)
+        == getattr(user, "PERFIL_OPERADOR", "operador")
+    )
+
+
 def _contexto_operacional(request):
     matriz = getattr(request.user, "matriz", None)
     if matriz is None:
         return None, None, None
 
-    lojas = getattr(request.user, "lojas", None)
-    loja = lojas.order_by("nome").first() if lojas is not None else None
-    if loja is None:
+    lojas_relacao = getattr(request.user, "lojas", None)
+    if lojas_relacao is None:
         return matriz, None, None
+
+    lojas = lojas_relacao.filter(matriz=matriz).order_by("nome")
 
     sessao = (
         SessaoCaixa.objects.select_related("caixa", "caixa__loja")
         .filter(
-            caixa__loja=loja,
+            caixa__matriz=matriz,
+            caixa__loja__in=lojas,
             operador_abertura=request.user,
             status=StatusSessaoCaixa.ABERTA,
         )
         .order_by("aberta_em", "id")
         .first()
     )
-    return matriz, loja, sessao
+    if sessao is not None:
+        loja = sessao.caixa.loja
+        request.session["loja_operacional_id"] = loja.pk
+        return matriz, loja, sessao
 
+    loja_operacional_id = request.session.get("loja_operacional_id")
+    if loja_operacional_id is not None:
+        loja = lojas.filter(pk=loja_operacional_id).first()
+        if loja is not None:
+            return matriz, loja, None
+        request.session.pop("loja_operacional_id", None)
+        return matriz, None, None
+
+    lojas_ids = list(lojas.values_list("pk", flat=True)[:2])
+    if len(lojas_ids) == 1:
+        loja = lojas.get(pk=lojas_ids[0])
+        request.session["loja_operacional_id"] = loja.pk
+        return matriz, loja, None
+
+    return matriz, None, None
 
 def _obter_venda_atual(request, *, criar=False):
     matriz, loja, sessao = _contexto_operacional(request)
@@ -294,6 +321,13 @@ def _serializar_venda(venda):
 @require_GET
 @require_permission(PERMISSAO_PDV_ABRIR_CAIXA)
 def abrir_caixa(request):
+    if not _usuario_pode_operar_pdv(request.user):
+        messages.error(
+            request,
+            "A abertura de caixa é destinada a operadores de caixa.",
+        )
+        return redirect("pdv:inicio")
+
     matriz, loja, sessao = _contexto_operacional(request)
 
     if not matriz or not loja:
@@ -391,17 +425,67 @@ def confirmar_abertura_caixa(request):
     return redirect("pdv:inicio")
 
 @login_required
+@require_POST
+@require_permission(PERMISSAO_PDV_VISUALIZAR)
+def selecionar_loja_operacional(request):
+    if not _usuario_pode_operar_pdv(request.user):
+        messages.error(
+            request,
+            "A seleção operacional de loja é destinada a operadores de caixa.",
+        )
+        return redirect("pdv:inicio")
+
+    matriz = getattr(request.user, "matriz", None)
+    lojas_relacao = getattr(request.user, "lojas", None)
+
+    if matriz is None or lojas_relacao is None:
+        messages.error(request, "Seu usuário não possui contexto operacional de loja.")
+        return redirect("pdv:inicio")
+
+    _, _, sessao = _contexto_operacional(request)
+    if sessao is not None:
+        messages.warning(
+            request,
+            "Feche a sessão de caixa antes de trocar a loja operacional.",
+        )
+        return redirect("pdv:inicio")
+
+    loja_id = (request.POST.get("loja_operacional_id") or "").strip()
+    if not loja_id.isdigit():
+        messages.error(request, "Selecione uma loja operacional válida.")
+        return redirect("pdv:inicio")
+
+    loja = lojas_relacao.filter(matriz=matriz, pk=int(loja_id)).first()
+    if loja is None:
+        request.session.pop("loja_operacional_id", None)
+        messages.error(request, "A loja selecionada não está autorizada para este usuário.")
+        return redirect("pdv:inicio")
+
+    request.session["loja_operacional_id"] = loja.pk
+    messages.success(request, f"Loja operacional selecionada: {loja.nome}.")
+    return redirect("pdv:inicio")
+
+
+@login_required
 @require_permission(PERMISSAO_PDV_VISUALIZAR)
 def inicio(request):
     venda, matriz, loja, sessao = _obter_venda_atual(request, criar=False)
+
+    pode_operar_pdv = _usuario_pode_operar_pdv(request.user)
+    lojas_operacionais = []
+    lojas_relacao = getattr(request.user, "lojas", None)
+    if pode_operar_pdv and matriz is not None and lojas_relacao is not None:
+        lojas_operacionais = lojas_relacao.filter(matriz=matriz).order_by("nome")
+
     contexto = {
         "venda": venda,
-        "loja": loja,
-        "sessao_caixa": sessao,
-        "caixa_aberto": bool(sessao),
+        "loja": loja if pode_operar_pdv else None,
+        "lojas_operacionais": lojas_operacionais,
+        "pode_operar_pdv": pode_operar_pdv,
+        "sessao_caixa": sessao if pode_operar_pdv else None,
+        "caixa_aberto": bool(sessao) if pode_operar_pdv else False,
     }
     return render(request, "pdv/inicio.html", contexto)
-
 
 @login_required
 @require_GET

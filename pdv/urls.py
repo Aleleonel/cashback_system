@@ -22,6 +22,16 @@ urlpatterns = [
     path('venda/cancelar/', views.cancelar_venda_web, name='cancelar_venda'),
 
     path("", views.inicio, name="inicio"),
+
+    path(
+
+        "loja-operacional/selecionar/",
+
+        views.selecionar_loja_operacional,
+
+        name="selecionar_loja_operacional",
+
+    ),
     path(
         "vendas/",
         views.historico_vendas,
