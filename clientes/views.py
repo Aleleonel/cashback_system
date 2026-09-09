@@ -17,6 +17,7 @@ from cashback.selectors import (
 from core.services import get_contexto_operacional_usuario
 
 from .models import Cliente
+from .services_cep import consultar_cep
 
 from django.db import models
 
@@ -52,6 +53,11 @@ from accounts.permissions import (
 )
 
 from django.core.paginator import Paginator
+
+@login_required
+def consultar_cep_view(request):
+    resultado = consultar_cep(request.GET.get('cep', ''))
+    return JsonResponse(resultado, status=200 if resultado.get('ok') else 400)
 
 @login_required
 @require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
@@ -199,6 +205,8 @@ def criar_cliente(request):
 
     if request.method == 'POST':
         form = ClienteForm(request.POST)
+        form.instance.matriz = contexto['matriz']
+        form.instance.loja_cadastro = contexto['loja']
 
         if form.is_valid():
             cliente = form.save(commit=False)

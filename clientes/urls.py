@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    consultar_cep_view,
     buscar_cliente_cpf,
     criar_cliente,
     editar_cliente,
@@ -14,7 +15,7 @@ from .views import (
 app_name = 'clientes'
 
 urlpatterns = [
-
+    path('consultar-cep/', consultar_cep_view, name='consultar_cep'),
     path(
         '', 
         lista_clientes, 

@@ -40,7 +40,9 @@ def aplicar_busca_clientes(queryset, busca):
         models.Q(nome__icontains=busca) |
         models.Q(email__icontains=busca) |
         models.Q(nome_normalizado__icontains=busca_texto) |
-        models.Q(email_normalizado__icontains=busca_texto)
+        models.Q(email_normalizado__icontains=busca_texto) |
+        models.Q(razao_social__icontains=busca) |
+        models.Q(nome_fantasia__icontains=busca)
     )
 
     if busca_numerica:
@@ -48,6 +50,7 @@ def aplicar_busca_clientes(queryset, busca):
             models.Q(cpf__icontains=busca) |
             models.Q(telefone__icontains=busca) |
             models.Q(cpf_normalizado__icontains=busca_numerica) |
+            models.Q(cnpj_normalizado__icontains=busca_numerica) |
             models.Q(telefone_normalizado__icontains=busca_numerica)
         )
 
