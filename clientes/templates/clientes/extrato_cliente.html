@@ -6,7 +6,7 @@
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">Extrato do Cliente</h5>
+            <h5 class="mb-0">Cliente 360</h5>
         </div>
 
         <div class="card-body">
@@ -17,11 +17,21 @@
                     <h4 class="mb-2">{{ cliente.nome }}</h4>
 
                     <p class="mb-1">
+                        {% if cliente.tipo_pessoa == "PJ" %}
+                        <strong>CNPJ:</strong> {{ cliente.cnpj }}
+                        {% if cliente.razao_social %}
+                        <br><strong>Razão social:</strong> {{ cliente.razao_social }}
+                        {% endif %}
+                        {% if cliente.nome_fantasia %}
+                        <br><strong>Nome fantasia:</strong> {{ cliente.nome_fantasia }}
+                        {% endif %}
+                        {% else %}
                         <strong>CPF:</strong> {{ cliente.cpf }}
+                        {% endif %}
                     </p>
 
                     <p class="mb-0">
-                        <strong>Loja cadastro:</strong>
+                        <strong>Loja de origem do cadastro:</strong>
                         {{ cliente.loja_cadastro.nome }}
                     </p>
                 </div>
@@ -79,6 +89,83 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                <small class="text-muted">Total gasto</small>
+                <h4 class="mb-0">R$ {{ cliente_360.total_gasto|floatformat:2 }}</h4>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                <small class="text-muted">Quantidade de compras</small>
+                <h4 class="mb-0">{{ cliente_360.quantidade_compras }}</h4>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                <small class="text-muted">Ticket médio</small>
+                <h4 class="mb-0">R$ {{ cliente_360.ticket_medio|floatformat:2 }}</h4>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                <small class="text-muted">Última compra com cashback</small>
+                <h6 class="mb-0">
+                    {% if cliente_360.ultima_compra %}
+                    {{ cliente_360.ultima_compra|date:"d/m/Y H:i" }}
+                    {% else %}Nenhuma compra{% endif %}
+                </h6>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white"><strong>Histórico de compras</strong></div>
+        <div class="card-body">
+            {% if cliente_360.historico_vendas %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr><th>Data</th><th>Loja da compra</th><th>Número</th><th class="text-end">Total</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for venda in cliente_360.historico_vendas %}
+                        <tr>
+                            <td>{{ venda.finalizada_em|date:"d/m/Y H:i" }}</td>
+                            <td>{{ venda.loja.nome }}</td>
+                            <td>{{ venda.numero|default:"-" }}</td>
+                            <td class="text-end">R$ {{ venda.total|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-muted">Nenhuma compra finalizada encontrada.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white"><strong>Vouchers</strong></div>
+        <div class="card-body">
+            {% if cliente_360.vouchers.lista %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Voucher</th><th>Código</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for voucher in cliente_360.vouchers.lista %}
+                        <tr><td>{{ voucher.nome }}</td><td>{{ voucher.codigo }}</td><td>{{ voucher.status }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-muted">Nenhum voucher vinculado ao cliente ou à matriz.</div>
+            {% endif %}
+        </div>
+    </div>
     <div class="row g-3 mb-4">
 
         <div class="col-md-3">

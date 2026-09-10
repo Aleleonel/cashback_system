@@ -55,3 +55,74 @@ def aplicar_busca_clientes(queryset, busca):
         )
 
     return queryset.filter(filtros)
+
+def obter_cliente_360(cliente):
+    """Retorna métricas e histórico de vendas finalizadas do cliente em sua matriz."""
+    from decimal import Decimal
+    from django.db.models import Count, Sum, Max
+    from pdv.models import Venda
+
+    vendas = (
+        Venda.objects
+        .filter(
+            cliente=cliente,
+            matriz=cliente.matriz,
+            status="finalizada",
+        )
+        .select_related("loja")
+        .order_by("-finalizada_em", "-id")
+    )
+
+    agregados = vendas.aggregate(
+        quantidade_compras=Count("id"),
+        total_gasto=Sum("total"),
+        ultima_compra=Max("finalizada_em"),
+    )
+    quantidade = agregados["quantidade_compras"] or 0
+    total = agregados["total_gasto"] or Decimal("0")
+    ticket = (total / quantidade) if quantidade else Decimal("0")
+
+    from cashback.selectors import (
+        get_movimentacoes_cliente,
+        get_resumo_extrato_cliente,
+        get_saldo_disponivel_cliente,
+    )
+    from vouchers.selectors import get_usos_voucher, get_vouchers_cliente
+
+    matriz = cliente.matriz
+
+    cashback = {
+        "saldo_disponivel": get_saldo_disponivel_cliente(
+            matriz=matriz,
+            cliente=cliente,
+        ),
+        "movimentacoes": get_movimentacoes_cliente(
+            matriz=matriz,
+            cliente=cliente,
+        ),
+        "resumo": get_resumo_extrato_cliente(
+            matriz=matriz,
+            cliente=cliente,
+        ),
+    }
+
+    vouchers = {
+        "lista": get_vouchers_cliente(
+            matriz=matriz,
+            cliente=cliente,
+        ),
+        "usos": get_usos_voucher(
+            matriz=matriz,
+            cliente=cliente,
+        ),
+    }
+
+    return {
+        "total_gasto": total,
+        "quantidade_compras": quantidade,
+        "ticket_medio": ticket,
+        "ultima_compra": agregados["ultima_compra"],
+        "historico_vendas": vendas,
+        "cashback": cashback,
+        "vouchers": vouchers,
+    }

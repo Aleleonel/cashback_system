@@ -41,6 +41,7 @@ from .importacao import (
 from .selectors import (
     aplicar_busca_clientes,
     get_cliente_por_cpf,
+    obter_cliente_360,
 )
 
 from accounts.decorators import require_permission
@@ -123,21 +124,10 @@ def extrato_cliente(request, cliente_id):
         ativo=True
     )
 
-    saldo = get_saldo_disponivel_cliente(
-        matriz=contexto['matriz'],
-        cliente=cliente
-    )
-
-    movimentacoes = get_movimentacoes_cliente(
-        matriz=contexto['matriz'],
-        cliente=cliente
-    )
-
-    resumo = get_resumo_extrato_cliente(
-        matriz=contexto['matriz'],
-        cliente=cliente
-    )
-
+    cliente_360 = obter_cliente_360(cliente)
+    saldo = cliente_360["cashback"]["saldo_disponivel"]
+    movimentacoes = cliente_360["cashback"]["movimentacoes"]
+    resumo = cliente_360["cashback"]["resumo"]
     return render(
         request,
         'clientes/extrato_cliente.html',
@@ -146,6 +136,7 @@ def extrato_cliente(request, cliente_id):
             'saldo': saldo,
             'movimentacoes': movimentacoes,
             'resumo': resumo,
+            'cliente_360': cliente_360,
         }
     )
 
@@ -378,4 +369,3 @@ def confirmar_importacao_clientes(request):
 @require_permission(PERMISSAO_CLIENTES_IMPORTAR)
 def baixar_modelo_importacao_clientes(request):
     return criar_download_modelo_clientes()
-
