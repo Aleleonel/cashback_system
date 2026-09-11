@@ -4,455 +4,317 @@
 
 <div class="container py-4">
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">Cliente 360</h5>
+    <nav class="mb-4" aria-label="Navegação Cliente 360">
+        <div class="nav nav-tabs flex-nowrap" style="overflow-x: auto; overflow-y: hidden;">
+            <a class="nav-link {% if dominio_ativo == 'extrato' %}active{% endif %}" data-cliente360-secao="extrato" href="?secao=extrato">Extrato</a>
+            <a class="nav-link {% if dominio_ativo == 'compras' %}active{% endif %}" data-cliente360-secao="compras" href="?secao=compras">Compras</a>
+            <a class="nav-link {% if dominio_ativo == 'beneficios' %}active{% endif %}" data-cliente360-secao="beneficios" href="?secao=beneficios">Benefícios</a>
+            <a class="nav-link {% if dominio_ativo == 'vouchers' %}active{% endif %}" data-cliente360-secao="vouchers" href="?secao=vouchers">Vouchers</a>
+        </div>
+    </nav>
+
+
+    {% if dominio_ativo == "extrato" %}
+    <section data-cliente360-extrato="lista">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div><h4 class="mb-1">Extrato</h4><p class="text-muted mb-0">Histórico de cashback e vouchers utilizados.</p></div>
+        </div>
+        <div class="card shadow-sm border-0"><div class="card-body">
+            <form method="get" class="row g-3 align-items-end mb-4">
+                <input type="hidden" name="secao" value="extrato">
+                <div class="col-md-4"><label class="form-label">Data inicial</label><input type="date" name="data_inicio" value="{{ filtros_extrato.data_inicio }}" class="form-control"></div>
+                <div class="col-md-4"><label class="form-label">Data final</label><input type="date" name="data_fim" value="{{ filtros_extrato.data_fim }}" class="form-control"></div>
+                <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn btn-primary">Buscar</button><a href="?secao=extrato" class="btn btn-outline-secondary">Limpar</a></div>
+            </form>
+            <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Loja</th><th class="text-end">Valor</th></tr></thead><tbody>
+                {% for item in extrato_page.object_list %}
+                <tr><td>{{ item.data|date:"d/m/Y H:i" }}</td><td>{% if item.tipo == "ENTRADA" %}<span class="badge text-bg-success">Cashback</span>{% elif item.tipo == "SAIDA" %}<span class="badge text-bg-danger">Cashback utilizado</span>{% else %}<span class="badge text-bg-primary">Voucher</span>{% endif %}</td><td>{{ item.titulo }}</td><td>{{ item.loja.nome|default:"-" }}</td><td class="text-end {% if item.tipo == 'ENTRADA' %}text-success{% else %}text-danger{% endif %}">{% if item.tipo == "ENTRADA" %}+{% else %}-{% endif %} R$ {{ item.valor|floatformat:2 }}</td></tr>
+                {% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma movimentação encontrada no período.</td></tr>{% endfor %}
+                </tbody></table></div>
+            {% if extrato_page.paginator.num_pages > 1 %}<nav class="mt-3"><ul class="pagination mb-0">{% if extrato_page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ query_string_extrato }}&page={{ extrato_page.previous_page_number }}">Anterior</a></li>{% endif %}<li class="page-item disabled"><span class="page-link">Página {{ extrato_page.number }} de {{ extrato_page.paginator.num_pages }}</span></li>{% if extrato_page.has_next %}<li class="page-item"><a class="page-link" href="?{{ query_string_extrato }}&page={{ extrato_page.next_page_number }}">Próxima</a></li>{% endif %}</ul></nav>{% endif %}
+        </div></div>
+    </section>
+    {% endif %}
+
+    {% if dominio_ativo == "compras" %}
+    <section data-cliente360-compras="lista">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <h1 class="h4 mb-1">Compras do cliente</h1>
+                <p class="text-muted mb-0">
+                    Histórico de vendas finalizadas em qualquer loja da mesma matriz.
+                </p>
+            </div>
+            {% if compras_page %}
+            <span class="badge text-bg-light border fs-6">
+                {{ compras_page.paginator.count }} compra(s)
+            </span>
+            {% endif %}
         </div>
 
-        <div class="card-body">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <input type="hidden" name="secao" value="compras">
 
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="cliente360-data-inicio">Data inicial</label>
+                        <input id="cliente360-data-inicio" type="date" class="form-control"
+                               name="data_inicio" value="{{ filtros_compras.data_inicio }}">
+                    </div>
 
-                <div>
-                    <h4 class="mb-2">{{ cliente.nome }}</h4>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="cliente360-data-fim">Data final</label>
+                        <input id="cliente360-data-fim" type="date" class="form-control"
+                               name="data_fim" value="{{ filtros_compras.data_fim }}">
+                    </div>
 
-                    <p class="mb-1">
-                        {% if cliente.tipo_pessoa == "PJ" %}
-                        <strong>CNPJ:</strong> {{ cliente.cnpj }}
-                        {% if cliente.razao_social %}
-                        <br><strong>Razão social:</strong> {{ cliente.razao_social }}
-                        {% endif %}
-                        {% if cliente.nome_fantasia %}
-                        <br><strong>Nome fantasia:</strong> {{ cliente.nome_fantasia }}
-                        {% endif %}
-                        {% else %}
-                        <strong>CPF:</strong> {{ cliente.cpf }}
-                        {% endif %}
-                    </p>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="cliente360-loja">Loja da compra</label>
+                        <select id="cliente360-loja" class="form-select" name="loja">
+                            <option value="">Todas as lojas da matriz</option>
+                            {% for loja in lojas_compras %}
+                            <option value="{{ loja.id }}" {% if filtros_compras.loja == loja.id|stringformat:"s" %}selected{% endif %}>
+                                {{ loja.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                    <p class="mb-0">
-                        <strong>Loja de origem do cadastro:</strong>
-                        {{ cliente.loja_cadastro.nome }}
-                    </p>
+                    <div class="col-12 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-funnel me-1"></i>Filtrar
+                        </button>
+                        <a class="btn btn-outline-secondary"
+                           href="{% url 'clientes:extrato_cliente' cliente.id %}?secao=compras">
+                            Limpar filtros
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h2 class="h6 mb-1">Extrato de compras</h2>
+                <div class="text-muted small">
+                    Data, loja da transação, número da venda, total e acesso ao detalhe.
                 </div>
-
-                <div class="text-end">
-                    <small class="text-muted">Saldo disponível</small>
-
-                    <h3 class="text-success mb-0">
-                        R$ {{ resumo.saldo_disponivel|floatformat:2 }}
-                    </h3>
-                </div>
-
             </div>
 
-            <div class="row g-3">
-
-                <div class="col-md-4">
-                    <small class="text-muted">Última compra</small>
-
-                    <h6 class="mb-0">
-                        {% if resumo.ultima_compra %}
-                        {{ resumo.ultima_compra.data_compra|date:"d/m/Y" }}
-                        {% else %}
-                        Nenhuma compra
-                        {% endif %}
-                    </h6>
-                </div>
-
-                <div class="col-md-4">
-                    <small class="text-muted">Próxima liberação</small>
-
-                    <h6 class="mb-0">
-                        {% if resumo.proxima_liberacao %}
-                        {{ resumo.proxima_liberacao|date:"d/m/Y" }}
-                        {% else %}
-                        Nenhuma prevista
-                        {% endif %}
-                    </h6>
-                </div>
-
-                <div class="col-md-4">
-                    <small class="text-muted">Próxima expiração</small>
-
-                    <h6 class="mb-0">
-                        {% if resumo.proxima_expiracao %}
-                        {{ resumo.proxima_expiracao|date:"d/m/Y" }}
-                        {% else %}
-                        Nenhuma prevista
-                        {% endif %}
-                    </h6>
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <small class="text-muted">Total gasto</small>
-                <h4 class="mb-0">R$ {{ cliente_360.total_gasto|floatformat:2 }}</h4>
-            </div></div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <small class="text-muted">Quantidade de compras</small>
-                <h4 class="mb-0">{{ cliente_360.quantidade_compras }}</h4>
-            </div></div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <small class="text-muted">Ticket médio</small>
-                <h4 class="mb-0">R$ {{ cliente_360.ticket_medio|floatformat:2 }}</h4>
-            </div></div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <small class="text-muted">Última compra com cashback</small>
-                <h6 class="mb-0">
-                    {% if cliente_360.ultima_compra %}
-                    {{ cliente_360.ultima_compra|date:"d/m/Y H:i" }}
-                    {% else %}Nenhuma compra{% endif %}
-                </h6>
-            </div></div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white"><strong>Histórico de compras</strong></div>
-        <div class="card-body">
-            {% if cliente_360.historico_vendas %}
             <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr><th>Data</th><th>Loja da compra</th><th>Número</th><th class="text-end">Total</th></tr>
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Loja da compra</th>
+                            <th>Número</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {% for venda in cliente_360.historico_vendas %}
+                        {% if compras_page %}
+                            {% for venda in compras_page %}
+                            <tr>
+                                <td class="text-nowrap">{{ venda.finalizada_em|date:"d/m/Y H:i" }}</td>
+                                <td>{{ venda.loja.nome }}</td>
+                                <td>{{ venda.numero|default:"—" }}</td>
+                                <td class="text-end text-nowrap fw-semibold">R$ {{ venda.total|floatformat:2 }}</td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="{% url 'clientes:detalhe_compra_cliente' cliente.id venda.id %}">
+                                        Ver detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    Nenhuma compra finalizada encontrada para os filtros informados.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
                         <tr>
-                            <td>{{ venda.finalizada_em|date:"d/m/Y H:i" }}</td>
-                            <td>{{ venda.loja.nome }}</td>
-                            <td>{{ venda.numero|default:"-" }}</td>
-                            <td class="text-end">R$ {{ venda.total|floatformat:2 }}</td>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                Nenhuma compra finalizada encontrada.
+                            </td>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-muted">Nenhuma compra finalizada encontrada.</div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white"><strong>Vouchers</strong></div>
-        <div class="card-body">
-            {% if cliente_360.vouchers.lista %}
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead><tr><th>Voucher</th><th>Código</th><th>Status</th></tr></thead>
-                    <tbody>
-                    {% for voucher in cliente_360.vouchers.lista %}
-                        <tr><td>{{ voucher.nome }}</td><td>{{ voucher.codigo }}</td><td>{{ voucher.status }}</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-muted">Nenhum voucher vinculado ao cliente ou à matriz.</div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="row g-3 mb-4">
-
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-
-                    <small class="text-muted">Saldo atual</small>
-
-                    <h4 class="text-success mb-0">
-                        R$ {{ resumo.saldo_disponivel|floatformat:2 }}
-                    </h4>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-
-                    <small class="text-muted">A liberar</small>
-
-                    <h4 class="mb-0">
-                        R$ {{ resumo.cashback_a_liberar|floatformat:2 }}
-                    </h4>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-
-                    <small class="text-muted">Total gerado</small>
-
-                    <h4 class="mb-0">
-                        R$ {{ resumo.total_gerado|floatformat:2 }}
-                    </h4>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-
-                    <small class="text-muted">Total utilizado</small>
-
-                    <h4 class="mb-0 text-danger">
-                        R$ {{ resumo.total_utilizado|floatformat:2 }}
-                    </h4>
-
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="card shadow-sm border-0">
-
-        <div class="card-header bg-white">
-            <strong>Movimentações da Conta Cashback</strong>
-        </div>
-
-        <div class="card-body">
-
-            {% for item in movimentacoes %}
-
-            <div class="border rounded-3 p-3 mb-3 bg-white">
-
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-
-                    <div>
-
-                        <div class="mb-2">
-
-                            {% if item.tipo == "ENTRADA" %}
-
-                            <span class="badge bg-success">
-                                Crédito
-                            </span>
-
-                            {% elif item.tipo == "SAIDA" %}
-
-                            <span class="badge bg-danger">
-                                Débito
-                            </span>
-
-                            {% elif item.tipo == "BENEFICIO" %}
-
-                            <span class="badge bg-primary">
-                                Benefício
-                            </span>
-
-                            {% endif %}
-
-                            <small class="text-muted ms-2">
-                                {{ item.data|date:"d/m/Y H:i" }}
-                            </small>
-
-                        </div>
-
-                        <h5 class="mb-1">
-                            {{ item.titulo }}
-                        </h5>
-
-                        <p class="mb-0 text-muted">
-                            Loja: {{ item.loja.nome }}
-                        </p>
-
-                    </div>
-
-                    <div class="text-end">
-
-                        {% if item.tipo == "ENTRADA" %}
-
-                        <small class="text-muted">Entrada</small>
-
-                        <h4 class="text-success mb-0">
-                            + R$ {{ item.entrada|floatformat:2 }}
-                        </h4>
-
-                        {% elif item.tipo == "SAIDA" %}
-
-                        <small class="text-muted">Saída</small>
-
-                        <h4 class="text-danger mb-0">
-                            - R$ {{ item.saida|floatformat:2 }}
-                        </h4>
-
-                        {% elif item.tipo == "BENEFICIO" %}
-
-                        <small class="text-muted">
-                            Desconto aplicado
-                        </small>
-
-                        <h4 class="text-primary mb-0">
-                            R$ {{ item.desconto_voucher|floatformat:2 }}
-                        </h4>
-
                         {% endif %}
-
-                    </div>
-
-                </div>
-
-                <hr>
-
-                {% if item.tipo == "ENTRADA" %}
-
-                <div class="row g-3">
-
-                    <div class="col-md-4">
-                        <small class="text-muted">
-                            Valor da compra
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            R$ {{ item.valor_compra|floatformat:2 }}
-                        </p>
-                    </div>
-
-                    <div class="col-md-4">
-                        <small class="text-muted">
-                            Base de cálculo
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            R$ {{ item.valor_base_cashback|default:item.valor_compra|floatformat:2 }}
-                        </p>
-                    </div>
-
-                    <div class="col-md-4">
-                        <small class="text-muted">
-                            Percentual
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            {{ item.percentual_cashback|floatformat:2 }}%
-                        </p>
-                    </div>
-
-                </div>
-
-                {% elif item.tipo == "BENEFICIO" %}
-
-                <div class="row g-3">
-
-                    <div class="col-md-3">
-                        <small class="text-muted">
-                            Código do voucher
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            {{ item.voucher_codigo }}
-                        </p>
-                    </div>
-
-                    <div class="col-md-3">
-                        <small class="text-muted">
-                            Voucher
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            {{ item.voucher_nome }}
-                        </p>
-                    </div>
-
-                    <div class="col-md-3">
-                        <small class="text-muted">
-                            Valor da compra
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            R$ {{ item.valor_compra|floatformat:2 }}
-                        </p>
-                    </div>
-
-                    <div class="col-md-3">
-                        <small class="text-muted">
-                            Base para cashback
-                        </small>
-
-                        <p class="mb-0 fw-semibold">
-                            {% if item.valor_base_cashback is not None %}
-                            R$ {{ item.valor_base_cashback|floatformat:2 }}
-                            {% else %}
-                            Não informada
-                            {% endif %}
-                        </p>
-                    </div>
-
-                </div>
-
-                {% endif %}
-
-                {% if item.observacao %}
-
-                <div class="mt-3">
-                    <small class="text-muted">
-                        Observação
-                    </small>
-
-                    <p class="mb-0">
-                        {{ item.observacao }}
-                    </p>
-                </div>
-
-                {% endif %}
-
-                <div class="mt-3 pt-3 border-top text-end">
-
-                    {% if item.tipo == "BENEFICIO" %}
-
-                    <small class="text-muted">
-                        Saldo de cashback não alterado
-                    </small>
-
-                    {% else %}
-
-                    <small class="text-muted">
-                        Saldo após movimentação
-                    </small>
-
-                    {% endif %}
-
-                    <h5 class="mb-0">
-                        R$ {{ item.saldo|floatformat:2 }}
-                    </h5>
-
-                </div>
-
+                    </tbody>
+                </table>
             </div>
 
-            {% empty %}
-
-            <div class="text-center text-muted py-5">
-                Nenhuma movimentação encontrada.
+            {% if compras_page and compras_page.paginator.num_pages > 1 %}
+            <div class="card-footer bg-white">
+                <nav aria-label="Paginação das compras">
+                    <ul class="pagination pagination-sm justify-content-end mb-0">
+                        {% if compras_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ query_string_compras }}&page={{ compras_page.previous_page_number }}">Anterior</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                Página {{ compras_page.number }} de {{ compras_page.paginator.num_pages }}
+                            </span>
+                        </li>
+                        {% if compras_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ query_string_compras }}&page={{ compras_page.next_page_number }}">Próxima</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
-
-            {% endfor %}
-
+            {% endif %}
         </div>
-    </div>
+    </section>
+    {% endif %}
 
-</div>
+
+
+    {% if dominio_ativo == "beneficios" %}
+    <section data-cliente360-beneficios="lista">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <h1 class="h4 mb-1">Benefícios do cliente</h1>
+                <p class="text-muted mb-0">Extrato de créditos e débitos de cashback em toda a matriz.</p>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <small class="text-muted">Saldo disponível</small>
+                    <h4 class="text-success mb-0">R$ {{ resumo.saldo_disponivel|floatformat:2 }}</h4>
+                </div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <small class="text-muted">Total gerado</small>
+                    <h4 class="mb-0">R$ {{ resumo.total_gerado|floatformat:2 }}</h4>
+                </div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <small class="text-muted">Total utilizado</small>
+                    <h4 class="text-danger mb-0">R$ {{ resumo.total_utilizado|floatformat:2 }}</h4>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <input type="hidden" name="secao" value="beneficios">
+                    <div class="col-md-4">
+                        <label class="form-label" for="beneficios-data-inicio">Data inicial</label>
+                        <input id="beneficios-data-inicio" type="date" name="data_inicio" value="{{ filtros_beneficios.data_inicio }}" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="beneficios-data-fim">Data final</label>
+                        <input id="beneficios-data-fim" type="date" name="data_fim" value="{{ filtros_beneficios.data_fim }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Filtrar</button>
+                        <a href="?secao=beneficios" class="btn btn-outline-secondary">Limpar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>Movimentações de cashback</strong>
+                {% if beneficios_page %}
+                <span class="badge text-bg-light border">{{ beneficios_page.paginator.count }} registro(s)</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Loja</th>
+                                <th>Descrição</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movimento in beneficios_page.object_list %}
+                            <tr>
+                                <td>{{ movimento.data|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if movimento.tipo == "ENTRADA" %}
+                                    <span class="badge text-bg-success">Crédito</span>
+                                    {% else %}
+                                    <span class="badge text-bg-danger">Débito</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ movimento.loja.nome|default:"-" }}</td>
+                                <td>{{ movimento.titulo }}</td>
+                                <td class="text-end {% if movimento.tipo == "ENTRADA" %}text-success{% else %}text-danger{% endif %}">
+                                    {% if movimento.tipo == "ENTRADA" %}+ R$ {{ movimento.entrada|floatformat:2 }}{% else %}- R$ {{ movimento.saida|floatformat:2 }}{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    Nenhuma movimentação de cashback encontrada.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if beneficios_page.paginator.num_pages > 1 %}
+                <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                    <span class="text-muted small">Página {{ beneficios_page.number }} de {{ beneficios_page.paginator.num_pages }}</span>
+                    <div class="btn-group">
+                        {% if beneficios_page.has_previous %}
+                        <a class="btn btn-sm btn-outline-secondary" href="?{{ query_string_beneficios }}&page={{ beneficios_page.previous_page_number }}">Anterior</a>
+                        {% endif %}
+                        {% if beneficios_page.has_next %}
+                        <a class="btn btn-sm btn-outline-secondary" href="?{{ query_string_beneficios }}&page={{ beneficios_page.next_page_number }}">Próxima</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if dominio_ativo == "vouchers" %}
+<section data-cliente360-vouchers="lista" class="mb-4">
+<div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Vouchers</strong></div><div class="card-body">
+<form method="get" class="row g-3 align-items-end mb-4"><input type="hidden" name="secao" value="vouchers">
+<div class="col-md-3"><label class="form-label">Data inicial</label><input type="date" name="data_inicio" value="{{ filtros_vouchers.data_inicio }}" class="form-control"></div>
+<div class="col-md-3"><label class="form-label">Data final</label><input type="date" name="data_fim" value="{{ filtros_vouchers.data_fim }}" class="form-control"></div>
+<div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">Todos</option><option value="ativo" {% if filtros_vouchers.status == "ativo" %}selected{% endif %}>Ativo</option><option value="inativo" {% if filtros_vouchers.status == "inativo" %}selected{% endif %}>Inativo</option></select></div>
+<div class="col-md-3 d-flex gap-2"><button type="submit" class="btn btn-primary">Filtrar</button><a href="?secao=vouchers" class="btn btn-outline-secondary">Limpar</a></div></form>
+<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Código</th><th>Nome</th><th>Validade</th><th>Status</th><th class="text-end">Benefício</th></tr></thead><tbody>
+{% for voucher in vouchers_page.object_list %}<tr><td>{{ voucher.codigo }}</td><td>{{ voucher.nome }}</td><td>{{ voucher.data_inicio|date:"d/m/Y" }}{% if voucher.data_fim %} a {{ voucher.data_fim|date:"d/m/Y" }}{% endif %}</td><td>{{ voucher.get_status_display }}</td><td class="text-end">{% if voucher.tipo == "percentual" %}{{ voucher.percentual|floatformat:2 }}%{% else %}R$ {{ voucher.valor|floatformat:2 }}{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhum voucher encontrado.</td></tr>{% endfor %}</tbody></table></div>
+{% if vouchers_page.paginator.num_pages > 1 %}<nav class="mt-3"><ul class="pagination mb-0">{% if vouchers_page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ query_string_vouchers }}&page={{ vouchers_page.previous_page_number }}">Anterior</a></li>{% endif %}<li class="page-item disabled"><span class="page-link">Página {{ vouchers_page.number }} de {{ vouchers_page.paginator.num_pages }}</span></li>{% if vouchers_page.has_next %}<li class="page-item"><a class="page-link" href="?{{ query_string_vouchers }}&page={{ vouchers_page.next_page_number }}">Próxima</a></li>{% endif %}</ul></nav>{% endif %}
+{# query_string_vouchers #}</div></div></section>
+<section data-cliente360-vouchers-usos="lista" class="mb-4">
+<div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Histórico de utilizações</strong></div><div class="card-body">
+<form method="get" class="row g-3 align-items-end mb-4"><input type="hidden" name="secao" value="vouchers">
+<div class="col-md-4"><label class="form-label">Data inicial do uso</label><input type="date" name="data_inicio_usos" value="{{ filtros_usos_vouchers.data_inicio }}" class="form-control"></div>
+<div class="col-md-4"><label class="form-label">Data final do uso</label><input type="date" name="data_fim_usos" value="{{ filtros_usos_vouchers.data_fim }}" class="form-control"></div>
+<div class="col-md-4 d-flex gap-2"><button type="submit" class="btn btn-primary">Filtrar usos</button><a href="?secao=vouchers" class="btn btn-outline-secondary">Limpar</a></div></form>
+<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Data</th><th>Voucher</th><th>Loja</th><th class="text-end">Valor da compra</th><th class="text-end">Desconto</th></tr></thead><tbody>
+{% for uso in usos_vouchers_page.object_list %}<tr><td>{{ uso.criado_em|date:"d/m/Y H:i" }}</td><td>{{ uso.voucher.codigo }} - {{ uso.voucher.nome }}</td><td>{{ uso.loja.nome }}</td><td class="text-end">R$ {{ uso.valor_compra|floatformat:2 }}</td><td class="text-end">R$ {{ uso.valor_desconto|floatformat:2 }}</td></tr>
+{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma utilização de voucher encontrada.</td></tr>{% endfor %}</tbody></table></div>
+{% if usos_vouchers_page.paginator.num_pages > 1 %}<nav class="mt-3"><ul class="pagination mb-0">{% if usos_vouchers_page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ query_string_usos_vouchers }}&page_usos={{ usos_vouchers_page.previous_page_number }}">Anterior</a></li>{% endif %}<li class="page-item disabled"><span class="page-link">Página {{ usos_vouchers_page.number }} de {{ usos_vouchers_page.paginator.num_pages }}</span></li>{% if usos_vouchers_page.has_next %}<li class="page-item"><a class="page-link" href="?{{ query_string_usos_vouchers }}&page_usos={{ usos_vouchers_page.next_page_number }}">Próxima</a></li>{% endif %}</ul></nav>{% endif %}
+</div></div></section>
+{% endif %}
 
 {% endblock %}

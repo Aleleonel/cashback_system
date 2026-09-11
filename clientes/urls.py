@@ -6,6 +6,7 @@ from .views import (
     criar_cliente,
     editar_cliente,
     extrato_cliente,
+    detalhe_compra_cliente,
     lista_clientes,
     importar_clientes,
     confirmar_importacao_clientes,
@@ -50,6 +51,12 @@ urlpatterns = [
         'extrato/<int:cliente_id>/',
         extrato_cliente,
         name='extrato_cliente'
+    ),
+
+    path(
+        'extrato/<int:cliente_id>/compras/<int:venda_id>/',
+        detalhe_compra_cliente,
+        name='detalhe_compra_cliente'
     ),
 
     path(

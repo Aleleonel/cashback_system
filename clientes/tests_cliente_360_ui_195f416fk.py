@@ -27,32 +27,20 @@ class Cliente360UITests(TestCase):
         )
         self.client.force_login(self.usuario)
 
-    def test_extrato_evolui_para_cliente_360_e_expoe_contexto(self):
-        response = self.client.get(
-            reverse("clientes:extrato_cliente", args=[self.cliente.id])
-        )
+    def test_cliente360_compras_expoe_contexto_especializado(self):
+        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=compras")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("cliente_360", response.context)
-        dados = response.context["cliente_360"]
-        self.assertIn("total_gasto", dados)
-        self.assertIn("quantidade_compras", dados)
-        self.assertIn("ticket_medio", dados)
-        self.assertIn("ultima_compra", dados)
-        self.assertIn("historico_vendas", dados)
-        self.assertIn("cashback", dados)
-        self.assertIn("vouchers", dados)
+        self.assertEqual(response.context["dominio_ativo"], "compras")
+        self.assertIn("compras_page", response.context)
+        self.assertIsNone(response.context["cliente_360"])
 
-    def test_template_exibe_identidade_metricas_historico_e_beneficios(self):
-        response = self.client.get(
-            reverse("clientes:extrato_cliente", args=[self.cliente.id])
-        )
-        self.assertContains(response, "Cliente 360")
-        self.assertContains(response, "Total gasto")
-        self.assertContains(response, "Quantidade de compras")
-        self.assertContains(response, "Ticket médio")
-        self.assertContains(response, "Histórico de compras")
-        self.assertContains(response, "Cashback")
-        self.assertContains(response, "Vouchers")
+    def test_template_exibe_navegacao_cliente360_por_dominios(self):
+        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=compras")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-cliente360-secao=\"extrato\"")
+        self.assertContains(response, "data-cliente360-secao=\"compras\"")
+        self.assertContains(response, "data-cliente360-secao=\"beneficios\"")
+        self.assertContains(response, "data-cliente360-secao=\"vouchers\"")
 
     def test_extrato_de_cliente_de_outra_matriz_permanece_inacessivel(self):
         outra = Matriz.objects.create(nome="Outra Matriz UI 360")
@@ -67,34 +55,30 @@ class Cliente360UITests(TestCase):
             reverse("clientes:extrato_cliente", args=[outro_cliente.id])
         )
         self.assertEqual(response.status_code, 404)
-    def test_pj_exibe_cnpj_e_razao_social_sem_rotulo_cpf(self):
-        cliente_pj = Cliente.objects.create(
-            matriz=self.matriz,
-            loja_cadastro=self.loja,
-            tipo_pessoa="PJ",
-            nome="Empresa Teste LTDA",
-            razao_social="Empresa Teste LTDA",
-            nome_fantasia="Empresa Teste",
-            cnpj="11222333000181",
-            cnpj_normalizado="11222333000181",
-            telefone="11999999999",
-            ativo=True,
+    def test_pj_acessa_dominio_compras_sem_dependencia_de_identidade_renderizada(self):
+        response = self.client.get(
+            reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=compras"
         )
-        response = self.client.get(reverse("clientes:extrato_cliente", args=[cliente_pj.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "CNPJ")
-        self.assertContains(response, "Empresa Teste LTDA")
-        self.assertNotContains(response, "<strong>CPF:</strong>", html=True)
+        self.assertEqual(response.context["dominio_ativo"], "compras")
+        self.assertEqual(response.context["cliente"].pk, self.cliente.pk)
 
-    def test_loja_cadastro_e_rotulada_como_origem_do_cadastro(self):
-        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]))
+    def test_loja_cadastro_nao_define_escopo_da_aba_compras(self):
+        response = self.client.get(
+            reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=compras"
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Loja de origem do cadastro")
+        self.assertEqual(response.context["cliente"].loja_cadastro_id, self.loja.id)
+        self.assertEqual(response.context["dominio_ativo"], "compras")
 
-    def test_ultima_compra_cashback_tem_rotulo_especifico(self):
-        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]))
+    def test_extrato_substitui_card_ultima_compra_cashback_sem_agregado_legado(self):
+        response = self.client.get(
+            reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=extrato"
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Última compra com cashback")
+        self.assertEqual(response.context["dominio_ativo"], "extrato")
+        self.assertIsNone(response.context["cliente_360"])
+        self.assertContains(response, 'data-cliente360-extrato="lista"')
 
     def test_ui_historico_exibe_compras_de_duas_lojas_da_mesma_matriz(self):
         from decimal import Decimal
@@ -103,7 +87,7 @@ class Cliente360UITests(TestCase):
         loja_b = Loja.objects.create(matriz=self.matriz, nome="Loja B UI 360", status=StatusOperacional.ATIVA)
         Venda.objects.create(matriz=self.matriz, loja=self.loja, cliente=self.cliente, operador=self.usuario, subtotal=Decimal("100.00"), total=Decimal("100.00"), status="finalizada")
         Venda.objects.create(matriz=self.matriz, loja=loja_b, cliente=self.cliente, operador=self.usuario, subtotal=Decimal("200.00"), total=Decimal("200.00"), status="finalizada")
-        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]))
+        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=compras")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.loja.nome)
         self.assertContains(response, "Loja B UI 360")
@@ -119,7 +103,7 @@ class Cliente360UITests(TestCase):
         tipo = Voucher._meta.get_field("tipo").choices[0][0]
         voucher = Voucher.objects.create(matriz=self.matriz, cliente=None, codigo="UIUSO360", nome="Voucher Uso UI 360", descricao="Teste uso voucher UI", tipo=tipo, valor=Decimal("10.00"), percentual=None, data_fim=timezone.localdate())
         UsoVoucher.objects.create(matriz=self.matriz, voucher=voucher, compra=None, cliente=self.cliente, loja=loja_b, usuario=self.usuario, valor_compra=Decimal("100.00"), valor_desconto=Decimal("10.00"), observacao="Uso voucher UI loja B")
-        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]))
+        response = self.client.get(reverse("clientes:extrato_cliente", args=[self.cliente.id]) + "?secao=extrato")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Voucher utilizado")
         self.assertContains(response, "UIUSO360")

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Compra #{{ venda.numero|default:"—" }} | Cliente 360{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" data-cliente360-detalhe-compra="v1">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="text-muted small mb-1">Cliente 360 · Compras</div>
+            <h1 class="h4 mb-1">Detalhe da compra</h1>
+            <div class="text-muted">{{ cliente.nome }} · {{ venda.loja.nome }}</div>
+        </div>
+        <a class="btn btn-outline-secondary"
+           href="{% url 'clientes:extrato_cliente' cliente.id %}?secao=compras">
+            Voltar para compras
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <div class="text-muted small">Compra</div>
+            <div class="fw-semibold fs-5">#{{ venda.numero|default:"—" }}</div>
+        </div></div></div>
+        <div class="col-12 col-md-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <div class="text-muted small">Data</div>
+            <div class="fw-semibold">{{ venda.finalizada_em|date:"d/m/Y H:i"|default:"—" }}</div>
+        </div></div></div>
+        <div class="col-12 col-md-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <div class="text-muted small">Loja da compra</div>
+            <div class="fw-semibold">{{ venda.loja.nome }}</div>
+        </div></div></div>
+        <div class="col-12 col-md-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <div class="text-muted small">Total da compra</div>
+            <div class="fw-bold fs-5">R$ {{ venda.total|floatformat:2 }}</div>
+        </div></div></div>
+    </div>
+
+    <section class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h2 class="h6 mb-1">Itens da compra</h2>
+            <div class="text-muted small">Produtos e composição dos valores.</div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th><th>Produto</th>
+                        <th class="text-end">Quantidade</th>
+                        <th class="text-end">Preço unitário</th>
+                        <th class="text-end">Desconto</th>
+                        <th class="text-end">Acréscimo</th>
+                        <th class="text-end">Total</th><th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                    <tr class="{% if item.cancelado %}table-secondary{% endif %}">
+                        <td>{{ item.sequencia }}</td>
+                        <td>
+                            <div class="fw-semibold {% if item.cancelado %}text-decoration-line-through{% endif %}">{{ item.produto.nome }}</div>
+                            {% if item.produto.codigo_interno %}<div class="text-muted small">{{ item.produto.codigo_interno }}</div>{% endif %}
+                            {% if item.observacao %}<div class="small mt-1">{{ item.observacao }}</div>{% endif %}
+                        </td>
+                        <td class="text-end">{{ item.quantidade|floatformat:3 }}</td>
+                        <td class="text-end text-nowrap">R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                        <td class="text-end text-nowrap">R$ {{ item.desconto|floatformat:2 }}</td>
+                        <td class="text-end text-nowrap">R$ {{ item.acrescimo|floatformat:2 }}</td>
+                        <td class="text-end text-nowrap fw-semibold">R$ {{ item.total|floatformat:2 }}</td>
+                        <td>{% if item.cancelado %}<span class="badge text-bg-danger">Cancelado</span>{% else %}<span class="badge text-bg-success">Vendido</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-4">Nenhum item registrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h6 mb-1">Pagamentos</h2>
+                    <div class="text-muted small">Formas utilizadas na quitação da compra.</div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>Forma</th><th class="text-end">Valor</th><th class="text-end">Parcelas</th><th class="text-end">Recebido</th><th class="text-end">Troco</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for pagamento in pagamentos %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ pagamento.forma_pagamento.nome }}</div>
+                                    <div class="text-muted small">{{ pagamento.forma_pagamento.get_tipo_display }}</div>
+                                </td>
+                                <td class="text-end text-nowrap">R$ {{ pagamento.valor|floatformat:2 }}</td>
+                                <td class="text-end">{{ pagamento.parcelas }}</td>
+                                <td class="text-end text-nowrap">{% if pagamento.valor_recebido is not None %}R$ {{ pagamento.valor_recebido|floatformat:2 }}{% else %}—{% endif %}</td>
+                                <td class="text-end text-nowrap">R$ {{ pagamento.troco|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Nenhum pagamento registrado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3"><h2 class="h6 mb-0">Totais</h2></div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-7 text-muted">Subtotal</dt><dd class="col-5 text-end">R$ {{ venda.subtotal|floatformat:2 }}</dd>
+                        <dt class="col-7 text-muted">Desconto</dt><dd class="col-5 text-end">R$ {{ venda.desconto|floatformat:2 }}</dd>
+                        <dt class="col-7 text-muted">Acréscimo</dt><dd class="col-5 text-end">R$ {{ venda.acrescimo|floatformat:2 }}</dd>
+                        <dt class="col-7">Total</dt><dd class="col-5 text-end fw-bold">R$ {{ venda.total|floatformat:2 }}</dd>
+                        <dt class="col-7 text-muted">Total pago</dt><dd class="col-5 text-end">R$ {{ resumo_pagamentos.total_pago|floatformat:2 }}</dd>
+                        <dt class="col-7 text-muted">Troco</dt><dd class="col-5 text-end">R$ {{ resumo_pagamentos.total_troco|floatformat:2 }}</dd>
+                    </dl>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
