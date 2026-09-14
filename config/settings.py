@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'auditoria',
     'empresa',
     'beneficios',
+    "financeiro.apps.FinanceiroConfig",
 ]
 
 MIDDLEWARE = [
