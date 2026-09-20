@@ -20,6 +20,7 @@ urlpatterns = [
     path('campanhas/', include('campanhas.urls')),
     path('produtos/', include('produtos.urls')),
     path('compras/', include('compras.urls')),
+    path('financeiro/', include('financeiro.urls')),
 
     path(
         'login/',

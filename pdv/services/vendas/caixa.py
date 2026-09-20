@@ -162,6 +162,7 @@ def abrir_sessao_caixa(*, caixa, operador, valor_abertura, observacao=""):
 def calcular_saldo_sessao_caixa(*, sessao):
     # Calcula o saldo esperado usando apenas movimentos persistidos.
     from decimal import Decimal
+    from django.core.exceptions import ValidationError
     from pdv.choices import TipoMovimentacaoCaixa
     from pdv.models import MovimentacaoCaixa
 
@@ -170,24 +171,34 @@ def calcular_saldo_sessao_caixa(*, sessao):
         TipoMovimentacaoCaixa.VENDA,
         TipoMovimentacaoCaixa.SUPRIMENTO,
     }
-    negativos = {
-        TipoMovimentacaoCaixa.SANGRIA,
-        TipoMovimentacaoCaixa.ESTORNO,
-    }
+    negativos = {TipoMovimentacaoCaixa.SANGRIA}
 
     total = Decimal("0.00")
-    movimentos = MovimentacaoCaixa.objects.filter(
-        sessao_caixa=sessao
-    ).exclude(tipo=TipoMovimentacaoCaixa.FECHAMENTO)
-
-    for movimento in movimentos.only("tipo", "valor"):
+    movimentos = (
+        MovimentacaoCaixa.objects.filter(sessao_caixa=sessao)
+        .exclude(tipo=TipoMovimentacaoCaixa.FECHAMENTO)
+        .select_related("movimentacao_estornada")
+    )
+    for movimento in movimentos:
         if movimento.tipo in positivos:
             total += movimento.valor
         elif movimento.tipo in negativos:
             total -= movimento.valor
-
+        elif movimento.tipo == TipoMovimentacaoCaixa.ESTORNO:
+            original = movimento.movimentacao_estornada
+            if original is None:
+                raise ValidationError("Movimento ESTORNO sem movimentacao original.")
+            if original.tipo == TipoMovimentacaoCaixa.SANGRIA:
+                total += movimento.valor
+            elif original.tipo in {
+                TipoMovimentacaoCaixa.ABERTURA,
+                TipoMovimentacaoCaixa.VENDA,
+                TipoMovimentacaoCaixa.SUPRIMENTO,
+            }:
+                total -= movimento.valor
+            else:
+                raise ValidationError("Tipo original invalido para estorno de caixa.")
     return total.quantize(Decimal("0.01"))
-
 
 def fechar_sessao_caixa(*, sessao_id, operador, valor_informado, observacao=""):
     # Fecha a sessao de forma atomica e rejeita reprocessamento.
@@ -323,3 +334,65 @@ def fechar_sessao_caixa(*, sessao_id, operador, valor_informado, observacao=""):
             )
 
         return sessao
+
+@transaction.atomic
+def registrar_movimentacao_caixa_operacional(
+    *, sessao_caixa, tipo, valor, operador, descricao="", movimentacao_estornada=None
+):
+    """Registra SUPRIMENTO, SANGRIA ou ESTORNO sem conhecer o dominio chamador."""
+    from pdv.models import SessaoCaixa
+    valor = Decimal(str(valor)).quantize(Decimal("0.01"))
+    if valor <= Decimal("0.00"):
+        raise ValidationError({"valor": "O valor deve ser maior que zero."})
+    permitidos = {
+        TipoMovimentacaoCaixa.SUPRIMENTO,
+        TipoMovimentacaoCaixa.SANGRIA,
+        TipoMovimentacaoCaixa.ESTORNO,
+    }
+    if tipo not in permitidos:
+        raise ValidationError({"tipo": "Tipo nao permitido na API operacional."})
+
+    sessao = (
+        SessaoCaixa.objects.select_for_update()
+        .select_related("caixa", "caixa__matriz", "caixa__loja")
+        .get(pk=sessao_caixa.pk)
+    )
+    if sessao.status != StatusSessaoCaixa.ABERTA:
+        raise ValidationError({"sessao_caixa": "A sessao de caixa deve estar aberta."})
+
+    if tipo == TipoMovimentacaoCaixa.SANGRIA:
+        saldo_disponivel = calcular_saldo_sessao_caixa(sessao=sessao)
+        if valor > saldo_disponivel:
+            raise ValidationError(
+                {"valor": "Saldo insuficiente no caixa para esta sangria."}
+            )
+
+    original = None
+    if tipo == TipoMovimentacaoCaixa.ESTORNO:
+        if movimentacao_estornada is None:
+            raise ValidationError({"movimentacao_estornada": "Estorno exige movimento original."})
+        original = MovimentacaoCaixa.objects.select_for_update().get(pk=movimentacao_estornada.pk)
+        if original.sessao_caixa_id != sessao.pk:
+            raise ValidationError({"movimentacao_estornada": "O movimento original deve ser da mesma sessao."})
+        existente = MovimentacaoCaixa.objects.select_for_update().filter(
+            tipo=TipoMovimentacaoCaixa.ESTORNO,
+            movimentacao_estornada=original,
+        ).first()
+        if existente is not None:
+            if existente.valor != valor:
+                raise ValidationError({"movimentacao_estornada": "Ja existe estorno com valor diferente."})
+            return existente
+    elif movimentacao_estornada is not None:
+        raise ValidationError({"movimentacao_estornada": "Somente ESTORNO referencia movimento original."})
+
+    movimento = MovimentacaoCaixa(
+        sessao_caixa=sessao,
+        tipo=tipo,
+        valor=valor,
+        operador=operador,
+        movimentacao_estornada=original,
+        descricao=(descricao or "").strip()[:255],
+    )
+    movimento.full_clean()
+    movimento.save()
+    return movimento

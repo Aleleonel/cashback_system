@@ -35,6 +35,23 @@ PERMISSAO_VOUCHERS_GERENCIAR = 'vouchers.gerenciar'
 
 
 # ==========================================================
+# FINANCEIRO
+# ==========================================================
+
+PERMISSAO_FINANCEIRO_VISUALIZAR = 'financeiro.visualizar'
+PERMISSAO_FINANCEIRO_GERENCIAR = 'financeiro.gerenciar'
+
+PERMISSAO_FINANCEIRO_LANCAR_DESPESA = 'financeiro.lancar_despesa'
+PERMISSAO_FINANCEIRO_BAIXAR = 'financeiro.baixar'
+PERMISSOES_FINANCEIRO = {
+    PERMISSAO_FINANCEIRO_VISUALIZAR,
+    PERMISSAO_FINANCEIRO_GERENCIAR,
+    PERMISSAO_FINANCEIRO_LANCAR_DESPESA,
+    PERMISSAO_FINANCEIRO_BAIXAR,
+}
+
+
+# ==========================================================
 # DASHBOARD / RELATORIOS
 # ==========================================================
 
@@ -167,7 +184,8 @@ PERMISSOES_POR_PERFIL = {
         | PERMISSOES_VOUCHERS
         | PERMISSOES_PRODUTOS
         | PERMISSOES_FISCAL
-        | PERMISSOES_PDV
+        | PERMISSOES_PDV        | PERMISSOES_FINANCEIRO
+
     ),
     'admin_loja': (
         PERMISSOES_CLIENTES
@@ -183,7 +201,8 @@ PERMISSOES_POR_PERFIL = {
             PERMISSAO_CAMPANHAS_TEMPLATES,
         }
         | PERMISSOES_RELATORIOS
-        | PERMISSOES_PDV
+        | PERMISSOES_PDV        | PERMISSOES_FINANCEIRO
+
     ),
     'operador': {
         PERMISSAO_DASHBOARD,
@@ -263,6 +282,15 @@ def get_permissoes_extras_disponiveis():
 
     itens = list(_get_permissoes_extras_disponiveis_sem_pdv())
     codigos_existentes = {item["codigo"] for item in itens}
+
+    permissoes_financeiro = [
+        {"codigo": PERMISSAO_FINANCEIRO_VISUALIZAR, "nome": "Financeiro: visualizar", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_GERENCIAR, "nome": "Financeiro: gerenciar", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_LANCAR_DESPESA, "nome": "Financeiro: lançar despesa", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_BAIXAR, "nome": "Financeiro: registrar baixa", "grupo": "Financeiro"},
+    ]
+    itens.extend(item for item in permissoes_financeiro if item["codigo"] not in codigos_existentes)
+    codigos_existentes.update(item["codigo"] for item in permissoes_financeiro)
 
     permissoes_fiscal = [
         {"codigo": PERMISSAO_FISCAL_VISUALIZAR, "nome": "Visualizar modulo fiscal", "grupo": "Fiscal"},

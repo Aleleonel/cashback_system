@@ -43,7 +43,7 @@ from pdv.services.vendas import (
     finalizar_venda,
 )
 from pdv.services.vendas.cancelamento import cancelar_venda
-from pdv.services.vendas.caixa import abrir_sessao_caixa
+from pdv.services.vendas.caixa import abrir_sessao_caixa, calcular_saldo_sessao_caixa, registrar_movimentacao_caixa_operacional
 from accounts.decorators import require_permission
 from accounts.services import usuario_tem_permissao
 from pdv.constants import (
@@ -52,6 +52,8 @@ from pdv.constants import (
     PERMISSAO_PDV_CANCELAR_VENDA,
     PERMISSAO_PDV_FECHAR_CAIXA,
     PERMISSAO_PDV_OPERAR,
+    PERMISSAO_PDV_SUPRIMENTO,
+    PERMISSAO_PDV_SANGRIA,
     PERMISSAO_PDV_VISUALIZAR,
 )
 # PDV-ACL-01 - PROTECOES FINAS
@@ -484,6 +486,8 @@ def inicio(request):
         "pode_operar_pdv": pode_operar_pdv,
         "sessao_caixa": sessao if pode_operar_pdv else None,
         "caixa_aberto": bool(sessao) if pode_operar_pdv else False,
+        "pode_suprimento_caixa": usuario_tem_permissao(request.user, PERMISSAO_PDV_SUPRIMENTO),
+        "pode_sangria_caixa": usuario_tem_permissao(request.user, PERMISSAO_PDV_SANGRIA),
     }
     return render(request, "pdv/inicio.html", contexto)
 
@@ -1527,3 +1531,50 @@ def cupom_venda_nao_fiscal(request, venda_uuid):
         "imprimir_automaticamente": request.GET.get("auto") == "1",
         "segunda_via": request.GET.get("via") == "2",
     })
+
+
+def _movimento_caixa_operacional(request, *, tipo, permissao, titulo):
+    if not usuario_tem_permissao(request.user, permissao):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Usuario sem permissao para esta operacao de caixa.")
+    sessao = _pdv04c1_sessao_aberta_do_usuario(request)
+    if sessao is None:
+        messages.warning(request, "Nao existe caixa aberto por este usuario.")
+        return redirect("pdv:inicio")
+    if request.method == "POST":
+        texto = (request.POST.get("valor") or "").strip()
+        observacao = (request.POST.get("observacao") or "").strip()
+        try:
+            normalizado = texto.replace("R$", "").replace(" ", "")
+            if "," in normalizado:
+                normalizado = normalizado.replace(".", "").replace(",", ".")
+            valor = Decimal(normalizado)
+            registrar_movimentacao_caixa_operacional(
+                sessao_caixa=sessao, tipo=tipo, valor=valor,
+                operador=request.user, descricao=observacao,
+            )
+        except (ValueError, ValidationError) as exc:
+            messages.error(request, _erro_validacao(exc))
+        else:
+            messages.success(request, f"{titulo} registrado com sucesso.")
+            return redirect("pdv:inicio")
+    return render(request, "pdv/movimento_caixa_operacional.html", {
+        "sessao": sessao, "titulo": titulo, "tipo": tipo,
+        "saldo": calcular_saldo_sessao_caixa(sessao=sessao),
+    })
+
+
+@login_required
+def suprimento_caixa(request):
+    return _movimento_caixa_operacional(
+        request, tipo=TipoMovimentacaoCaixa.SUPRIMENTO,
+        permissao=PERMISSAO_PDV_SUPRIMENTO, titulo="Suprimento",
+    )
+
+
+@login_required
+def sangria_caixa(request):
+    return _movimento_caixa_operacional(
+        request, tipo=TipoMovimentacaoCaixa.SANGRIA,
+        permissao=PERMISSAO_PDV_SANGRIA, titulo="Sangria",
+    )

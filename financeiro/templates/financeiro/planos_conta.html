@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Plano de Contas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">Plano de Contas</h1>
+            <p class="text-muted mb-0">Cadastros financeiros da matriz {{ matriz }}.</p>
+        </div>
+        <a href="{% url 'financeiro:plano_conta_novo' %}" class="btn btn-primary">
+            Novo plano
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Natureza</th>
+                            <th>Pai</th>
+                            <th>Ativo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plano in planos %}
+                        <tr>
+                            <td>{{ plano.codigo }}</td>
+                            <td>{{ plano.nome }}</td>
+                            <td>{{ plano.get_tipo_display }}</td>
+                            <td>{{ plano.get_natureza_display }}</td>
+                            <td>{{ plano.pai|default:"—" }}</td>
+                            <td>{% if plano.ativo %}Sim{% else %}Não{% endif %}</td>
+                            <td>
+                                <a href="{% url 'financeiro:plano_conta_editar' plano_uuid=plano.uuid %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                Nenhuma conta cadastrada.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

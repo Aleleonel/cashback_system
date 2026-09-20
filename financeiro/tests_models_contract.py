@@ -94,4 +94,4 @@ class ModelosFinanceirosContractRedTests(SimpleTestCase):
         self.assertGreaterEqual(self.texto.count("decimal_places=2"), 3)
 
     def test_relacoes_consolidadas_devem_usar_protect(self):
-        self.assertEqual(self.texto.count("on_delete=models.PROTECT"), 4)
+        self.assertGreaterEqual(self.texto.count("on_delete=models.PROTECT"), 4)

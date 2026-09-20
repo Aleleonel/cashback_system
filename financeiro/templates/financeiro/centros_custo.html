@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Centros de Custo{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">Centros de Custo</h1>
+            <p class="text-muted mb-0">Matriz: {{ matriz.nome }}</p>
+        </div>
+        <a href="{% url 'financeiro:centro_custo_novo' %}" class="btn btn-primary">
+            Novo Centro de Custo
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for centro in centros %}
+                        <tr>
+                            <td>{{ centro.codigo }}</td>
+                            <td>{{ centro.nome }}</td>
+                            <td>{% if centro.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                Nenhum centro de custo cadastrado.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

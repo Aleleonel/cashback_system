@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4"><h1 class="h3 mb-3">{{ titulo }} de caixa</h1>
+<div class="card"><div class="card-body">
+<p><strong>Caixa:</strong> {{ sessao.caixa.nome }}<br><strong>Saldo atual:</strong> R$ {{ saldo|floatformat:2 }}</p>
+<form method="post">{% csrf_token %}
+<div class="mb-3"><label class="form-label">Valor</label><input name="valor" class="form-control" required inputmode="decimal"></div>
+<div class="mb-3"><label class="form-label">Observacao</label><textarea name="observacao" class="form-control" rows="3"></textarea></div>
+<button class="btn btn-primary" type="submit">Registrar {{ titulo|lower }}</button>
+<a class="btn btn-outline-secondary" href="{% url 'pdv:inicio' %}">Cancelar</a>
+</form></div></div></div>
+{% endblock %}

@@ -53,7 +53,16 @@
                         <i class="bi bi-clock-history me-1"></i>
                         Histórico de Fechamentos
                     </a>
-                    <!-- PDV-04C.1 - NAVEGACAO FECHAMENTO -->
+                    {% if pode_suprimento_caixa %}
+                    <a href="{% url 'pdv:suprimento_caixa' %}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle me-1"></i>Suprimento
+                    </a>
+                    {% endif %}
+                    {% if pode_sangria_caixa %}
+                    <a href="{% url 'pdv:sangria_caixa' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-dash-circle me-1"></i>Sangria
+                    </a>
+                    {% endif %}                    <!-- PDV-04C.1 - NAVEGACAO FECHAMENTO -->
                     <a href="{% url 'pdv:fechar_caixa' %}" class="btn btn-outline-danger">
                         <i class="bi bi-lock-fill me-1"></i>
                         Fechar caixa

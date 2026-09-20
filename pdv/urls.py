@@ -6,6 +6,8 @@ from . import views
 app_name = "pdv"
 
 urlpatterns = [
+    path("caixa/suprimento/", views.suprimento_caixa, name="suprimento_caixa"),
+    path("caixa/sangria/", views.sangria_caixa, name="sangria_caixa"),
     # PDV-04C.1 - ROTAS DE FECHAMENTO DE CAIXA
     path("caixa/fechar/", views.fechar_caixa, name="fechar_caixa"),
     path(

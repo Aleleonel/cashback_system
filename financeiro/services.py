@@ -6,7 +6,7 @@ from django.db import transaction
 from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 
-from .models import BaixaFinanceira, ParcelaFinanceira, TituloFinanceiro
+from .models import BaixaFinanceira, CentroCusto, ParcelaFinanceira, PlanoConta, TituloFinanceiro
 
 
 def _decimal_positivo(valor, campo):
@@ -138,6 +138,139 @@ def criar_titulo_financeiro(
         request=request,
     )
 
+    return titulo
+
+@transaction.atomic
+def criar_lancamento_manual(
+    *,
+    matriz,
+    loja,
+    natureza,
+    chave_idempotencia,
+    descricao,
+    data_emissao,
+    parcelas,
+    plano_conta,
+    centro_custo=None,
+    entidade_nome="",
+    documento_referencia="",
+    data_competencia=None,
+    valor_bruto=None,
+    valor_desconto="0.00",
+    valor_juros="0.00",
+    observacao="",
+    usuario=None,
+    request=None,
+):
+    if plano_conta is None:
+        raise ValidationError({"plano_conta": "O plano de contas e obrigatorio."})
+    plano_conta = PlanoConta.objects.get(pk=plano_conta.pk)
+    if plano_conta.matriz_id != matriz.pk:
+        raise ValidationError({"plano_conta": "O plano de contas deve pertencer a matriz do lancamento."})
+    if not plano_conta.ativo:
+        raise ValidationError({"plano_conta": "O plano de contas deve estar ativo."})
+    if plano_conta.tipo != PlanoConta.Tipo.ANALITICA or not plano_conta.aceita_lancamento:
+        raise ValidationError({"plano_conta": "O plano de contas deve ser analitico e aceitar lancamentos."})
+    if loja is not None and loja.matriz_id != matriz.pk:
+        raise ValidationError({"loja": "A loja deve pertencer a matriz do lancamento."})
+    if centro_custo is not None:
+        centro_custo = CentroCusto.objects.get(pk=centro_custo.pk)
+        if centro_custo.matriz_id != matriz.pk:
+            raise ValidationError({"centro_custo": "O centro de custo deve pertencer a matriz do lancamento."})
+        if not centro_custo.ativo:
+            raise ValidationError({"centro_custo": "O centro de custo deve estar ativo."})
+
+    if data_competencia is None:
+        raise ValidationError({"data_competencia": "A data de competencia e obrigatoria no lancamento manual."})
+    if valor_bruto is None:
+        raise ValidationError({"valor_bruto": "O valor bruto e obrigatorio no lancamento manual."})
+    valor_bruto = _decimal_positivo(valor_bruto, "valor_bruto")
+    try:
+        valor_desconto = Decimal(str(valor_desconto))
+        valor_juros = Decimal(str(valor_juros))
+    except Exception as exc:
+        raise ValidationError({"valores": "Desconto e juros devem ser valores decimais validos."}) from exc
+    if valor_desconto < 0 or valor_juros < 0:
+        raise ValidationError({"valores": "Desconto e juros nao podem ser negativos."})
+    valor_final = valor_bruto - valor_desconto + valor_juros
+    if valor_final <= 0:
+        raise ValidationError({"valor_final": "O valor final deve ser maior que zero."})
+
+    soma_parcelas = Decimal("0.00")
+    for item in parcelas:
+        soma_parcelas += Decimal(str(item["valor"]))
+    if soma_parcelas != valor_final:
+        raise ValidationError({"parcelas": "A soma das parcelas deve ser igual ao valor final."})
+
+    centro_custo_id = centro_custo.pk if centro_custo is not None else None
+    existente = (
+        TituloFinanceiro.objects.select_for_update()
+        .filter(matriz=matriz, chave_idempotencia=chave_idempotencia)
+        .first()
+    )
+    if existente is not None:
+        conflito = (
+            existente.loja_id != (loja.pk if loja is not None else None)
+            or existente.natureza != natureza
+            or existente.origem_tipo != TituloFinanceiro.OrigemTipo.MANUAL
+            or existente.origem_id != chave_idempotencia
+            or existente.descricao != descricao
+            or existente.data_emissao != data_emissao
+            or existente.plano_conta_id != plano_conta.pk
+            or existente.centro_custo_id != centro_custo_id
+            or existente.entidade_nome != entidade_nome
+            or existente.documento_referencia != documento_referencia
+            or existente.data_competencia != data_competencia
+            or existente.valor_bruto != valor_bruto
+            or existente.valor_desconto != valor_desconto
+            or existente.valor_juros != valor_juros
+            or existente.observacao != observacao
+            or existente.valor_original != valor_final
+        )
+        estrutura = [
+            (p.numero, p.vencimento, p.valor_original)
+            for p in existente.parcelas.order_by("numero")
+        ]
+        esperada = [
+            (int(item["numero"]), item["vencimento"], Decimal(str(item["valor"])))
+            for item in parcelas
+        ]
+        if conflito or estrutura != esperada:
+            raise ValidationError(
+                {"chave_idempotencia": "Conflito: a chave ja existe com payload financeiro diferente."}
+            )
+        return existente
+
+    titulo = criar_titulo_financeiro(
+        matriz=matriz,
+        loja=loja,
+        natureza=natureza,
+        origem_tipo=TituloFinanceiro.OrigemTipo.MANUAL,
+        origem_id=chave_idempotencia,
+        chave_idempotencia=chave_idempotencia,
+        descricao=descricao,
+        data_emissao=data_emissao,
+        parcelas=parcelas,
+        usuario=usuario,
+        request=request,
+    )
+    if titulo.valor_original != valor_final:
+        raise ValidationError({"valor_final": "O valor final deve coincidir com o total das parcelas."})
+    titulo.plano_conta = plano_conta
+    titulo.centro_custo = centro_custo
+    titulo.entidade_nome = entidade_nome
+    titulo.documento_referencia = documento_referencia
+    titulo.data_competencia = data_competencia
+    titulo.valor_bruto = valor_bruto
+    titulo.valor_desconto = valor_desconto
+    titulo.valor_juros = valor_juros
+    titulo.observacao = observacao
+    titulo.full_clean()
+    titulo.save(update_fields=[
+        "plano_conta", "centro_custo", "entidade_nome", "documento_referencia",
+        "data_competencia", "valor_bruto", "valor_desconto", "valor_juros",
+        "observacao", "atualizado_em",
+    ])
     return titulo
 
 def _sincronizar_status_titulo(titulo):
@@ -368,3 +501,88 @@ def cancelar_titulo_financeiro(*, titulo, usuario=None, request=None):
         request=request,
     )
     return titulo
+
+@transaction.atomic
+def registrar_baixa_financeira_com_caixa(
+    *, parcela, valor, data, chave_idempotencia, forma_pagamento,
+    sessao_caixa=None, operador=None, observacao="", usuario=None, request=None
+):
+    from pdv.choices import TipoFormaPagamento, TipoMovimentacaoCaixa
+    from pdv.services.vendas.caixa import registrar_movimentacao_caixa_operacional
+
+    titulo = parcela.titulo
+    if forma_pagamento.matriz_id != titulo.matriz_id:
+        raise ValidationError({"forma_pagamento": "Forma de pagamento de outra matriz."})
+    dinheiro = forma_pagamento.tipo == TipoFormaPagamento.DINHEIRO
+    if dinheiro:
+        if sessao_caixa is None or operador is None:
+            raise ValidationError({"sessao_caixa": "Dinheiro exige sessao aberta e operador."})
+        if titulo.loja_id is None:
+            raise ValidationError({"loja": "Titulo sem loja nao pode ser baixado em dinheiro."})
+        if sessao_caixa.caixa.matriz_id != titulo.matriz_id or sessao_caixa.caixa.loja_id != titulo.loja_id:
+            raise ValidationError({"sessao_caixa": "Sessao incompatível com matriz/loja do titulo."})
+
+    baixa = registrar_baixa_financeira(
+        parcela=parcela, valor=valor, data=data,
+        chave_idempotencia=chave_idempotencia, observacao=observacao,
+        usuario=usuario, request=request,
+    )
+    if baixa.forma_pagamento_id not in (None, forma_pagamento.pk):
+        raise ValidationError({"chave_idempotencia": "Baixa existente usa outra forma de pagamento."})
+    if baixa.forma_pagamento_id is None:
+        baixa.forma_pagamento=forma_pagamento
+        baixa.save(update_fields=["forma_pagamento"])
+    if not dinheiro:
+        return baixa
+    if baixa.movimentacao_caixa_id is None:
+        tipo = TipoMovimentacaoCaixa.SANGRIA if titulo.natureza == TituloFinanceiro.Natureza.PAGAR else TipoMovimentacaoCaixa.SUPRIMENTO
+        movimento = registrar_movimentacao_caixa_operacional(
+            sessao_caixa=sessao_caixa, tipo=tipo, valor=baixa.valor,
+            operador=operador, descricao=f"Financeiro: {titulo.descricao}",
+        )
+        baixa.sessao_caixa=sessao_caixa
+        baixa.movimentacao_caixa=movimento
+        baixa.save(update_fields=["sessao_caixa","movimentacao_caixa"])
+    elif baixa.sessao_caixa_id != sessao_caixa.pk:
+        raise ValidationError({"chave_idempotencia": "Baixa existente vinculada a outra sessao."})
+    return baixa
+
+
+@transaction.atomic
+def estornar_baixa_financeira_com_caixa(
+    *, baixa, valor, data, chave_idempotencia, operador=None,
+    observacao="", usuario=None, request=None
+):
+    from pdv.choices import TipoFormaPagamento, TipoMovimentacaoCaixa
+    from pdv.services.vendas.caixa import registrar_movimentacao_caixa_operacional
+
+    original = (
+        BaixaFinanceira.objects.select_for_update()
+        .select_related("forma_pagamento","sessao_caixa","movimentacao_caixa","parcela__titulo")
+        .get(pk=baixa.pk)
+    )
+    estorno = estornar_baixa_financeira(
+        baixa=original, valor=valor, data=data,
+        chave_idempotencia=chave_idempotencia, observacao=observacao,
+        usuario=usuario, request=request,
+    )
+    dinheiro = original.forma_pagamento_id is not None and original.forma_pagamento.tipo == TipoFormaPagamento.DINHEIRO
+    if not dinheiro:
+        return estorno
+    if operador is None:
+        raise ValidationError({"operador": "Estorno em dinheiro exige operador."})
+    if original.movimentacao_caixa_id is None or original.sessao_caixa_id is None:
+        raise ValidationError({"baixa": "Baixa em dinheiro sem movimento de caixa rastreavel."})
+    if estorno.movimentacao_caixa_id is None:
+        movimento = registrar_movimentacao_caixa_operacional(
+            sessao_caixa=original.sessao_caixa,
+            tipo=TipoMovimentacaoCaixa.ESTORNO,
+            valor=estorno.valor, operador=operador,
+            movimentacao_estornada=original.movimentacao_caixa,
+            descricao=f"Estorno financeiro: {original.parcela.titulo.descricao}",
+        )
+        estorno.forma_pagamento=original.forma_pagamento
+        estorno.sessao_caixa=original.sessao_caixa
+        estorno.movimentacao_caixa=movimento
+        estorno.save(update_fields=["forma_pagamento","sessao_caixa","movimentacao_caixa"])
+    return estorno

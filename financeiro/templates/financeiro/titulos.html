@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3"><div><h1 class="h3 mb-1">Títulos financeiros</h1><p class="text-muted mb-0">Consulta operacional de contas a pagar e a receber.</p></div><a href="{% url 'financeiro:painel' %}" class="btn btn-outline-secondary">Voltar ao painel</a></div>
+  <form method="get" class="card card-body shadow-sm border-0 mb-3"><div class="row g-3">
+    <div class="col-md-3"><label class="form-label">Natureza</label><select name="natureza" class="form-select"><option value="">Todas</option><option value="RECEBER" {% if natureza == 'RECEBER' %}selected{% endif %}>Contas a receber</option><option value="PAGAR" {% if natureza == 'PAGAR' %}selected{% endif %}>Contas a pagar</option></select></div>
+    <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">Todos</option><option value="ABERTO" {% if status == 'ABERTO' %}selected{% endif %}>Aberto</option><option value="PARCIAL" {% if status == 'PARCIAL' %}selected{% endif %}>Parcial</option><option value="LIQUIDADO" {% if status == 'LIQUIDADO' %}selected{% endif %}>Liquidado</option><option value="CANCELADO" {% if status == 'CANCELADO' %}selected{% endif %}>Cancelado</option></select></div>
+    <div class="col-md-3"><label class="form-label">Escopo</label><select name="escopo" class="form-select">{% if request.user.perfil == 'master' %}<option value="consolidado" {% if escopo == 'consolidado' %}selected{% endif %}>Consolidado</option><option value="matriz" {% if escopo == 'matriz' %}selected{% endif %}>Somente matriz</option>{% endif %}<option value="loja" {% if escopo == 'loja' %}selected{% endif %}>Loja</option></select></div>
+    <div class="col-md-3"><label class="form-label">Loja</label><select name="loja" class="form-select"><option value="">Selecione</option>{% for item in lojas %}<option value="{{ item.pk }}" {% if loja and loja.pk == item.pk %}selected{% endif %}>{{ item.nome }}</option>{% endfor %}</select></div>
+  </div><div class="mt-3 text-end"><button type="submit" class="btn btn-primary">Filtrar</button></div></form>
+  {% include "financeiro/_tabela_titulos.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Novo Centro de Custo{% endblock %}
+{% block content %}
+<div class="ui-page">
+  <header class="ui-page-header">
+    <div class="ui-page-header__content">
+      <span class="ui-page-header__eyebrow">Financeiro</span>
+      <h1 class="ui-page-header__title">Novo Centro de Custo</h1>
+      <p class="ui-page-header__description">Matriz: {{ matriz.nome }}</p>
+    </div>
+    <div class="ui-page-header__actions">
+      <a href="{% url 'financeiro:centros_custo' %}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+  </header>
+
+  <div class="row justify-content-center g-3">
+    <div class="col-12 col-lg-8">
+      <div class="ui-panel">
+        <div class="ui-panel__body">
+          <details class="alert alert-light border mb-4">
+            <summary class="fw-semibold">Como preencher</summary>
+            <div class="form-text mt-3">
+              1. Defina um código para identificação.<br>
+              2. Informe um nome operacional claro.<br>
+              3. Mantenha o centro de custo ativo enquanto estiver disponível para classificação.
+            </div>
+          </details>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+            <div class="row g-3">
+              {% for field in form %}
+              <div class="col-12 col-md-6">
+                {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check mt-4">
+                  {{ field }}
+                  <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                </div>
+                {% else %}
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% endif %}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="ui-form-actions mt-4">
+              <button type="submit" class="btn btn-primary">Salvar</button>
+              <a href="{% url 'financeiro:centros_custo' %}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

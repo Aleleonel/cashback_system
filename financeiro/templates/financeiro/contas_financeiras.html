@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Contas Financeiras{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div><h1 class="h3 mb-1">Contas Financeiras</h1><p class="text-muted mb-0">{{ matriz.nome }}</p></div>
+    <a href="{% url 'financeiro:conta_financeira_nova' %}" class="btn btn-primary">Nova Conta</a>
+  </div>
+  <div class="card shadow-sm"><div class="card-body p-0"><div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Nome</th><th>Tipo</th><th>Instituição</th><th>Loja</th><th>Agência</th><th>Número</th><th>Status</th></tr></thead>
+      <tbody>{% for conta in contas %}<tr>
+        <td>{{ conta.nome }}</td><td>{{ conta.get_tipo_display }}</td>
+        <td>{{ conta.instituicao.nome|default:"—" }}</td><td>{{ conta.loja.nome|default:"Matriz" }}</td>
+        <td>{{ conta.agencia|default:"—" }}</td><td>{{ conta.numero|default:"—" }}</td>
+        <td>{% if conta.ativo %}Ativa{% else %}Inativa{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma conta financeira cadastrada.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div></div></div>
+</div>
+{% endblock %}
