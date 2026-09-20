@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Nova Instituição Bancária{% endblock %}
+{% block title %}{% if modo_edicao %}Editar{% else %}Nova{% endif %} Instituição Bancária{% endblock %}
 {% block content %}
 <div class="ui-page">
   <header class="ui-page-header">
     <div class="ui-page-header__content">
       <span class="ui-page-header__eyebrow">Financeiro</span>
-      <h1 class="ui-page-header__title">Nova Instituição Bancária</h1>
-      <p class="ui-page-header__description">Cadastre a instituição usada como referência nas contas financeiras.</p>
+      <h1 class="ui-page-header__title">{% if modo_edicao %}Editar{% else %}Nova{% endif %} Instituição Bancária</h1>
+      <p class="ui-page-header__description">{% if modo_edicao %}Atualize a instituição usada como referência nas contas financeiras.{% else %}Cadastre a instituição usada como referência nas contas financeiras.{% endif %}</p>
     </div>
     <div class="ui-page-header__actions">
       <a href="{% url 'financeiro:instituicoes_bancarias' %}" class="btn btn-outline-secondary">Voltar</a>

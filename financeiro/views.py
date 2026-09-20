@@ -278,6 +278,25 @@ def instituicao_bancaria_nova(request):
 
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
+def instituicao_bancaria_editar(request, instituicao_uuid):
+    instituicao = get_object_or_404(InstituicaoBancaria, uuid=instituicao_uuid)
+
+    if request.method == "POST":
+        form = InstituicaoBancariaForm(request.POST, instance=instituicao)
+        if form.is_valid():
+            form.save()
+            return redirect("financeiro:instituicoes_bancarias")
+    else:
+        form = InstituicaoBancariaForm(instance=instituicao)
+
+    return render(
+        request,
+        "financeiro/instituicao_bancaria_form.html",
+        {"form": form, "modo_edicao": True, "instituicao": instituicao},
+    )
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
 def contas_financeiras(request):
     matriz = _matriz_usuario(request)
     contas = (

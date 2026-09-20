@@ -14,6 +14,7 @@ urlpatterns = [
     path("centros-custo/novo/", views.centro_custo_novo, name="centro_custo_novo"),
     path("instituicoes-bancarias/", views.instituicoes_bancarias, name="instituicoes_bancarias"),
     path("instituicoes-bancarias/nova/", views.instituicao_bancaria_nova, name="instituicao_bancaria_nova"),
+    path("instituicoes-bancarias/<uuid:instituicao_uuid>/editar/", views.instituicao_bancaria_editar, name="instituicao_bancaria_editar"),
     path("contas-financeiras/", views.contas_financeiras, name="contas_financeiras"),
     path("contas-financeiras/nova/", views.conta_financeira_nova, name="conta_financeira_nova"),
     path("lancamentos/novo/", views.lancamento_manual, name="lancamento_manual"),
