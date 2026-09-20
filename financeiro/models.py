@@ -145,6 +145,9 @@ class ContaFinanceira(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.nome
+
     class Meta:
         indexes = [
             models.Index(fields=["matriz", "ativo"], name="ix_fin_conta_mat_ativo"),

@@ -53,7 +53,7 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
             kwargs={"titulo_uuid": self.titulo.uuid, "parcela_id": self.parcela.pk},
         ))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Registrar baixa em dinheiro")
+        self.assertContains(response, "Registrar baixa")
     def test_post_pagar_dinheiro_cria_baixa_sangria_e_liquida(self):
         self.client.force_login(self.operador)
         response = self.client.post(
@@ -61,7 +61,7 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
                 "financeiro:parcela_baixa_nova",
                 kwargs={"titulo_uuid": self.titulo.uuid, "parcela_id": self.parcela.pk},
             ),
-            {"valor": "15.00", "data": date.today().isoformat(), "observacao": "Motoboy teste POST", "chave_idempotencia": str(uuid.uuid4())},
+            {"valor": "15.00", "data": date.today().isoformat(), "observacao": "Motoboy teste POST", "forma_pagamento": str(self.dinheiro.pk), "chave_idempotencia": str(uuid.uuid4())},
         )
         self.assertEqual(response.status_code, 302)
         self.parcela.refresh_from_db()
@@ -85,7 +85,7 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
                 "financeiro:parcela_baixa_nova",
                 kwargs={"titulo_uuid": self.titulo.uuid, "parcela_id": self.parcela.pk},
             ),
-            {"valor": "15.00", "data": date.today().isoformat(), "observacao": "Sem sessao", "chave_idempotencia": str(uuid.uuid4())},
+            {"valor": "15.00", "data": date.today().isoformat(), "observacao": "Sem sessao", "forma_pagamento": str(self.dinheiro.pk), "chave_idempotencia": str(uuid.uuid4())},
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Nao existe sessao de caixa aberta por este usuario nesta loja.")
@@ -125,7 +125,7 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
                 "financeiro:parcela_baixa_nova",
                 kwargs={"titulo_uuid": self.titulo.uuid, "parcela_id": self.parcela.pk},
             ),
-            {"valor": "16.00", "data": date.today().isoformat(), "observacao": "Acima do saldo", "chave_idempotencia": str(uuid.uuid4())},
+            {"valor": "16.00", "data": date.today().isoformat(), "observacao": "Acima do saldo", "forma_pagamento": str(self.dinheiro.pk), "chave_idempotencia": str(uuid.uuid4())},
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "A baixa nao pode exceder o saldo da parcela.")
@@ -135,8 +135,8 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
                 sessao_caixa=self.sessao, tipo=TipoMovimentacaoCaixa.SANGRIA
             ).exists()
         )
-    def test_multiplas_formas_dinheiro_ativas_nao_geram_500(self):
-        FormaPagamento.objects.create(
+    def test_multiplas_formas_dinheiro_ativas_sao_exibidas_para_escolha(self):
+        duplicada = FormaPagamento.objects.create(
             matriz=self.matriz,
             nome="Dinheiro duplicado R9KUX14I2",
             codigo="DINHEIRO-R9KUX14I2",
@@ -151,10 +151,8 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
             )
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            "Existe mais de uma forma de pagamento Dinheiro ativa. Revise a configuracao.",
-        )
+        self.assertContains(response, self.dinheiro.nome)
+        self.assertContains(response, duplicada.nome)
         self.assertFalse(self.parcela.baixas.exists())
     def test_get_fornece_token_idempotencia_e_retry_nao_duplica(self):
         self.client.force_login(self.operador)
@@ -171,6 +169,7 @@ class BaixaDinheiroUiBehaviorR9KUXTests(TestCase):
             "valor": "15.00",
             "data": date.today().isoformat(),
             "observacao": "Retry idempotente",
+            "forma_pagamento": str(self.dinheiro.pk),
             "chave_idempotencia": token,
         }
         primeira = self.client.post(url, payload)

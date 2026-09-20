@@ -1,6 +1,7 @@
 from django import forms
 
 from empresas.models import Loja
+from pdv.models import FormaPagamento
 
 from .models import CentroCusto, ContaFinanceira, InstituicaoBancaria, PlanoConta, TituloFinanceiro
 
@@ -178,9 +179,17 @@ class LancamentoManualForm(forms.Form):
 class BaixaDinheiroForm(forms.Form):
     valor = forms.DecimalField(max_digits=14, decimal_places=2, min_value=0.01)
     data = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    forma_pagamento = forms.ModelChoiceField(queryset=FormaPagamento.objects.none())
+    conta_financeira = forms.ModelChoiceField(queryset=ContaFinanceira.objects.none(), required=False)
     observacao = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
 
-    def __init__(self, *form_args, **form_kwargs):
+    def __init__(self, *form_args, formas_pagamento=None, contas_financeiras=None, **form_kwargs):
         super().__init__(*form_args, **form_kwargs)
         for name in ("valor", "data", "observacao"):
             self.fields[name].widget.attrs["class"] = "form-control"
+        for name in ("forma_pagamento", "conta_financeira"):
+            self.fields[name].widget.attrs["class"] = "form-select"
+        if formas_pagamento is not None:
+            self.fields["forma_pagamento"].queryset = formas_pagamento
+        if contas_financeiras is not None:
+            self.fields["conta_financeira"].queryset = contas_financeiras

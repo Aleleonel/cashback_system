@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container-fluid py-3">
-<h1 class="h3">Registrar baixa em dinheiro</h1>
+<h1 class="h3">Registrar baixa</h1>
 <p class="text-muted">Título {{ titulo.uuid }} — Parcela {{ parcela.numero }}</p>
 <form method="post" class="card shadow-sm border-0"><div class="card-body">
-{% csrf_token %}{{ form.non_field_errors }}{% if erro_configuracao %}<div class="alert alert-danger">{{ erro_configuracao }}</div>{% endif %}
+{% csrf_token %}{{ form.non_field_errors }}
 <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 <div class="mb-3"><label class="form-label">Valor</label>{{ form.valor }}{{ form.valor.errors }}</div>
 <div class="mb-3"><label class="form-label">Data</label>{{ form.data }}{{ form.data.errors }}</div>
+<div class="mb-3"><label class="form-label">Forma de pagamento</label>{{ form.forma_pagamento }}{{ form.forma_pagamento.errors }}</div>
+<div class="mb-3"><label class="form-label">Conta financeira</label>{{ form.conta_financeira }}{{ form.conta_financeira.errors }}<div class="form-text">Obrigatória para formas que não sejam dinheiro.</div></div>
 <div class="mb-3"><label class="form-label">Observação</label>{{ form.observacao }}{{ form.observacao.errors }}</div>
-<div class="alert alert-info">Forma de pagamento: Dinheiro. A baixa movimentará o caixa aberto por você nesta loja.</div>
+<div class="alert alert-info">Em dinheiro, a baixa movimenta o caixa operacional aberto por você nesta loja. Nas demais formas, utiliza a conta financeira selecionada sem movimentar o caixa físico.</div>
 <button class="btn btn-primary" type="submit">Registrar baixa</button>
 <a class="btn btn-outline-secondary" href="{% url 'financeiro:titulo_detalhe' titulo_uuid=titulo.uuid %}">Cancelar</a>
 </div></form></div>

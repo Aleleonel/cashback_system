@@ -425,6 +425,7 @@ def lancamento_manual(request):
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_BAIXAR)
 def parcela_baixa_nova(request, titulo_uuid, parcela_id):
+    from django.db.models import Q
     from django.utils import timezone
     from pdv.choices import StatusSessaoCaixa, TipoFormaPagamento
     from pdv.models import FormaPagamento, SessaoCaixa
@@ -434,61 +435,47 @@ def parcela_baixa_nova(request, titulo_uuid, parcela_id):
     titulo = get_object_or_404(TituloFinanceiro, matriz=matriz, uuid=titulo_uuid)
     lojas = _lojas_autorizadas(request, matriz)
     if titulo.loja_id is None or not lojas.filter(pk=titulo.loja_id).exists():
-        raise Http404("Titulo sem loja autorizada para baixa em dinheiro.")
+        raise Http404("Titulo sem loja autorizada para baixa.")
     parcela = get_object_or_404(titulo.parcelas.all(), pk=parcela_id)
-    formas_dinheiro = FormaPagamento.objects.filter(
-        matriz=matriz, tipo=TipoFormaPagamento.DINHEIRO, ativa=True
-    )
-    quantidade_formas_dinheiro = formas_dinheiro.count()
-    if quantidade_formas_dinheiro == 0:
-        raise Http404("Forma de pagamento Dinheiro ativa nao encontrada.")
-    if quantidade_formas_dinheiro > 1:
-        return render(
-            request,
-            "financeiro/parcela_baixa_form.html",
-            {
-                "titulo": titulo,
-                "parcela": parcela,
-                "form": BaixaDinheiroForm(),
-                "chave_idempotencia": "",
-                "erro_configuracao": (
-                    "Existe mais de uma forma de pagamento Dinheiro ativa. "
-                    "Revise a configuracao."
-                ),
-            },
-            status=200,
-        )
-    forma = formas_dinheiro.get()
+    formas_pagamento = FormaPagamento.objects.filter(matriz=matriz, ativa=True).order_by("nome")
+    contas_financeiras = ContaFinanceira.objects.filter(matriz=matriz, ativo=True).filter(
+        Q(loja__isnull=True) | Q(loja=titulo.loja)
+    ).order_by("nome")
+    form_kwargs = {"formas_pagamento": formas_pagamento, "contas_financeiras": contas_financeiras}
     sessoes = SessaoCaixa.objects.filter(
         caixa__matriz=matriz, caixa__loja=titulo.loja, status=StatusSessaoCaixa.ABERTA
     ).select_related("caixa")
 
     if request.method == "POST":
-        form = BaixaDinheiroForm(request.POST)
+        form = BaixaDinheiroForm(request.POST, **form_kwargs)
         token_idempotencia = (request.POST.get("chave_idempotencia") or "").strip()
         try:
             token_idempotencia = str(uuid.UUID(token_idempotencia))
         except (ValueError, AttributeError, TypeError):
             form.add_error(None, "Token de idempotencia invalido. Recarregue o formulario.")
         if form.is_valid() and not form.non_field_errors():
-            sessao = sessoes.filter(operador_abertura=request.user).first()
-            if sessao is None:
+            forma = form.cleaned_data["forma_pagamento"]
+            conta = form.cleaned_data["conta_financeira"]
+            dinheiro = forma.tipo == TipoFormaPagamento.DINHEIRO
+            sessao = sessoes.filter(operador_abertura=request.user).first() if dinheiro else None
+            if dinheiro and sessao is None:
                 form.add_error(None, "Nao existe sessao de caixa aberta por este usuario nesta loja.")
+            elif not dinheiro and conta is None:
+                form.add_error("conta_financeira", "Conta financeira e obrigatoria para baixa nao-dinheiro.")
             else:
                 try:
                     registrar_baixa_financeira_com_caixa(
-                        parcela=parcela, valor=form.cleaned_data["valor"],
-                        data=form.cleaned_data["data"],
+                        parcela=parcela, valor=form.cleaned_data["valor"], data=form.cleaned_data["data"],
                         chave_idempotencia=f"baixa-ui:{matriz.pk}:{request.user.pk}:{token_idempotencia}",
-                        forma_pagamento=forma, sessao_caixa=sessao, operador=request.user,
+                        forma_pagamento=forma, conta_financeira=conta, sessao_caixa=sessao,
+                        operador=request.user if dinheiro else None,
                         observacao=form.cleaned_data["observacao"], usuario=request.user, request=request,
                     )
                 except ValidationError as exc:
                     if hasattr(exc, "message_dict"):
                         for campo, mensagens in exc.message_dict.items():
-                            destino = campo if campo in form.fields else None
                             for mensagem in mensagens:
-                                form.add_error(destino, mensagem)
+                                form.add_error(campo if campo in form.fields else None, mensagem)
                     else:
                         for mensagem in exc.messages:
                             form.add_error(None, mensagem)
@@ -499,8 +486,11 @@ def parcela_baixa_nova(request, titulo_uuid, parcela_id):
         total_baixas = sum((e.valor for e in parcela.baixas.all() if e.tipo == BaixaFinanceira.Tipo.BAIXA), Decimal("0.00"))
         total_estornos = sum((e.valor for e in parcela.baixas.all() if e.tipo == BaixaFinanceira.Tipo.ESTORNO), Decimal("0.00"))
         saldo_parcela = parcela.valor_original - total_baixas + total_estornos
-        form = BaixaDinheiroForm(initial={"valor": saldo_parcela, "data": timezone.localdate()})
-
-    return render(request, "financeiro/parcela_baixa_form.html",
-                  {"titulo": titulo, "parcela": parcela, "form": form,
-                   "chave_idempotencia": token_idempotencia})
+        initial = {"valor": saldo_parcela, "data": timezone.localdate()}
+        dinheiro = formas_pagamento.filter(tipo=TipoFormaPagamento.DINHEIRO)
+        if dinheiro.count() == 1:
+            initial["forma_pagamento"] = dinheiro.get()
+        form = BaixaDinheiroForm(initial=initial, **form_kwargs)
+    return render(request, "financeiro/parcela_baixa_form.html", {
+        "titulo": titulo, "parcela": parcela, "form": form, "chave_idempotencia": token_idempotencia,
+    })

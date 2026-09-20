@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from empresas.models import Matriz, Loja
-from financeiro.models import TituloFinanceiro
+from financeiro.models import ContaFinanceira, TituloFinanceiro
 from financeiro.services import criar_titulo_financeiro, registrar_baixa_financeira_com_caixa, estornar_baixa_financeira_com_caixa
 from pdv.choices import TipoFormaPagamento, TipoMovimentacaoCaixa
 from pdv.models import Caixa, SessaoCaixa, FormaPagamento, MovimentacaoCaixa
@@ -21,6 +21,7 @@ class IntegracaoCaixaOperacionalTests(TestCase):
         MovimentacaoCaixa.objects.create(sessao_caixa=self.sessao,tipo=TipoMovimentacaoCaixa.ABERTURA,valor=Decimal("100.00"),operador=self.user,descricao="Abertura")
         self.dinheiro=FormaPagamento.objects.create(matriz=self.matriz,nome="Dinheiro R7DF",codigo="DIN_R7DF",tipo=TipoFormaPagamento.DINHEIRO,movimenta_caixa=True)
         self.pix=FormaPagamento.objects.create(matriz=self.matriz,nome="PIX R7DF",codigo="PIX_R7DF",tipo=TipoFormaPagamento.PIX,movimenta_caixa=False)
+        self.conta_pix=ContaFinanceira.objects.create(matriz=self.matriz,loja=self.loja,nome="Conta PIX R7DF",tipo=ContaFinanceira.Tipo.CONTA_CORRENTE,ativo=True)
 
     def titulo(self,natureza,chave,valor="30.00"):
         return criar_titulo_financeiro(
@@ -60,7 +61,7 @@ class IntegracaoCaixaOperacionalTests(TestCase):
 
     def test_pix_nao_gera_movimento_caixa_fisico(self):
         t=self.titulo(TituloFinanceiro.Natureza.PAGAR,"r7df-pix")
-        b=registrar_baixa_financeira_com_caixa(parcela=t.parcelas.get(),valor=Decimal("30"),data=date.today(),chave_idempotencia="bx-pix",forma_pagamento=self.pix)
+        b=registrar_baixa_financeira_com_caixa(parcela=t.parcelas.get(),valor=Decimal("30"),data=date.today(),chave_idempotencia="bx-pix",forma_pagamento=self.pix,conta_financeira=self.conta_pix)
         self.assertIsNone(b.movimentacao_caixa_id);self.assertIsNone(b.sessao_caixa_id)
         self.assertEqual(calcular_saldo_sessao_caixa(sessao=self.sessao),Decimal("100.00"))
 

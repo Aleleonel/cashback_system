@@ -505,7 +505,8 @@ def cancelar_titulo_financeiro(*, titulo, usuario=None, request=None):
 @transaction.atomic
 def registrar_baixa_financeira_com_caixa(
     *, parcela, valor, data, chave_idempotencia, forma_pagamento,
-    sessao_caixa=None, operador=None, observacao="", usuario=None, request=None
+    conta_financeira=None, sessao_caixa=None, operador=None,
+    observacao="", usuario=None, request=None
 ):
     from pdv.choices import TipoFormaPagamento, TipoMovimentacaoCaixa
     from pdv.services.vendas.caixa import registrar_movimentacao_caixa_operacional
@@ -515,12 +516,23 @@ def registrar_baixa_financeira_com_caixa(
         raise ValidationError({"forma_pagamento": "Forma de pagamento de outra matriz."})
     dinheiro = forma_pagamento.tipo == TipoFormaPagamento.DINHEIRO
     if dinheiro:
+        if conta_financeira is not None:
+            raise ValidationError({"conta_financeira": "Baixa em dinheiro nao utiliza conta financeira."})
         if sessao_caixa is None or operador is None:
             raise ValidationError({"sessao_caixa": "Dinheiro exige sessao aberta e operador."})
         if titulo.loja_id is None:
             raise ValidationError({"loja": "Titulo sem loja nao pode ser baixado em dinheiro."})
         if sessao_caixa.caixa.matriz_id != titulo.matriz_id or sessao_caixa.caixa.loja_id != titulo.loja_id:
             raise ValidationError({"sessao_caixa": "Sessao incompatível com matriz/loja do titulo."})
+    else:
+        if conta_financeira is None:
+            raise ValidationError({"conta_financeira": "Conta financeira e obrigatoria para baixa nao-dinheiro."})
+        if conta_financeira.matriz_id != titulo.matriz_id:
+            raise ValidationError({"conta_financeira": "Conta financeira de outra matriz."})
+        if not conta_financeira.ativo:
+            raise ValidationError({"conta_financeira": "Conta financeira inativa."})
+        if conta_financeira.loja_id is not None and titulo.loja_id is not None and conta_financeira.loja_id != titulo.loja_id:
+            raise ValidationError({"conta_financeira": "Conta financeira de outra loja."})
 
     baixa = registrar_baixa_financeira(
         parcela=parcela, valor=valor, data=data,
@@ -531,9 +543,14 @@ def registrar_baixa_financeira_com_caixa(
         raise ValidationError({"chave_idempotencia": "Baixa existente usa outra forma de pagamento."})
     if baixa.forma_pagamento_id is None:
         baixa.forma_pagamento=forma_pagamento
-        baixa.save(update_fields=["forma_pagamento"])
     if not dinheiro:
+        if baixa.conta_financeira_id not in (None, conta_financeira.pk):
+            raise ValidationError({"chave_idempotencia": "Baixa existente usa outra conta financeira."})
+        if baixa.conta_financeira_id is None:
+            baixa.conta_financeira=conta_financeira
+        baixa.save(update_fields=["forma_pagamento", "conta_financeira"])
         return baixa
+    baixa.save(update_fields=["forma_pagamento"])
     if baixa.movimentacao_caixa_id is None:
         tipo = TipoMovimentacaoCaixa.SANGRIA if titulo.natureza == TituloFinanceiro.Natureza.PAGAR else TipoMovimentacaoCaixa.SUPRIMENTO
         movimento = registrar_movimentacao_caixa_operacional(
@@ -568,6 +585,13 @@ def estornar_baixa_financeira_com_caixa(
     )
     dinheiro = original.forma_pagamento_id is not None and original.forma_pagamento.tipo == TipoFormaPagamento.DINHEIRO
     if not dinheiro:
+        if estorno.forma_pagamento_id not in (None, original.forma_pagamento_id):
+            raise ValidationError({"chave_idempotencia": "Estorno existente usa outra forma de pagamento."})
+        if estorno.conta_financeira_id not in (None, original.conta_financeira_id):
+            raise ValidationError({"chave_idempotencia": "Estorno existente usa outra conta financeira."})
+        estorno.forma_pagamento=original.forma_pagamento
+        estorno.conta_financeira=original.conta_financeira
+        estorno.save(update_fields=["forma_pagamento", "conta_financeira"])
         return estorno
     if operador is None:
         raise ValidationError({"operador": "Estorno em dinheiro exige operador."})
