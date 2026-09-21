@@ -23,6 +23,7 @@
                             <th>Código</th>
                             <th>Nome</th>
                             <th>Status</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -31,10 +32,11 @@
                             <td>{{ centro.codigo }}</td>
                             <td>{{ centro.nome }}</td>
                             <td>{% if centro.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+                            <td><a href="{% url 'financeiro:centro_custo_editar' centro.uuid %}" class="btn btn-sm btn-outline-primary">Editar</a></td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="3" class="text-center text-muted py-4">
+                            <td colspan="4" class="text-center text-muted py-4">
                                 Nenhum centro de custo cadastrado.
                             </td>
                         </tr>

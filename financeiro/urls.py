@@ -12,6 +12,7 @@ urlpatterns = [
     path("planos-conta/<uuid:plano_uuid>/editar/", views.plano_conta_editar, name="plano_conta_editar"),
     path("centros-custo/", views.centros_custo, name="centros_custo"),
     path("centros-custo/novo/", views.centro_custo_novo, name="centro_custo_novo"),
+    path("centros-custo/<uuid:centro_uuid>/editar/", views.centro_custo_editar, name="centro_custo_editar"),
     path("instituicoes-bancarias/", views.instituicoes_bancarias, name="instituicoes_bancarias"),
     path("instituicoes-bancarias/nova/", views.instituicao_bancaria_nova, name="instituicao_bancaria_nova"),
     path("instituicoes-bancarias/<uuid:instituicao_uuid>/editar/", views.instituicao_bancaria_editar, name="instituicao_bancaria_editar"),

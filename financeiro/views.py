@@ -250,6 +250,31 @@ def centro_custo_novo(request):
 
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
+def centro_custo_editar(request, centro_uuid):
+    matriz = _matriz_usuario(request)
+    try:
+        centro = CentroCusto.objects.get(uuid=centro_uuid, matriz=matriz)
+    except CentroCusto.DoesNotExist as exc:
+        raise Http404("Centro de custo nao encontrado.") from exc
+
+    if request.method == "POST":
+        form = CentroCustoForm(request.POST, instance=centro)
+        if form.is_valid():
+            atualizado = form.save(commit=False)
+            atualizado.matriz = matriz
+            atualizado.save()
+            return redirect("financeiro:centros_custo")
+    else:
+        form = CentroCustoForm(instance=centro)
+
+    return render(
+        request,
+        "financeiro/centro_custo_form.html",
+        {"matriz": matriz, "form": form, "modo_edicao": True, "centro": centro},
+    )
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
 def instituicoes_bancarias(request):
     instituicoes = InstituicaoBancaria.objects.all().order_by("nome", "codigo_bacen")
     return render(
