@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Prefetch
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -121,7 +122,7 @@ def titulo_detalhe(request, titulo_uuid):
     elif escopo == ESCOPO_LOJA:
         queryset = queryset.filter(loja=loja)
     titulo = get_object_or_404(queryset, uuid=titulo_uuid)
-    parcelas = titulo.parcelas.all().prefetch_related("baixas").order_by("numero")
+    parcelas = titulo.parcelas.all().prefetch_related(Prefetch("baixas", queryset=BaixaFinanceira.objects.select_related("forma_pagamento", "conta_financeira"))).order_by("numero")
     return render(request, "financeiro/titulo_detalhe.html", {
         "matriz": matriz, "lojas": lojas, "escopo": escopo, "loja": loja,
         "titulo": titulo, "parcelas": parcelas,
