@@ -417,11 +417,17 @@ def estornar_baixa_financeira(
         Decimal("0.00"),
     )
     total_liquido_baixado = total_baixas - total_estornos
-    if valor > total_liquido_baixado:
-        raise ValidationError({"valor": "O estorno nao pode exceder o total liquido baixado."})
+    total_estornado_baixa = sum(
+        (evento.valor for evento in eventos if evento.baixa_estornada_id == baixa_original.pk),
+        Decimal("0.00"),
+    )
+    saldo_estornavel_baixa = baixa_original.valor - total_estornado_baixa
+    if valor > saldo_estornavel_baixa:
+        raise ValidationError({"valor": "O estorno nao pode exceder o saldo estornavel da baixa."})
 
     estorno = BaixaFinanceira(
         parcela=parcela,
+        baixa_estornada=baixa_original,
         valor=valor,
         data=data,
         tipo=BaixaFinanceira.Tipo.ESTORNO,

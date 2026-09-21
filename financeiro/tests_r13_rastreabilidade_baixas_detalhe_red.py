@@ -21,7 +21,7 @@ class R13RastreabilidadeBaixasDetalheRedTests(SimpleTestCase):
 
     def test_tabela_vazia_usa_seis_colunas(self):
         source = TEMPLATE.read_text(encoding="utf-8")
-        self.assertIn('colspan="6"', source)
+        self.assertIn('colspan="7"', source)
 
     def test_view_prefetch_carrega_relacoes_da_baixa(self):
         source = VIEWS.read_text(encoding="utf-8")

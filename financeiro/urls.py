@@ -7,6 +7,7 @@ urlpatterns = [
     path("titulos/", views.titulos, name="titulos"),
     path("titulos/<uuid:titulo_uuid>/", views.titulo_detalhe, name="titulo_detalhe"),
     path("titulos/<uuid:titulo_uuid>/parcelas/<int:parcela_id>/baixa/", views.parcela_baixa_nova, name="parcela_baixa_nova"),
+    path("titulos/<uuid:titulo_uuid>/parcelas/<int:parcela_id>/baixas/<int:baixa_id>/estornar/", views.baixa_estornar, name="baixa_estornar"),
     path("planos-conta/", views.planos_conta, name="planos_conta"),
     path("planos-conta/novo/", views.plano_conta_novo, name="plano_conta_novo"),
     path("planos-conta/<uuid:plano_uuid>/editar/", views.plano_conta_editar, name="plano_conta_editar"),

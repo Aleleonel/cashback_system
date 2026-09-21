@@ -20,7 +20,7 @@ from accounts.permissions import (
 from empresas.models import Loja
 from financeiro.models import BaixaFinanceira, CentroCusto, ContaFinanceira, InstituicaoBancaria, PlanoConta, TituloFinanceiro
 from financeiro.services import criar_lancamento_manual
-from financeiro.forms import BaixaDinheiroForm, CentroCustoForm, ContaFinanceiraForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
+from financeiro.forms import BaixaDinheiroForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
 from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_saldos
 
 
@@ -465,6 +465,83 @@ def lancamento_manual(request):
         request,
         "financeiro/lancamento_manual.html",
         {"matriz": matriz, "form": form, "chave_idempotencia": chave_idempotencia},
+    )
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_BAIXAR)
+def baixa_estornar(request, titulo_uuid, parcela_id, baixa_id):
+    from django.utils import timezone
+    from financeiro.services import estornar_baixa_financeira_com_caixa
+
+    matriz = _matriz_usuario(request)
+    titulo = get_object_or_404(TituloFinanceiro, matriz=matriz, uuid=titulo_uuid)
+    lojas = _lojas_autorizadas(request, matriz)
+    if titulo.loja_id is None or not lojas.filter(pk=titulo.loja_id).exists():
+        raise Http404("Titulo sem loja autorizada para estorno.")
+
+    parcela = get_object_or_404(titulo.parcelas.all(), pk=parcela_id)
+    baixa = get_object_or_404(
+        parcela.baixas.select_related("forma_pagamento", "conta_financeira", "sessao_caixa"),
+        pk=baixa_id,
+        tipo=BaixaFinanceira.Tipo.BAIXA,
+    )
+
+    if request.method == "POST":
+        form = EstornoBaixaForm(request.POST)
+        token_idempotencia = (request.POST.get("chave_idempotencia") or "").strip()
+        try:
+            token_idempotencia = str(uuid.UUID(token_idempotencia))
+        except (ValueError, AttributeError, TypeError):
+            form.add_error(None, "Token de idempotencia invalido. Recarregue o formulario.")
+
+        if form.is_valid() and not form.non_field_errors():
+            try:
+                estornar_baixa_financeira_com_caixa(
+                    baixa=baixa,
+                    valor=form.cleaned_data["valor"],
+                    data=form.cleaned_data["data"],
+                    chave_idempotencia=f"estorno-ui:{matriz.pk}:{request.user.pk}:{token_idempotencia}",
+                    operador=request.user,
+                    observacao=form.cleaned_data["observacao"],
+                    usuario=request.user,
+                    request=request,
+                )
+            except ValidationError as exc:
+                if hasattr(exc, "message_dict"):
+                    for campo, mensagens in exc.message_dict.items():
+                        for mensagem in mensagens:
+                            form.add_error(campo if campo in form.fields else None, mensagem)
+                else:
+                    for mensagem in exc.messages:
+                        form.add_error(None, mensagem)
+            else:
+                return redirect("financeiro:titulo_detalhe", titulo_uuid=titulo.uuid)
+    else:
+        token_idempotencia = str(uuid.uuid4())
+        total_estornado = sum(
+            (
+                evento.valor
+                for evento in parcela.baixas.all()
+                if evento.tipo == BaixaFinanceira.Tipo.ESTORNO
+                and evento.baixa_estornada_id == baixa.pk
+            ),
+            Decimal("0.00"),
+        )
+        valor_estornavel = baixa.valor - total_estornado
+        form = EstornoBaixaForm(
+            initial={"valor": valor_estornavel, "data": timezone.localdate()}
+        )
+
+    return render(
+        request,
+        "financeiro/baixa_estorno_form.html",
+        {
+            "titulo": titulo,
+            "parcela": parcela,
+            "baixa": baixa,
+            "form": form,
+            "chave_idempotencia": token_idempotencia,
+        },
     )
 
 @login_required

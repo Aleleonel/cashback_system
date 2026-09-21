@@ -193,3 +193,12 @@ class BaixaDinheiroForm(forms.Form):
             self.fields["forma_pagamento"].queryset = formas_pagamento
         if contas_financeiras is not None:
             self.fields["conta_financeira"].queryset = contas_financeiras
+class EstornoBaixaForm(forms.Form):
+    valor = forms.DecimalField(max_digits=14, decimal_places=2, min_value=0.01)
+    data = forms.DateField(widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}))
+    observacao = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
+
+    def __init__(self, *form_args, **form_kwargs):
+        super().__init__(*form_args, **form_kwargs)
+        for name in ("valor", "data", "observacao"):
+            self.fields[name].widget.attrs["class"] = "form-control"

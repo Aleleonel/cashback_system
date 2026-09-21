@@ -290,6 +290,13 @@ class BaixaFinanceira(models.Model):
         on_delete=models.PROTECT,
         related_name="baixas",
     )
+    baixa_estornada = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="estornos",
+    )
     valor = models.DecimalField(max_digits=14, decimal_places=2)
     data = models.DateField()
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
