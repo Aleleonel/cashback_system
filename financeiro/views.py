@@ -389,6 +389,32 @@ def conta_financeira_nova(request):
         {"matriz": matriz, "form": form},
     )
 
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
+def conta_financeira_editar(request, conta_uuid):
+    matriz = _matriz_usuario(request)
+    conta = get_object_or_404(ContaFinanceira, uuid=conta_uuid, matriz=matriz)
+
+    if request.method == "POST":
+        form = ContaFinanceiraForm(request.POST, instance=conta)
+    else:
+        form = ContaFinanceiraForm(instance=conta)
+
+    form.fields["loja"].queryset = _lojas_autorizadas(request, matriz)
+    form.fields["instituicao"].queryset = InstituicaoBancaria.objects.all().order_by("nome")
+
+    if request.method == "POST" and form.is_valid():
+        atualizada = form.save(commit=False)
+        atualizada.matriz = matriz
+        atualizada.save()
+        return redirect("financeiro:contas_financeiras")
+
+    return render(
+        request,
+        "financeiro/conta_financeira_form.html",
+        {"matriz": matriz, "form": form, "modo_edicao": True, "conta": conta},
+    )
+
 def _somar_meses(data_base, meses):
     indice = data_base.month - 1 + meses
     ano = data_base.year + indice // 12
