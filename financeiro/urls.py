@@ -5,6 +5,7 @@ app_name = 'financeiro'
 urlpatterns = [
     path("", views.painel, name="painel"),
     path("titulos/", views.titulos, name="titulos"),
+    path("titulos/exportar.csv", views.titulos_exportar_csv, name="titulos_exportar_csv"),
     path("titulos/<uuid:titulo_uuid>/", views.titulo_detalhe, name="titulo_detalhe"),
     path("titulos/<uuid:titulo_uuid>/cancelar/", views.titulo_cancelar, name="titulo_cancelar"),
     path("titulos/<uuid:titulo_uuid>/parcelas/<int:parcela_id>/baixa/", views.parcela_baixa_nova, name="parcela_baixa_nova"),

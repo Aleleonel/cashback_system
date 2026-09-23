@@ -1,3 +1,4 @@
+import csv
 import uuid
 from calendar import monthrange
 from decimal import Decimal
@@ -5,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
-from django.http import Http404, HttpResponseForbidden, QueryDict
+from django.http import Http404, HttpResponseForbidden, QueryDict, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -108,6 +109,50 @@ def titulos(request):
     if contexto is None:
         return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
     return render(request, "financeiro/titulos.html", contexto)
+
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
+def titulos_exportar_csv(request):
+    matriz = _matriz_usuario(request)
+    escopo, loja, lojas = _resolver_escopo(request, matriz)
+    if escopo is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+
+    natureza = (request.GET.get("natureza") or "").strip().upper()
+    status = (request.GET.get("status") or "").strip().upper()
+    if natureza not in {TituloFinanceiro.Natureza.PAGAR, TituloFinanceiro.Natureza.RECEBER}:
+        natureza = None
+    if status not in {
+        TituloFinanceiro.Status.ABERTO,
+        TituloFinanceiro.Status.PARCIAL,
+        TituloFinanceiro.Status.LIQUIDADO,
+        TituloFinanceiro.Status.CANCELADO,
+    }:
+        status = None
+
+    titulos = listar_titulos(
+        matriz=matriz,
+        natureza=natureza,
+        status=status,
+        escopo=escopo,
+        loja=loja,
+    )
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="titulos_financeiros.csv"'
+    response.write("\ufeff")
+    writer = csv.writer(response, delimiter=";")
+    writer.writerow(["Emissao", "Natureza", "Descricao", "Loja", "Status", "Valor"])
+    for titulo in titulos:
+        writer.writerow([
+            titulo.data_emissao.strftime("%d/%m/%Y"),
+            titulo.get_natureza_display(),
+            titulo.descricao,
+            titulo.loja.nome if titulo.loja else "Matriz",
+            titulo.get_status_display(),
+            str(titulo.valor_original).replace(".", ","),
+        ])
+    return response
 
 
 @login_required
