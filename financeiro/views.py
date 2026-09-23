@@ -19,7 +19,7 @@ from accounts.permissions import (
 )
 from empresas.models import Loja
 from financeiro.models import BaixaFinanceira, CentroCusto, ContaFinanceira, InstituicaoBancaria, PlanoConta, TituloFinanceiro
-from financeiro.services import criar_lancamento_manual
+from financeiro.services import cancelar_titulo_financeiro, criar_lancamento_manual
 from financeiro.forms import BaixaDinheiroForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
 from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_saldos
 
@@ -127,6 +127,34 @@ def titulo_detalhe(request, titulo_uuid):
         "matriz": matriz, "lojas": lojas, "escopo": escopo, "loja": loja,
         "titulo": titulo, "parcelas": parcelas,
     })
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_BAIXAR)
+def titulo_cancelar(request, titulo_uuid):
+    matriz = _matriz_usuario(request)
+    titulo = get_object_or_404(TituloFinanceiro, matriz=matriz, uuid=titulo_uuid)
+    lojas = _lojas_autorizadas(request, matriz)
+    if titulo.loja_id is None or not lojas.filter(pk=titulo.loja_id).exists():
+        raise Http404("Titulo sem loja autorizada para cancelamento.")
+
+    erro = None
+    if request.method == "POST":
+        try:
+            cancelar_titulo_financeiro(
+                titulo=titulo,
+                usuario=request.user,
+                request=request,
+            )
+        except ValidationError as exc:
+            erro = " ".join(exc.messages)
+        else:
+            return redirect("financeiro:titulo_detalhe", titulo_uuid=titulo.uuid)
+
+    return render(
+        request,
+        "financeiro/titulo_cancelar_confirm.html",
+        {"titulo": titulo, "erro": erro},
+    )
 
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
