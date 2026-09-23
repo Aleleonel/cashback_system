@@ -5,8 +5,9 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
-from django.http import Http404, HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from accounts.decorators import require_permission
 from accounts.services import usuario_tem_permissao
@@ -132,10 +133,22 @@ def titulo_detalhe(request, titulo_uuid):
 @require_permission(PERMISSAO_FINANCEIRO_BAIXAR)
 def titulo_cancelar(request, titulo_uuid):
     matriz = _matriz_usuario(request)
-    titulo = get_object_or_404(TituloFinanceiro, matriz=matriz, uuid=titulo_uuid)
-    lojas = _lojas_autorizadas(request, matriz)
-    if titulo.loja_id is None or not lojas.filter(pk=titulo.loja_id).exists():
-        raise Http404("Titulo sem loja autorizada para cancelamento.")
+    escopo, loja, lojas = _resolver_escopo(request, matriz)
+    if escopo is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+
+    queryset = TituloFinanceiro.objects.filter(matriz=matriz)
+    if escopo == ESCOPO_MATRIZ:
+        queryset = queryset.filter(loja__isnull=True)
+    elif escopo == ESCOPO_LOJA:
+        queryset = queryset.filter(loja=loja)
+    titulo = get_object_or_404(queryset, uuid=titulo_uuid)
+
+    params = QueryDict(mutable=True)
+    params["escopo"] = escopo
+    if loja is not None:
+        params["loja"] = str(loja.pk)
+    query_escopo = params.urlencode()
 
     erro = None
     if request.method == "POST":
@@ -148,12 +161,19 @@ def titulo_cancelar(request, titulo_uuid):
         except ValidationError as exc:
             erro = " ".join(exc.messages)
         else:
-            return redirect("financeiro:titulo_detalhe", titulo_uuid=titulo.uuid)
+            detalhe_url = reverse("financeiro:titulo_detalhe", kwargs={"titulo_uuid": titulo.uuid})
+            return redirect(f"{detalhe_url}?{query_escopo}")
 
     return render(
         request,
         "financeiro/titulo_cancelar_confirm.html",
-        {"titulo": titulo, "erro": erro},
+        {
+            "titulo": titulo,
+            "erro": erro,
+            "escopo": escopo,
+            "loja": loja,
+            "query_escopo": query_escopo,
+        },
     )
 
 @login_required

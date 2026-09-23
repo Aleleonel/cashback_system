@@ -16,14 +16,16 @@ class R15CancelamentoTituloUIBehaviorTests(SimpleTestCase):
         self.assertLess(post_pos, service_pos)
         self.assertLess(service_pos, render_pos)
 
-    def test_view_restringe_titulo_a_matriz_e_loja_autorizada(self):
+    def test_view_restringe_titulo_ao_mesmo_escopo_do_detalhe(self):
         start = self.views.index("def titulo_cancelar(")
         end = self.views.index("\ndef ", start + 5)
         block = self.views[start:end]
-        self.assertIn("TituloFinanceiro, matriz=matriz, uuid=titulo_uuid", block)
-        self.assertIn("_lojas_autorizadas(request, matriz)", block)
-        self.assertIn("lojas.filter(pk=titulo.loja_id).exists()", block)
-        self.assertIn("raise Http404", block)
+        self.assertIn("_resolver_escopo(request, matriz)", block)
+        self.assertIn("TituloFinanceiro.objects.filter(matriz=matriz)", block)
+        self.assertIn("ESCOPO_MATRIZ", block)
+        self.assertIn("loja__isnull=True", block)
+        self.assertIn("ESCOPO_LOJA", block)
+        self.assertIn("queryset.filter(loja=loja)", block)
 
     def test_erro_de_dominio_permanece_na_confirmacao(self):
         start = self.views.index("def titulo_cancelar(")
@@ -37,7 +39,8 @@ class R15CancelamentoTituloUIBehaviorTests(SimpleTestCase):
         start = self.views.index("def titulo_cancelar(")
         end = self.views.index("\ndef ", start + 5)
         block = self.views[start:end]
-        self.assertIn('redirect("financeiro:titulo_detalhe"', block)
+        self.assertIn('reverse("financeiro:titulo_detalhe"', block)
+        self.assertIn('return redirect(f"{detalhe_url}?{query_escopo}")', block)
 
     def test_confirmacao_exige_csrf_e_post(self):
         self.assertIn('method="post"', self.template)

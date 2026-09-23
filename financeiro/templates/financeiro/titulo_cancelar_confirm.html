@@ -10,11 +10,11 @@
         O cancelamento preserva o histórico financeiro. Só é permitido quando o total líquido baixado do título é zero.
       </div>
       {% if erro %}<div class="alert alert-danger">{{ erro }}</div>{% endif %}
-      <form method="post">
+      <form method="post" action="?{{ query_escopo }}">
         {% csrf_token %}
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
-          <a href="{% url 'financeiro:titulo_detalhe' titulo_uuid=titulo.uuid %}" class="btn btn-outline-secondary">Voltar</a>
+          <a href="{% url 'financeiro:titulo_detalhe' titulo_uuid=titulo.uuid %}?escopo={{ escopo }}{% if loja %}&loja={{ loja.pk }}{% endif %}" class="btn btn-outline-secondary">Voltar</a>
         </div>
       </form>
     </div>
