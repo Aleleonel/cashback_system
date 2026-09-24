@@ -23,6 +23,7 @@ from empresas.models import Loja
 from financeiro.models import BaixaFinanceira, CentroCusto, ContaFinanceira, InstituicaoBancaria, PlanoConta, TituloFinanceiro
 from financeiro.services import cancelar_titulo_financeiro, criar_lancamento_manual
 from financeiro.forms import BaixaDinheiroForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
+from financeiro.importacao_csv import importar_titulos_csv
 from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_saldos
 
 
@@ -155,6 +156,54 @@ def titulos_exportar_csv(request):
     return response
 
 
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_LANCAR_DESPESA)
+def titulos_importar_csv(request):
+    matriz = _matriz_usuario(request)
+    escopo, loja, lojas = _resolver_escopo(request, matriz)
+    if escopo is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+    if escopo == ESCOPO_CONSOLIDADO:
+        return HttpResponseForbidden("Selecione o escopo Matriz ou uma Loja para importar titulos.")
+
+    erro = None
+    resultado = None
+    if request.method == "POST":
+        arquivo = request.FILES.get("arquivo")
+        if arquivo is None:
+            erro = "Selecione um arquivo CSV."
+        else:
+            try:
+                resultado = importar_titulos_csv(
+                    arquivo=arquivo,
+                    matriz=matriz,
+                    loja=loja,
+                    usuario=request.user,
+                    request=request,
+                )
+            except ValidationError as exc:
+                if hasattr(exc, "message_dict"):
+                    erro = " ".join(
+                        mensagem
+                        for mensagens in exc.message_dict.values()
+                        for mensagem in mensagens
+                    )
+                else:
+                    erro = " ".join(exc.messages)
+
+    return render(
+        request,
+        "financeiro/titulo_importar_csv.html",
+        {
+            "matriz": matriz,
+            "lojas": lojas,
+            "escopo": escopo,
+            "loja": loja,
+            "erro": erro,
+            "resultado": resultado,
+        },
+    )
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
 def titulo_detalhe(request, titulo_uuid):
