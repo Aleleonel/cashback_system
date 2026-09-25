@@ -34,6 +34,7 @@ def venda_fake(tipo_emissao):
 
 
 class IntegracaoFinalizacaoFiscal184Tests(TestCase):
+    @patch("pdv.services.vendas.finalizacao.gerar_contas_receber_venda")
     @patch(
         "pdv.services.vendas.finalizacao."
         "registrar_auditoria_finalizacao_venda"
@@ -69,6 +70,7 @@ class IntegracaoFinalizacaoFiscal184Tests(TestCase):
         caixa,
         finalizar,
         auditoria,
+        contas_receber,
     ):
         venda = venda_fake(
             TipoEmissaoVenda.NAO_FISCAL
@@ -95,6 +97,7 @@ class IntegracaoFinalizacaoFiscal184Tests(TestCase):
         finalizar.assert_called_once()
         auditoria.assert_called_once()
 
+    @patch("pdv.services.vendas.finalizacao.gerar_contas_receber_venda")
     @patch(
         "pdv.services.vendas.finalizacao."
         "registrar_auditoria_finalizacao_venda"
@@ -130,6 +133,7 @@ class IntegracaoFinalizacaoFiscal184Tests(TestCase):
         caixa,
         finalizar,
         auditoria,
+        contas_receber,
     ):
         venda = venda_fake(
             TipoEmissaoVenda.FISCAL

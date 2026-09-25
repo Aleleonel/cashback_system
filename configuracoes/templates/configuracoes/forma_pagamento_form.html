@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}<div class="container py-3" style="max-width:900px">
+{% if contexto_configuracoes.escopo == "plataforma" %}<a href="{% url 'configuracoes:formas_pagamento' %}?matriz={{ matriz_alvo.pk }}" class="small">← Formas de pagamento</a>{% else %}<a href="{% url 'configuracoes:formas_pagamento' %}" class="small">← Formas de pagamento</a>{% endif %}
+<h1 class="h3 mt-2">{{ titulo_pagina }}</h1>{% if matriz_alvo %}<p><strong>Matriz:</strong> {{ matriz_alvo.nome }}</p>{% endif %}<p class="text-muted">Defina explicitamente o comportamento operacional e financeiro.</p>
+<form method="post" novalidate>{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<div class="card shadow-sm mb-3"><div class="card-body"><h2 class="h5">Identificação</h2><div class="row g-3"><div class="col-md-6"><label class="form-label">{{ form.nome.label }}</label>{{ form.nome }}{{ form.nome.errors }}</div><div class="col-md-3"><label class="form-label">{{ form.codigo.label }}</label>{{ form.codigo }}{{ form.codigo.errors }}</div><div class="col-md-3"><label class="form-label">{{ form.tipo.label }}</label>{{ form.tipo }}{{ form.tipo.errors }}</div></div></div></div>
+<div class="card shadow-sm mb-3"><div class="card-body"><h2 class="h5 mb-3">Parcelamento</h2>
+<div class="row g-3 align-items-end"><div class="col-md-6"><div class="form-check mb-2">{{ form.permite_parcelamento }} <label class="form-check-label" for="id_permite_parcelamento">{{ form.permite_parcelamento.label }}</label></div>{{ form.permite_parcelamento.errors }}<div class="form-text">Ative somente quando esta forma aceitar mais de uma parcela.</div></div>
+<div class="col-md-4"><label class="form-label" for="id_maximo_parcelas">{{ form.maximo_parcelas.label }}</label>{{ form.maximo_parcelas }}{{ form.maximo_parcelas.errors }}<div class="form-text">Quando o parcelamento estiver desligado, o valor permanece em 1.</div></div></div></div></div>
+<div class="card shadow-sm mb-3"><div class="card-body"><h2 class="h5 mb-3">Regras operacionais e financeiras</h2><div class="row g-3">
+<div class="col-md-6"><h3 class="h6">Operação no PDV</h3>
+<div class="form-check mb-2">{{ form.ativa }} <label class="form-check-label" for="id_ativa">{{ form.ativa.label }}</label></div>{{ form.ativa.errors }}
+<div class="form-check mb-2">{{ form.exige_cliente_identificado }} <label class="form-check-label" for="id_exige_cliente_identificado">{{ form.exige_cliente_identificado.label }}</label></div>{{ form.exige_cliente_identificado.errors }}
+<div class="form-check mb-2">{{ form.exige_autorizacao }} <label class="form-check-label" for="id_exige_autorizacao">{{ form.exige_autorizacao.label }}</label></div>{{ form.exige_autorizacao.errors }}
+<div class="form-check mb-2">{{ form.permite_troco }} <label class="form-check-label" for="id_permite_troco">{{ form.permite_troco.label }}</label></div>{{ form.permite_troco.errors }}
+<div class="form-check mb-2">{{ form.somente_funcionario }} <label class="form-check-label" for="id_somente_funcionario">{{ form.somente_funcionario.label }}</label></div>{{ form.somente_funcionario.errors }}</div>
+<div class="col-md-6"><h3 class="h6">Financeiro e caixa</h3>
+<div class="border rounded p-3 mb-2"><div class="form-check">{{ form.gera_contas_receber }} <label class="form-check-label fw-semibold" for="id_gera_contas_receber">{{ form.gera_contas_receber.label }}</label></div>{{ form.gera_contas_receber.errors }}<div class="form-text">Cria o título financeiro ao finalizar a venda.</div></div>
+<div class="border rounded p-3"><div class="form-check">{{ form.movimenta_caixa }} <label class="form-check-label fw-semibold" for="id_movimenta_caixa">{{ form.movimenta_caixa.label }}</label></div>{{ form.movimenta_caixa.errors }}<div class="form-text">Inclui o valor no movimento operacional do caixa.</div></div>
+<div class="form-text mt-2">São controles independentes: uma forma pode gerar contas a receber sem movimentar caixa, ou movimentar caixa sem gerar contas a receber.</div></div></div></div></div>
+<script>
+(function(){const permite=document.getElementById("id_permite_parcelamento");const maximo=document.getElementById("id_maximo_parcelas");if(!permite||!maximo)return;function sincronizarParcelamento(){if(permite.checked){maximo.disabled=false;if(!maximo.value||Number(maximo.value)<1)maximo.value="1";}else{maximo.value = "1";maximo.disabled=true;}}permite.addEventListener("change",sincronizarParcelamento);sincronizarParcelamento();})();
+</script><button class="btn btn-primary" type="submit">Salvar</button> {% if contexto_configuracoes.escopo == "plataforma" %}<a class="btn btn-outline-secondary" href="{% url 'configuracoes:formas_pagamento' %}?matriz={{ matriz_alvo.pk }}">Cancelar</a>{% else %}<a class="btn btn-outline-secondary" href="{% url 'configuracoes:formas_pagamento' %}">Cancelar</a>{% endif %}
+</form></div>{% endblock %}

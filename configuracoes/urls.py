@@ -7,6 +7,9 @@ app_name = "configuracoes"
 
 urlpatterns = [
     path("", views.inicio, name="inicio"),
+    path("caixa-pagamentos/formas/", views.formas_pagamento, name="formas_pagamento"),
+    path("caixa-pagamentos/formas/nova/", views.forma_pagamento_criar, name="forma_pagamento_criar"),
+    path("caixa-pagamentos/formas/<int:pk>/editar/", views.forma_pagamento_editar, name="forma_pagamento_editar"),
     path("empresa/", views.empresa, name="empresa"),
     path(
         "usuarios-permissoes/",

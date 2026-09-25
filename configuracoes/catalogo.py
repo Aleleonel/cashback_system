@@ -62,6 +62,8 @@ codigo="usuarios",
         titulo="Caixa e pagamentos",
         descricao="Abertura, fechamento e formas de pagamento.",
         icone="bi-cash-stack",
+        url_name="configuracoes:formas_pagamento",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="financeiro_fiscal",

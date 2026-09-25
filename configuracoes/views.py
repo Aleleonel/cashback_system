@@ -1,14 +1,19 @@
+from django.urls import reverse
 from django.contrib import messages
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import require_permission
 from accounts.permissions import PERMISSAO_EMPRESA_USUARIOS_GERENCIAR
 
 from .catalogo import listar_grupos_configuracao
-from .forms import ConfiguracaoComercialForm
+from .forms import ConfiguracaoComercialForm, FormaPagamentoForm
+from pdv.models import FormaPagamento
+from empresas.models import Matriz
 from .services import (
     atualizar_configuracao_comercial,
     obter_ou_criar_configuracao_comercial,
+    criar_forma_pagamento,
+    atualizar_forma_pagamento,
 )
 from .decorators import (
     central_configuracoes_required,
@@ -200,3 +205,56 @@ def regras_comerciais(request):
         },
     )
 
+
+
+def _contexto_formas_pagamento(request):
+    contexto = request.contexto_configuracoes
+    if contexto["escopo"] == "empresa":
+        return contexto["matriz"], Matriz.objects.none(), None
+    matriz_id = request.GET.get("matriz", "").strip()
+    matrizes = Matriz.objects.all().order_by("nome")
+    if not matriz_id:
+        return None, matrizes, None
+    try:
+        matriz = matrizes.get(pk=int(matriz_id))
+    except (TypeError, ValueError, Matriz.DoesNotExist):
+        return None, matrizes, "Matriz selecionada inválida."
+    return matriz, matrizes, None
+
+@central_configuracoes_required
+def formas_pagamento(request):
+    contexto=request.contexto_configuracoes
+    matriz, matrizes_plataforma, erro_matriz=_contexto_formas_pagamento(request)
+    formas=FormaPagamento.objects.filter(matriz=matriz).order_by("nome") if matriz else FormaPagamento.objects.none()
+    return render(request,"configuracoes/formas_pagamento.html",{"contexto_configuracoes":contexto,"matriz_alvo":matriz,"matrizes_plataforma":matrizes_plataforma,"erro_matriz":erro_matriz,"formas_pagamento":formas,"pode_editar_formas":matriz is not None})
+
+@central_configuracoes_required
+def forma_pagamento_criar(request):
+    contexto=request.contexto_configuracoes
+    matriz, _, erro=_contexto_formas_pagamento(request)
+    if matriz is None:
+        messages.error(request,erro or "Selecione explicitamente uma matriz para cadastrar formas de pagamento.")
+        return redirect("configuracoes:formas_pagamento")
+    form=FormaPagamentoForm(request.POST or None)
+    if request.method=="POST" and form.is_valid():
+        criar_forma_pagamento(matriz=matriz,dados=form.cleaned_data,usuario=request.user,request=request)
+        messages.success(request,"Forma de pagamento cadastrada com sucesso.")
+        if contexto["escopo"]=="plataforma": return redirect(f"{reverse('configuracoes:formas_pagamento')}?matriz={matriz.pk}")
+        return redirect("configuracoes:formas_pagamento")
+    return render(request,"configuracoes/forma_pagamento_form.html",{"contexto_configuracoes":contexto,"matriz_alvo":matriz,"form":form,"titulo_pagina":"Nova forma de pagamento"})
+
+@central_configuracoes_required
+def forma_pagamento_editar(request,pk):
+    contexto=request.contexto_configuracoes
+    matriz, _, erro=_contexto_formas_pagamento(request)
+    if matriz is None:
+        messages.error(request,erro or "Selecione explicitamente uma matriz para alterar formas de pagamento.")
+        return redirect("configuracoes:formas_pagamento")
+    forma=get_object_or_404(FormaPagamento,pk=pk,matriz=matriz)
+    form=FormaPagamentoForm(request.POST or None,instance=forma)
+    if request.method=="POST" and form.is_valid():
+        atualizar_forma_pagamento(forma=forma,dados=form.cleaned_data,usuario=request.user,request=request)
+        messages.success(request,"Forma de pagamento atualizada com sucesso.")
+        if contexto["escopo"]=="plataforma": return redirect(f"{reverse('configuracoes:formas_pagamento')}?matriz={matriz.pk}")
+        return redirect("configuracoes:formas_pagamento")
+    return render(request,"configuracoes/forma_pagamento_form.html",{"contexto_configuracoes":contexto,"matriz_alvo":matriz,"form":form,"forma_pagamento":forma,"titulo_pagina":"Editar forma de pagamento"})
