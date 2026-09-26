@@ -16,6 +16,7 @@
 <div class="form-check mb-2">{{ form.somente_funcionario }} <label class="form-check-label" for="id_somente_funcionario">{{ form.somente_funcionario.label }}</label></div>{{ form.somente_funcionario.errors }}</div>
 <div class="col-md-6"><h3 class="h6">Financeiro e caixa</h3>
 <div class="border rounded p-3 mb-2"><div class="form-check">{{ form.gera_contas_receber }} <label class="form-check-label fw-semibold" for="id_gera_contas_receber">{{ form.gera_contas_receber.label }}</label></div>{{ form.gera_contas_receber.errors }}<div class="form-text">Cria o título financeiro ao finalizar a venda.</div></div>
+<div class="border rounded p-3 mb-2"><div class="form-check">{{ form.gera_cashback }} <label class="form-check-label fw-semibold" for="id_gera_cashback">{{ form.gera_cashback.label }}</label></div>{{ form.gera_cashback.errors }}<div class="form-text">Define se os valores pagos com esta forma entram na base elegível para geração de cashback.</div></div>
 <div class="border rounded p-3"><div class="form-check">{{ form.movimenta_caixa }} <label class="form-check-label fw-semibold" for="id_movimenta_caixa">{{ form.movimenta_caixa.label }}</label></div>{{ form.movimenta_caixa.errors }}<div class="form-text">Inclui o valor no movimento operacional do caixa.</div></div>
 <div class="form-text mt-2">São controles independentes: uma forma pode gerar contas a receber sem movimentar caixa, ou movimentar caixa sem gerar contas a receber.</div></div></div></div></div>
 <script>

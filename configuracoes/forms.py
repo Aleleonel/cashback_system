@@ -65,8 +65,8 @@ class ConfiguracaoComercialForm(forms.ModelForm):
 class FormaPagamentoForm(forms.ModelForm):
     class Meta:
         model = FormaPagamento
-        fields = ("nome","codigo","tipo","ativa","permite_parcelamento","maximo_parcelas","exige_cliente_identificado","exige_autorizacao","gera_contas_receber","movimenta_caixa","permite_troco","somente_funcionario")
-        labels = {"nome":"Nome","codigo":"Código","tipo":"Tipo","ativa":"Ativa","permite_parcelamento":"Permite parcelamento","maximo_parcelas":"Máximo de parcelas","exige_cliente_identificado":"Exige cliente identificado","exige_autorizacao":"Exige autorização","gera_contas_receber":"Gera contas a receber","movimenta_caixa":"Movimenta caixa","permite_troco":"Permite troco","somente_funcionario":"Somente funcionário"}
+        fields = ("nome","codigo","tipo","ativa","permite_parcelamento","maximo_parcelas","exige_cliente_identificado","exige_autorizacao","gera_contas_receber","gera_cashback","movimenta_caixa","permite_troco","somente_funcionario")
+        labels = {"nome":"Nome","codigo":"Código","tipo":"Tipo","ativa":"Ativa","permite_parcelamento":"Permite parcelamento","maximo_parcelas":"Máximo de parcelas","exige_cliente_identificado":"Exige cliente identificado","exige_autorizacao":"Exige autorização","gera_contas_receber":"Gera contas a receber","gera_cashback":"Gera cashback","movimenta_caixa":"Movimenta caixa","permite_troco":"Permite troco","somente_funcionario":"Somente funcionário"}
         widgets = {"nome":forms.TextInput(attrs={"class":"form-control"}),"codigo":forms.TextInput(attrs={"class":"form-control"}),"tipo":forms.Select(attrs={"class":"form-select"}),"maximo_parcelas":forms.NumberInput(attrs={"class":"form-control","min":"1"})}
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)

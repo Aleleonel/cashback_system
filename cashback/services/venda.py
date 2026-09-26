@@ -31,6 +31,7 @@ def registrar_venda(
     aceita_email=True,
     aceita_sms=False,
     observacao='',
+    valor_base_cashback=None,
 ):
     valor_compra = Decimal(valor_compra)
     valor_cashback_usado = Decimal(valor_cashback_usado or 0)
@@ -87,11 +88,14 @@ def registrar_venda(
         valor_desconto_voucher=desconto_voucher,
     )
 
-    valor_base_cashback = (
-        valor_compra
-        - valor_cashback_usado
-        - desconto_voucher
-    )
+    if valor_base_cashback is None:
+        valor_base_cashback = (
+            valor_compra
+            - valor_cashback_usado
+            - desconto_voucher
+        )
+    else:
+        valor_base_cashback = Decimal(valor_base_cashback)
 
     lancamento = registrar_compra(
         matriz=matriz,

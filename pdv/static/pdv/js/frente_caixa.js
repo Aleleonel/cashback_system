@@ -546,10 +546,30 @@
         };
     };
 
+    const baseCashback = () =>
+        [...document.querySelectorAll(".pdv-linha-pagamento")]
+            .reduce((soma, linha) => {
+                const forma = formaLinha(linha);
+                if (!forma || !forma.gera_cashback) return soma;
+                return soma + numero(linha.querySelector(".pdv-valor-pagamento").value);
+            }, 0);
+
+    const atualizarCashbackPrevistoFechamento = () => {
+        const percentual = numero(vendaAtual?.beneficios?.percentual_cashback);
+        const previsto = baseCashback() * percentual / 100;
+        const base = baseCashback();
+        const elementoBase = document.getElementById("pdv-fechamento-base-cashback");
+        if (elementoBase) elementoBase.textContent = moeda(base);
+        const elementoModal = document.getElementById("pdv-fechamento-cashback-previsto");
+        if (elementoModal) elementoModal.textContent = moeda(previsto);
+        const elemento = document.getElementById("pdv-cashback-previsto");
+        if (elemento) elemento.textContent = moeda(previsto);
+    };
     const atualizarResumoFechamento = () => {
         if (!vendaAtual) return;
         const beneficio = beneficioAtual();
         const resumo = resumoPagamentos();
+        atualizarCashbackPrevistoFechamento();
         const restante = document.getElementById("pdv-fechamento-restante");
         const botao = document.getElementById("pdv-confirmar-fechamento");
 

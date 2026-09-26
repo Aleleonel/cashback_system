@@ -24,7 +24,8 @@ def executar_venda_idempotente(
     aceita_email=True,
     aceita_sms=False,
     observacao='',
-):
+
+    valor_base_cashback=None,):
     try:
         resultado = registrar_venda(
             matriz=matriz,
@@ -43,7 +44,8 @@ def executar_venda_idempotente(
             observacao=observacao,
             aplicar_voucher=aplicar_voucher,
             codigo_voucher=codigo_voucher,
-        )
+
+            valor_base_cashback=valor_base_cashback,)
 
         return ResultadoOperacaoVenda(
             compra=resultado['compra'],

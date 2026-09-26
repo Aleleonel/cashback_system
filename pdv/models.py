@@ -192,6 +192,7 @@ class FormaPagamento(models.Model):
     exige_cliente_identificado = models.BooleanField(default=False)
     exige_autorizacao = models.BooleanField(default=False)
     gera_contas_receber = models.BooleanField(default=False)
+    gera_cashback = models.BooleanField(default=True)
     movimenta_caixa = models.BooleanField(default=True)
     permite_troco = models.BooleanField(default=False)
     somente_funcionario = models.BooleanField(default=False)

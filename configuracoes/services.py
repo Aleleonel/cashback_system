@@ -1,4 +1,4 @@
-﻿from django.db import transaction
+from django.db import transaction
 
 from .models import ConfiguracaoComercial
 from auditoria.models import RegistroAuditoria
@@ -34,7 +34,7 @@ def atualizar_configuracao_comercial(*, configuracao, dados):
     return configuracao
 
 
-CAMPOS_FORMA_PAGAMENTO={"nome","codigo","tipo","ativa","permite_parcelamento","maximo_parcelas","exige_cliente_identificado","exige_autorizacao","gera_contas_receber","movimenta_caixa","permite_troco","somente_funcionario"}
+CAMPOS_FORMA_PAGAMENTO={"nome","codigo","tipo","ativa","permite_parcelamento","maximo_parcelas","exige_cliente_identificado","exige_autorizacao","gera_contas_receber","gera_cashback","movimenta_caixa","permite_troco","somente_funcionario"}
 @transaction.atomic
 def criar_forma_pagamento(*,matriz,dados,usuario=None,request=None):
     forma=FormaPagamento(matriz=matriz)

@@ -19,6 +19,21 @@ def _decimal(valor, campo):
         raise ValidationError({campo: "Informe um valor monetÃ¡rio vÃ¡lido."})
 
 
+def calcular_base_cashback_pagamentos(pagamentos):
+    """Soma somente os valores de pagamentos elegiveis ao cashback."""
+    total = Decimal("0.00")
+    for pagamento in pagamentos:
+        if isinstance(pagamento, dict):
+            elegivel = bool(pagamento.get("gera_cashback", False))
+            valor = pagamento.get("valor", Decimal("0.00"))
+        else:
+            forma = getattr(pagamento, "forma_pagamento", None)
+            elegivel = bool(getattr(forma, "gera_cashback", False))
+            valor = getattr(pagamento, "valor", Decimal("0.00"))
+        if elegivel:
+            total += Decimal(str(valor or "0"))
+    return total.quantize(CENTAVOS)
+
 def garantir_formas_pagamento_basicas(*, matriz):
     padroes = (
         ("DINHEIRO", "Dinheiro", TipoFormaPagamento.DINHEIRO, False, 1, True),
@@ -53,13 +68,17 @@ def serializar_formas_pagamento(*, matriz):
             "maximo_parcelas": forma.maximo_parcelas,
             "permite_troco": forma.permite_troco,
             "exige_autorizacao": forma.exige_autorizacao,
+            "gera_cashback": forma.gera_cashback,
         }
         for forma in garantir_formas_pagamento_basicas(matriz=matriz)
     ]
 
 
 
-def _registrar_beneficio(venda, usuario, tipo, cashback, voucher):
+def _registrar_beneficio(venda, usuario, tipo, cashback, voucher, valor_base_cashback=None):
+    if valor_base_cashback is None:
+        valor_base_cashback = calcular_base_cashback_pagamentos(venda.pagamentos.all())
+
     cliente = venda.cliente
     identificado = cliente is not None and cliente.cpf != "CONSUMIDOR"
 
@@ -81,6 +100,9 @@ def _registrar_beneficio(venda, usuario, tipo, cashback, voucher):
     if not identificado:
         return beneficio_resolvido.valor
 
+    if valor_base_cashback <= Decimal("0.00") and tipo == "nenhum":
+        return beneficio_resolvido.valor
+
     resultado = executar_venda_idempotente(
         matriz=venda.matriz,
         loja=venda.loja,
@@ -92,6 +114,7 @@ def _registrar_beneficio(venda, usuario, tipo, cashback, voucher):
         email=cliente.email or "",
         data_nascimento=cliente.data_nascimento,
         valor_compra=venda.total,
+        valor_base_cashback=valor_base_cashback,
         valor_cashback_usado=(
             cashback if tipo == "cashback" else Decimal("0.00")
         ),
@@ -216,8 +239,26 @@ def fechar_venda_web(
         raise ValidationError({"voucher": "Informe o voucher escolhido."})
 
     venda.recalcular_totais()
+    valor_compra = venda.total
+    beneficio_resolvido = resolver_beneficio_da_venda(
+        matriz=venda.matriz,
+        loja=venda.loja,
+        cliente=venda.cliente,
+        valor_compra=valor_compra,
+        tipo_beneficio=tipo_beneficio,
+        valor_cashback=cashback,
+        codigo_voucher=codigo_voucher,
+    )
+    venda.desconto_geral = beneficio_resolvido.valor
+    venda.recalcular_totais(salvar=False)
+
+    _registrar_pagamentos(venda, pagamentos)
+    valor_base_cashback = calcular_base_cashback_pagamentos(venda.pagamentos.all())
+
+    venda.total = valor_compra
     desconto = _registrar_beneficio(
-        venda, usuario, tipo_beneficio, cashback, codigo_voucher
+        venda, usuario, tipo_beneficio, cashback, codigo_voucher,
+        valor_base_cashback=valor_base_cashback,
     )
 
     venda.desconto_geral = desconto
@@ -229,7 +270,7 @@ def fechar_venda_web(
         "status", "atualizada_em"
     ])
 
-    _registrar_pagamentos(venda, pagamentos)
+
 
     venda_finalizada = finalizar_venda(
         venda=venda,
