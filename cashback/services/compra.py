@@ -1,4 +1,5 @@
 from datetime import timedelta
+
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -12,6 +13,13 @@ from cashback.selectors import get_saldo_disponivel_cliente
 
 from .cashback import usar_cashback
 
+
+def calcular_datas_cashback(*, dias_liberacao, dias_expiracao, data_compra=None):
+    """Calcula o ciclo: liberacao apos a compra e expiracao apos a liberacao."""
+    hoje = data_compra or timezone.localdate()
+    data_liberacao = hoje + timedelta(days=dias_liberacao)
+    data_expiracao = data_liberacao + timedelta(days=dias_expiracao)
+    return hoje, data_liberacao, data_expiracao
 
 def calcular_cashback(*, valor_compra, percentual):
     valor_compra = Decimal(valor_compra)
@@ -156,6 +164,12 @@ def registrar_compra(
         percentual=configuracao.percentual_cashback
     )
 
+    _, data_liberacao, data_expiracao = calcular_datas_cashback(
+        dias_liberacao=configuracao.dias_liberacao,
+        dias_expiracao=configuracao.dias_expiracao,
+        data_compra=hoje,
+    )
+
     lancamento = LancamentoCashback.objects.create(
         matriz=matriz,
         loja=loja,
@@ -167,8 +181,8 @@ def registrar_compra(
         valor_cashback=valor_cashback,
         valor_utilizado=Decimal('0.00'),
         data_compra=hoje,
-        data_liberacao=hoje + timedelta(days=configuracao.dias_liberacao),
-        data_expiracao=hoje + timedelta(days=configuracao.dias_expiracao),
+        data_liberacao=data_liberacao,
+        data_expiracao=data_expiracao,
         observacao=observacao
     )
 
