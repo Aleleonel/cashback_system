@@ -157,7 +157,7 @@
 
                                 <tbody>
                                     {% for field in form.visible_fields %}
-                                        {% if field.name != "loja" and field.name != "documento_referencia" and field.name != "observacoes" and field.name != "chave_idempotencia" %}
+                                        {% if field.name != "loja" and field.name != "documento_referencia" and field.name != "observacoes" and field.name != "chave_idempotencia" and field.name != "vencimento_financeiro" %}
                                             <tr>
                                                 <td class="ps-3">
                                                     <label
@@ -228,6 +228,12 @@
 
                     <div class="card-body">
                         <div class="row g-3">
+                            {% if form.vencimento_financeiro %}
+                                <div class="col-md-6">
+                                    {% include "partials/campo_formulario.html" with campo=form.vencimento_financeiro %}
+                                </div>
+                            {% endif %}
+
                             {% if form.documento_referencia %}
                                 <div class="col-md-6">
                                     {% include "partials/campo_formulario.html" with campo=form.documento_referencia %}
@@ -291,9 +297,10 @@
 
                         <div class="d-grid gap-2">
                             <button
-                                type="submit"
+                                type="button"
                                 class="btn btn-success"
-                                onclick="return confirm('Confirmar o recebimento destas mercadorias?');"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-confirmar-recebimento"
                             >
                                 <i class="bi bi-box-arrow-in-down me-1"></i>
                                 Confirmar recebimento
@@ -311,5 +318,138 @@
             </div>
         </div>
     </form>
+
+    <div
+        class="modal fade"
+        id="modal-confirmar-recebimento"
+        tabindex="-1"
+        aria-labelledby="modal-confirmar-recebimento-titulo"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title h5 mb-1" id="modal-confirmar-recebimento-titulo">
+                            Confirmar recebimento
+                        </h2>
+                        <div class="text-muted small">Resumo do recebimento</div>
+                    </div>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Fechar"
+                    ></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="text-muted small">Pedido</div>
+                        <div class="fw-semibold">
+                            PC-{{ pedido.numero|stringformat:"06d" }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">Loja</div>
+                            <div class="fw-semibold" id="resumo-recebimento-loja">â€”</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Vencimento</div>
+                            <div class="fw-semibold" id="resumo-recebimento-vencimento">â€”</div>
+                        </div>
+                    </div>
+
+                    <div class="text-muted small mb-2">Itens e quantidades</div>
+                    <div id="resumo-recebimento-itens" class="border rounded p-3 small"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Voltar e revisar
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="confirmar-recebimento-final"
+                    >
+                        <i class="bi bi-box-arrow-in-down me-1"></i>
+                        Confirmar recebimento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const formulario = document.querySelector('[data-ui-recebimento="true"]');
+            const modal = document.getElementById("modal-confirmar-recebimento");
+            const confirmar = document.getElementById("confirmar-recebimento-final");
+
+            if (!formulario || !modal || !confirmar) {
+                return;
+            }
+
+            modal.addEventListener("show.bs.modal", function () {
+                const loja = formulario.querySelector('[name="loja"]');
+                const vencimento = formulario.querySelector('[name="vencimento_financeiro"]');
+                const resumoLoja = document.getElementById("resumo-recebimento-loja");
+                const resumoVencimento = document.getElementById("resumo-recebimento-vencimento");
+                const resumoItens = document.getElementById("resumo-recebimento-itens");
+
+                if (loja && resumoLoja) {
+                    const opcao = loja.options[loja.selectedIndex];
+                    resumoLoja.textContent = opcao && opcao.value
+                        ? opcao.text
+                        : "NÃ£o informada";
+                }
+
+                if (vencimento && resumoVencimento) {
+                    resumoVencimento.textContent = vencimento.value || "NÃ£o informado";
+                }
+
+                if (resumoItens) {
+                    resumoItens.innerHTML = "";
+                    const campos = formulario.querySelectorAll(
+                        '[data-ui-itens-recebimento="true"] input'
+                    );
+
+                    campos.forEach(function (campo) {
+                        if (!campo.name || campo.type === "hidden") {
+                            return;
+                        }
+
+                        const linha = campo.closest("tr");
+                        const rotulo = linha ? linha.querySelector("label") : null;
+                        const item = document.createElement("div");
+                        item.className = "d-flex justify-content-between gap-3 py-1";
+                        const nome = document.createElement("span");
+                        const quantidade = document.createElement("strong");
+
+                        nome.textContent = rotulo
+                            ? rotulo.textContent.trim()
+                            : campo.name;
+                        quantidade.textContent = campo.value || "0";
+
+                        item.appendChild(nome);
+                        item.appendChild(quantidade);
+                        resumoItens.appendChild(item);
+                    });
+                }
+            });
+
+            confirmar.addEventListener("click", function () {
+                confirmar.disabled = true;
+                formulario.requestSubmit();
+            });
+        });
+    </script>
 </div>
 {% endblock %}

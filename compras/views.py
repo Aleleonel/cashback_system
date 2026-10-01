@@ -607,6 +607,7 @@ def receber_pedido_compra_view(
                 pedido=pedido,
                 loja=form.cleaned_data['loja'],
                 itens=form.get_itens(),
+                vencimento_financeiro=form.cleaned_data['vencimento_financeiro'],
                 chave_idempotencia=(
                     form.cleaned_data[
                         'chave_idempotencia'

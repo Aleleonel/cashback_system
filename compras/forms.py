@@ -159,6 +159,11 @@ class ItemPedidoCompraForm(forms.ModelForm):
         )
 
 class RecebimentoCompraForm(forms.Form):
+    vencimento_financeiro = forms.DateField(
+        label='Vencimento',
+        required=True,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+    )
     loja = forms.ModelChoiceField(
         queryset=None,
         label='Loja de entrada',

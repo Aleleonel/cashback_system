@@ -110,6 +110,7 @@ class DevolucaoCompraServicesTestCase(TestCase):
                 'quantidade': Decimal('10.000'),
             }],
             chave_idempotencia='recebimento-base-devolucao',
+            vencimento_financeiro=timezone.localdate(),
             usuario=self.usuario,
         )
         self.item_recebimento = self.recebimento.itens.get()

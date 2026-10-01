@@ -1,5 +1,7 @@
 from decimal import Decimal, InvalidOperation
 
+from django.utils import timezone
+
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
@@ -19,6 +21,9 @@ from compras.models import (
     RecebimentoCompra,
 )
 
+from financeiro.models import TituloFinanceiro
+from financeiro.services import criar_titulo_financeiro
+
 from .custos import atualizar_custos_produtos_recebimento
 
 
@@ -33,6 +38,7 @@ def receber_pedido_compra(
     documento_referencia='',
     observacoes='',
     request=None,
+    vencimento_financeiro=None,
 ):
     chave_idempotencia = (chave_idempotencia or '').strip()
 
@@ -75,6 +81,13 @@ def receber_pedido_compra(
 
     if existente is not None:
         return existente
+
+    if vencimento_financeiro is None:
+        raise ValidationError({
+            'vencimento_financeiro': (
+                'O vencimento financeiro e obrigatorio.'
+            )
+        })
 
     itens = _normalizar_itens(itens)
 
@@ -208,6 +221,28 @@ def receber_pedido_compra(
         ),
         request=request,
     )
+
+    valor_recebido = sum(
+        (
+            Decimal(item.quantidade) * Decimal(item.item_pedido.valor_unitario)
+            for item in recebimento.itens.select_related("item_pedido").all()
+        ),
+        Decimal("0.00"),
+    ).quantize(Decimal("0.01"))
+    if valor_recebido > Decimal("0.00"):
+        criar_titulo_financeiro(
+            matriz=pedido.matriz,
+            loja=loja,
+            natureza=TituloFinanceiro.Natureza.PAGAR,
+            origem_tipo=TituloFinanceiro.OrigemTipo.COMPRA_RECEBIMENTO,
+            origem_id=str(recebimento.uuid),
+            chave_idempotencia=f"compra-recebimento:{recebimento.uuid}",
+            descricao=f"Recebimento PC-{pedido.numero:06d}",
+            data_emissao=timezone.localdate(),
+            parcelas=[{"numero": 1, "vencimento": vencimento_financeiro, "valor": valor_recebido}],
+            usuario=usuario,
+            request=request,
+        )
 
     return recebimento
 

@@ -130,6 +130,7 @@ class CustosCompraServicesTestCase(TestCase):
             loja=self.loja,
             itens=itens,
             chave_idempotencia=chave,
+            vencimento_financeiro=timezone.localdate(),
             usuario=self.usuario,
         )
 

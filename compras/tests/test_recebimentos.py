@@ -119,6 +119,7 @@ class RecebimentoCompraServicesTestCase(TestCase):
                 }
             ],
             chave_idempotencia=chave,
+            vencimento_financeiro=timezone.localdate(),
             usuario=self.usuario,
         )
 
