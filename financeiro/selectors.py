@@ -89,3 +89,41 @@ def resumo_saldos(*, matriz, escopo=ESCOPO_CONSOLIDADO, loja=None):
         "receber": resultado[TituloFinanceiro.Natureza.RECEBER],
         "pagar": resultado[TituloFinanceiro.Natureza.PAGAR],
     }
+
+def resumo_fluxo_caixa(*, matriz, data_inicio, data_fim, escopo=ESCOPO_CONSOLIDADO, loja=None):
+    # Realizado: eventos por data. Previsto: saldo aberto por vencimento.
+    zero = Decimal("0.00")
+    vazio = {
+        "realizado_entradas": zero, "realizado_saidas": zero, "realizado_liquido": zero,
+        "previsto_receber": zero, "previsto_pagar": zero, "previsto_liquido": zero,
+    }
+    if data_inicio is None or data_fim is None or data_inicio > data_fim:
+        return vazio.copy()
+
+    titulos = TituloFinanceiro.objects.filter(matriz=matriz).exclude(status=TituloFinanceiro.Status.CANCELADO)
+    titulos = _aplicar_escopo_titulo(titulos, matriz=matriz, escopo=escopo, loja=loja)
+
+    realizado = {TituloFinanceiro.Natureza.RECEBER: zero, TituloFinanceiro.Natureza.PAGAR: zero}
+    eventos = BaixaFinanceira.objects.filter(
+        parcela__titulo__in=titulos, data__gte=data_inicio, data__lte=data_fim
+    ).select_related("parcela__titulo")
+    for evento in eventos:
+        sinal = Decimal("1.00") if evento.tipo == BaixaFinanceira.Tipo.BAIXA else Decimal("-1.00")
+        realizado[evento.parcela.titulo.natureza] += evento.valor * sinal
+
+    previsto = {TituloFinanceiro.Natureza.RECEBER: zero, TituloFinanceiro.Natureza.PAGAR: zero}
+    parcelas = ParcelaFinanceira.objects.filter(
+        titulo__in=titulos, vencimento__gte=data_inicio, vencimento__lte=data_fim,
+        status__in=[ParcelaFinanceira.Status.ABERTO, ParcelaFinanceira.Status.PARCIAL],
+    ).select_related("titulo").prefetch_related("baixas")
+    for parcela in parcelas:
+        baixas = sum((e.valor for e in parcela.baixas.all() if e.tipo == BaixaFinanceira.Tipo.BAIXA), zero)
+        estornos = sum((e.valor for e in parcela.baixas.all() if e.tipo == BaixaFinanceira.Tipo.ESTORNO), zero)
+        previsto[parcela.titulo.natureza] += parcela.valor_original - baixas + estornos
+
+    entradas=realizado[TituloFinanceiro.Natureza.RECEBER]; saidas=realizado[TituloFinanceiro.Natureza.PAGAR]
+    receber=previsto[TituloFinanceiro.Natureza.RECEBER]; pagar=previsto[TituloFinanceiro.Natureza.PAGAR]
+    return {
+        "realizado_entradas": entradas, "realizado_saidas": saidas, "realizado_liquido": entradas-saidas,
+        "previsto_receber": receber, "previsto_pagar": pagar, "previsto_liquido": receber-pagar,
+    }

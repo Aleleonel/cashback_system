@@ -1,3 +1,4 @@
+from datetime import date
 import csv
 import uuid
 from calendar import monthrange
@@ -9,6 +10,7 @@ from django.db.models import Prefetch
 from django.http import Http404, HttpResponseForbidden, QueryDict, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.decorators import require_permission
 from accounts.services import usuario_tem_permissao
@@ -24,7 +26,7 @@ from financeiro.models import BaixaFinanceira, CentroCusto, ContaFinanceira, Ins
 from financeiro.services import cancelar_titulo_financeiro, criar_lancamento_manual
 from financeiro.forms import BaixaDinheiroForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
 from financeiro.importacao_csv import importar_titulos_csv
-from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_saldos
+from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_fluxo_caixa, resumo_saldos
 
 
 def _matriz_usuario(request):
@@ -78,6 +80,20 @@ def _contexto_financeiro(request):
         natureza = None
     if status not in {TituloFinanceiro.Status.ABERTO, TituloFinanceiro.Status.PARCIAL, TituloFinanceiro.Status.LIQUIDADO, TituloFinanceiro.Status.CANCELADO}:
         status = None
+    hoje = timezone.localdate()
+    data_inicio_raw = (request.GET.get("data_inicio") or "").strip()
+    data_fim_raw = (request.GET.get("data_fim") or "").strip()
+    try:
+        data_inicio = date.fromisoformat(data_inicio_raw) if data_inicio_raw else hoje.replace(day=1)
+    except ValueError:
+        data_inicio = hoje.replace(day=1)
+    try:
+        data_fim = date.fromisoformat(data_fim_raw) if data_fim_raw else hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
+    except ValueError:
+        data_fim = hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
+    fluxo_caixa = resumo_fluxo_caixa(
+        matriz=matriz, data_inicio=data_inicio, data_fim=data_fim, escopo=escopo, loja=loja,
+    )
     saldos = resumo_saldos(matriz=matriz, escopo=escopo, loja=loja)
     queryset = listar_titulos(matriz=matriz, natureza=natureza, status=status, escopo=escopo, loja=loja)
     pagina = Paginator(queryset, 20).get_page(request.GET.get("page"))
@@ -90,6 +106,9 @@ def _contexto_financeiro(request):
         "status": status or "",
         "saldos": saldos,
         "saldo_liquido": saldos["receber"] - saldos["pagar"],
+        "data_inicio": data_inicio.isoformat(),
+        "data_fim": data_fim.isoformat(),
+        "fluxo_caixa": fluxo_caixa,
         "pagina": pagina,
     }
 

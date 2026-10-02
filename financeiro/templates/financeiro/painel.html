@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load formatadores %}
 {% block content %}
 <div class="container-fluid py-3">
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -7,21 +8,34 @@
   </div>
   <form method="get" class="card card-body shadow-sm border-0 mb-3">
     <div class="row g-3 align-items-end">
-      <div class="col-md-4"><label class="form-label">Escopo</label><select name="escopo" class="form-select">
+      <div class="col-md-3"><label class="form-label">Escopo</label><select name="escopo" class="form-select">
         {% if request.user.perfil == 'master' %}<option value="consolidado" {% if escopo == 'consolidado' %}selected{% endif %}>Consolidado</option><option value="matriz" {% if escopo == 'matriz' %}selected{% endif %}>Somente matriz</option>{% endif %}
         <option value="loja" {% if escopo == 'loja' %}selected{% endif %}>Loja</option>
       </select></div>
-      <div class="col-md-5"><label class="form-label">Loja</label><select name="loja" class="form-select"><option value="">Selecione</option>{% for item in lojas %}<option value="{{ item.pk }}" {% if loja and loja.pk == item.pk %}selected{% endif %}>{{ item.nome }}</option>{% endfor %}</select></div>
-      <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Aplicar filtro</button></div>
+      <div class="col-md-3"><label class="form-label">Loja</label><select name="loja" class="form-select"><option value="">Selecione</option>{% for item in lojas %}<option value="{{ item.pk }}" {% if loja and loja.pk == item.pk %}selected{% endif %}>{{ item.nome }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><label class="form-label">Data inicial</label><input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control"></div>
+      <div class="col-md-2"><label class="form-label">Data final</label><input type="date" name="data_fim" value="{{ data_fim }}" class="form-control"></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Aplicar filtro</button></div>
     </div>
   </form>
   <div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Contas a receber</div><div class="fs-4 fw-semibold">R$ {{ saldos.receber|floatformat:2 }}</div></div></div></div>
-    <div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Contas a pagar</div><div class="fs-4 fw-semibold">R$ {{ saldos.pagar|floatformat:2 }}</div></div></div></div>
-    <div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Saldo previsto</div><div class="fs-4 fw-semibold">R$ {{ saldo_liquido|floatformat:2 }}</div></div></div></div>
+    <div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Contas a receber</div><div class="fs-4 fw-semibold">R$ {{ saldos.receber|moeda_br }}</div></div></div></div>
+    <div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Contas a pagar</div><div class="fs-4 fw-semibold">R$ {{ saldos.pagar|moeda_br }}</div></div></div></div>
+    <div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Saldo previsto</div><div class="fs-4 fw-semibold">R$ {{ saldo_liquido|moeda_br }}</div></div></div></div>
+  </div>
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Fluxo de caixa do período</strong></div>
+    <div class="card-body"><div class="row g-3">
+      <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Entradas realizadas</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.realizado_entradas|moeda_br }}</div></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Saídas realizadas</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.realizado_saidas|moeda_br }}</div></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Fluxo líquido realizado</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.realizado_liquido|moeda_br }}</div></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Previsto a receber</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.previsto_receber|moeda_br }}</div></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Previsto a pagar</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.previsto_pagar|moeda_br }}</div></div></div>
+      <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Saldo previsto do período</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.previsto_liquido|moeda_br }}</div></div></div>
+    </div></div>
   </div>
   <div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Títulos</strong></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Emissão</th><th>Natureza</th><th>Descrição</th><th>Loja</th><th>Status</th><th class="text-end">Valor</th><th></th></tr></thead><tbody>
-    {% for titulo in pagina %}<tr><td>{{ titulo.data_emissao|date:"d/m/Y" }}</td><td>{{ titulo.get_natureza_display }}</td><td>{{ titulo.descricao }}</td><td>{% if titulo.loja %}{{ titulo.loja.nome }}{% else %}Matriz{% endif %}</td><td>{{ titulo.get_status_display }}</td><td class="text-end">R$ {{ titulo.valor_original|floatformat:2 }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:titulo_detalhe' titulo.uuid %}?escopo={{ escopo }}{% if loja %}&loja={{ loja.pk }}{% endif %}">Detalhes</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum título encontrado.</td></tr>{% endfor %}
+    {% for titulo in pagina %}<tr><td>{{ titulo.data_emissao|date:"d/m/Y" }}</td><td>{{ titulo.get_natureza_display }}</td><td>{{ titulo.descricao }}</td><td>{% if titulo.loja %}{{ titulo.loja.nome }}{% else %}Matriz{% endif %}</td><td>{{ titulo.get_status_display }}</td><td class="text-end">R$ {{ titulo.valor_original|moeda_br }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:titulo_detalhe' titulo.uuid %}?escopo={{ escopo }}{% if loja %}&loja={{ loja.pk }}{% endif %}">Detalhes</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum título encontrado.</td></tr>{% endfor %}
   </tbody></table></div></div>
 </div>
 {% endblock %}
