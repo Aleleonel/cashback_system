@@ -28,6 +28,16 @@ urlpatterns = [
         name="vendas_comissoes",
     ),
     path(
+        "vendas-comissoes/comissoes/",
+        views.comissoes,
+        name="comissoes",
+    ),
+    path(
+        "vendas-comissoes/comissoes/metas/<int:pk>/editar/",
+        views.meta_comissao_editar,
+        name="meta_comissao_editar",
+    ),
+    path(
         "vendas-comissoes/regras-comerciais/",
         views.regras_comerciais,
         name="regras_comerciais",

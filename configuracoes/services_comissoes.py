@@ -64,7 +64,7 @@ def calcular_comissoes_por_metas(
 
 def selecionar_vendas_validas_competencia(queryset, *, loja_id: int, ano: int, mes: int):
     from pdv.models import StatusOperacaoVenda
-    """Seleciona vendas finalizadas, nÃ£o canceladas, de uma loja e competÃªncia mensal."""
+    """Seleciona vendas finalizadas, não canceladas, de uma loja e competência mensal."""
     from datetime import datetime
     from django.utils import timezone
 
@@ -124,3 +124,98 @@ def orquestrar_comissoes_competencia(
         },
         comissoes=calculo.comissoes,
     )
+def fechar_comissoes_competencia(*, loja, ano: int, mes: int):
+    """Persiste uma fotografia imutavel das comissoes mensais da loja."""
+    from django.db import IntegrityError, transaction
+    from pdv.models import Venda
+    from .models import (
+        ComissaoVendedor,
+        ConfiguracaoComissaoMatriz,
+        FechamentoComissao,
+        MetaComissaoLoja,
+    )
+
+    existente = FechamentoComissao.objects.filter(
+        loja=loja, competencia_ano=ano, competencia_mes=mes
+    ).first()
+    if existente is not None:
+        return existente
+
+    with transaction.atomic():
+        existente = (
+            FechamentoComissao.objects.select_for_update()
+            .filter(loja=loja, competencia_ano=ano, competencia_mes=mes)
+            .first()
+        )
+        if existente is not None:
+            return existente
+
+        configuracao, _ = ConfiguracaoComissaoMatriz.objects.get_or_create(
+            matriz=loja.matriz
+        )
+        metas_qs = MetaComissaoLoja.objects.filter(loja=loja, ativa=True).order_by(
+            "valor_meta", "pk"
+        )
+        metas = [
+            {"valor_meta": meta.valor_meta, "percentual": meta.percentual_comissao}
+            for meta in metas_qs
+        ]
+        vendas_validas = list(
+            selecionar_vendas_validas_competencia(
+                Venda.objects.select_related("vendedor"),
+                loja_id=loja.pk, ano=ano, mes=mes,
+            )
+        )
+        resultado = orquestrar_comissoes_competencia(
+            vendas_validas=vendas_validas,
+            metas=metas,
+            exigir_minimo_individual=configuracao.exigir_minimo_individual,
+            minimo_individual=configuracao.minimo_vendas_vendedor,
+        )
+        metas_atingidas = [
+            meta for meta in metas
+            if resultado.total_loja >= Decimal(meta["valor_meta"])
+        ]
+        valor_meta_atingida = (
+            max(metas_atingidas, key=lambda meta: Decimal(meta["valor_meta"]))["valor_meta"]
+            if metas_atingidas else None
+        )
+        try:
+            with transaction.atomic():
+                fechamento = FechamentoComissao.objects.create(
+                    matriz=loja.matriz, loja=loja,
+                    competencia_ano=ano, competencia_mes=mes,
+                    total_vendas_loja=resultado.total_loja,
+                    valor_meta_atingida=valor_meta_atingida,
+                    percentual_aplicado=resultado.percentual_aplicado,
+                    exigir_minimo_individual=configuracao.exigir_minimo_individual,
+                    minimo_individual=configuracao.minimo_vendas_vendedor,
+                )
+        except IntegrityError:
+            return FechamentoComissao.objects.get(
+                loja=loja, competencia_ano=ano, competencia_mes=mes
+            )
+        vendedores = {
+            venda.vendedor_id: venda.vendedor
+            for venda in vendas_validas if venda.vendedor_id is not None
+        }
+        for vendedor_id, vendedor in vendedores.items():
+            total_vendedor = resultado.vendas_por_vendedor.get(
+                vendedor_id, Decimal("0.00")
+            )
+            elegivel = (
+                not configuracao.exigir_minimo_individual
+                or total_vendedor >= configuracao.minimo_vendas_vendedor
+            )
+            nome = vendedor.get_full_name().strip() or vendedor.get_username()
+            ComissaoVendedor.objects.create(
+                fechamento=fechamento, vendedor=vendedor,
+                vendedor_uuid_original=vendedor.uuid,
+                vendedor_nome_original=nome,
+                total_vendas_vendedor=total_vendedor,
+                elegivel=elegivel,
+                valor_comissao=resultado.comissoes.get(
+                    vendedor_id, Decimal("0.00")
+                ),
+            )
+        return fechamento

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import ConfiguracaoComercial
+from .models import ConfiguracaoComercial, ConfiguracaoComissaoMatriz, MetaComissaoLoja
 from pdv.models import FormaPagamento
 
 
@@ -72,3 +72,15 @@ class FormaPagamentoForm(forms.ModelForm):
         super().__init__(*args,**kwargs)
         for campo in self.fields.values():
             if isinstance(campo.widget,forms.CheckboxInput): campo.widget.attrs["class"]="form-check-input"
+
+
+class ConfiguracaoComissaoMatrizForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoComissaoMatriz
+        fields = ("exigir_minimo_individual", "minimo_vendas_vendedor")
+
+
+class MetaComissaoLojaForm(forms.ModelForm):
+    class Meta:
+        model = MetaComissaoLoja
+        fields = ("valor_meta", "percentual_comissao", "ativa")

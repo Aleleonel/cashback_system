@@ -6,7 +6,7 @@ from accounts.decorators import require_permission
 from accounts.permissions import PERMISSAO_EMPRESA_USUARIOS_GERENCIAR
 
 from .catalogo import listar_grupos_configuracao
-from .forms import ConfiguracaoComercialForm, FormaPagamentoForm
+from .forms import ConfiguracaoComissaoMatrizForm, MetaComissaoLojaForm, ConfiguracaoComercialForm, FormaPagamentoForm
 from pdv.models import FormaPagamento
 from empresas.models import Matriz
 from .services import (
@@ -141,8 +141,10 @@ def vendas_comissoes(request):
         },
         {
             "titulo": "Comissões",
-            "descricao": "Estrutura futura para regras, percentuais e cálculo de comissões.",
+            "descricao": "Configure elegibilidade, metas por loja e fechamento mensal de comissões.",
             "icone": "bi-percent",
+            "url_name": "configuracoes:comissoes",
+            "disponivel": True,
         },
     ]
 
@@ -154,6 +156,104 @@ def vendas_comissoes(request):
             "secoes": secoes,
         },
     )
+
+@central_configuracoes_required
+def comissoes(request):
+    from .models import ConfiguracaoComissaoMatriz, MetaComissaoLoja, FechamentoComissao
+    from empresas.models import Loja, Matriz
+    contexto_acesso = request.contexto_configuracoes
+    matrizes_plataforma = Matriz.objects.none()
+    erro_matriz = None
+    if contexto_acesso["escopo"] == "empresa":
+        matriz = contexto_acesso["matriz"]
+    else:
+        matriz = None
+        matrizes_plataforma = Matriz.objects.all().order_by("nome")
+        matriz_id = request.GET.get("matriz", "").strip()
+        if matriz_id:
+            try:
+                matriz = matrizes_plataforma.get(pk=int(matriz_id))
+            except (TypeError, ValueError, Matriz.DoesNotExist):
+                erro_matriz = "Matriz selecionada inválida."
+    lojas = Loja.objects.filter(matriz=matriz).order_by("nome") if matriz else Loja.objects.none()
+    configuracao = ConfiguracaoComissaoMatriz.objects.filter(matriz=matriz).get() if matriz is not None and ConfiguracaoComissaoMatriz.objects.filter(matriz=matriz).exists() else None
+    form_configuracao = ConfiguracaoComissaoMatrizForm(instance=configuracao) if matriz is not None else None
+    meta_form = MetaComissaoLojaForm()
+    if matriz is not None and request.method == "POST":
+        acao = request.POST.get("acao")
+        redirect_comissoes = f"{request.path}?matriz={matriz.pk}" if contexto_acesso["escopo"] == "plataforma" else request.path
+        if acao == "salvar_configuracao":
+            form_configuracao = ConfiguracaoComissaoMatrizForm(request.POST, instance=configuracao)
+            if form_configuracao.is_valid():
+                obj = form_configuracao.save(commit=False)
+                obj.matriz = matriz
+                obj.save()
+                messages.success(request, "Configuração de comissão atualizada com sucesso.")
+                return redirect(redirect_comissoes)
+        elif acao == "adicionar_meta":
+            loja_id = request.POST.get("loja_id")
+            try:
+                loja = lojas.get(pk=loja_id)
+            except (Loja.DoesNotExist, TypeError, ValueError):
+                messages.error(request, "Loja inválida para o contexto selecionado.")
+            else:
+                meta_form = MetaComissaoLojaForm(request.POST)
+                if meta_form.is_valid():
+                    meta = meta_form.save(commit=False)
+                    meta.loja = loja
+                    meta.save()
+                    messages.success(request, "Meta de comissão adicionada com sucesso.")
+                    return redirect(redirect_comissoes)
+        elif acao == "fechamento_comissao":
+            from .services_comissoes import fechar_comissoes_competencia
+            loja_fechamento_id = request.POST.get("loja_fechamento_id")
+            competencia_ano = request.POST.get("competencia_ano")
+            competencia_mes = request.POST.get("competencia_mes")
+            try:
+                loja_fechamento = lojas.get(pk=loja_fechamento_id)
+                ano = int(competencia_ano)
+                mes = int(competencia_mes)
+                if ano < 1 or mes < 1 or mes > 12:
+                    raise ValueError
+            except (Loja.DoesNotExist, TypeError, ValueError):
+                messages.error(request, "Loja ou competência inválida para o fechamento.")
+            else:
+                fechar_comissoes_competencia(loja=loja_fechamento, ano=ano, mes=mes)
+                messages.success(request, f"Fechamento de {mes:02d}/{ano} para {loja_fechamento.nome} disponível no histórico.")
+                return redirect(redirect_comissoes)
+    metas = MetaComissaoLoja.objects.filter(loja__in=lojas).order_by("loja__nome", "valor_meta") if matriz else MetaComissaoLoja.objects.none()
+    fechamentos_comissao = FechamentoComissao.objects.filter(loja__in=lojas).select_related("loja").prefetch_related("comissoes_vendedores").order_by("-competencia_ano", "-competencia_mes", "loja__nome", "-pk") if matriz else FechamentoComissao.objects.none()
+    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao})
+
+@central_configuracoes_required
+def meta_comissao_editar(request, pk):
+    from .models import MetaComissaoLoja
+    from empresas.models import Matriz
+    contexto_acesso = request.contexto_configuracoes
+    if contexto_acesso["escopo"] == "empresa":
+        matriz = contexto_acesso["matriz"]
+    else:
+        matriz = None
+        matriz_id = request.GET.get("matriz", "").strip()
+        if matriz_id:
+            try:
+                matriz = Matriz.objects.get(pk=int(matriz_id))
+            except (TypeError, ValueError, Matriz.DoesNotExist):
+                matriz = None
+    if matriz is None:
+        messages.error(request, "Selecione uma matriz válida para editar a meta.")
+        return redirect("configuracoes:comissoes")
+    meta = get_object_or_404(MetaComissaoLoja, pk=pk, loja__matriz=matriz)
+    form = MetaComissaoLojaForm(request.POST or None, instance=meta)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Meta de comissão atualizada com sucesso.")
+        destino = reverse("configuracoes:comissoes")
+        if contexto_acesso["escopo"] == "plataforma":
+            destino = f"{destino}?matriz={matriz.pk}"
+        return redirect(destino)
+    return render(request, "configuracoes/meta_comissao_form.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "meta": meta, "form": form})
+
 
 @central_configuracoes_required
 def regras_comerciais(request):
