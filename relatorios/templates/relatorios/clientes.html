@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório de Clientes{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">Clientes</h4>
+            <p class="text-muted mb-0">Relatório de clientes da matriz operacional.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-2">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label">Busca</label>
+                    <input type="text" name="q" value="{{ busca }}" class="form-control" placeholder="Nome, CPF/CNPJ, telefone ou e-mail">
+                </div>
+                <div class="col-lg-2 col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="ativo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="1" {% if ativo_filtro == '1' %}selected{% endif %}>Ativos</option>
+                        <option value="0" {% if ativo_filtro == '0' %}selected{% endif %}>Inativos</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo_pessoa" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="PF" {% if tipo_pessoa_filtro == 'PF' %}selected{% endif %}>Pessoa física</option>
+                        <option value="PJ" {% if tipo_pessoa_filtro == 'PJ' %}selected{% endif %}>Pessoa jurídica</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label">Loja</label>
+                    <select name="loja" class="form-select">
+                        <option value="">Todas</option>
+                        {% for loja in lojas %}
+                        <option value="{{ loja.pk }}" {% if loja_filtro == loja.pk|stringformat:'s' %}selected{% endif %}>{{ loja.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-dark flex-grow-1">Filtrar</button>
+                    <a href="{% url 'relatorios:clientes' %}" class="btn btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Cliente</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th>Cidade/UF</th><th>Loja de cadastro</th><th>Status</th><th>Cadastro</th></tr></thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.nome }}{% if cliente.tipo_pessoa == 'PJ' and cliente.razao_social %}<div class="small text-muted">{{ cliente.razao_social }}</div>{% endif %}</td>
+                        <td>{% if cliente.tipo_pessoa == 'PJ' %}{{ cliente.cnpj|default:'-' }}{% else %}{{ cliente.cpf|default:'-' }}{% endif %}</td>
+                        <td>{{ cliente.telefone|default:'-' }}</td>
+                        <td>{{ cliente.email|default:'-' }}</td>
+                        <td>{% if cliente.cidade %}{{ cliente.cidade }}{% if cliente.estado %}/{{ cliente.estado }}{% endif %}{% else %}-{% endif %}</td>
+                        <td>{{ cliente.loja_cadastro.nome|default:'-' }}</td>
+                        <td>{% if cliente.ativo %}<span class="badge text-bg-success">Ativo</span>{% else %}<span class="badge text-bg-secondary">Inativo</span>{% endif %}</td>
+                        <td>{{ cliente.criado_em|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhum cliente encontrado.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if clientes.paginator.num_pages > 1 %}
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            {% if clientes.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ clientes.previous_page_number }}">Anterior</a>{% else %}<span></span>{% endif %}
+            <span class="text-muted small">Página {{ clientes.number }} de {{ clientes.paginator.num_pages }} · {{ clientes.paginator.count }} registro(s)</span>
+            {% if clientes.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ clientes.next_page_number }}">Próxima</a>{% else %}<span></span>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

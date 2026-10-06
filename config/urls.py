@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
+from relatorios.views import dashboard
 from django.contrib.auth.views import LogoutView
 
 from accounts.views import CashbackLoginView
@@ -16,7 +17,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('cashback/', include('cashback.urls')),
     path('clientes/', include('clientes.urls')),
-    path('dashboard/', include('relatorios.urls')),
+    path('dashboard/', dashboard, name='dashboard'),
+    path('relatorios/', include('relatorios.urls')),
     path('campanhas/', include('campanhas.urls')),
     path('produtos/', include('produtos.urls')),
     path('compras/', include('compras.urls')),

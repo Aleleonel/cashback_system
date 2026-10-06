@@ -1,9 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.core.paginator import Paginator
+from empresas.models import Loja
 
 from core.services import get_contexto_operacional_usuario
 
-from .selectors import get_dashboard_resumo
+from .selectors import get_dashboard_resumo, get_relatorio_clientes
 
 from accounts.decorators import require_permission
 from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
@@ -28,3 +30,32 @@ def dashboard(request):
             'resumo': resumo,
         }
     )
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def relatorio_clientes(request):
+    contexto = get_contexto_operacional_usuario(request.user)
+    busca = (request.GET.get('q') or '').strip()
+    ativo_raw = (request.GET.get('ativo') or '').strip()
+    tipo_pessoa = (request.GET.get('tipo_pessoa') or '').strip()
+    loja_raw = (request.GET.get('loja') or '').strip()
+    ativo = True if ativo_raw == '1' else False if ativo_raw == '0' else None
+    loja_id = int(loja_raw) if loja_raw.isdigit() else None
+    clientes_qs = get_relatorio_clientes(
+        matriz=contexto['matriz'], ativo=ativo,
+        tipo_pessoa=tipo_pessoa or None, loja_id=loja_id, busca=busca or None,
+    )
+    clientes = Paginator(clientes_qs, 50).get_page(request.GET.get('page'))
+    lojas = Loja.objects.filter(matriz=contexto['matriz']).order_by('nome', 'id')
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    query_string = query_params.urlencode()
+    return render(request, 'relatorios/clientes.html', {
+        'clientes': clientes,
+        'busca': busca,
+        'ativo_filtro': ativo_raw,
+        'tipo_pessoa_filtro': tipo_pessoa,
+        'loja_filtro': loja_raw,
+        'lojas': lojas,
+        'query_string': query_string,
+    })

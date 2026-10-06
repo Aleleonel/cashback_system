@@ -81,7 +81,7 @@
             </div>
         </div>
 
-        <a href="{% url 'relatorios:dashboard' %}" class="nav-link text-white">
+        <a href="{% url 'dashboard' %}" class="nav-link text-white">
             <i class="bi bi-speedometer2 me-2"></i>
             Dashboard
         </a>
@@ -117,6 +117,19 @@
         </a>
         {% endif %}
 
+        {% if pode_ver_dashboard %}
+        <div class="sidebar-section-heading" data-sidebar-section="relatorios" data-sidebar-icon="bi-bar-chart-line">
+            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">
+                Relatórios
+            </div>
+        </div>
+        <div class="text-white-50 small px-3 mt-1 mb-1">Cadastros</div>
+        <a href="{% url 'relatorios:clientes' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'clientes' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-file-earmark-person me-2"></i>
+            Clientes
+        </a>
+        {% endif %}
+
         {% if pode_gerenciar_vouchers %}
         <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
             <i class="bi bi-ticket-perforated me-2"></i>
@@ -126,22 +139,7 @@
 
 
 
-        <a href="{% url 'pdv:inicio' %}"
-           class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'inicio' %}active bg-primary text-white{% else %}text-white{% endif %}"
-           data-menu-pdv-frente-caixa="true">
-            <i class="bi bi-calculator me-2"></i>
-            Frente de Caixa
-        </a>
 
-        <!-- PDV-04E.3 - HISTORICO DE VENDAS -->
-        <a
-            href="{% url 'pdv:historico_vendas' %}"
-            class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'historico_vendas' or request.resolver_match.url_name == 'detalhe_venda' %}active bg-primary text-white{% else %}text-white{% endif %}"
-            data-menu-pdv-historico-vendas="true"
-        >
-            <i class="bi bi-receipt-cutoff me-2"></i>
-            Histórico de Vendas
-        </a>
 
 
         <div class="sidebar-section-heading" data-sidebar-section="produtos-estoque" data-sidebar-icon="bi-box-seam">
@@ -171,6 +169,23 @@
              data-sidebar-icon="bi-cash-stack">
             Caixa
         </div>
+
+        <a href="{% url 'pdv:inicio' %}"
+           class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'inicio' %}active bg-primary text-white{% else %}text-white{% endif %}"
+           data-menu-pdv-frente-caixa="true">
+            <i class="bi bi-calculator me-2"></i>
+            Frente de Caixa
+        </a>
+
+        <!-- PDV-04E.3 - HISTORICO DE VENDAS -->
+        <a
+            href="{% url 'pdv:historico_vendas' %}"
+            class="nav-link {% if request.resolver_match.namespace == 'pdv' and request.resolver_match.url_name == 'historico_vendas' or request.resolver_match.url_name == 'detalhe_venda' %}active bg-primary text-white{% else %}text-white{% endif %}"
+            data-menu-pdv-historico-vendas="true"
+        >
+            <i class="bi bi-receipt-cutoff me-2"></i>
+            Histórico de Vendas
+        </a>
     <li class="nav-item">
         <a
             href="{% url 'pdv:abrir_caixa' %}"

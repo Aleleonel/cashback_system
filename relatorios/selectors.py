@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from cashback.models import LancamentoCashback
 from clientes.models import Cliente
+from clientes.selectors import aplicar_busca_clientes
 
 
 def get_dashboard_resumo(*, matriz):
@@ -134,3 +135,19 @@ def get_dashboard_resumo(*, matriz):
         'ticket_medio_mes': ticket_medio_mes,
         'cashback_gerado_mes': cashback_gerado_mes,
     }
+
+def get_relatorio_clientes(*, matriz, ativo=None, tipo_pessoa=None, loja_id=None, busca=None):
+    qs = Cliente.objects.filter(matriz=matriz)
+    if ativo is not None:
+        qs = qs.filter(ativo=ativo)
+    if tipo_pessoa:
+        qs = qs.filter(tipo_pessoa=tipo_pessoa)
+    if loja_id:
+        qs = qs.filter(loja_cadastro_id=loja_id)
+    if busca:
+        qs = aplicar_busca_clientes(qs, busca)
+    return qs.order_by('nome', 'id')
+
+
+def get_relatorio_aniversariantes(*, matriz, mes):
+    return Cliente.objects.filter(matriz=matriz).none()
