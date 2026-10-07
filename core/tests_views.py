@@ -42,7 +42,7 @@ class ViewsProtegidasTest(TestCase):
 
     def test_dashboard_exige_login(self):
         response = self.client.get(
-            reverse('relatorios:dashboard')
+            reverse('dashboard')
         )
 
         self.assertEqual(response.status_code, 302)
@@ -92,7 +92,7 @@ class ViewsProtegidasTest(TestCase):
         self.client.force_login(self.usuario)
 
         response = self.client.get(
-            reverse('relatorios:dashboard')
+            reverse('dashboard')
         )
 
         self.assertEqual(response.status_code, 200)
@@ -147,7 +147,7 @@ class ViewsProtegidasTest(TestCase):
         self.client.force_login(self.superuser)
 
         response = self.client.get(
-            reverse('relatorios:dashboard')
+            reverse('dashboard')
         )
 
         self.assertEqual(response.status_code, 403)

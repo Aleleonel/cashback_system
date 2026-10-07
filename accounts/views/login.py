@@ -10,4 +10,4 @@ class CashbackLoginView(LoginView):
         if self.request.user.is_superuser:
             return reverse('plataforma:painel_master')
 
-        return reverse('relatorios:dashboard')
+        return reverse('dashboard')

@@ -166,7 +166,7 @@ STATICFILES_DIRS = [
 AUTH_USER_MODEL = 'accounts.Usuario'
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'relatorios:dashboard'
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 SESSION_COOKIE_HTTPONLY = True
