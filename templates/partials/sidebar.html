@@ -123,10 +123,9 @@
                 Relatórios
             </div>
         </div>
-        <div class="text-white-50 small px-3 mt-1 mb-1">Cadastros</div>
-        <a href="{% url 'relatorios:clientes' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'clientes' %}active bg-primary text-white{% else %}text-white{% endif %}">
-            <i class="bi bi-file-earmark-person me-2"></i>
-            Clientes
+        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-folder2-open me-2"></i>
+            Cadastros
         </a>
         {% endif %}
 
@@ -394,6 +393,7 @@
             Config. Campanha
         </a>
         {% endif %}
+
 
         {% endif %}
 

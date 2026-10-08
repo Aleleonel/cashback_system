@@ -18,5 +18,5 @@ class RelatoriosNavegacaoEncodingTests(SimpleTestCase):
         self.assertIn("data-sidebar-section=" + chr(34) + "clientes" + chr(34), sidebar)
         self.assertIn("clientes:lista_clientes", sidebar)
         self.assertIn("data-sidebar-section=" + chr(34) + "relatorios" + chr(34), sidebar)
-        self.assertIn("relatorios:clientes", sidebar)
+        self.assertIn("relatorios:cadastros", sidebar)
 

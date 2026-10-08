@@ -14,6 +14,11 @@ from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
 
 @login_required
 @require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_cadastros(request):
+    return render(request, 'relatorios/cadastros.html')
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
 def dashboard(request):
 
     contexto = get_contexto_operacional_usuario(
@@ -78,5 +83,5 @@ def relatorio_aniversariantes(request):
     return render(request, 'relatorios/aniversariantes.html', {
         'page_obj': page_obj,
         'mes_filtro': mes,
-        'meses': [(i, nome) for i, nome in enumerate(('Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'), 1)],
+        'meses': [(i, nome) for i, nome in enumerate(('Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'), 1)],
     })
