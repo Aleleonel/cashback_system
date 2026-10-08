@@ -150,4 +150,13 @@ def get_relatorio_clientes(*, matriz, ativo=None, tipo_pessoa=None, loja_id=None
 
 
 def get_relatorio_aniversariantes(*, matriz, mes):
-    return Cliente.objects.filter(matriz=matriz).none()
+    return (
+        Cliente.objects.filter(
+            matriz=matriz,
+            tipo_pessoa=Cliente.TIPO_PESSOA_PF,
+            data_nascimento__isnull=False,
+            data_nascimento__month=mes,
+        )
+        .select_related('loja_cadastro')
+        .order_by('data_nascimento__day', 'nome', 'id')
+    )

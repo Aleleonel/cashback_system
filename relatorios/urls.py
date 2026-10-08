@@ -1,11 +1,11 @@
 from django.urls import path
 
-from .views import dashboard, relatorio_clientes
+from .views import dashboard, relatorio_clientes, relatorio_aniversariantes
 
 
 app_name = 'relatorios'
 
 urlpatterns = [
     path('cadastros/clientes/', relatorio_clientes, name='clientes'),
-    path('cadastros/aniversariantes/', dashboard, name='aniversariantes'),
+    path('cadastros/aniversariantes/', relatorio_aniversariantes, name='aniversariantes'),
 ]

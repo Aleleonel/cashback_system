@@ -1,11 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
+from django.utils import timezone
 from empresas.models import Loja
 
 from core.services import get_contexto_operacional_usuario
 
-from .selectors import get_dashboard_resumo, get_relatorio_clientes
+from .selectors import get_dashboard_resumo, get_relatorio_clientes, get_relatorio_aniversariantes
 
 from accounts.decorators import require_permission
 from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
@@ -58,4 +59,24 @@ def relatorio_clientes(request):
         'loja_filtro': loja_raw,
         'lojas': lojas,
         'query_string': query_string,
+    })
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def relatorio_aniversariantes(request):
+    contexto = get_contexto_operacional_usuario(request.user)
+    mes_atual = timezone.localdate().month
+    try:
+        mes = int(request.GET.get('mes') or mes_atual)
+    except (TypeError, ValueError):
+        mes = mes_atual
+    if mes < 1 or mes > 12:
+        mes = mes_atual
+    qs = get_relatorio_aniversariantes(matriz=contexto['matriz'], mes=mes)
+    paginator = Paginator(qs, 50)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'relatorios/aniversariantes.html', {
+        'page_obj': page_obj,
+        'mes_filtro': mes,
+        'meses': [(i, nome) for i, nome in enumerate(('Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'), 1)],
     })

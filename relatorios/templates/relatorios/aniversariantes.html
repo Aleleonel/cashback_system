@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}RelatÃ³rio de Aniversariantes{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3"><div><h1 class="h3 mb-1">Aniversariantes</h1><p class="text-muted mb-0">RelatÃ³rio derivado do cadastro de clientes.</p></div></div>
+  <form method="get" class="row g-2 mb-3"><div class="col-md-4"><label class="form-label" for="mes">MÃªs</label><select class="form-select" id="mes" name="mes">{% for numero, nome in meses %}<option value="{{ numero }}" {% if numero == mes_filtro %}selected{% endif %}>{{ nome }}</option>{% endfor %}</select></div><div class="col-md-auto d-flex align-items-end"><button class="btn btn-primary" type="submit">Filtrar</button></div></form>
+  <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Cliente</th><th>AniversÃ¡rio</th><th>Telefone</th><th>E-mail</th><th>Loja de cadastro</th></tr></thead><tbody>
+  {% for cliente in page_obj %}<tr><td>{{ cliente.nome }}</td><td>{{ cliente.data_nascimento|date:"d/m" }}</td><td>{{ cliente.telefone|default:"-" }}</td><td>{{ cliente.email|default:"-" }}</td><td>{{ cliente.loja_cadastro.nome|default:"-" }}</td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhum aniversariante encontrado para o mÃªs selecionado.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  {% if page_obj.paginator.num_pages > 1 %}<nav class="mt-3"><div class="d-flex justify-content-between align-items-center"><span>PÃ¡gina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} Â· {{ page_obj.paginator.count }} registro(s)</span><div>{% if page_obj.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?mes={{ mes_filtro }}&page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %} {% if page_obj.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?mes={{ mes_filtro }}&page={{ page_obj.next_page_number }}">PrÃ³xima</a>{% endif %}</div></div></nav>{% endif %}
+</div>
+{% endblock %}
