@@ -91,7 +91,8 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-6 col-md-3 col-xl-2">
+                {% if pode_filtrar_loja %}
+<div class="col-6 col-md-3 col-xl-2">
                     <label class="form-label" for="id_loja">Loja</label>
                     <select class="form-select" id="id_loja" name="loja">
                         <option value="">Todas</option>
@@ -100,6 +101,12 @@
                         {% endfor %}
                     </select>
                 </div>
+{% else %}
+<div class="col-12 col-md-6 col-xl">
+  <label class="form-label">Loja</label>
+  <input type="text" class="form-control" value="{{ loja_operacional.nome }}" disabled>
+</div>
+{% endif %}
                 <div class="col-12 col-xl-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">
                         <i class="bi bi-search me-1"></i>Filtrar

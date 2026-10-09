@@ -123,9 +123,13 @@
                 Relatórios
             </div>
         </div>
-        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' %}active bg-primary text-white{% else %}text-white{% endif %}">
+        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name != 'vendas' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-folder2-open me-2"></i>
             Cadastros
+        </a>
+        <a href="{% url 'relatorios:vendas' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'vendas' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-cart-check me-2"></i>
+            Vendas
         </a>
         {% endif %}
 

@@ -19,6 +19,11 @@ def hub_cadastros(request):
 
 @login_required
 @require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_vendas(request):
+    return render(request, 'relatorios/vendas.html')
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
 def dashboard(request):
 
     contexto = get_contexto_operacional_usuario(

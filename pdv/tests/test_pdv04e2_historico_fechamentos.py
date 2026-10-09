@@ -63,16 +63,18 @@ class Pdv04E2HistoricoFechamentosContratoTests(SimpleTestCase):
         self.assertIn("Fechar Caixa", self.sidebar)
         self.assertIn("Histórico de Fechamentos", self.sidebar)
 
-        inicio_secao = self.sidebar.index(
-            "PDV-04E.2 - SECAO CAIXA"
-        )
-        trecho_caixa = self.sidebar[inicio_secao:]
-        self.assertNotIn("Frente de Caixa", trecho_caixa)
-
+        # A secao Caixa consolidada inclui a unica entrada "Frente de Caixa".
+        # O contrato correto e impedir duplicidade, nao proibir a entrada
+        # dentro da propria secao Caixa.
         self.assertEqual(
             self.sidebar.count("Frente de Caixa"),
             1,
         )
+        self.assertEqual(
+            self.sidebar.count('data-menu-pdv-frente-caixa="true"'),
+            1,
+        )
+
 
     def test_pdv_tem_acesso_ao_historico(self):
         self.assertIn("pdv:historico_fechamentos", self.inicio)

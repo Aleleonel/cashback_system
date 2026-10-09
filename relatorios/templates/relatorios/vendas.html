@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios de Vendas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <div class="text-uppercase text-secondary small fw-semibold mb-1">Relatórios</div>
+        <h1 class="h3 mb-1"><i class="bi bi-cart-check me-2"></i>Vendas</h1>
+        <p class="text-secondary mb-0">Selecione o relatório de vendas que deseja consultar.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <i class="bi bi-receipt-cutoff fs-2 mb-3" aria-hidden="true"></i>
+                    <h2 class="h5">Relatório de Vendas</h2>
+                    <p class="text-secondary flex-grow-1">Consulte vendas concretizadas, filtros operacionais e totais consolidados.</p>
+                    <a href="{% url 'pdv:historico_vendas' %}" class="btn btn-outline-primary stretched-link">Acessar relatório</a>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+{% endblock %}

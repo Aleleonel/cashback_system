@@ -1213,7 +1213,36 @@ def historico_vendas(request):
         )
         return redirect("pdv:inicio")
 
-    lojas = lojas_relacao.filter(matriz=matriz).order_by("nome")
+    usuario_operacional = (
+        getattr(request.user, "perfil", None)
+        == getattr(request.user, "PERFIL_OPERADOR", "operador")
+    )
+    pode_filtrar_loja = not usuario_operacional
+
+    if usuario_operacional:
+        loja_operacional_id = request.session.get("loja_operacional_id")
+        loja_operacional = None
+        if loja_operacional_id is not None:
+            loja_operacional = lojas_relacao.filter(
+                matriz=matriz,
+                pk=loja_operacional_id,
+            ).first()
+        if loja_operacional is None:
+            loja_operacional = lojas_relacao.filter(
+                matriz=matriz,
+            ).order_by("nome").first()
+        if loja_operacional is None:
+            messages.error(
+                request,
+                "Seu usuario nao possui loja operacional para consultar vendas.",
+            )
+            return redirect("pdv:inicio")
+        request.session["loja_operacional_id"] = loja_operacional.pk
+        lojas = lojas_relacao.filter(pk=loja_operacional.pk)
+    else:
+        lojas = lojas_relacao.model.objects.filter(
+            matriz=matriz,
+        ).order_by("nome")
 
     vendas = (
         Venda.objects
@@ -1308,8 +1337,10 @@ def historico_vendas(request):
             sessao_caixa__caixa_id=int(caixa_id)
         )
 
-    if loja_id.isdigit():
+    if pode_filtrar_loja and loja_id.isdigit():
         vendas = vendas.filter(loja_id=int(loja_id))
+    elif usuario_operacional:
+        loja_id = ""
 
     vendas = vendas.distinct()
 
@@ -1379,6 +1410,9 @@ def historico_vendas(request):
             "vendas": page_obj.object_list,
             "totais": totais,
             "lojas": lojas,
+            "pode_filtrar_loja": pode_filtrar_loja,
+            "usuario_operacional": usuario_operacional,
+            "loja_operacional": loja_operacional if usuario_operacional else None,
             "vendedores": vendedores,
             "operadores": operadores,
             "formas_pagamento": formas_pagamento,
