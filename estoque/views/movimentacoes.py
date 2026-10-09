@@ -28,13 +28,52 @@ from estoque.services import (
 @login_required
 def lista_movimentacoes(request):
     contexto = get_contexto_operacional_usuario(request.user)
+    matriz = contexto['matriz']
+    lojas_relacao = request.user.lojas.filter(matriz=matriz)
+    usuario_operacional = (
+        getattr(request.user, 'perfil', None)
+        == getattr(request.user, 'PERFIL_OPERADOR', 'operador')
+    )
+    pode_filtrar_loja = not usuario_operacional
+    loja_operacional = None
+
+    if usuario_operacional:
+        loja_operacional_id = request.session.get('loja_operacional_id')
+        if loja_operacional_id is not None:
+            loja_operacional = lojas_relacao.filter(
+                pk=loja_operacional_id,
+            ).first()
+
+        if loja_operacional is None:
+            loja_operacional = lojas_relacao.order_by('nome').first()
+
+        if loja_operacional is None:
+            messages.error(
+                request,
+                'Seu usuario nao possui loja operacional para consultar estoque.',
+            )
+            return redirect('estoque:lista_movimentacoes')
+
+        request.session['loja_operacional_id'] = loja_operacional.pk
+        lojas = lojas_relacao.filter(pk=loja_operacional.pk)
+    else:
+        lojas = lojas_relacao.model.objects.filter(
+            matriz=matriz,
+        ).order_by('nome')
 
     busca = request.GET.get('busca', '').strip()
+    loja_id = request.GET.get('loja', '').strip()
 
     movimentacoes = get_movimentacoes(
-        matriz=contexto['matriz'],
+        matriz=matriz,
+        lojas=lojas,
         busca=busca,
     )
+
+    if pode_filtrar_loja and loja_id.isdigit():
+        movimentacoes = movimentacoes.filter(loja_id=int(loja_id))
+    elif usuario_operacional:
+        loja_id = ''
 
     paginador = Paginator(movimentacoes, 25)
     pagina = paginador.get_page(request.GET.get('page'))
@@ -45,6 +84,12 @@ def lista_movimentacoes(request):
         {
             'pagina': pagina,
             'busca': busca,
+            'lojas': lojas,
+            'loja_id': loja_id,
+            'pode_filtrar_loja': pode_filtrar_loja,
+            'colunas_tabela': 6 if pode_filtrar_loja else 5,
+            'usuario_operacional': usuario_operacional,
+            'loja_operacional': loja_operacional,
         }
     )
 

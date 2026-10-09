@@ -39,7 +39,46 @@ estoque-page movimentacoes-page
 
     {% url 'estoque:lista_movimentacoes' as url_limpar_estoque %}
 
-    {% include 'partials/toolbar_lista.html' with toolbar_titulo='Localizar movimentações' toolbar_subtitulo='Pesquise as movimentações registradas no estoque.' toolbar_icone='bi-search' toolbar_rotulo_busca='Buscar movimentação' toolbar_placeholder_busca='Produto, documento ou referência' toolbar_url_limpar=url_limpar_estoque %}
+    <div class="card-body border-bottom">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label for="id_busca" class="form-label">Buscar movimentação</label>
+                <input
+                    type="search"
+                    class="form-control"
+                    id="id_busca"
+                    name="busca"
+                    value="{{ busca }}"
+                    placeholder="Produto, documento ou referência"
+                >
+            </div>
+            <div class="col-md-4">
+                <label for="id_loja" class="form-label">Loja</label>
+                {% if pode_filtrar_loja %}
+                    <select class="form-select" id="id_loja" name="loja">
+                        <option value="">Todas</option>
+                        {% for loja in lojas %}
+                            <option value="{{ loja.pk }}" {% if loja_id == loja.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ loja.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="id_loja"
+                        value="{{ loja_operacional.nome }}"
+                        disabled
+                    >
+                {% endif %}
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="{{ url_limpar_estoque }}">Limpar</a>
+            </div>
+        </form>
+    </div>
 
     {% include 'partials/tabela_base.html' with tabela_conteudo='estoque/movimentacoes/_tabela_conteudo.html' tabela_aria_label='Lista de movimentações de estoque' %}
 

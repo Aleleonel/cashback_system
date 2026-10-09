@@ -1,7 +1,8 @@
-﻿<thead>
+<thead>
     <tr>
         <th scope="col">Data</th>
         <th scope="col">Produto</th>
+        {% if pode_filtrar_loja %}<th scope="col">Loja</th>{% endif %}
         <th scope="col">Tipo</th>
         <th scope="col" class="text-end">Quantidade</th>
         <th scope="col">Referência</th>
@@ -12,11 +13,12 @@
     <tr>
         <td>{{ movimentacao.criado_em|date:'d/m/Y H:i' }}</td>
         <td>{{ movimentacao.produto }}</td>
+        {% if pode_filtrar_loja %}<td>{{ movimentacao.loja.nome }}</td>{% endif %}
         <td>{{ movimentacao.get_tipo_display }}</td>
         <td class="text-end">{{ movimentacao.quantidade }}</td>
         <td>{{ movimentacao.documento_referencia|default:'—' }}</td>
     </tr>
     {% empty %}
-        {% include 'partials/estado_vazio.html' with colunas=5 mensagem='Nenhuma movimentação de estoque encontrada.' icone='bi-boxes' %}
+        {% include 'partials/estado_vazio.html' with colunas=colunas_tabela mensagem='Nenhuma movimentação de estoque encontrada.' icone='bi-boxes' %}
     {% endfor %}
 </tbody>

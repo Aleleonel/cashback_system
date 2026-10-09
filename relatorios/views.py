@@ -22,6 +22,12 @@ def hub_cadastros(request):
 def hub_vendas(request):
     return render(request, 'relatorios/vendas.html')
 
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_estoque(request):
+    return render(request, 'relatorios/estoque.html')
+
 @login_required
 @require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
 def dashboard(request):

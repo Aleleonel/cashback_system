@@ -1,11 +1,11 @@
-﻿"""Consultas relacionadas às movimentações de estoque."""
+"""Consultas relacionadas às movimentações de estoque."""
 
 from django.db.models import Q
 
 from estoque.models import MovimentacaoEstoque
 
 
-def get_movimentacoes(*, matriz, busca=''):
+def get_movimentacoes(*, matriz, lojas=None, busca=''):
     """Retorna as movimentações pertencentes à matriz informada."""
     movimentacoes = (
         MovimentacaoEstoque.objects
@@ -20,6 +20,9 @@ def get_movimentacoes(*, matriz, busca=''):
             '-id',
         )
     )
+
+    if lojas is not None:
+        movimentacoes = movimentacoes.filter(loja__in=lojas)
 
     busca = busca.strip()
 
