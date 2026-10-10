@@ -25,6 +25,10 @@ def hub_vendas(request):
 
 @login_required
 @require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_financeiro(request):
+    return render(request, "relatorios/financeiro.html")
+
+
 def hub_estoque(request):
     return render(request, 'relatorios/estoque.html')
 

@@ -3,16 +3,16 @@
 {% block content %}
 <div class="container-fluid py-3">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <div><h1 class="h3 mb-1">Financeiro</h1><p class="text-muted mb-0">Visão financeira da matriz e das lojas autorizadas.</p></div>
-    <a href="{% url 'financeiro:titulos' %}" class="btn btn-outline-primary">Títulos</a>
+    <div><h1 class="h3 mb-1">Financeiro</h1><p class="text-muted mb-0">{% if usuario_operacional %}Visão financeira da loja operacional.{% else %}Visão financeira da matriz e das lojas autorizadas.{% endif %}</p></div>
+    {% if not modo_relatorio %}<a href="{% url 'financeiro:titulos' %}" class="btn btn-outline-primary">Títulos</a>{% endif %}
   </div>
   <form method="get" class="card card-body shadow-sm border-0 mb-3">
     <div class="row g-3 align-items-end">
       <div class="col-md-3"><label class="form-label">Escopo</label><select name="escopo" class="form-select">
-        {% if request.user.perfil == 'master' %}<option value="consolidado" {% if escopo == 'consolidado' %}selected{% endif %}>Consolidado</option><option value="matriz" {% if escopo == 'matriz' %}selected{% endif %}>Somente matriz</option>{% endif %}
+        {% if modo_relatorio and not usuario_operacional %}<option value="consolidado" {% if escopo == 'consolidado' %}selected{% endif %}>Consolidado</option>{% elif request.user.perfil == 'master' %}<option value="consolidado" {% if escopo == 'consolidado' %}selected{% endif %}>Consolidado</option><option value="matriz" {% if escopo == 'matriz' %}selected{% endif %}>Somente matriz</option>{% endif %}
         <option value="loja" {% if escopo == 'loja' %}selected{% endif %}>Loja</option>
       </select></div>
-      <div class="col-md-3"><label class="form-label">Loja</label><select name="loja" class="form-select"><option value="">Selecione</option>{% for item in lojas %}<option value="{{ item.pk }}" {% if loja and loja.pk == item.pk %}selected{% endif %}>{{ item.nome }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><label class="form-label">Loja</label>{% if pode_filtrar_loja %}<select name="loja" class="form-select"><option value="">Selecione</option>{% for item in lojas %}<option value="{{ item.pk }}" {% if loja and loja.pk == item.pk %}selected{% endif %}>{{ item.nome }}</option>{% endfor %}</select>{% else %}<input type="text" class="form-control" value="{{ loja_operacional.nome }}" disabled>{% endif %}</div>
       <div class="col-md-2"><label class="form-label">Data inicial</label><input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control"></div>
       <div class="col-md-2"><label class="form-label">Data final</label><input type="date" name="data_fim" value="{{ data_fim }}" class="form-control"></div>
       <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Aplicar filtro</button></div>
@@ -34,8 +34,8 @@
       <div class="col-md-4"><div class="border rounded p-3 h-100"><div class="text-muted small">Saldo previsto do período</div><div class="fs-5 fw-semibold">R$ {{ fluxo_caixa.previsto_liquido|moeda_br }}</div></div></div>
     </div></div>
   </div>
-  <div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Títulos</strong></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Emissão</th><th>Natureza</th><th>Descrição</th><th>Loja</th><th>Status</th><th class="text-end">Valor</th><th></th></tr></thead><tbody>
-    {% for titulo in pagina %}<tr><td>{{ titulo.data_emissao|date:"d/m/Y" }}</td><td>{{ titulo.get_natureza_display }}</td><td>{{ titulo.descricao }}</td><td>{% if titulo.loja %}{{ titulo.loja.nome }}{% else %}Matriz{% endif %}</td><td>{{ titulo.get_status_display }}</td><td class="text-end">R$ {{ titulo.valor_original|moeda_br }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:titulo_detalhe' titulo.uuid %}?escopo={{ escopo }}{% if loja %}&loja={{ loja.pk }}{% endif %}">Detalhes</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhum título encontrado.</td></tr>{% endfor %}
+  <div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Títulos</strong></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Emissão</th><th>Natureza</th><th>Descrição</th><th>Loja</th><th>Status</th><th class="text-end">Valor</th>{% if not modo_relatorio %}<th></th>{% endif %}</tr></thead><tbody>
+    {% for titulo in pagina %}<tr><td>{{ titulo.data_emissao|date:"d/m/Y" }}</td><td>{{ titulo.get_natureza_display }}</td><td>{{ titulo.descricao }}</td><td>{% if titulo.loja %}{{ titulo.loja.nome }}{% else %}Matriz{% endif %}</td><td>{{ titulo.get_status_display }}</td><td class="text-end">R$ {{ titulo.valor_original|moeda_br }}</td>{% if not modo_relatorio %}<td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:titulo_detalhe' titulo.uuid %}?escopo={{ escopo }}{% if loja %}&loja={{ loja.pk }}{% endif %}">Detalhes</a></td>{% endif %}</tr>{% empty %}<tr><td colspan="{% if modo_relatorio %}6{% else %}7{% endif %}" class="text-center text-muted py-4">Nenhum título encontrado.</td></tr>{% endfor %}
   </tbody></table></div></div>
 </div>
 {% endblock %}

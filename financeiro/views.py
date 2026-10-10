@@ -42,6 +42,31 @@ def _lojas_autorizadas(request, matriz):
     return request.user.lojas.filter(matriz=matriz).order_by("nome")
 
 
+def _lojas_relatorio(request, matriz):
+    if request.user.perfil == Usuario.PERFIL_OPERADOR:
+        return request.user.lojas.filter(matriz=matriz).order_by("nome")
+    return Loja.objects.filter(matriz=matriz).order_by("nome")
+
+
+def _resolver_escopo_relatorio(request, matriz):
+    lojas = _lojas_relatorio(request, matriz)
+    loja_id = (request.GET.get("loja") or "").strip()
+    if request.user.perfil == Usuario.PERFIL_OPERADOR:
+        if not lojas.exists():
+            raise Http404("Usuario sem loja autorizada.")
+        session = getattr(request, "session", None)
+        loja_operacional_id = session.get("loja_operacional_id") if session is not None else None
+        loja = lojas.filter(pk=loja_operacional_id).first() if loja_operacional_id is not None else None
+        if loja is None:
+            loja = lojas.first()
+            if session is not None:
+                session["loja_operacional_id"] = loja.pk
+        return ESCOPO_LOJA, loja, lojas
+    if loja_id:
+        return ESCOPO_LOJA, get_object_or_404(lojas, pk=loja_id), lojas
+    return ESCOPO_CONSOLIDADO, None, lojas
+
+
 def _resolver_escopo(request, matriz):
     lojas = _lojas_autorizadas(request, matriz)
     escopo = (request.GET.get("escopo") or "").strip().lower()
@@ -64,16 +89,29 @@ def _resolver_escopo(request, matriz):
     if request.user.perfil == Usuario.PERFIL_OPERADOR:
         if not lojas.exists():
             raise Http404("Usuario sem loja autorizada.")
-        loja = get_object_or_404(lojas, pk=loja_id) if loja_id else lojas.first()
+        usuario_operacional = True
+        pode_filtrar_loja = False
+        session = getattr(request, "session", None)
+        loja_operacional_id = session.get("loja_operacional_id") if session is not None else None
+        loja = lojas.filter(pk=loja_operacional_id).first() if loja_operacional_id is not None else None
+        if loja is None:
+            loja = lojas.first()
+            if session is not None:
+                session["loja_operacional_id"] = loja.pk
         return ESCOPO_LOJA, loja, lojas
     return None, None, lojas
 
 
-def _contexto_financeiro(request):
+def _contexto_financeiro(request, modo_relatorio=False):
     matriz = _matriz_usuario(request)
-    escopo, loja, lojas = _resolver_escopo(request, matriz)
+    if modo_relatorio:
+        escopo, loja, lojas = _resolver_escopo_relatorio(request, matriz)
+    else:
+        escopo, loja, lojas = _resolver_escopo(request, matriz)
     if escopo is None:
         return None
+    usuario_operacional = request.user.perfil == Usuario.PERFIL_OPERADOR
+    pode_filtrar_loja = not usuario_operacional
     natureza = (request.GET.get("natureza") or "").strip().upper()
     status = (request.GET.get("status") or "").strip().upper()
     if natureza not in {TituloFinanceiro.Natureza.PAGAR, TituloFinanceiro.Natureza.RECEBER}:
@@ -102,6 +140,10 @@ def _contexto_financeiro(request):
         "lojas": lojas,
         "escopo": escopo,
         "loja": loja,
+        "usuario_operacional": usuario_operacional,
+        "pode_filtrar_loja": pode_filtrar_loja,
+        "loja_operacional": loja if usuario_operacional else None,
+        "modo_relatorio": modo_relatorio,
         "natureza": natureza or "",
         "status": status or "",
         "saldos": saldos,
@@ -117,6 +159,15 @@ def _contexto_financeiro(request):
 @require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
 def painel(request):
     contexto = _contexto_financeiro(request)
+    if contexto is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+    return render(request, "financeiro/painel.html", contexto)
+
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
+def painel_relatorio(request):
+    contexto = _contexto_financeiro(request, modo_relatorio=True)
     if contexto is None:
         return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
     return render(request, "financeiro/painel.html", contexto)

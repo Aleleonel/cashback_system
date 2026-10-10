@@ -135,6 +135,10 @@
             <i class="bi bi-boxes me-2"></i>
             Estoque
         </a>
+        <a href="{% url 'relatorios:financeiro' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'estoque' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-boxes me-2"></i>
+            Financeiro
+        </a>
         {% endif %}
 
         {% if pode_gerenciar_vouchers %}
