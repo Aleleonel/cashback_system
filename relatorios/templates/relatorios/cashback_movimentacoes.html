@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load formatadores %}
+{% block content %}
+<div class="container-fluid py-3">
+<h1 class="h3 mb-1">Movimentações de Cashback</h1>
+<p class="text-muted">Histórico de cashback gerado e utilizado no escopo autorizado.</p>
+<form method="get" class="card card-body mb-3"><div class="row g-3 align-items-end">
+<div class="col-md-2"><label class="form-label">Data inicial</label><input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control"></div>
+<div class="col-md-2"><label class="form-label">Data final</label><input type="date" name="data_fim" value="{{ data_fim }}" class="form-control"></div>
+<div class="col-md-2"><label class="form-label">Tipo</label><select name="tipo" class="form-select"><option value="">Todos</option><option value="ENTRADA" {% if tipo_filtro == "ENTRADA" %}selected{% endif %}>Entrada</option><option value="SAIDA" {% if tipo_filtro == "SAIDA" %}selected{% endif %}>Saída</option></select></div>
+<div class="col-md-3"><label class="form-label">Cliente</label><select name="cliente" class="form-select"><option value="">Todos</option>{% for c in clientes %}<option value="{{ c.pk }}" {% if cliente_filtro == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}</select></div>
+<div class="col-md-3"><label class="form-label">Loja</label>{% if operador %}<input class="form-control" value="{{ loja_filtro.nome }}" disabled>{% else %}<select name="loja" class="form-select"><option value="">Todas</option>{% for l in lojas %}<option value="{{ l.pk }}" {% if loja_filtro.pk == l.pk %}selected{% endif %}>{{ l.nome }}</option>{% endfor %}</select>{% endif %}</div>
+<div class="col-12"><button class="btn btn-primary">Aplicar filtros</button> <a class="btn btn-outline-secondary" href="{% url 'relatorios:cashback_movimentacoes' %}">Limpar</a></div>
+</div></form>
+<div class="row g-3 mb-3">
+<div class="col-md-4"><div class="card card-body"><span class="text-muted">Movimentações</span><strong class="fs-4">{{ quantidade }}</strong></div></div>
+<div class="col-md-4"><div class="card card-body"><span class="text-muted">Cashback gerado</span><strong class="fs-4">R$ {{ total_gerado|moeda_br }}</strong></div></div>
+<div class="col-md-4"><div class="card card-body"><span class="text-muted">Cashback utilizado</span><strong class="fs-4">R$ {{ total_utilizado|moeda_br }}</strong></div></div>
+</div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+<thead><tr><th>Data</th><th>Tipo</th><th>Cliente</th><th>Loja</th><th class="text-end">Compra</th><th class="text-end">Cashback %</th><th class="text-end">Entrada</th><th class="text-end">Saída</th></tr></thead>
+<tbody>{% for mov in page_obj %}<tr><td>{{ mov.data|date:"d/m/Y H:i" }}</td><td>{{ mov.tipo|title }}</td><td>{{ mov.cliente.nome }}</td><td>{{ mov.loja.nome }}</td><td class="text-end">{% if mov.valor_compra != None %}R$ {{ mov.valor_compra|moeda_br }}{% else %}-{% endif %}</td><td class="text-end">{% if mov.percentual_cashback != None %}{{ mov.percentual_cashback|moeda_br }}%{% else %}-{% endif %}</td><td class="text-end">{% if mov.entrada %}R$ {{ mov.entrada|moeda_br }}{% else %}-{% endif %}</td><td class="text-end">{% if mov.saida %}R$ {{ mov.saida|moeda_br }}{% else %}-{% endif %}</td></tr>{% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma movimentação encontrada.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% if page_obj.paginator.num_pages > 1 %}<nav class="mt-3"><ul class="pagination mb-0">
+{% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}&tipo={{ tipo_filtro }}&cliente={{ cliente_filtro }}{% if loja_filtro and not operador %}&loja={{ loja_filtro.pk }}{% endif %}">Anterior</a></li>{% endif %}
+<li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+{% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}&tipo={{ tipo_filtro }}&cliente={{ cliente_filtro }}{% if loja_filtro and not operador %}&loja={{ loja_filtro.pk }}{% endif %}">Próxima</a></li>{% endif %}
+</ul></nav>{% endif %}
+</div>
+{% endblock %}

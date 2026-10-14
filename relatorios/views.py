@@ -4,8 +4,10 @@ from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.utils import timezone
 from empresas.models import Loja
+from clientes.models import Cliente
 from vouchers.models import Voucher
 from vouchers.selectors import get_relatorio_usos_voucher
+from cashback.selectors import get_relatorio_movimentacoes_cashback
 
 from core.services import get_contexto_operacional_usuario
 
@@ -171,4 +173,66 @@ def relatorio_utilizacao_vouchers(request):
         'voucher_filtro': voucher_raw,
         'data_inicio': data_inicio_raw,
         'data_fim': data_fim_raw,
+    })
+
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_cashback(request):
+    return render(request, 'relatorios/cashback.html')
+
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def relatorio_movimentacoes_cashback(request):
+    contexto = get_contexto_operacional_usuario(request.user)
+    matriz = contexto['matriz']
+    operador = getattr(request.user, 'perfil', None) == 'operador'
+
+    if operador:
+        lojas_autorizadas = request.user.lojas.filter(matriz=matriz).order_by('nome', 'id')
+        loja_id = request.session.get('loja_operacional_id')
+        loja = lojas_autorizadas.filter(pk=loja_id).first() if loja_id else None
+        if loja is None:
+            loja = lojas_autorizadas.first()
+            if loja is not None:
+                request.session['loja_operacional_id'] = loja.pk
+        lojas = lojas_autorizadas.filter(pk=loja.pk) if loja else lojas_autorizadas.none()
+    else:
+        lojas = Loja.objects.filter(matriz=matriz).order_by('nome', 'id')
+        loja_raw = (request.GET.get('loja') or '').strip()
+        loja = lojas.filter(pk=loja_raw).first() if loja_raw.isdigit() else None
+
+    data_inicio = (request.GET.get('data_inicio') or '').strip()
+    data_fim = (request.GET.get('data_fim') or '').strip()
+    tipo = (request.GET.get('tipo') or '').strip().upper()
+    if tipo not in ('ENTRADA', 'SAIDA'):
+        tipo = ''
+    cliente_raw = (request.GET.get('cliente') or '').strip()
+    cliente_id = int(cliente_raw) if cliente_raw.isdigit() else None
+
+    resultado = get_relatorio_movimentacoes_cashback(
+        matriz=matriz,
+        loja=loja,
+        cliente_id=cliente_id,
+        data_inicio=data_inicio or None,
+        data_fim=data_fim or None,
+        tipo=tipo or None,
+    )
+    page_obj = Paginator(resultado['movimentacoes'], 50).get_page(request.GET.get('page'))
+    clientes = Cliente.objects.filter(matriz=matriz).order_by('nome', 'id')
+
+    return render(request, 'relatorios/cashback_movimentacoes.html', {
+        'page_obj': page_obj,
+        'quantidade': resultado['quantidade_movimentacoes'],
+        'total_gerado': resultado['total_gerado'],
+        'total_utilizado': resultado['total_utilizado'],
+        'lojas': lojas,
+        'loja_filtro': loja,
+        'operador': operador,
+        'clientes': clientes,
+        'cliente_filtro': cliente_raw,
+        'tipo_filtro': tipo,
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
     })

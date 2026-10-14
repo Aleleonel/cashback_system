@@ -1,0 +1,4 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid py-3"><h1 class="h3">Cashback</h1><p class="text-muted">Relatórios gerenciais de cashback.</p><div class="card"><div class="card-body"><h2 class="h5">Movimentações de Cashback</h2><p class="text-muted">Histórico de cashback gerado e utilizado.</p><a class="btn btn-primary" href="{% url 'relatorios:cashback_movimentacoes' %}">Abrir relatório</a></div></div></div>
+{% endblock %}

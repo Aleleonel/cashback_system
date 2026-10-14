@@ -123,7 +123,7 @@
                 Relatórios
             </div>
         </div>
-        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name != 'vendas' and request.resolver_match.url_name != 'estoque' and request.resolver_match.url_name != 'financeiro' and request.resolver_match.url_name != 'vouchers' and request.resolver_match.url_name != 'vouchers_utilizacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
+        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name != 'vendas' and request.resolver_match.url_name != 'estoque' and request.resolver_match.url_name != 'financeiro' and request.resolver_match.url_name != 'vouchers' and request.resolver_match.url_name != 'vouchers_utilizacoes' and request.resolver_match.url_name != 'cashback' and request.resolver_match.url_name != 'cashback_movimentacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-folder2-open me-2"></i>
             Cadastros
         </a>
@@ -142,6 +142,10 @@
         <a href="{% url 'relatorios:vouchers' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'vouchers' or request.resolver_match.url_name == 'vouchers_utilizacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-ticket-perforated me-2"></i>
             Vouchers
+        </a>
+        <a href="{% url 'relatorios:cashback' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'cashback' or request.resolver_match.url_name == 'cashback_movimentacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-cash-coin me-2"></i>
+            Cashback
         </a>
         {% endif %}
 

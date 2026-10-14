@@ -252,3 +252,30 @@ def get_resumo_extrato_cliente(*, matriz, cliente):
         'total_gerado': total_gerado,
         'total_utilizado': total_utilizado,
     }
+
+def get_relatorio_movimentacoes_cashback(*, matriz, loja=None, data_inicio=None, data_fim=None, cliente_id=None, tipo=None):
+    movimentacoes = []
+    zero = Decimal('0.00')
+    tipo = (tipo or '').upper().strip()
+    entradas = LancamentoCashback.objects.filter(matriz=matriz).select_related('loja', 'cliente')
+    saidas = UsoCashback.objects.filter(matriz=matriz).select_related('loja', 'cliente')
+    if loja is not None:
+        entradas = entradas.filter(loja=loja)
+        saidas = saidas.filter(loja=loja)
+    if cliente_id:
+        entradas = entradas.filter(cliente_id=cliente_id)
+        saidas = saidas.filter(cliente_id=cliente_id)
+    if data_inicio:
+        entradas = entradas.filter(criado_em__date__gte=data_inicio)
+        saidas = saidas.filter(data_uso__date__gte=data_inicio)
+    if data_fim:
+        entradas = entradas.filter(criado_em__date__lte=data_fim)
+        saidas = saidas.filter(data_uso__date__lte=data_fim)
+    if tipo != 'SAIDA':
+        for lancamento in entradas:
+            movimentacoes.append({'data': lancamento.criado_em, 'tipo': 'ENTRADA', 'cliente': lancamento.cliente, 'cliente_id': lancamento.cliente_id, 'loja': lancamento.loja, 'loja_id': lancamento.loja_id, 'valor_compra': lancamento.valor_compra, 'percentual_cashback': lancamento.percentual_cashback, 'entrada': lancamento.valor_cashback, 'saida': zero, 'referencia': lancamento})
+    if tipo != 'ENTRADA':
+        for uso in saidas:
+            movimentacoes.append({'data': uso.data_uso, 'tipo': 'SAIDA', 'cliente': uso.cliente, 'cliente_id': uso.cliente_id, 'loja': uso.loja, 'loja_id': uso.loja_id, 'valor_compra': None, 'percentual_cashback': None, 'entrada': zero, 'saida': uso.valor_usado, 'referencia': uso})
+    movimentacoes.sort(key=lambda item: item['data'], reverse=True)
+    return {'movimentacoes': movimentacoes, 'quantidade_movimentacoes': len(movimentacoes), 'total_gerado': sum((item['entrada'] for item in movimentacoes), zero), 'total_utilizado': sum((item['saida'] for item in movimentacoes), zero)}
