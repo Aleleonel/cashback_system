@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load formatadores %}
+{% block content %}
+<div class="container-fluid py-3">
+<h1 class="h3 mb-1">Utilização de Vouchers</h1>
+<p class="text-muted">Histórico de vouchers utilizados no escopo autorizado.</p>
+<form method="get" class="card card-body mb-3"><div class="row g-3 align-items-end">
+<div class="col-md-3"><label class="form-label">Data inicial</label><input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control"></div>
+<div class="col-md-3"><label class="form-label">Data final</label><input type="date" name="data_fim" value="{{ data_fim }}" class="form-control"></div>
+<div class="col-md-3"><label class="form-label">Voucher</label><select name="voucher" class="form-select"><option value="">Todos</option>{% for v in vouchers %}<option value="{{ v.pk }}" {% if voucher_filtro == v.pk|stringformat:"s" %}selected{% endif %}>{{ v.codigo }} - {{ v.nome }}</option>{% endfor %}</select></div>
+<div class="col-md-3"><label class="form-label">Loja</label>{% if operador %}<input class="form-control" value="{{ loja_filtro.nome }}" disabled>{% else %}<select name="loja" class="form-select"><option value="">Todas</option>{% for l in lojas %}<option value="{{ l.pk }}" {% if loja_filtro.pk == l.pk %}selected{% endif %}>{{ l.nome }}</option>{% endfor %}</select>{% endif %}</div>
+<div class="col-12"><button class="btn btn-primary">Aplicar filtros</button> <a class="btn btn-outline-secondary" href="{% url 'relatorios:vouchers_utilizacoes' %}">Limpar</a></div>
+</div></form>
+<div class="row g-3 mb-3">
+<div class="col-md-4"><div class="card card-body"><span class="text-muted">Utilizações</span><strong class="fs-4">{{ quantidade }}</strong></div></div>
+<div class="col-md-4"><div class="card card-body"><span class="text-muted">Valor das compras</span><strong class="fs-4">R$ {{ valor_compras|moeda_br }}</strong></div></div>
+<div class="col-md-4"><div class="card card-body"><span class="text-muted">Descontos concedidos</span><strong class="fs-4">R$ {{ valor_descontos|moeda_br }}</strong></div></div>
+</div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+<thead><tr><th>Data</th><th>Voucher</th><th>Cliente</th><th>Loja</th><th>Usuário</th><th class="text-end">Compra</th><th class="text-end">Desconto</th></tr></thead>
+<tbody>{% for uso in page_obj %}<tr><td>{{ uso.criado_em|date:"d/m/Y H:i" }}</td><td>{{ uso.voucher.codigo }} - {{ uso.voucher.nome }}</td><td>{{ uso.cliente.nome }}</td><td>{{ uso.loja.nome }}</td><td>{{ uso.usuario.username }}</td><td class="text-end">R$ {{ uso.valor_compra|moeda_br }}</td><td class="text-end">R$ {{ uso.valor_desconto|moeda_br }}</td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma utilização encontrada.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+</div>
+{% endblock %}

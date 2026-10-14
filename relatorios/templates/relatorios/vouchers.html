@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <h1 class="h3 mb-1">Vouchers</h1>
+  <p class="text-muted mb-4">Relatórios gerenciais de vouchers.</p>
+  <div class="row g-3"><div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body">
+    <h2 class="h5">Utilização de Vouchers</h2>
+    <p class="text-muted">Histórico de usos, compras e descontos concedidos.</p>
+    <a class="btn btn-primary" href="{% url 'relatorios:vouchers_utilizacoes' %}">Abrir relatório</a>
+  </div></div></div></div>
+</div>
+{% endblock %}

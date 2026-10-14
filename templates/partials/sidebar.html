@@ -123,7 +123,7 @@
                 Relatórios
             </div>
         </div>
-        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name != 'vendas' and request.resolver_match.url_name != 'estoque' %}active bg-primary text-white{% else %}text-white{% endif %}">
+        <a href="{% url 'relatorios:cadastros' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name != 'vendas' and request.resolver_match.url_name != 'estoque' and request.resolver_match.url_name != 'financeiro' and request.resolver_match.url_name != 'vouchers' and request.resolver_match.url_name != 'vouchers_utilizacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-folder2-open me-2"></i>
             Cadastros
         </a>
@@ -139,12 +139,21 @@
             <i class="bi bi-boxes me-2"></i>
             Financeiro
         </a>
+        <a href="{% url 'relatorios:vouchers' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'vouchers' or request.resolver_match.url_name == 'vouchers_utilizacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-ticket-perforated me-2"></i>
+            Vouchers
+        </a>
         {% endif %}
 
         {% if pode_gerenciar_vouchers %}
-        <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link text-white-50">
+        <div class="sidebar-section-heading" data-sidebar-section="gestao-vouchers" data-sidebar-icon="bi-ticket-perforated">
+            <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">
+                Gestão de Vouchers
+            </div>
+        </div>
+        <a href="{% url 'vouchers:lista_vouchers' %}" class="nav-link {% if request.resolver_match.namespace == 'vouchers' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-ticket-perforated me-2"></i>
-            Vouchers
+            Gerenciar Vouchers
         </a>
         {% endif %}
 

@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
+from django.db.models import Sum
 from django.utils import timezone
 from empresas.models import Loja
+from vouchers.models import Voucher
+from vouchers.selectors import get_relatorio_usos_voucher
 
 from core.services import get_contexto_operacional_usuario
 
@@ -99,4 +102,73 @@ def relatorio_aniversariantes(request):
         'page_obj': page_obj,
         'mes_filtro': mes,
         'meses': [(i, nome) for i, nome in enumerate(('Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'), 1)],
+    })
+
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_vouchers(request):
+    return render(request, 'relatorios/vouchers.html')
+
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def relatorio_utilizacao_vouchers(request):
+    contexto = get_contexto_operacional_usuario(request.user)
+    matriz = contexto['matriz']
+    perfil = getattr(request.user, 'perfil', None)
+    operador = perfil == 'operador'
+
+    if operador:
+        lojas_autorizadas = request.user.lojas.filter(matriz=matriz).order_by('nome', 'id')
+        loja_id = request.session.get('loja_operacional_id')
+        loja = lojas_autorizadas.filter(pk=loja_id).first() if loja_id else None
+        if loja is None:
+            loja = lojas_autorizadas.first()
+            if loja is not None:
+                request.session['loja_operacional_id'] = loja.pk
+        lojas = lojas_autorizadas.filter(pk=loja.pk) if loja else lojas_autorizadas.none()
+    else:
+        lojas = Loja.objects.filter(matriz=matriz).order_by('nome', 'id')
+        loja_raw = (request.GET.get('loja') or '').strip()
+        loja = lojas.filter(pk=loja_raw).first() if loja_raw.isdigit() else None
+
+    data_inicio_raw = (request.GET.get('data_inicio') or '').strip()
+    data_fim_raw = (request.GET.get('data_fim') or '').strip()
+    voucher_raw = (request.GET.get('voucher') or '').strip()
+
+    from datetime import date
+    def parse_data(valor):
+        try:
+            return date.fromisoformat(valor) if valor else None
+        except ValueError:
+            return None
+
+    usos = get_relatorio_usos_voucher(
+        matriz=matriz,
+        loja=loja,
+        data_inicio=parse_data(data_inicio_raw),
+        data_fim=parse_data(data_fim_raw),
+        voucher_id=voucher_raw if voucher_raw.isdigit() else None,
+    )
+    totais = usos.aggregate(
+        valor_compras=Sum('valor_compra'),
+        valor_descontos=Sum('valor_desconto'),
+    )
+    quantidade = usos.count()
+    page_obj = Paginator(usos, 50).get_page(request.GET.get('page'))
+    vouchers = Voucher.objects.filter(matriz=matriz).order_by('nome', 'id')
+
+    return render(request, 'relatorios/vouchers_utilizacao.html', {
+        'page_obj': page_obj,
+        'quantidade': quantidade,
+        'valor_compras': totais['valor_compras'] or 0,
+        'valor_descontos': totais['valor_descontos'] or 0,
+        'lojas': lojas,
+        'loja_filtro': loja,
+        'operador': operador,
+        'vouchers': vouchers,
+        'voucher_filtro': voucher_raw,
+        'data_inicio': data_inicio_raw,
+        'data_fim': data_fim_raw,
     })

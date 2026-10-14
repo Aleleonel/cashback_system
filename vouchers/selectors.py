@@ -126,3 +126,22 @@ def get_usos_voucher(
         )
 
     return usos
+
+def get_relatorio_usos_voucher(
+    *,
+    matriz,
+    loja=None,
+    data_inicio=None,
+    data_fim=None,
+    voucher_id=None,
+):
+    usos = get_usos_voucher(matriz=matriz)
+    if loja is not None:
+        usos = usos.filter(loja=loja)
+    if data_inicio is not None:
+        usos = usos.filter(criado_em__date__gte=data_inicio)
+    if data_fim is not None:
+        usos = usos.filter(criado_em__date__lte=data_fim)
+    if voucher_id:
+        usos = usos.filter(voucher_id=voucher_id)
+    return usos
