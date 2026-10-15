@@ -1,8 +1,10 @@
+from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 from empresas.models import Loja
 from clientes.models import Cliente
 from vouchers.models import Voucher
@@ -15,6 +17,8 @@ from .selectors import get_dashboard_resumo, get_relatorio_clientes, get_relator
 
 from accounts.decorators import require_permission
 from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
+from compras.selectors import get_fornecedores, get_pedidos_compra
+from compras.models import Fornecedor, PedidoCompra
 
 
 @login_required
@@ -236,3 +240,37 @@ def relatorio_movimentacoes_cashback(request):
         'data_inicio': data_inicio,
         'data_fim': data_fim,
     })
+
+
+def _bloquear_operador_compras(request):
+    if getattr(request.user, 'perfil', None) == 'operador':
+        raise PermissionDenied('Relatorios de compras e fornecedores sao restritos ao perfil administrativo da matriz.')
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_compras(request):
+    _bloquear_operador_compras(request)
+    return render(request, 'relatorios/compras.html')
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def relatorio_pedidos_compra(request):
+    _bloquear_operador_compras(request)
+    c=get_contexto_operacional_usuario(request.user);q=(request.GET.get('q') or '').strip();st=(request.GET.get('status') or '').strip();data_inicio=(request.GET.get('data_inicio') or '').strip();data_fim=(request.GET.get('data_fim') or '').strip();qs=get_pedidos_compra(matriz=c['matriz'],busca=q,status=st)
+    from datetime import date
+    try:
+        di=date.fromisoformat(data_inicio) if data_inicio else None
+    except ValueError:
+        di=None
+    try:
+        df=date.fromisoformat(data_fim) if data_fim else None
+    except ValueError:
+        df=None
+    qs=qs.filter(data_emissao__gte=di) if di else qs;qs=qs.filter(data_emissao__lte=df) if df else qs;xs=list(qs);qp=request.GET.copy();qp.pop('page',None)
+    return render(request,'relatorios/compras_pedidos.html',{'page_obj':Paginator(xs,50).get_page(request.GET.get('page')),'quantidade':len(xs),'total_pedidos':sum((x.total for x in xs),Decimal('0.00')),'busca':q,'status_filtro':st,'data_inicio':data_inicio,'data_fim':data_fim,'status_choices':PedidoCompra._meta.get_field('status').choices,'query_string':qp.urlencode()})
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def relatorio_fornecedores(request):
+    _bloquear_operador_compras(request)
+    c=get_contexto_operacional_usuario(request.user);q=(request.GET.get('q') or '').strip();st=(request.GET.get('status') or '').strip();qs=get_fornecedores(matriz=c['matriz'],busca=q,status=st);n=qs.count();qp=request.GET.copy();qp.pop('page',None)
+    return render(request,'relatorios/compras_fornecedores.html',{'page_obj':Paginator(qs,50).get_page(request.GET.get('page')),'quantidade':n,'busca':q,'status_filtro':st,'status_choices':Fornecedor._meta.get_field('status').choices,'query_string':qp.urlencode()})
