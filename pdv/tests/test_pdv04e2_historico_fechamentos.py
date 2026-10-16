@@ -23,12 +23,12 @@ class Pdv04E2HistoricoFechamentosContratoTests(SimpleTestCase):
         self.assertIn('name="historico_fechamentos"', self.urls)
         self.assertIn("views.historico_fechamentos", self.urls)
 
-    def test_view_e_protegida(self):
-        self.assertIn(
-            "@require_permission(PERMISSAO_PDV_FECHAR_CAIXA)",
-            self.views,
-        )
+    def test_view_e_protegida_por_modo(self):
         self.assertIn("def historico_fechamentos(request):", self.views)
+        self.assertIn("PERMISSAO_RELATORIOS_DASHBOARD", self.views)
+        self.assertIn("PERMISSAO_PDV_FECHAR_CAIXA", self.views)
+        self.assertIn("usuario_tem_permissao(", self.views)
+        self.assertIn("if modo_relatorio:", self.views)
 
     def test_view_isola_matriz_e_lojas(self):
         self.assertIn("caixa__matriz=matriz", self.views)

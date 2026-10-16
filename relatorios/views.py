@@ -274,3 +274,9 @@ def relatorio_fornecedores(request):
     _bloquear_operador_compras(request)
     c=get_contexto_operacional_usuario(request.user);q=(request.GET.get('q') or '').strip();st=(request.GET.get('status') or '').strip();qs=get_fornecedores(matriz=c['matriz'],busca=q,status=st);n=qs.count();qp=request.GET.copy();qp.pop('page',None)
     return render(request,'relatorios/compras_fornecedores.html',{'page_obj':Paginator(qs,50).get_page(request.GET.get('page')),'quantidade':n,'busca':q,'status_filtro':st,'status_choices':Fornecedor._meta.get_field('status').choices,'query_string':qp.urlencode()})
+
+
+@login_required
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def hub_caixa(request):
+    return render(request, "relatorios/caixa.html")

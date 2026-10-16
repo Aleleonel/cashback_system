@@ -20,6 +20,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="get" class="row g-3 align-items-end">
+                {% if modo_relatorio %}<input type="hidden" name="modo_relatorio" value="1">{% endif %}
                 <div class="col-12 col-md-6 col-xl-2">
                     <label class="form-label" for="id_data_inicio">Data inicial</label>
                     <input type="date" class="form-control" id="id_data_inicio" name="data_inicio" value="{{ filtros.data_inicio }}">
@@ -29,6 +30,18 @@
                     <label class="form-label" for="id_data_fim">Data final</label>
                     <input type="date" class="form-control" id="id_data_fim" name="data_fim" value="{{ filtros.data_fim }}">
                 </div>
+
+                {% if pode_filtrar_loja %}
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="id_loja">Loja</label>
+                    <select class="form-select" id="id_loja" name="loja">
+                        <option value="">Todas</option>
+                        {% for loja in lojas %}
+                            <option value="{{ loja.pk }}" {% if filtros.loja == loja.pk|stringformat:'s' %}selected{% endif %}>{{ loja.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
 
                 <div class="col-12 col-md-6 col-xl-2">
                     <label class="form-label" for="id_caixa">Caixa</label>
@@ -68,7 +81,7 @@
                     <button type="submit" class="btn btn-primary flex-fill">
                         <i class="bi bi-search me-1"></i>Filtrar
                     </button>
-                    <a href="{% url 'pdv:historico_fechamentos' %}" class="btn btn-outline-secondary" title="Limpar filtros">
+                    <a href="{% url 'pdv:historico_fechamentos' %}{% if modo_relatorio %}?modo_relatorio=1{% endif %}" class="btn btn-outline-secondary" title="Limpar filtros">
                         <i class="bi bi-x-lg"></i>
                     </a>
                 </div>
@@ -127,9 +140,15 @@
                 <h2 class="h6 mb-1">Sessões de caixa</h2>
                 <p class="text-muted small mb-0">{{ page_obj.paginator.count }} registro(s) encontrado(s).</p>
             </div>
+            {% if modo_relatorio %}
+            <a href="{% url 'relatorios:caixa' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Voltar aos Relatorios
+            </a>
+            {% else %}
             <a href="{% url 'pdv:inicio' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i>Voltar ao PDV
             </a>
+            {% endif %}
         </div>
 
         <div class="table-responsive">
@@ -145,6 +164,7 @@
                         <th class="text-end">Informado</th>
                         <th class="text-end">Diferença</th>
                         <th>Status</th>
+                        <th class="text-end">Acoes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,10 +221,15 @@
                                     <span class="badge text-bg-secondary">{{ sessao.get_status_display }}</span>
                                 {% endif %}
                             </td>
+                            <td class="text-end">
+                                <a href="{% url 'pdv:demonstrativo_caixa' sessao.pk %}{% if modo_relatorio %}?modo_relatorio=1{% endif %}" class="btn btn-outline-primary btn-sm">
+                                    Demonstrativo
+                                </a>
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="10" class="text-center py-5">
                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                 <p class="text-muted mt-2 mb-0">Nenhum fechamento encontrado com os filtros informados.</p>
                             </td>

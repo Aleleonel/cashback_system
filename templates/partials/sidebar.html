@@ -135,9 +135,13 @@
             <i class="bi bi-boxes me-2"></i>
             Estoque
         </a>
-        <a href="{% url 'relatorios:financeiro' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'estoque' %}active bg-primary text-white{% else %}text-white{% endif %}">
-            <i class="bi bi-boxes me-2"></i>
+        <a href="{% url 'relatorios:financeiro' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'financeiro' or request.resolver_match.url_name == 'financeiro_painel' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-cash-stack me-2"></i>
             Financeiro
+        </a>
+        <a href="{% url 'relatorios:caixa' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'caixa' or request.GET.modo_relatorio == '1' and request.resolver_match.url_name == 'historico_fechamentos' or request.GET.modo_relatorio == '1' and request.resolver_match.url_name == 'demonstrativo_caixa' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-cash-stack me-2"></i>
+            Caixa
         </a>
         <a href="{% url 'relatorios:vouchers' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'vouchers' or request.resolver_match.url_name == 'vouchers_utilizacoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-ticket-perforated me-2"></i>

@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 import json
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
@@ -21,6 +21,7 @@ from pdv.choices import (
     StatusSessaoCaixa,
     TipoMovimentacaoCaixa,
 )
+from empresas.models import Loja
 from pdv.models import (
     Caixa,
     FormaPagamento,
@@ -46,6 +47,7 @@ from pdv.services.vendas.cancelamento import cancelar_venda
 from pdv.services.vendas.caixa import abrir_sessao_caixa, calcular_saldo_sessao_caixa, registrar_movimentacao_caixa_operacional
 from accounts.decorators import require_permission
 from accounts.services import usuario_tem_permissao
+from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
 from pdv.constants import (
     PERMISSAO_PDV_ABRIR_CAIXA,
     PERMISSAO_PDV_AUTORIZAR_DESCONTO,
@@ -1051,7 +1053,6 @@ def confirmar_fechamento_caixa(request):
 # PDV-04E.2 - HISTORICO DE FECHAMENTOS
 @login_required
 @require_GET
-@require_permission(PERMISSAO_PDV_FECHAR_CAIXA)
 def historico_fechamentos(request):
     from datetime import datetime
 
@@ -1061,16 +1062,55 @@ def historico_fechamentos(request):
     from django.utils import timezone
 
     matriz = getattr(request.user, "matriz", None)
-    lojas_relacao = getattr(request.user, "lojas", None)
+    modo_relatorio = (request.GET.get("modo_relatorio") or "").strip() == "1"
+    usuario_operacional = (
+        getattr(request.user, "perfil", None)
+        == getattr(request.user, "PERFIL_OPERADOR", "operador")
+    )
 
-    if matriz is None or lojas_relacao is None:
+    if matriz is None:
         messages.error(
             request,
             "Seu usuario nao possui contexto operacional para consultar caixas.",
         )
         return redirect("pdv:inicio")
 
-    lojas = lojas_relacao.filter(matriz=matriz).order_by("nome")
+    if modo_relatorio:
+        if not usuario_tem_permissao(
+            request.user,
+            PERMISSAO_RELATORIOS_DASHBOARD,
+        ):
+            return HttpResponseForbidden(
+                "Sem permissao para consultar relatorios."
+            )
+
+        if usuario_operacional:
+            loja_operacional_id = request.session.get("loja_operacional_id")
+            if loja_operacional_id:
+                lojas = request.user.lojas.filter(
+                    matriz=matriz,
+                    pk=loja_operacional_id,
+                ).order_by("nome")
+            else:
+                lojas = Loja.objects.none()
+        else:
+            lojas = Loja.objects.filter(matriz=matriz).order_by("nome")
+            loja_filtro = (request.GET.get("loja") or "").strip()
+    else:
+        if not usuario_tem_permissao(request.user, PERMISSAO_PDV_FECHAR_CAIXA):
+            return HttpResponseForbidden("Sem permissao para consultar fechamentos de caixa.")
+        lojas_relacao = getattr(request.user, "lojas", None)
+        if lojas_relacao is None:
+            messages.error(
+                request,
+                "Seu usuario nao possui contexto operacional para consultar caixas.",
+            )
+            return redirect("pdv:inicio")
+        lojas = lojas_relacao.filter(matriz=matriz).order_by("nome")
+    lojas_filtro = lojas
+    if modo_relatorio and not usuario_operacional and loja_filtro.isdigit():
+        lojas_filtro = lojas.filter(pk=int(loja_filtro))
+
     sessoes = (
         SessaoCaixa.objects
         .select_related(
@@ -1081,7 +1121,7 @@ def historico_fechamentos(request):
         )
         .filter(
             caixa__matriz=matriz,
-            caixa__loja__in=lojas,
+            caixa__loja__in=lojas_filtro,
         )
         .order_by("-aberta_em")
     )
@@ -1181,16 +1221,156 @@ def historico_fechamentos(request):
             "caixas": caixas,
             "operadores": operadores,
             "status_opcoes": StatusSessaoCaixa.choices,
+            "lojas": lojas,
+            "pode_filtrar_loja": modo_relatorio and not usuario_operacional,
             "filtros": {
                 "data_inicio": data_inicio,
                 "data_fim": data_fim,
+                "loja": loja_filtro if modo_relatorio and not usuario_operacional else "",
                 "caixa": caixa_id,
                 "operador": operador_id,
                 "status": status,
             },
             "query_string": query_params.urlencode(),
+            "modo_relatorio": modo_relatorio,
+            "usuario_operacional": usuario_operacional,
         },
     )
+
+# F2EA21 - DEMONSTRATIVO DE SESSAO DE CAIXA
+@login_required
+@require_GET
+def _contexto_demonstrativo_caixa(request, sessao_id):
+    from collections import defaultdict
+    from empresas.models import Loja
+    from financeiro.models import BaixaFinanceira, TituloFinanceiro
+    from pdv.models import PagamentoVenda, MovimentacaoCaixa
+    from pdv.services.vendas.caixa import calcular_saldo_sessao_caixa
+
+    matriz = getattr(request.user, "matriz", None)
+    modo_relatorio = (request.GET.get("modo_relatorio") or "").strip() == "1"
+    if modo_relatorio:
+        if not usuario_tem_permissao(request.user, PERMISSAO_RELATORIOS_DASHBOARD):
+            return None, HttpResponseForbidden("Sem permissao para consultar relatorios.")
+    elif not usuario_tem_permissao(request.user, PERMISSAO_PDV_FECHAR_CAIXA):
+        return None, HttpResponseForbidden("Sem permissao para consultar fechamentos de caixa.")
+    if matriz is None:
+        return None, redirect("pdv:inicio")
+
+    usuario_operacional = getattr(request.user, "perfil", None) == getattr(request.user, "PERFIL_OPERADOR", "operador")
+    if usuario_operacional:
+        lojas_autorizadas = request.user.lojas.filter(matriz=matriz)
+        loja_operacional_id = request.session.get("loja_operacional_id")
+        lojas = lojas_autorizadas.filter(pk=loja_operacional_id) if loja_operacional_id else lojas_autorizadas.none()
+    else:
+        lojas = Loja.objects.filter(matriz=matriz)
+
+    sessao = get_object_or_404(
+        SessaoCaixa.objects.select_related("caixa", "caixa__loja", "caixa__matriz", "operador_abertura", "operador_fechamento"),
+        pk=sessao_id, caixa__matriz=matriz, caixa__loja__in=lojas,
+    )
+    pagamentos = (PagamentoVenda.objects.filter(venda__sessao_caixa=sessao, venda__status=StatusOperacaoVenda.FINALIZADA)
+        .select_related("forma_pagamento", "venda").order_by("forma_pagamento__nome", "criado_em"))
+    formas = defaultdict(lambda: {"recebido": Decimal("0.00"), "a_receber": Decimal("0.00"), "total": Decimal("0.00"), "movimenta_caixa": False, "gera_contas_receber": False})
+    for pagamento in pagamentos:
+        forma=pagamento.forma_pagamento; linha=formas[forma.nome]
+        linha["total"] += pagamento.valor; linha["movimenta_caixa"]=forma.movimenta_caixa; linha["gera_contas_receber"]=forma.gera_contas_receber
+        if not forma.gera_contas_receber:
+            linha["recebido"] += pagamento.valor
+            continue
+        titulo=(TituloFinanceiro.objects.filter(matriz=matriz, loja=sessao.caixa.loja, natureza=TituloFinanceiro.Natureza.RECEBER,
+            origem_tipo=TituloFinanceiro.OrigemTipo.VENDA_PAGAMENTO, origem_id=str(pagamento.uuid))
+            .exclude(status=TituloFinanceiro.Status.CANCELADO).prefetch_related("parcelas__baixas").first())
+        if titulo is None:
+            linha["a_receber"] += pagamento.valor
+            continue
+        recebido=Decimal("0.00"); saldo=Decimal("0.00")
+        for parcela in titulo.parcelas.all():
+            baixas=sum((e.valor for e in parcela.baixas.all() if e.tipo==BaixaFinanceira.Tipo.BAIXA),Decimal("0.00"))
+            estornos=sum((e.valor for e in parcela.baixas.all() if e.tipo==BaixaFinanceira.Tipo.ESTORNO),Decimal("0.00"))
+            recebido += baixas-estornos; saldo += parcela.valor_original-baixas+estornos
+        linha["recebido"] += recebido; linha["a_receber"] += saldo
+    movimentos=list(MovimentacaoCaixa.objects.filter(sessao_caixa=sessao).select_related("operador","venda","movimentacao_estornada").order_by("criada_em","id"))
+    saldo_calculado=calcular_saldo_sessao_caixa(sessao=sessao)
+    return {"sessao":sessao,"formas_pagamento":[{"nome":n,**x} for n,x in formas.items()],"movimentos":movimentos,
+        "tipos_saldo":("ABERTURA","VENDA","SUPRIMENTO","SANGRIA","ESTORNO"),"valor_abertura":sessao.valor_abertura,
+        "saldo_calculado":saldo_calculado,"saldo_real":sessao.valor_fechamento_informado,
+        "usuario_operacional":usuario_operacional,"modo_relatorio":modo_relatorio}, None
+
+
+@login_required
+@require_GET
+def demonstrativo_caixa(request, sessao_id):
+    contexto, resposta = _contexto_demonstrativo_caixa(request, sessao_id)
+    if resposta is not None:
+        return resposta
+    return render(request, "pdv/demonstrativo_caixa.html", contexto)
+
+
+@login_required
+@require_GET
+def demonstrativo_caixa_pdf(request, sessao_id):
+    from io import BytesIO
+    from django.utils import timezone
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import mm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    contexto, resposta = _contexto_demonstrativo_caixa(request, sessao_id)
+    if resposta is not None:
+        return resposta
+    sessao=contexto["sessao"]; loja=sessao.caixa.loja
+    def dinheiro(valor):
+        if valor is None: return "Não informado"
+        x=f"{Decimal(valor):,.2f}".replace(",","#").replace(".",",").replace("#",".")
+        return f"R$ {x}"
+    def data_hora(valor):
+        return "-----" if valor is None else timezone.localtime(valor).strftime("%d/%m/%Y %H:%M:%S")
+
+    buffer=BytesIO()
+    doc=SimpleDocTemplate(buffer,pagesize=A4,rightMargin=14*mm,leftMargin=14*mm,topMargin=14*mm,bottomMargin=14*mm,
+        title=f"Demonstrativo de Caixa - Sessao {sessao.pk}",author="Pro-Cash")
+    styles=getSampleStyleSheet()
+    titulo=ParagraphStyle("TituloCaixa",parent=styles["Heading1"],alignment=TA_CENTER,fontSize=16,leading=19,spaceAfter=4)
+    centro=ParagraphStyle("CentroCaixa",parent=styles["Normal"],alignment=TA_CENTER,fontSize=9,leading=12)
+    secao=ParagraphStyle("SecaoCaixa",parent=styles["Heading2"],fontSize=11,leading=14,spaceBefore=7,spaceAfter=5,leftIndent=0)
+    normal=ParagraphStyle("NormalCaixa",parent=styles["Normal"],fontSize=8.5,leading=11)
+    direita=ParagraphStyle("DireitaCaixa",parent=normal,alignment=TA_RIGHT)
+    story=[Paragraph("Demonstrativo de Caixa",titulo),Paragraph(str(loja.nome),centro)]
+    if loja.cnpj: story.append(Paragraph(f"CNPJ: {loja.cnpj}",centro))
+    if loja.telefone: story.append(Paragraph(f"Telefone: {loja.telefone}",centro))
+    story += [Paragraph(f"Caixa: {sessao.caixa.nome}",centro),Spacer(1,5*mm)]
+    operador=sessao.operador_abertura.get_full_name().strip() or sessao.operador_abertura.username
+    resumo=[["Situação",sessao.get_status_display()],["Aberto em",data_hora(sessao.aberta_em)],["Fechado em",data_hora(sessao.fechada_em)],["Funcionário",operador]]
+    tab=Table(resumo,colWidths=[38*mm,130*mm]); tab.setStyle(TableStyle([("FONTNAME",(0,0),(0,-1),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,-1),8.5),("GRID",(0,0),(-1,-1),.35,colors.grey),("BACKGROUND",(0,0),(0,-1),colors.whitesmoke),("PADDING",(0,0),(-1,-1),4)]))
+    tab.hAlign="LEFT"
+    story += [tab,Paragraph("Movimentações de caixa",secao),Paragraph("Abertura do caixa",secao)]
+    tab=Table([["Descrição","Valor"],["Valor de abertura",dinheiro(contexto["valor_abertura"])]],colWidths=[125*mm,43*mm]); tab.setStyle(TableStyle([("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,-1),8.5),("BACKGROUND",(0,0),(-1,0),colors.whitesmoke),("GRID",(0,0),(-1,-1),.35,colors.grey),("ALIGN",(1,1),(1,-1),"RIGHT"),("PADDING",(0,0),(-1,-1),4)])); story.append(tab)
+    tab.hAlign="LEFT"
+    rows=[["Forma de pagamento","Recebido","A receber","Total"]]
+    for f in contexto["formas_pagamento"]: rows.append([Paragraph(str(f["nome"]),normal),Paragraph(dinheiro(f["recebido"]),direita),Paragraph(dinheiro(f["a_receber"]),direita),Paragraph(dinheiro(f["total"]),direita)])
+    if len(rows)==1: rows.append(["Nenhum pagamento.","","",""])
+    tab=Table(rows,colWidths=[66*mm,34*mm,34*mm,34*mm],repeatRows=1); tab.setStyle(TableStyle([("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,-1),8),("BACKGROUND",(0,0),(-1,0),colors.whitesmoke),("GRID",(0,0),(-1,-1),.35,colors.grey),("VALIGN",(0,0),(-1,-1),"TOP"),("ALIGN",(1,1),(-1,-1),"RIGHT"),("PADDING",(0,0),(-1,-1),4)])); story += [Paragraph("Vendas realizadas no balcão",secao),tab]
+    tab.hAlign="LEFT"
+    rows=[["Data","Tipo","Descrição","Valor"]]
+    for m in contexto["movimentos"]: rows.append([data_hora(m.criada_em),m.get_tipo_display(),Paragraph(str(m.descricao or "-"),normal),Paragraph(dinheiro(m.valor),direita)])
+    if len(rows)==1: rows.append(["Nenhuma movimentacao.","","",""])
+    tab=Table(rows,colWidths=[39*mm,32*mm,63*mm,34*mm],repeatRows=1); tab.setStyle(TableStyle([("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,-1),7.5),("BACKGROUND",(0,0),(-1,0),colors.whitesmoke),("GRID",(0,0),(-1,-1),.35,colors.grey),("VALIGN",(0,0),(-1,-1),"TOP"),("ALIGN",(3,1),(3,-1),"RIGHT"),("PADDING",(0,0),(-1,-1),3.5)])); story += [Paragraph("Movimentações registradas",secao),tab,Spacer(1,5*mm)]
+    tab.hAlign="LEFT"
+    rows=[["Saldo calculado",dinheiro(contexto["saldo_calculado"])]]
+    if sessao.valor_fechamento_informado is not None: rows.append(["Saldo informado",dinheiro(sessao.valor_fechamento_informado)])
+    if sessao.diferenca_fechamento is not None: rows.append(["Diferença",dinheiro(sessao.diferenca_fechamento)])
+    rows.append(["Saldo real no caixa",dinheiro(contexto["saldo_real"])])
+    tab=Table(rows,colWidths=[105*mm,63*mm]); tab.setStyle(TableStyle([("FONTNAME",(0,0),(0,-1),"Helvetica-Bold"),("FONTNAME",(0,-1),(-1,-1),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,-1),9),("GRID",(0,0),(-1,-1),.35,colors.grey),("BACKGROUND",(0,-1),(-1,-1),colors.whitesmoke),("ALIGN",(1,0),(1,-1),"RIGHT"),("PADDING",(0,0),(-1,-1),4)])); story.append(tab)
+    tab.hAlign="LEFT"
+    doc.build(story); pdf=buffer.getvalue(); buffer.close()
+    response=HttpResponse(pdf,content_type="application/pdf")
+    response["Content-Disposition"]=f'attachment; filename="demonstrativo_caixa_{sessao.pk}.pdf"'
+    return response
+
 
 # PDV-04E.3 - HISTORICO DE VENDAS
 @login_required

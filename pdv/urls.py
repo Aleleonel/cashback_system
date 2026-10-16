@@ -15,6 +15,8 @@ urlpatterns = [
         views.historico_fechamentos,
         name="historico_fechamentos",
     ),
+    path("caixa/historico/<int:sessao_id>/", views.demonstrativo_caixa, name="demonstrativo_caixa"),
+    path("caixa/historico/<int:sessao_id>/pdf/", views.demonstrativo_caixa_pdf, name="demonstrativo_caixa_pdf"),
     path(
         "caixa/fechar/confirmar/",
         views.confirmar_fechamento_caixa,

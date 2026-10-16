@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Demonstrativo de Caixa{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+<div class="d-flex justify-content-between align-items-center mb-3"><div><h2>Demonstrativo de Caixa</h2><div>{{ sessao.caixa.loja.nome }} - {{ sessao.caixa.nome }}</div></div><div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'pdv:demonstrativo_caixa_pdf' sessao.id %}{% if modo_relatorio %}?modo_relatorio=1{% endif %}">Exportar PDF</a><a class="btn btn-outline-secondary" href="{% url 'pdv:historico_fechamentos' %}{% if modo_relatorio %}?modo_relatorio=1{% endif %}">Voltar</a></div></div>
+<div class="card mb-3"><div class="card-body"><div class="row g-3">
+<div class="col-md-3"><strong>Situação</strong><div>{{ sessao.get_status_display }}</div></div>
+<div class="col-md-3"><strong>Aberto em</strong><div>{{ sessao.aberta_em|date:"d/m/Y H:i:s" }}</div></div>
+<div class="col-md-3"><strong>Fechado em</strong><div>{% if sessao.fechada_em %}{{ sessao.fechada_em|date:"d/m/Y H:i:s" }}{% else %}-----{% endif %}</div></div>
+<div class="col-md-3"><strong>Funcionário</strong><div>{{ sessao.operador_abertura.get_full_name|default:sessao.operador_abertura.username }}</div></div>
+</div></div></div>
+<h4>Movimentações de caixa</h4>
+<h5>Abertura do caixa</h5>
+<table class="table table-bordered table-sm"><thead><tr><th>Descrição</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Valor de abertura</td><td>R$ {{ valor_abertura|floatformat:2 }}</td></tr>
+</tbody></table><h5>Vendas realizadas no balcão</h5>
+<table class="table table-bordered table-sm"><thead><tr><th>Forma Pagamento</th><th>Recebido</th><th>A Receber</th><th>Total</th></tr></thead><tbody>
+{% for f in formas_pagamento %}<tr><td>{{ f.nome }}</td><td>R$ {{ f.recebido|floatformat:2 }}</td><td>R$ {{ f.a_receber|floatformat:2 }}</td><td>R$ {{ f.total|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Nenhum pagamento.</td></tr>{% endfor %}
+</tbody></table>
+<h5>Movimentações registradas</h5><table class="table table-bordered table-sm"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody>
+{% for m in movimentos %}<tr><td>{{ m.criada_em|date:"d/m/Y H:i:s" }}</td><td>{{ m.get_tipo_display }}</td><td>{{ m.descricao|default:"-" }}</td><td>R$ {{ m.valor|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Nenhuma movimentação.</td></tr>{% endfor %}
+</tbody></table>
+<div class="row justify-content-end"><div class="col-md-5"><table class="table table-bordered">
+<tr><th>Saldo calculado</th><td>R$ {{ saldo_calculado|floatformat:2 }}</td></tr>
+{% if sessao.valor_fechamento_informado is not None %}<tr><th>Saldo informado</th><td>R$ {{ sessao.valor_fechamento_informado|floatformat:2 }}</td></tr>{% endif %}
+{% if sessao.diferenca_fechamento is not None %}<tr><th>Diferença</th><td>R$ {{ sessao.diferenca_fechamento|floatformat:2 }}</td></tr>{% endif %}
+<tr><th>Saldo real no caixa</th><td><strong>{% if saldo_real is not None %}R$ {{ saldo_real|floatformat:2 }}{% else %}<span class="text-muted">Não informado</span>{% endif %}</strong></td></tr>
+</table></div></div></div>
+{% endblock %}
