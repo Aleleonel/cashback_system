@@ -152,6 +152,10 @@
             <i class="bi bi-cash-coin me-2"></i>
             Cashback
         </a>
+        <a href="{% url 'relatorios:comissoes' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'comissoes' or request.resolver_match.url_name == 'relatorio_comissoes' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-percent me-2"></i>
+            Comiss&otilde;es
+        </a>
         {% endif %}
 
         {% if pode_gerenciar_vouchers %}

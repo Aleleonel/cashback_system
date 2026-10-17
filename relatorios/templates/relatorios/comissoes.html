@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Relat&oacute;rios de Comiss&otilde;es{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+ <div class="mb-4"><div class="text-uppercase text-secondary small fw-semibold mb-1">Relat&oacute;rios</div><h1 class="h3 mb-1"><i class="bi bi-percent me-2"></i>Comiss&otilde;es</h1><p class="text-secondary mb-0">Consulte os fechamentos de comiss&atilde;o j&aacute; consolidados conforme seu escopo de acesso.</p></div>
+ <div class="row g-4"><div class="col-12 col-md-6 col-xl-4"><article class="card h-100 border-0 shadow-sm"><div class="card-body d-flex flex-column"><i class="bi bi-person-check fs-2 mb-3"></i><h2 class="h5">Relat&oacute;rio de Comiss&otilde;es</h2><p class="text-secondary flex-grow-1">Consulte compet&ecirc;ncia, loja, vendedor, vendas, meta, percentual aplicado e valor da comiss&atilde;o.</p><a href="{% url 'relatorios:relatorio_comissoes' %}" class="btn btn-outline-primary stretched-link">Acessar relat&oacute;rio</a></div></article></div></div>
+</div>
+{% endblock %}

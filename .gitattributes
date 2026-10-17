@@ -1,0 +1,14 @@
+# Contrato textual do Pro-Cash.
+# Nao executa recodificacao: apenas estabiliza EOL para alteracoes futuras.
+*.py    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.toml  text eol=lf
+*.ini   text eol=lf
+*.cfg   text eol=lf
+*.ps1   text eol=crlf
