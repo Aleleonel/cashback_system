@@ -181,7 +181,7 @@
         <h2 class="h5 mb-1"><i class="bi bi-calendar2-check me-2"></i>Fechamento mensal</h2>
         <p class="text-secondary small">Consolide uma competência. Fechamentos existentes permanecem históricos e imutáveis.</p>
         <form method="post" class="row g-3 align-items-end">{% csrf_token %}<input type="hidden" name="acao" value="fechamento_comissao">
-          <div class="col-12 col-lg-5"><label class="form-label">Filial</label><select class="form-select" name="loja_fechamento_id" required><option value="">Selecione...</option>{% for loja in lojas %}<option value="{{ loja.pk }}">{{ loja.nome }}</option>{% endfor %}</select></div>
+          <div class="col-12 col-lg-5"><label class="form-label">Filial</label><select class="form-select" name="loja_fechamento_id" required><option value="">Selecione...</option><option value="todas">Todas as lojas</option>{% for loja in lojas %}<option value="{{ loja.pk }}">{{ loja.nome }}</option>{% endfor %}</select></div>
           <div class="col-6 col-lg-2"><label class="form-label">Mês</label><input class="form-control" name="competencia_mes" type="number" min="1" max="12" required></div>
           <div class="col-6 col-lg-2"><label class="form-label">Ano</label><input class="form-control" name="competencia_ano" type="number" min="1" required></div>
           <div class="col-12 col-lg-3 d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-calendar-check me-1"></i>Fechar comissões</button></div>

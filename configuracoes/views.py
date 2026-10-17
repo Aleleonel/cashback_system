@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.contrib import messages
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import require_permission
@@ -210,16 +211,24 @@ def comissoes(request):
             competencia_ano = request.POST.get("competencia_ano")
             competencia_mes = request.POST.get("competencia_mes")
             try:
-                loja_fechamento = lojas.get(pk=loja_fechamento_id)
                 ano = int(competencia_ano)
                 mes = int(competencia_mes)
                 if ano < 1 or mes < 1 or mes > 12:
                     raise ValueError
+                fechamento_global = loja_fechamento_id == "todas"
+                loja_fechamento = None if fechamento_global else lojas.get(pk=loja_fechamento_id)
             except (Loja.DoesNotExist, TypeError, ValueError):
-                messages.error(request, "Loja ou competência inválida para o fechamento.")
+                messages.error(request, "Loja ou competÃªncia invÃ¡lida para o fechamento.")
             else:
-                fechar_comissoes_competencia(loja=loja_fechamento, ano=ano, mes=mes)
-                messages.success(request, f"Fechamento de {mes:02d}/{ano} para {loja_fechamento.nome} disponível no histórico.")
+                if fechamento_global:
+                    lojas_fechadas = list(lojas)
+                    with transaction.atomic():
+                        for loja_alvo in lojas_fechadas:
+                            fechar_comissoes_competencia(loja=loja_alvo, ano=ano, mes=mes)
+                    messages.success(request, f"Fechamento de {mes:02d}/{ano} disponÃ­vel no histÃ³rico para {len(lojas_fechadas)} loja(s).")
+                else:
+                    fechar_comissoes_competencia(loja=loja_fechamento, ano=ano, mes=mes)
+                    messages.success(request, f"Fechamento de {mes:02d}/{ano} para {loja_fechamento.nome} disponÃ­vel no histÃ³rico.")
                 return redirect(redirect_comissoes)
     metas = MetaComissaoLoja.objects.filter(loja__in=lojas).order_by("loja__nome", "valor_meta") if matriz else MetaComissaoLoja.objects.none()
     fechamentos_comissao = FechamentoComissao.objects.filter(loja__in=lojas).select_related("loja").prefetch_related("comissoes_vendedores").order_by("-competencia_ano", "-competencia_mes", "loja__nome", "-pk") if matriz else FechamentoComissao.objects.none()
