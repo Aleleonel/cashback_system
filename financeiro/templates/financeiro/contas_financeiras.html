@@ -14,7 +14,7 @@
         <td>{{ conta.instituicao.nome|default:"—" }}</td><td>{{ conta.loja.nome|default:"Matriz" }}</td>
         <td>{{ conta.agencia|default:"—" }}</td><td>{{ conta.numero|default:"—" }}</td>
         <td>{% if conta.ativo %}Ativa{% else %}Inativa{% endif %}</td>
-        <td><a href="{% url 'financeiro:conta_financeira_editar' conta.uuid %}" class="btn btn-sm btn-outline-primary">Editar</a></td>
+        <td><a href="{% url 'financeiro:conta_financeira_extrato' conta.uuid %}" class="btn btn-sm btn-outline-secondary">Extrato</a> <a href="{% url 'financeiro:conta_financeira_editar' conta.uuid %}" class="btn btn-sm btn-outline-primary">Editar</a></td>
       </tr>{% empty %}<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma conta financeira cadastrada.</td></tr>{% endfor %}</tbody>
     </table>
   </div></div></div>

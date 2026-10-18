@@ -23,5 +23,7 @@ urlpatterns = [
     path("contas-financeiras/", views.contas_financeiras, name="contas_financeiras"),
     path("contas-financeiras/nova/", views.conta_financeira_nova, name="conta_financeira_nova"),
     path("contas-financeiras/<uuid:conta_uuid>/editar/", views.conta_financeira_editar, name="conta_financeira_editar"),
+    path("contas-financeiras/<uuid:conta_uuid>/extrato/", views.conta_financeira_extrato, name="conta_financeira_extrato"),
+    path("contas-financeiras/<uuid:conta_uuid>/extrato/pdf/", views.conta_financeira_extrato_pdf, name="conta_financeira_extrato_pdf"),
     path("lancamentos/novo/", views.lancamento_manual, name="lancamento_manual"),
 ]

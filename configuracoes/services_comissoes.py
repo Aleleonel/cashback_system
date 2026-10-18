@@ -219,3 +219,38 @@ def fechar_comissoes_competencia(*, loja, ano: int, mes: int):
                 ),
             )
         return fechamento
+
+def gerar_titulo_financeiro_comissao(*, comissao, vencimento, usuario=None, request=None):
+    """Converte um snapshot positivo de comissao em uma obrigacao financeira idempotente."""
+    from datetime import date
+    from django.core.exceptions import ValidationError
+    from financeiro.models import TituloFinanceiro
+    from financeiro.services import criar_titulo_financeiro
+    from .models import ComissaoVendedor
+
+    if not isinstance(comissao, ComissaoVendedor) or comissao.pk is None:
+        raise ValidationError({"comissao": "Informe um snapshot de comissao persistido."})
+    if not comissao.elegivel or comissao.valor_comissao <= ZERO:
+        raise ValidationError({"comissao": "Somente comissao elegivel e com valor positivo pode gerar titulo."})
+
+    fechamento = comissao.fechamento
+    chave = f"COMISSAO:{comissao.pk}"
+    competencia = date(fechamento.competencia_ano, fechamento.competencia_mes, 1)
+    descricao = (
+        f"ComissÃ£o {fechamento.competencia_mes:02d}/{fechamento.competencia_ano} - "
+        f"{comissao.vendedor_nome_original}"
+    )
+
+    return criar_titulo_financeiro(
+        matriz=fechamento.matriz,
+        loja=fechamento.loja,
+        natureza=TituloFinanceiro.Natureza.PAGAR,
+        origem_tipo=TituloFinanceiro.OrigemTipo.COMISSAO,
+        origem_id=str(comissao.pk),
+        chave_idempotencia=chave,
+        descricao=descricao,
+        data_emissao=competencia,
+        parcelas=[{"numero": 1, "vencimento": vencimento, "valor": comissao.valor_comissao}],
+        usuario=usuario,
+        request=request,
+    )

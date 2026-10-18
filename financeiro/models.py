@@ -163,6 +163,7 @@ class TituloFinanceiro(models.Model):
         VENDA_PAGAMENTO = "VENDA_PAGAMENTO", "Venda - pagamento"
         MANUAL = "MANUAL", "Manual"
         AJUSTE = "AJUSTE", "Ajuste"
+        COMISSAO = "COMISSAO", "ComissÃ£o"
     class Status(models.TextChoices):
         ABERTO = "ABERTO", "Aberto"
         PARCIAL = "PARCIAL", "Parcial"

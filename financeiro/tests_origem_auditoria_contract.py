@@ -42,7 +42,7 @@ class OrigemTipoAuditoriaContractTest(TestCase):
         self.assertTrue(hasattr(TituloFinanceiro, "OrigemTipo"))
         self.assertEqual(
             set(TituloFinanceiro.OrigemTipo.values),
-            {"COMPRA_RECEBIMENTO", "VENDA_PAGAMENTO", "MANUAL", "AJUSTE"},
+            {"COMPRA_RECEBIMENTO", "VENDA_PAGAMENTO", "MANUAL", "AJUSTE", "COMISSAO"},
         )
 
     def test_origem_tipo_invalida_e_rejeitada(self):

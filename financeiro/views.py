@@ -599,6 +599,71 @@ def conta_financeira_editar(request, conta_uuid):
         {"matriz": matriz, "form": form, "modo_edicao": True, "conta": conta},
     )
 
+def _extrato_conta_contexto(request, conta_uuid):
+    from django.db.models import Q
+    matriz = _matriz_usuario(request)
+    conta = get_object_or_404(ContaFinanceira.objects.select_related("loja", "instituicao"), uuid=conta_uuid, matriz=matriz)
+    lojas = _lojas_autorizadas(request, matriz)
+    if conta.loja_id is not None and not lojas.filter(pk=conta.loja_id).exists():
+        raise Http404("Conta financeira fora do escopo autorizado.")
+    eventos = BaixaFinanceira.objects.filter(conta_financeira=conta).select_related("forma_pagamento", "parcela__titulo", "parcela__titulo__loja")
+    data_inicio=(request.GET.get("data_inicio") or "").strip(); data_fim=(request.GET.get("data_fim") or "").strip()
+    tipo=(request.GET.get("tipo") or "").strip().upper(); natureza=(request.GET.get("natureza") or "").strip().upper()
+    forma_pagamento=(request.GET.get("forma_pagamento") or "").strip(); busca=(request.GET.get("busca") or "").strip()
+    try:
+        if data_inicio: eventos=eventos.filter(data__gte=date.fromisoformat(data_inicio))
+    except ValueError: data_inicio=""
+    try:
+        if data_fim: eventos=eventos.filter(data__lte=date.fromisoformat(data_fim))
+    except ValueError: data_fim=""
+    if tipo in {"BAIXA","ESTORNO"}: eventos=eventos.filter(tipo=tipo)
+    else: tipo=""
+    if natureza in {"PAGAR","RECEBER"}: eventos=eventos.filter(parcela__titulo__natureza=natureza)
+    else: natureza=""
+    if forma_pagamento: eventos=eventos.filter(forma_pagamento_id=forma_pagamento)
+    if busca: eventos=eventos.filter(Q(parcela__titulo__descricao__icontains=busca)|Q(observacao__icontains=busca))
+    eventos=eventos.order_by("-data","-criado_em","-pk"); lista=list(eventos)
+    total_entradas=Decimal("0"); total_saidas=Decimal("0")
+    for e in lista:
+        entrada=(e.tipo=="ESTORNO" and e.parcela.titulo.natureza=="PAGAR") or (e.tipo=="BAIXA" and e.parcela.titulo.natureza=="RECEBER")
+        if entrada: total_entradas+=e.valor
+        else: total_saidas+=e.valor
+    try:
+        from pdv.models import FormaPagamento
+        formas=FormaPagamento.objects.filter(matriz=matriz,ativa=True).order_by("nome")
+    except Exception: formas=[]
+    params=request.GET.copy(); params.pop("page",None)
+    return {"matriz":matriz,"conta":conta,"eventos":lista,"data_inicio":data_inicio,"data_fim":data_fim,"tipo":tipo,"natureza":natureza,"forma_pagamento":forma_pagamento,"busca":busca,"formas_pagamento":formas,"total_entradas":total_entradas,"total_saidas":total_saidas,"saldo_liquido":total_entradas-total_saidas,"total_movimentacoes":len(lista),"querystring":params.urlencode()}
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
+def conta_financeira_extrato(request, conta_uuid):
+    contexto=_extrato_conta_contexto(request,conta_uuid)
+    contexto["pagina"]=Paginator(contexto["eventos"],30).get_page(request.GET.get("page"))
+    return render(request,"financeiro/conta_financeira_extrato.html",contexto)
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
+def conta_financeira_extrato_pdf(request, conta_uuid):
+    from io import BytesIO
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    contexto=_extrato_conta_contexto(request,conta_uuid); buffer=BytesIO(); styles=getSampleStyleSheet()
+    doc=SimpleDocTemplate(buffer,pagesize=landscape(A4))
+    story=[Paragraph("Extrato da Conta Financeira",styles["Title"]),Paragraph(str(contexto["conta"].nome),styles["Heading2"]),Paragraph("Periodo: %s a %s"%(contexto["data_inicio"] or "inicio",contexto["data_fim"] or "fim"),styles["Normal"]),Spacer(1,12)]
+    resumo=[["Entradas","Saidas","Saldo liquido","Movimentacoes"],[f'R$ {contexto["total_entradas"]:.2f}',f'R$ {contexto["total_saidas"]:.2f}',f'R$ {contexto["saldo_liquido"]:.2f}',str(contexto["total_movimentacoes"])]]
+    rt=Table(resumo);rt.setStyle(TableStyle([("GRID",(0,0),(-1,-1),.25,colors.grey),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold")]))
+    story += [rt,Spacer(1,12)];dados=[["Data","Tipo","Natureza","Titulo","Forma","Loja","Valor"]]
+    for e in contexto["eventos"]:
+        entrada=(e.tipo=="ESTORNO" and e.parcela.titulo.natureza=="PAGAR") or (e.tipo=="BAIXA" and e.parcela.titulo.natureza=="RECEBER")
+        dados.append([e.data.strftime("%d/%m/%Y"),e.get_tipo_display(),e.parcela.titulo.get_natureza_display(),e.parcela.titulo.descricao,str(e.forma_pagamento or "-"),e.parcela.titulo.loja.nome if e.parcela.titulo.loja else "Matriz",("%sR$ %.2f"%("+" if entrada else "-",e.valor))])
+    tb=Table(dados,repeatRows=1);tb.setStyle(TableStyle([("GRID",(0,0),(-1,-1),.25,colors.grey),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold")]))
+    story.append(tb);doc.build(story)
+    response=HttpResponse(buffer.getvalue(),content_type="application/pdf");response["Content-Disposition"]='attachment; filename="extrato_conta_financeira.pdf"';return response
+
+
 def _somar_meses(data_base, meses):
     indice = data_base.month - 1 + meses
     ano = data_base.year + indice // 12
