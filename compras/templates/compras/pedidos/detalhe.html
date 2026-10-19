@@ -228,7 +228,11 @@
                                                 <button
                                                     type="submit"
                                                     class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Remover este item do pedido?');"
+                                                    data-confirmacao-pedido="true"
+                                                    data-confirmacao-titulo="Remover item"
+                                                    data-confirmacao-mensagem="Remover este item do pedido?"
+                                                    data-confirmacao-botao="Remover"
+                                                    data-confirmacao-classe="btn btn-danger"
                                                 >
                                                     <i class="bi bi-trash me-1"></i>
                                                     Remover
@@ -524,7 +528,11 @@
                                 <button
                                     type="submit"
                                     class="btn btn-success w-100"
-                                    onclick="return confirm('Enviar este pedido ao fornecedor?');"
+                                    data-confirmacao-pedido="true"
+                                    data-confirmacao-titulo="Enviar pedido"
+                                    data-confirmacao-mensagem="Enviar este pedido ao fornecedor?"
+                                    data-confirmacao-botao="Enviar ao fornecedor"
+                                    data-confirmacao-classe="btn btn-success"
                                 >
                                     <i class="bi bi-send me-1"></i>
                                     Enviar ao fornecedor
@@ -540,7 +548,11 @@
                                 <button
                                     type="submit"
                                     class="btn btn-outline-danger w-100"
-                                    onclick="return confirm('Cancelar este pedido?');"
+                                    data-confirmacao-pedido="true"
+                                    data-confirmacao-titulo="Cancelar pedido"
+                                    data-confirmacao-mensagem="Cancelar este pedido?"
+                                    data-confirmacao-botao="Cancelar pedido"
+                                    data-confirmacao-classe="btn btn-danger"
                                 >
                                     <i class="bi bi-x-circle me-1"></i>
                                     Cancelar pedido
@@ -569,7 +581,11 @@
                                 <button
                                     type="submit"
                                     class="btn btn-outline-danger w-100"
-                                    onclick="return confirm('Cancelar este pedido?');"
+                                    data-confirmacao-pedido="true"
+                                    data-confirmacao-titulo="Cancelar pedido"
+                                    data-confirmacao-mensagem="Cancelar este pedido?"
+                                    data-confirmacao-botao="Cancelar pedido"
+                                    data-confirmacao-classe="btn btn-danger"
                                 >
                                     <i class="bi bi-x-circle me-1"></i>
                                     Cancelar pedido
@@ -593,5 +609,48 @@
             </section>
         </div>
     </div>
+    <div class="modal fade" id="modal-confirmar-acao-pedido" tabindex="-1" aria-labelledby="modal-confirmar-acao-pedido-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title h5 mb-1" id="modal-confirmar-acao-pedido-titulo">Confirmar acao</h2>
+                        <div class="text-muted small">Revise a operacao antes de continuar</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body"><p class="mb-0" id="modal-confirmar-acao-pedido-mensagem"></p></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar e revisar</button>
+                    <button type="button" class="btn btn-dark" id="modal-confirmar-acao-pedido-final">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const modalEl=document.getElementById("modal-confirmar-acao-pedido");
+        const titulo=document.getElementById("modal-confirmar-acao-pedido-titulo");
+        const mensagem=document.getElementById("modal-confirmar-acao-pedido-mensagem");
+        const confirmar=document.getElementById("modal-confirmar-acao-pedido-final");
+        if(!modalEl||!titulo||!mensagem||!confirmar||!window.bootstrap)return;
+        let formularioPendente=null;
+        document.querySelectorAll('[data-confirmacao-pedido="true"]').forEach(function(botao){
+            botao.addEventListener("click",function(evento){
+                evento.preventDefault(); formularioPendente=botao.closest("form"); if(!formularioPendente)return;
+                titulo.textContent=botao.dataset.confirmacaoTitulo||"Confirmar acao";
+                mensagem.textContent=botao.dataset.confirmacaoMensagem||"Deseja continuar?";
+                confirmar.textContent=botao.dataset.confirmacaoBotao||"Confirmar";
+                confirmar.className=botao.dataset.confirmacaoClasse||"btn btn-dark";
+                window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            });
+        });
+        confirmar.addEventListener("click",function(){
+            if(!formularioPendente)return;
+            const form=formularioPendente; formularioPendente=null;
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).hide(); form.submit();
+        });
+    });
+    </script>
 </div>
 {% endblock %}

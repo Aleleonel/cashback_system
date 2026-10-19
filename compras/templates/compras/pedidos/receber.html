@@ -241,8 +241,17 @@
                             {% endif %}
 
                             {% if form.observacoes %}
-                                <div class="col-12">
-                                    {% include "partials/campo_formulario.html" with campo=form.observacoes %}
+                                <div class="col-12" data-ui-observacoes-recebimento="true">
+                                    <label for="{{ form.observacoes.id_for_label }}" class="form-label fw-semibold d-block">
+                                        {{ form.observacoes.label }}
+                                    </label>
+                                    {{ form.observacoes }}
+                                    {% if form.observacoes.help_text %}
+                                        <div class="form-text">{{ form.observacoes.help_text }}</div>
+                                    {% endif %}
+                                    {% for erro in form.observacoes.errors %}
+                                        <div class="text-danger small mt-1">{{ erro }}</div>
+                                    {% endfor %}
                                 </div>
                             {% endif %}
 
