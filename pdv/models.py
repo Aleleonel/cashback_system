@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 import uuid
 from decimal import Decimal
 
@@ -480,6 +481,13 @@ class ItemVenda(models.Model):
     acrescimo = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
     subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
     total = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
+    custo_unitario_snapshot = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+
     observacao = models.TextField(blank=True)
     cancelado = models.BooleanField(default=False, db_index=True)
     motivo_cancelamento = models.CharField(max_length=255, blank=True)
@@ -493,6 +501,10 @@ class ItemVenda(models.Model):
     )
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+
+    @property
+    def custo_total_snapshot(self):
+        return (Decimal(self.quantidade or 0) * Decimal(self.custo_unitario_snapshot or 0)).quantize(Decimal("0.01"))
 
     class Meta:
         ordering = ["venda", "sequencia"]

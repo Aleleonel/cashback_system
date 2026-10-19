@@ -61,6 +61,7 @@ class IntegracaoFinalizacaoFiscal184Tests(TestCase):
         "pdv.services.vendas.finalizacao."
         "_associar_cliente_consumidor"
     )
+    @patch("pdv.services.vendas.finalizacao._congelar_custo_itens", new=lambda **kwargs: None)
     def test_nao_fiscal_nao_chama_pipeline(
         self,
         associar,
@@ -124,6 +125,7 @@ class IntegracaoFinalizacaoFiscal184Tests(TestCase):
         "pdv.services.vendas.finalizacao."
         "_associar_cliente_consumidor"
     )
+    @patch("pdv.services.vendas.finalizacao._congelar_custo_itens", new=lambda **kwargs: None)
     def test_fiscal_executa_pipeline_antes_de_estoque(
         self,
         associar,
@@ -189,6 +191,7 @@ class IntegracaoFinalizacaoFiscal184Tests(TestCase):
         "pdv.services.vendas.finalizacao."
         "_associar_cliente_consumidor"
     )
+    @patch("pdv.services.vendas.finalizacao._congelar_custo_itens", new=lambda **kwargs: None)
     def test_falha_fiscal_impede_estoque_e_caixa(
         self,
         associar,

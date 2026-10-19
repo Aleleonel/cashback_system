@@ -104,11 +104,25 @@ def atualizar_custos_produtos_recebimento(
 
     custos_atualizados = []
 
-    for item in itens_pedido:
-        if item.pk not in ids_recebidos:
-            continue
+    itens_recebidos_pedido = [
+        item for item in itens_pedido
+        if item.pk in ids_recebidos
+    ]
+    produtos_bloqueados = {
+        produto.pk: produto
+        for produto in (
+            Produto.objects
+            .select_for_update()
+            .filter(
+                pk__in={item.produto_id for item in itens_recebidos_pedido},
+                matriz=pedido.matriz,
+            )
+            .order_by("pk")
+        )
+    }
 
-        custo_anterior = Decimal(item.produto.custo_base)
+    for item in itens_recebidos_pedido:
+        custo_anterior = Decimal(produtos_bloqueados[item.produto_id].custo_base)
         custo_novo = calcular_custo_unitario_item(
             item_pedido=item,
             subtotal_pedido=subtotal_pedido,
@@ -117,15 +131,7 @@ def atualizar_custos_produtos_recebimento(
             desconto=pedido.desconto,
         )
 
-        produto = (
-            Produto.objects
-            .select_for_update()
-            .get(
-                pk=item.produto_id,
-                matriz=pedido.matriz,
-            )
-        )
-
+        produto = produtos_bloqueados[item.produto_id]
         produto.custo_base = custo_novo
         produto.save(
             update_fields=[

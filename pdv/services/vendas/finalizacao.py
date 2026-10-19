@@ -10,6 +10,7 @@ from estoque.services import confirmar_reserva_estoque
 from empresas.models import Loja
 from financeiro.models import TituloFinanceiro
 from financeiro.services import criar_titulo_financeiro
+from produtos.models import Produto
 from pdv.choices import (
     StatusOperacaoVenda,
     TipoEmissaoVenda,
@@ -184,6 +185,28 @@ def _finalizar_modelo(*, venda):
     return venda
 
 
+def _congelar_custo_itens(*, venda):
+    itens = list(
+        venda.itens
+        .select_for_update()
+        .filter(cancelado=False)
+        .order_by("sequencia")
+    )
+    produtos = {
+        produto.pk: produto
+        for produto in Produto.objects.select_for_update().filter(
+            pk__in={item.produto_id for item in itens},
+            matriz=venda.matriz,
+        ).order_by("pk")
+    }
+
+    for item in itens:
+        produto = produtos[item.produto_id]
+        item.custo_unitario_snapshot = Decimal(produto.custo_base)
+        item.full_clean()
+        item.save(update_fields=["custo_unitario_snapshot", "atualizado_em"])
+
+
 @transaction.atomic
 def finalizar_venda(*, venda, usuario=None, request=None):
     venda = (
@@ -213,6 +236,8 @@ def finalizar_venda(*, venda, usuario=None, request=None):
         venda=venda,
         permitir_fiscal=permitir_fiscal,
     )
+
+    _congelar_custo_itens(venda=venda)
 
     if permitir_fiscal:
         preparar_e_persistir_snapshot_fiscal_venda(
