@@ -8,6 +8,13 @@
     <a href="{% url 'relatorios:financeiro_painel' %}" class="card h-100 text-decoration-none">
       <div class="card-body"><h2 class="h5">Relatorio Financeiro</h2><p class="text-muted mb-0">Saldos, fluxo de caixa e titulos.</p></div>
     </a>
-  </div></div>
+  </div>
+{% if pode_acessar_dre %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <a href="{% url 'relatorios:dre' %}" class="card h-100 text-decoration-none">
+      <div class="card-body"><h2 class="h5">DRE Gerencial</h2><p class="text-muted mb-0">Resultado por competencia, margens, comparativo e rastreabilidade.</p></div>
+    </a>
+  </div>
+{% endif %}</div>
 </div>
 {% endblock %}

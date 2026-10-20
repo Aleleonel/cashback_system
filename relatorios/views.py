@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from empresas.models import Loja
+from empresas.models import Loja, Matriz
 from clientes.models import Cliente
 from vouchers.models import Voucher
 from vouchers.selectors import get_relatorio_usos_voucher
@@ -22,6 +22,8 @@ from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
 from compras.selectors import get_fornecedores, get_pedidos_compra
 from compras.models import Fornecedor, PedidoCompra
 from configuracoes.models import FechamentoComissao, ComissaoVendedor
+from financeiro.models import CentroCusto
+from .services_dre import apurar_dre, apurar_evolucao_mensal, REGIME_COMPETENCIA
 
 
 @login_required
@@ -38,7 +40,12 @@ def hub_vendas(request):
 @login_required
 @require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
 def hub_financeiro(request):
-    return render(request, "relatorios/financeiro.html")
+    pode_acessar_dre = request.user.is_superuser or getattr(request.user, "perfil", None) != "operador"
+    return render(
+        request,
+        "relatorios/financeiro.html",
+        {"pode_acessar_dre": pode_acessar_dre},
+    )
 
 
 def hub_estoque(request):
@@ -393,3 +400,180 @@ def exportar_comissoes_xlsx(request):
     rs["B8"].number_format='R$ #,##0.00';rs["B9"].number_format='R$ #,##0.00';rs.column_dimensions["A"].width=28;rs.column_dimensions["B"].width=42
     out=BytesIO();wb.save(out)
     response=HttpResponse(out.getvalue(),content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response["Content-Disposition"]='attachment; filename="relatorio_comissoes.xlsx"';return response
+
+def _periodo_anterior_dre(inicio, fim):
+    from datetime import date, timedelta
+    def ultimo_dia_mes(valor):
+        proximo = date(valor.year + (1 if valor.month == 12 else 0), 1 if valor.month == 12 else valor.month + 1, 1)
+        return proximo - timedelta(days=1)
+    mes_calendario_completo = inicio.day == 1 and fim == ultimo_dia_mes(inicio) and inicio.year == fim.year and inicio.month == fim.month
+    if mes_calendario_completo:
+        anterior_fim = inicio - timedelta(days=1)
+        anterior_inicio = anterior_fim.replace(day=1)
+        return anterior_inicio, anterior_fim
+    dias = (fim - inicio).days
+    anterior_fim = inicio - timedelta(days=1)
+    anterior_inicio = anterior_fim - timedelta(days=dias)
+    return anterior_inicio, anterior_fim
+
+
+def _contexto_dre(request):
+    from datetime import date, timedelta
+
+    if request.user.is_superuser:
+        matrizes = Matriz.objects.order_by("nome", "id")
+        matriz_raw = (request.GET.get("matriz") or "").strip()
+        matriz = matrizes.filter(pk=matriz_raw).first() if matriz_raw.isdigit() else None
+        operador = False
+    else:
+        contexto = get_contexto_operacional_usuario(request.user)
+        matriz = contexto["matriz"]
+        matrizes = Matriz.objects.none()
+        matriz_raw = ""
+        operador = getattr(request.user, "perfil", None) == getattr(request.user, "PERFIL_OPERADOR", "operador")
+
+    hoje = timezone.localdate()
+    inicio_padrao = hoje.replace(day=1)
+    fim_padrao = (inicio_padrao.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    data_inicio_input = (request.GET.get("data_inicio") or "").strip()
+    data_fim_input = (request.GET.get("data_fim") or "").strip()
+    erro_filtros = []
+
+    def parse_data(raw, padrao):
+        if not raw:
+            return padrao
+        try:
+            return date.fromisoformat(raw)
+        except ValueError:
+            erro_filtros.append("Data invÃ¡lida")
+            return None
+
+    data_inicio = parse_data(data_inicio_input, inicio_padrao)
+    data_fim = parse_data(data_fim_input, fim_padrao)
+    if data_inicio is not None and data_fim is not None and data_fim < data_inicio:
+        erro_filtros.append("PerÃ­odo invÃ¡lido")
+
+    if request.user.is_superuser and matriz is None:
+        erro_filtros.append("Selecione uma matriz")
+
+    filtros_validos = not erro_filtros
+    loja_raw = (request.GET.get("loja") or "").strip()
+    centro_raw = (request.GET.get("centro_custo") or "").strip()
+
+    if matriz is None:
+        lojas = Loja.objects.none()
+        loja = None
+        centros_custo = CentroCusto.objects.none()
+        centro_custo = None
+    elif operador:
+        autorizadas = request.user.lojas.filter(matriz=matriz).order_by("nome", "id")
+        lid = request.session.get("loja_operacional_id")
+        loja = autorizadas.filter(pk=lid).first() if lid else autorizadas.first()
+        if loja and not lid:
+            request.session["loja_operacional_id"] = loja.pk
+        lojas = autorizadas.filter(pk=loja.pk) if loja else autorizadas.none()
+        centros_custo = CentroCusto.objects.filter(matriz=matriz,ativo=True).order_by("nome", "id")
+        centro_custo = centros_custo.filter(pk=centro_raw).first() if centro_raw.isdigit() else None
+    else:
+        lojas = Loja.objects.filter(matriz=matriz).order_by("nome", "id")
+        loja = lojas.filter(pk=loja_raw).first() if loja_raw.isdigit() else None
+        centros_custo = CentroCusto.objects.filter(matriz=matriz,ativo=True).order_by("nome", "id")
+        centro_custo = centros_custo.filter(pk=centro_raw).first() if centro_raw.isdigit() else None
+
+    periodo_anterior = None
+    apuracao = None
+    evolucao = []
+    if not erro_filtros:
+        periodo_anterior = _periodo_anterior_dre(data_inicio, data_fim)
+        apuracao = apurar_dre(
+            matriz=matriz, inicio=data_inicio, fim=data_fim, loja=loja,
+            centro_custo=centro_custo, periodo_anterior=periodo_anterior,
+        )
+        evolucao = apurar_evolucao_mensal(
+            matriz=matriz, inicio=data_inicio, fim=data_fim, loja=loja,
+            centro_custo=centro_custo,
+        )
+
+    return {
+        "matriz": matriz, "matrizes": matrizes, "matriz_filtro": matriz_raw,
+        "operador": operador, "lojas": lojas, "loja_filtro": loja,
+        "centros_custo": centros_custo, "centro_custo_filtro": centro_custo,
+        "data_inicio": data_inicio, "data_fim": data_fim,
+        "data_inicio_input": data_inicio_input or inicio_padrao.isoformat(),
+        "data_fim_input": data_fim_input or fim_padrao.isoformat(),
+        "periodo_anterior": periodo_anterior, "erro_filtros": erro_filtros,
+        "filtros_validos": filtros_validos, "regime": REGIME_COMPETENCIA,
+        "resultado": apuracao["resultado"] if apuracao else None,
+        "analise_vertical": apuracao["analise_vertical"] if apuracao else {},
+        "drilldown": apuracao["drilldown"] if apuracao else {},
+        "comparativo": apuracao.get("comparativo") if apuracao else None,
+        "evolucao": evolucao, "query_string": request.GET.urlencode(),
+    }
+
+def _bloquear_operador_dre(request):
+    if not request.user.is_superuser and getattr(request.user, "perfil", None) == "operador":
+        raise PermissionDenied("DRE gerencial restrita ao perfil administrativo da matriz.")
+
+
+@login_required
+@require_GET
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def dre(request):
+    _bloquear_operador_dre(request)
+    return render(request,"relatorios/dre.html",_contexto_dre(request))
+
+@login_required
+@require_GET
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def exportar_dre_pdf(request):
+    _bloquear_operador_dre(request)
+    from io import BytesIO
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    contexto = _contexto_dre(request)
+    if not contexto.get("filtros_validos", contexto.get("resultado") is not None):
+        return HttpResponse(
+            "; ".join(contexto.get("erro_filtros") or ["Filtros invÃ¡lidos"]),
+            status=400,
+            content_type="text/plain; charset=utf-8",
+        )
+    resultado = contexto["resultado"]; av = contexto["analise_vertical"]
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=14*mm, leftMargin=14*mm, topMargin=12*mm, bottomMargin=12*mm)
+    styles=getSampleStyleSheet(); titulo=ParagraphStyle("DRETitulo",parent=styles["Title"],fontName="Helvetica-Bold",fontSize=15,leading=18)
+    story=[Paragraph("DemonstraÃ§Ã£o do Resultado - DRE",titulo),Paragraph(f"Matriz: {contexto['matriz']} | PerÃ­odo: {contexto['data_inicio'].strftime('%d/%m/%Y')} a {contexto['data_fim'].strftime('%d/%m/%Y')} | Regime: {contexto['regime']}",styles["Normal"]),Spacer(1,5*mm)]
+    linhas=[("Receita Bruta","receita_bruta"),("(-) DeduÃ§Ãµes da Receita","deducoes_receita"),("(=) Receita LÃ­quida","receita_liquida"),("(-) CMV","cmv"),("(=) Lucro Bruto","lucro_bruto"),("(-) Despesas Operacionais","despesas_operacionais"),("(=) Resultado Operacional","resultado_operacional"),("(+/-) Resultado Financeiro","resultado_financeiro"),("(+/-) Outras Receitas / Despesas","outras_receitas_despesas"),("(=) Resultado Antes dos Impostos","resultado_antes_impostos")]
+    rows=[["Linha","Valor","AnÃ¡lise vertical"]]+[[rotulo,_formatar_brl(getattr(resultado,campo)),f"{av.get(campo,0):.2f}%"] for rotulo,campo in linhas]
+    table=Table(rows,repeatRows=1,colWidths=[92*mm,48*mm,38*mm]);table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#343A40")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("GRID",(0,0),(-1,-1),0.3,colors.HexColor("#DEE2E6")),("ALIGN",(1,1),(-1,-1),"RIGHT"),("FONTSIZE",(0,0),(-1,-1),9)]))
+    story.append(table);doc.build(story)
+    response=HttpResponse(buffer.getvalue(),content_type="application/pdf");response["Content-Disposition"]='attachment; filename="relatorio_dre.pdf"';return response
+
+@login_required
+@require_GET
+@require_permission(PERMISSAO_RELATORIOS_DASHBOARD)
+def exportar_dre_xlsx(request):
+    _bloquear_operador_dre(request)
+    from io import BytesIO
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    contexto = _contexto_dre(request)
+    if not contexto.get("filtros_validos", contexto.get("resultado") is not None):
+        return HttpResponse(
+            "; ".join(contexto.get("erro_filtros") or ["Filtros invÃ¡lidos"]),
+            status=400,
+            content_type="text/plain; charset=utf-8",
+        )
+    resultado = contexto["resultado"]; av = contexto["analise_vertical"]
+    wb=Workbook();ws=wb.active;ws.title="DRE";ws.append(["DemonstraÃ§Ã£o do Resultado - DRE","",""]);ws.merge_cells("A1:C1");ws["A1"].font=Font(bold=True,size=16)
+    ws.append(["Matriz",str(contexto["matriz"]),""]);ws.append(["PerÃ­odo",f"{contexto['data_inicio'].strftime('%d/%m/%Y')} a {contexto['data_fim'].strftime('%d/%m/%Y')}",""]);ws.append(["Regime",contexto["regime"],""]);ws.append([]);ws.append(["Linha","Valor","AnÃ¡lise vertical"])
+    linhas=[("Receita Bruta","receita_bruta"),("(-) DeduÃ§Ãµes da Receita","deducoes_receita"),("(=) Receita LÃ­quida","receita_liquida"),("(-) CMV","cmv"),("(=) Lucro Bruto","lucro_bruto"),("(-) Despesas Operacionais","despesas_operacionais"),("(=) Resultado Operacional","resultado_operacional"),("(+/-) Resultado Financeiro","resultado_financeiro"),("(+/-) Outras Receitas / Despesas","outras_receitas_despesas"),("(=) Resultado Antes dos Impostos","resultado_antes_impostos")]
+    for rotulo,campo in linhas: ws.append([rotulo,float(getattr(resultado,campo)),float(av.get(campo,0))/100])
+    fill=PatternFill("solid",fgColor="343A40")
+    for c in ws[6]: c.font=Font(bold=True,color="FFFFFF");c.fill=fill;c.alignment=Alignment(horizontal="center")
+    for row in range(7,ws.max_row+1): ws.cell(row,2).number_format='R$ #,##0.00';ws.cell(row,3).number_format='0.00%'
+    ws.column_dimensions["A"].width=38;ws.column_dimensions["B"].width=22;ws.column_dimensions["C"].width=20;ws.freeze_panes="A7"
+    out=BytesIO();wb.save(out)
+    response=HttpResponse(out.getvalue(),content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response["Content-Disposition"]='attachment; filename="relatorio_dre.xlsx"';return response

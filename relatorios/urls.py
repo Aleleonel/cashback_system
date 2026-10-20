@@ -1,12 +1,15 @@
 from django.urls import path
 
-from .views import dashboard, hub_cadastros, hub_vendas, hub_estoque, hub_financeiro, hub_vouchers, relatorio_utilizacao_vouchers, relatorio_clientes, relatorio_aniversariantes, hub_cashback, relatorio_movimentacoes_cashback, hub_compras, relatorio_pedidos_compra, relatorio_fornecedores, hub_caixa, hub_comissoes, relatorio_comissoes, exportar_comissoes_pdf, exportar_comissoes_xlsx
+from .views import dashboard, hub_cadastros, hub_vendas, hub_estoque, hub_financeiro, hub_vouchers, relatorio_utilizacao_vouchers, relatorio_clientes, relatorio_aniversariantes, hub_cashback, relatorio_movimentacoes_cashback, hub_compras, relatorio_pedidos_compra, relatorio_fornecedores, hub_caixa, hub_comissoes, relatorio_comissoes, exportar_comissoes_pdf, exportar_comissoes_xlsx, dre, exportar_dre_pdf, exportar_dre_xlsx
 from financeiro.views import painel_relatorio
 
 
 app_name = 'relatorios'
 
 urlpatterns = [
+    path('dre/', dre, name='dre'),
+    path('dre/pdf/', exportar_dre_pdf, name='exportar_dre_pdf'),
+    path('dre/xlsx/', exportar_dre_xlsx, name='exportar_dre_xlsx'),
     path('comissoes/', hub_comissoes, name='comissoes'),
     path('comissoes/relatorio/', relatorio_comissoes, name='relatorio_comissoes'),
     path('comissoes/relatorio/pdf/', exportar_comissoes_pdf, name='exportar_comissoes_pdf'),

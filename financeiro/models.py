@@ -27,6 +27,21 @@ class PlanoConta(models.Model):
     nome = models.CharField(max_length=150)
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     natureza = models.CharField(max_length=10, choices=Natureza.choices)
+
+    class ClassificacaoDRE(models.TextChoices):
+        DEDUCAO_RECEITA = "DEDUCAO_RECEITA", "DeduÃ§Ã£o de receita"
+        DESPESA_OPERACIONAL = "DESPESA_OPERACIONAL", "Despesa operacional"
+        RESULTADO_FINANCEIRO = "RESULTADO_FINANCEIRO", "Resultado financeiro"
+        OUTRA_RECEITA_DESPESA = "OUTRA_RECEITA_DESPESA", "Outra receita/despesa"
+
+    classificacao_dre = models.CharField(
+        max_length=32,
+        choices=ClassificacaoDRE.choices,
+        null=True,
+        blank=True,
+        default=None,
+        verbose_name="ClassificaÃ§Ã£o DRE",
+    )
     pai = models.ForeignKey(
         "self",
         on_delete=models.PROTECT,
