@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from empresas.models import Matriz
@@ -17,6 +18,7 @@ from financeiro.services import (
 class CancelamentoFinanceiroContractTest(TestCase):
     def setUp(self):
         self.matriz = Matriz.objects.create(nome="Matriz Cancelamento")
+        self.usuario = get_user_model().objects.create_superuser(username="cancelamento_contract", password="x")
         self.titulo = criar_titulo_financeiro(
             matriz=self.matriz,
             loja=None,
@@ -33,7 +35,7 @@ class CancelamentoFinanceiroContractTest(TestCase):
         )
 
     def test_cancelar_titulo_aberto_cancela_titulo_e_parcelas(self):
-        retorno = cancelar_titulo_financeiro(titulo=self.titulo)
+        retorno = cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
         self.titulo.refresh_from_db()
         self.assertEqual(retorno.pk, self.titulo.pk)
         self.assertEqual(self.titulo.status, TituloFinanceiro.Status.CANCELADO)
@@ -42,8 +44,8 @@ class CancelamentoFinanceiroContractTest(TestCase):
         )
 
     def test_cancelamento_repetido_e_idempotente(self):
-        primeiro = cancelar_titulo_financeiro(titulo=self.titulo)
-        segundo = cancelar_titulo_financeiro(titulo=self.titulo)
+        primeiro = cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
+        segundo = cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
         self.assertEqual(primeiro.pk, segundo.pk)
         self.assertEqual(segundo.status, TituloFinanceiro.Status.CANCELADO)
 
@@ -56,7 +58,7 @@ class CancelamentoFinanceiroContractTest(TestCase):
             chave_idempotencia="BX-CANCEL-1",
         )
         with self.assertRaises(ValidationError):
-            cancelar_titulo_financeiro(titulo=self.titulo)
+            cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
 
     def test_pode_cancelar_depois_de_estorno_integral(self):
         parcela = self.titulo.parcelas.get(numero=1)
@@ -72,13 +74,13 @@ class CancelamentoFinanceiroContractTest(TestCase):
             data=date(2026, 9, 15),
             chave_idempotencia="EST-CANCEL-2",
         )
-        cancelar_titulo_financeiro(titulo=self.titulo)
+        cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
         self.titulo.refresh_from_db()
         self.assertEqual(self.titulo.status, TituloFinanceiro.Status.CANCELADO)
 
     def test_baixa_em_titulo_cancelado_e_rejeitada(self):
         parcela = self.titulo.parcelas.get(numero=1)
-        cancelar_titulo_financeiro(titulo=self.titulo)
+        cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
         with self.assertRaises(ValidationError):
             registrar_baixa_financeira(
                 parcela=parcela,

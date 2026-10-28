@@ -45,7 +45,7 @@ class DREHTTPPeriodoTests(TestCase):
             r=self.client.get(reverse("relatorios:dre"),{"matriz":self.matriz.pk,"data_inicio":"2026-99-99","data_fim":"2026-09-30"})
         self.assertEqual(r.status_code,200)
         self.assertTrue(r.context["erro_filtros"])
-        self.assertIn("Data invÃ¡lida",r.context["erro_filtros"])
+        self.assertIn("Data inválida",r.context["erro_filtros"])
 
     @patch("relatorios.views.apurar_evolucao_mensal",return_value=[])
     def test_periodo_invertido_sinaliza_e_nao_inverte_silenciosamente(self,_):
@@ -53,5 +53,5 @@ class DREHTTPPeriodoTests(TestCase):
         with patch("relatorios.views.apurar_dre",side_effect=self.fake_apurar(chamadas)):
             r=self.client.get(reverse("relatorios:dre"),{"matriz":self.matriz.pk,"data_inicio":"2026-09-30","data_fim":"2026-09-01"})
         self.assertEqual(r.status_code,200)
-        self.assertIn("PerÃ­odo invÃ¡lido",r.context["erro_filtros"])
+        self.assertIn("Período inválido",r.context["erro_filtros"])
         self.assertEqual(chamadas, [])

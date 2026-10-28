@@ -13,11 +13,11 @@ class DREHardeningEscopoPeriodoRedTests(SimpleTestCase):
 
     def test_data_invalida_nao_e_silenciosamente_substituida(self):
         self.assertIn("erro_filtros",self.ctx)
-        self.assertIn("Data invÃ¡lida",self.ctx)
+        self.assertIn("Data inválida",self.ctx)
 
     def test_periodo_invertido_nao_e_silenciosamente_trocado(self):
         self.assertNotIn("data_inicio,data_fim=data_fim,data_inicio",self.ctx)
-        self.assertIn("PerÃ­odo invÃ¡lido",self.ctx)
+        self.assertIn("Período inválido",self.ctx)
 
     def test_mes_calendario_completo_compara_mes_calendario_anterior(self):
         self.assertIn("_periodo_anterior_dre",self.src)

@@ -1,5 +1,7 @@
 import uuid
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -29,7 +31,7 @@ class PlanoConta(models.Model):
     natureza = models.CharField(max_length=10, choices=Natureza.choices)
 
     class ClassificacaoDRE(models.TextChoices):
-        DEDUCAO_RECEITA = "DEDUCAO_RECEITA", "DeduÃ§Ã£o de receita"
+        DEDUCAO_RECEITA = "DEDUCAO_RECEITA", "Dedução de receita"
         DESPESA_OPERACIONAL = "DESPESA_OPERACIONAL", "Despesa operacional"
         RESULTADO_FINANCEIRO = "RESULTADO_FINANCEIRO", "Resultado financeiro"
         OUTRA_RECEITA_DESPESA = "OUTRA_RECEITA_DESPESA", "Outra receita/despesa"
@@ -40,7 +42,7 @@ class PlanoConta(models.Model):
         null=True,
         blank=True,
         default=None,
-        verbose_name="ClassificaÃ§Ã£o DRE",
+        verbose_name="Classificação DRE",
     )
     pai = models.ForeignKey(
         "self",
@@ -68,6 +70,54 @@ class PlanoConta(models.Model):
         ]
     def __str__(self):
         return f"{self.codigo} - {self.nome}"
+
+    def _validar_mutacao_dre_competencia_fechada(self):
+        if not self.pk:
+            return
+
+        anterior = (
+            type(self).objects
+            .filter(pk=self.pk)
+            .values("natureza", "classificacao_dre")
+            .first()
+        )
+        if not anterior:
+            return
+        if (
+            anterior["natureza"] == self.natureza
+            and anterior["classificacao_dre"] == self.classificacao_dre
+        ):
+            return
+
+        competencias = (
+            TituloFinanceiro.objects
+            .filter(
+                plano_conta_id=self.pk,
+                origem_tipo__in=[
+                    TituloFinanceiro.OrigemTipo.MANUAL,
+                    TituloFinanceiro.OrigemTipo.AJUSTE,
+                ],
+                data_competencia__isnull=False,
+            )
+            .values_list("data_competencia", flat=True)
+            .distinct()
+        )
+        for data_competencia in competencias:
+            if FechamentoGerencial.objects.filter(
+                matriz_id=self.matriz_id,
+                competencia_ano=data_competencia.year,
+                competencia_mes=data_competencia.month,
+                status=FechamentoGerencial.Status.FECHADO,
+            ).exists():
+                raise ValidationError(
+                    "Natureza/classificacao DRE nao pode ser alterada porque o plano possui "
+                    "lancamentos em competencia gerencial fechada. Reabra a competencia antes "
+                    "da alteracao."
+                )
+
+    def save(self, *args, **kwargs):
+        self._validar_mutacao_dre_competencia_fechada()
+        return super().save(*args, **kwargs)
 
 
 
@@ -362,3 +412,32 @@ class BaixaFinanceira(models.Model):
         indexes = [
             models.Index(fields=["parcela", "data"], name="ix_fin_baixa_parc_data"),
         ]
+
+
+class FechamentoGerencial(models.Model):
+    class Status(models.TextChoices):
+        ABERTO = "ABERTO", "Aberto"
+        FECHADO = "FECHADO", "Fechado"
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    matriz = models.ForeignKey("empresas.Matriz", on_delete=models.PROTECT, related_name="fechamentos_gerenciais")
+    competencia_ano = models.PositiveSmallIntegerField()
+    competencia_mes = models.PositiveSmallIntegerField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.ABERTO)
+    fechado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="fechamentos_gerenciais_realizados", null=True, blank=True)
+    fechado_em = models.DateTimeField(null=True, blank=True)
+    reaberto_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="fechamentos_gerenciais_reabertos", null=True, blank=True)
+    reaberto_em = models.DateTimeField(null=True, blank=True)
+    motivo_reabertura = models.TextField(blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["matriz", "competencia_ano", "competencia_mes"], name="uq_fin_fech_ger_matriz_comp"),
+            models.CheckConstraint(condition=Q(competencia_mes__gte=1) & Q(competencia_mes__lte=12), name="ck_fin_fech_ger_mes"),
+        ]
+        indexes = [models.Index(fields=["matriz", "competencia_ano", "competencia_mes", "status"], name="ix_fin_fech_ger_comp_st")]
+
+    def __str__(self):
+        return f"{self.matriz} - {self.competencia_mes:02d}/{self.competencia_ano} - {self.status}"

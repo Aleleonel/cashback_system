@@ -5,6 +5,8 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from accounts.models import PermissaoUsuario
+from accounts.permissions import PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO
 from auditoria.models import RegistroAuditoria
 from empresas.models import Matriz
 from financeiro.models import BaixaFinanceira, ParcelaFinanceira, TituloFinanceiro
@@ -19,11 +21,12 @@ from financeiro.services import (
 class AuditoriaEventosFinanceirosContractTest(TestCase):
     def setUp(self):
         self.matriz = Matriz.objects.create(nome="Matriz Auditoria Eventos")
-        self.usuario = get_user_model().objects.create_user(
+        self.usuario = get_user_model().objects.create_superuser(
             username="financeiro_eventos",
             password="123456",
             matriz=self.matriz,
         )
+        PermissaoUsuario.objects.create(usuario=self.usuario, permissao=PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO)
         self.titulo = criar_titulo_financeiro(
             matriz=self.matriz,
             loja=None,
@@ -63,7 +66,7 @@ class AuditoriaEventosFinanceirosContractTest(TestCase):
         ).exists())
 
     def test_cancelamento_registra_auditoria(self):
-        cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario)
+        cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
         self.assertTrue(RegistroAuditoria.objects.filter(
             recurso="financeiro.titulo", recurso_id=str(self.titulo.uuid),
             acao=RegistroAuditoria.ACAO_EDITAR, usuario=self.usuario,
@@ -98,7 +101,7 @@ class AuditoriaEventosFinanceirosContractTest(TestCase):
     def test_falha_auditoria_desfaz_cancelamento(self):
         with patch("financeiro.services.registrar_auditoria", side_effect=RuntimeError("falha auditoria")):
             with self.assertRaises(RuntimeError):
-                cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario)
+                cancelar_titulo_financeiro(titulo=self.titulo, usuario=self.usuario, motivo="Correcao controlada de teste")
         self.titulo.refresh_from_db()
         self.parcela.refresh_from_db()
         self.assertEqual(self.titulo.status, TituloFinanceiro.Status.ABERTO)

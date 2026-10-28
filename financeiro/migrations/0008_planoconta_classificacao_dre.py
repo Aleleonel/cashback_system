@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='planoconta',
             name='classificacao_dre',
-            field=models.CharField(blank=True, choices=[('DEDUCAO_RECEITA', 'DeduÃ§Ã£o de receita'), ('DESPESA_OPERACIONAL', 'Despesa operacional'), ('RESULTADO_FINANCEIRO', 'Resultado financeiro'), ('OUTRA_RECEITA_DESPESA', 'Outra receita/despesa')], default=None, max_length=32, null=True, verbose_name='ClassificaÃ§Ã£o DRE'),
+            field=models.CharField(blank=True, choices=[('DEDUCAO_RECEITA', 'Dedução de receita'), ('DESPESA_OPERACIONAL', 'Despesa operacional'), ('RESULTADO_FINANCEIRO', 'Resultado financeiro'), ('OUTRA_RECEITA_DESPESA', 'Outra receita/despesa')], default=None, max_length=32, null=True, verbose_name='Classificação DRE'),
         ),
     ]

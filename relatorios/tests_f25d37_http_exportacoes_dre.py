@@ -41,7 +41,7 @@ class DREHTTPExportacoesTests(TestCase):
         self.assertIn("relatorio_dre.xlsx",r["Content-Disposition"])
         wb=load_workbook(BytesIO(r.content),data_only=False)
         self.assertIn("DRE",wb.sheetnames);ws=wb["DRE"]
-        self.assertEqual(ws["A1"].value,"DemonstraÃ§Ã£o do Resultado - DRE")
+        self.assertEqual(ws["A1"].value,"Demonstração do Resultado - DRE")
         self.assertEqual(ws["B7"].value,210.0)
         self.assertEqual(ws["B16"].value,75.0)
 

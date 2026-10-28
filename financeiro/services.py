@@ -2,11 +2,33 @@ from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
 
 from auditoria.models import RegistroAuditoria
 from auditoria.services import registrar_auditoria
 
-from .models import BaixaFinanceira, CentroCusto, ParcelaFinanceira, PlanoConta, TituloFinanceiro
+from .models import BaixaFinanceira, CentroCusto, FechamentoGerencial, ParcelaFinanceira, PlanoConta, TituloFinanceiro
+from django.core.exceptions import PermissionDenied
+from accounts.permissions import PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO, PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO, PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA
+from accounts.services import usuario_tem_permissao
+
+
+def _exigir_escopo_titulo_financeiro(*, usuario, titulo):
+    if usuario is None or getattr(usuario, "pk", None) is None:
+        raise PermissionDenied("Usuario invalido para operacao financeira.")
+    if getattr(usuario, "is_superuser", False):
+        return
+    if usuario.matriz_id != titulo.matriz_id:
+        raise PermissionDenied("Titulo financeiro fora da matriz autorizada.")
+    perfil = getattr(usuario, "perfil", None)
+    if perfil == "master":
+        return
+    if perfil in ("admin_loja", "operador"):
+        if titulo.loja_id is None or not usuario.lojas.filter(
+            pk=titulo.loja_id, matriz_id=titulo.matriz_id
+        ).exists():
+            raise PermissionDenied("Titulo financeiro fora das lojas autorizadas para o usuario.")
 
 
 def _decimal_positivo(valor, campo):
@@ -241,6 +263,11 @@ def criar_lancamento_manual(
             )
         return existente
 
+    exigir_competencia_gerencial_aberta(
+        matriz=matriz,
+        data_competencia=data_competencia,
+    )
+
     titulo = criar_titulo_financeiro(
         matriz=matriz,
         loja=loja,
@@ -459,11 +486,110 @@ def estornar_baixa_financeira(
     return estorno
 
 @transaction.atomic
-def cancelar_titulo_financeiro(*, titulo, usuario=None, request=None):
+def atualizar_lancamento_manual(
+    *, titulo, loja, natureza, descricao, data_emissao, parcelas, plano_conta,
+    centro_custo=None, entidade_nome="", documento_referencia="",
+    data_competencia=None, valor_bruto=None, valor_desconto=Decimal("0.00"),
+    valor_juros=Decimal("0.00"), observacao="", usuario=None, request=None,
+):
+    if not usuario_tem_permissao(usuario, PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO):
+        raise PermissionDenied("Usuario sem permissao para editar lancamentos financeiros.")
     titulo = TituloFinanceiro.objects.select_for_update().get(pk=titulo.pk)
+    _exigir_escopo_titulo_financeiro(usuario=usuario, titulo=titulo)
+    if titulo.origem_tipo not in {
+        TituloFinanceiro.OrigemTipo.MANUAL,
+        TituloFinanceiro.OrigemTipo.AJUSTE,
+    }:
+        raise ValidationError("Somente lancamentos manuais ou de ajuste podem ser corrigidos por este fluxo.")
+    if titulo.status != TituloFinanceiro.Status.ABERTO:
+        raise ValidationError("Somente titulos abertos podem ser corrigidos.")
+    if titulo.parcelas.filter(baixas__isnull=False).exists():
+        raise ValidationError("Titulo com baixa financeira nao pode ser corrigido diretamente.")
+    if titulo.data_competencia:
+        exigir_competencia_gerencial_aberta(matriz=titulo.matriz, data_competencia=titulo.data_competencia)
+    if data_competencia:
+        exigir_competencia_gerencial_aberta(matriz=titulo.matriz, data_competencia=data_competencia)
+    if loja is not None and loja.matriz_id != titulo.matriz_id:
+        raise ValidationError({"loja": "A loja deve pertencer a mesma matriz do titulo."})
+    if loja is not None and loja.pk != titulo.loja_id:
+        titulo_destino = type(titulo)(matriz_id=titulo.matriz_id, loja_id=loja.pk)
+        _exigir_escopo_titulo_financeiro(usuario=usuario, titulo=titulo_destino)
+    if plano_conta is not None and plano_conta.matriz_id != titulo.matriz_id:
+        raise ValidationError({"plano_conta": "O plano de contas deve pertencer a mesma matriz do titulo."})
+    if centro_custo is not None and centro_custo.matriz_id != titulo.matriz_id:
+        raise ValidationError({"centro_custo": "O centro de custo deve pertencer a mesma matriz do titulo."})
+    parcelas = list(parcelas)
+    if not parcelas:
+        raise ValidationError({"parcelas": "Informe ao menos uma parcela."})
+    numeros_parcelas = [i["numero"] for i in parcelas]
+    if len(numeros_parcelas) != len(set(numeros_parcelas)):
+        raise ValidationError({"parcelas": "Os numeros das parcelas devem ser unicos."})
+
+    valores_parcelas = [Decimal(str(i["valor"])) for i in parcelas]
+    if any(valor <= Decimal("0.00") for valor in valores_parcelas):
+        raise ValidationError({"parcelas": "O valor de cada parcela deve ser maior que zero."})
+
+    total = sum(valores_parcelas, Decimal("0.00"))
+    bruto = Decimal(str(valor_bruto if valor_bruto is not None else total))
+    desconto = Decimal(str(valor_desconto or 0))
+    juros = Decimal(str(valor_juros or 0))
+    final = bruto - desconto + juros
+    if bruto <= Decimal("0.00") or final <= Decimal("0.00"):
+        raise ValidationError({"valor_bruto": "O valor do lancamento deve ser maior que zero."})
+    if total != final:
+        raise ValidationError({"parcelas": "A soma das parcelas deve ser igual ao valor final do titulo."})
+    antes = {"natureza": titulo.natureza, "loja_id": titulo.loja_id,
+             "plano_conta_id": titulo.plano_conta_id, "centro_custo_id": titulo.centro_custo_id,
+             "data_competencia": titulo.data_competencia.isoformat() if titulo.data_competencia else None,
+             "valor_bruto": str(titulo.valor_bruto) if titulo.valor_bruto is not None else None}
+    titulo.loja=loja; titulo.natureza=natureza; titulo.descricao=descricao
+    titulo.data_emissao=data_emissao; titulo.plano_conta=plano_conta; titulo.centro_custo=centro_custo
+    titulo.entidade_nome=entidade_nome; titulo.documento_referencia=documento_referencia
+    titulo.data_competencia=data_competencia; titulo.valor_bruto=bruto
+    titulo.valor_desconto=desconto; titulo.valor_juros=juros; titulo.valor_original=final
+    titulo.observacao=observacao
+    titulo.save(update_fields=["loja","natureza","descricao","data_emissao","plano_conta","centro_custo",
+        "entidade_nome","documento_referencia","data_competencia","valor_bruto","valor_desconto",
+        "valor_juros","valor_original","observacao","atualizado_em"])
+    titulo.parcelas.all().delete()
+    for item in parcelas:
+        ParcelaFinanceira.objects.create(titulo=titulo, numero=item["numero"],
+            vencimento=item["vencimento"], valor_original=Decimal(str(item["valor"])),
+            status=ParcelaFinanceira.Status.ABERTO)
+    depois = {"natureza": titulo.natureza, "loja_id": titulo.loja_id,
+              "plano_conta_id": titulo.plano_conta_id, "centro_custo_id": titulo.centro_custo_id,
+              "data_competencia": titulo.data_competencia.isoformat() if titulo.data_competencia else None,
+              "valor_bruto": str(titulo.valor_bruto)}
+    registrar_auditoria(matriz=titulo.matriz, loja=titulo.loja, usuario=usuario, acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso="financeiro.titulo", recurso_id=str(titulo.uuid),
+        descricao=f"Lancamento manual corrigido. Antes={antes}; Depois={depois}.", request=request)
+    return titulo
+
+
+@transaction.atomic
+def cancelar_titulo_financeiro(*, titulo, usuario=None, request=None, motivo=None):
+    if not usuario_tem_permissao(usuario, PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO):
+        raise PermissionDenied("Usuario sem permissao para cancelar lancamentos financeiros.")
+    titulo = TituloFinanceiro.objects.select_for_update().get(pk=titulo.pk)
+    _exigir_escopo_titulo_financeiro(usuario=usuario, titulo=titulo)
 
     if titulo.status == TituloFinanceiro.Status.CANCELADO:
         return titulo
+
+    if titulo.origem_tipo not in {
+        TituloFinanceiro.OrigemTipo.MANUAL,
+        TituloFinanceiro.OrigemTipo.AJUSTE,
+    }:
+        raise ValidationError(
+            {"titulo": "Titulos de origem automatica devem ser corrigidos no processo de origem."}
+        )
+
+    motivo = (motivo or "").strip()
+    if not motivo:
+        raise ValidationError({"motivo": "O motivo do cancelamento e obrigatorio."})
+
+    if titulo.data_competencia is not None:
+        exigir_competencia_gerencial_aberta(matriz=titulo.matriz, data_competencia=titulo.data_competencia)
 
     parcelas = list(
         ParcelaFinanceira.objects.select_for_update()
@@ -503,7 +629,7 @@ def cancelar_titulo_financeiro(*, titulo, usuario=None, request=None):
         acao=RegistroAuditoria.ACAO_EDITAR,
         recurso="financeiro.titulo",
         recurso_id=titulo.uuid,
-        descricao=f"Titulo financeiro cancelado: uuid={titulo.uuid}.",
+        descricao=f"Titulo financeiro cancelado: uuid={titulo.uuid}; motivo={motivo}.",
         request=request,
     )
     return titulo
@@ -616,3 +742,103 @@ def estornar_baixa_financeira_com_caixa(
         estorno.movimentacao_caixa=movimento
         estorno.save(update_fields=["forma_pagamento","sessao_caixa","movimentacao_caixa"])
     return estorno
+
+
+def competencia_gerencial_esta_fechada(*, matriz, data_competencia):
+    if matriz is None or data_competencia is None:
+        return False
+    return FechamentoGerencial.objects.filter(matriz=matriz, competencia_ano=data_competencia.year, competencia_mes=data_competencia.month, status=FechamentoGerencial.Status.FECHADO).exists()
+
+
+def exigir_competencia_gerencial_aberta(*, matriz, data_competencia):
+    if competencia_gerencial_esta_fechada(matriz=matriz, data_competencia=data_competencia):
+        raise ValidationError({"data_competencia": "A competencia gerencial esta fechada. Reabra a competencia antes de alterar fatos economicos."})
+
+
+def validar_fechamento_gerencial(*, matriz, competencia_ano, competencia_mes):
+    erros = []
+    itens = []
+    matriz_valida = matriz is not None and getattr(matriz, "pk", None) is not None
+    itens.append({"codigo":"MATRIZ_VALIDA","status":"OK" if matriz_valida else "PENDENTE","bloqueante":True})
+    if not matriz_valida: erros.append("Matriz obrigatoria.")
+    ano_valido = isinstance(competencia_ano, int) and not isinstance(competencia_ano, bool) and competencia_ano >= 1
+    itens.append({"codigo":"COMPETENCIA_ANO_VALIDA","status":"OK" if ano_valido else "PENDENTE","bloqueante":True})
+    if not ano_valido: erros.append("Ano de competencia invalido.")
+    mes_valido = isinstance(competencia_mes, int) and not isinstance(competencia_mes, bool) and 1 <= competencia_mes <= 12
+    itens.append({"codigo":"COMPETENCIA_MES_VALIDA","status":"OK" if mes_valido else "PENDENTE","bloqueante":True})
+    if not mes_valido: erros.append("Mes de competencia invalido.")
+    if matriz_valida and ano_valido and mes_valido:
+        from calendar import monthrange
+        from datetime import date
+        inicio=date(competencia_ano,competencia_mes,1)
+        fim=date(competencia_ano,competencia_mes,monthrange(competencia_ano,competencia_mes)[1])
+        economicos=TituloFinanceiro.objects.filter(matriz=matriz,origem_tipo__in=[TituloFinanceiro.OrigemTipo.MANUAL,TituloFinanceiro.OrigemTipo.AJUSTE],data_competencia__range=(inicio,fim)).exclude(status=TituloFinanceiro.Status.CANCELADO)
+        sem_classificacao=economicos.filter(
+            Q(plano_conta__isnull=True)
+            | (
+                Q(plano_conta__natureza__in=[PlanoConta.Natureza.DESPESA, PlanoConta.Natureza.RECEITA])
+                & (Q(plano_conta__classificacao_dre__isnull=True) | Q(plano_conta__classificacao_dre=""))
+            )
+        ).count()
+        class_ok=sem_classificacao==0
+        itens.append({"codigo":"LANCAMENTOS_ECONOMICOS_CLASSIFICADOS_DRE","status":"OK" if class_ok else "PENDENTE","bloqueante":True,"quantidade":sem_classificacao})
+        if not class_ok: erros.append("Existem lancamentos economicos ativos sem classificacao DRE explicita.")
+        from configuracoes.models import FechamentoComissao
+        comissao_existe=FechamentoComissao.objects.filter(matriz=matriz,competencia_ano=competencia_ano,competencia_mes=competencia_mes).exists()
+        itens.append({"codigo":"COMISSAO_MENSAL","status":"OK" if comissao_existe else "AVISO","bloqueante":False,"quantidade":1 if comissao_existe else 0})
+        from pdv.models import ItemVenda
+        itens_venda=ItemVenda.objects.filter(venda__matriz=matriz,venda__finalizada_em__date__range=(inicio,fim),venda__cancelada_em__isnull=True)
+        if any(f.name=="cancelado" for f in ItemVenda._meta.fields): itens_venda=itens_venda.filter(cancelado=False)
+        snapshot_zero=itens_venda.filter(custo_unitario_snapshot=0).count()
+        itens.append({"codigo":"INTEGRIDADE_CMV_SNAPSHOT","status":"AVISO" if snapshot_zero else "OK","bloqueante":False,"quantidade":snapshot_zero})
+    pendencias=[item for item in itens if item["status"]=="PENDENTE"]
+    avisos=[item for item in itens if item["status"]=="AVISO"]
+    return {"valido":not any(item["bloqueante"] for item in pendencias),"erros":erros,"pendencias":pendencias,"avisos":avisos,"itens":itens}
+
+@transaction.atomic
+def fechar_competencia_gerencial(*, matriz, competencia_ano, competencia_mes, usuario, request=None):
+    validacao = validar_fechamento_gerencial(matriz=matriz, competencia_ano=competencia_ano, competencia_mes=competencia_mes)
+    if not validacao["valido"]:
+        raise ValidationError({"fechamento_gerencial": validacao["erros"]})
+    if usuario is None or getattr(usuario, "pk", None) is None:
+        raise ValidationError({"usuario": "Usuario responsavel pelo fechamento e obrigatorio."})
+    fechamento, _ = FechamentoGerencial.objects.select_for_update().get_or_create(
+        matriz=matriz, competencia_ano=competencia_ano, competencia_mes=competencia_mes,
+        defaults={"status": FechamentoGerencial.Status.ABERTO},
+    )
+    if fechamento.status == FechamentoGerencial.Status.FECHADO:
+        return fechamento
+    fechamento.status = FechamentoGerencial.Status.FECHADO
+    fechamento.fechado_por = usuario
+    fechamento.fechado_em = timezone.now()
+    fechamento.save(update_fields=["status","fechado_por","fechado_em","atualizado_em"])
+    registrar_auditoria(usuario=usuario, matriz=matriz, loja=None, acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso="financeiro.fechamento_gerencial", recurso_id=fechamento.uuid,
+        descricao=f"Competencia gerencial fechada: {competencia_mes:02d}/{competencia_ano}.", request=request)
+    return fechamento
+
+
+@transaction.atomic
+def reabrir_competencia_gerencial(*, fechamento, usuario, motivo, request=None):
+    if not usuario_tem_permissao(usuario, PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA):
+        raise PermissionDenied("Usuario sem permissao para reabrir competencia gerencial.")
+    if not getattr(usuario, "is_superuser", False) and getattr(usuario, "perfil", None) not in {"master", "admin_loja"}:
+        raise PermissionDenied("Reabertura de competencia restrita a perfil administrativo.")
+    if usuario is None or getattr(usuario, "pk", None) is None:
+        raise ValidationError({"usuario": "Usuario responsavel pela reabertura e obrigatorio."})
+    motivo=(motivo or "").strip()
+    if not motivo:
+        raise ValidationError({"motivo": "O motivo da reabertura e obrigatorio."})
+    fechamento=FechamentoGerencial.objects.select_for_update().get(pk=fechamento.pk)
+    if fechamento.status == FechamentoGerencial.Status.ABERTO:
+        raise ValidationError({"fechamento_gerencial": "A competencia ja esta aberta."})
+    fechamento.status=FechamentoGerencial.Status.ABERTO
+    fechamento.reaberto_por=usuario
+    fechamento.reaberto_em=timezone.now()
+    fechamento.motivo_reabertura=motivo
+    fechamento.save(update_fields=["status","reaberto_por","reaberto_em","motivo_reabertura","atualizado_em"])
+    registrar_auditoria(usuario=usuario, matriz=fechamento.matriz, loja=None, acao=RegistroAuditoria.ACAO_EDITAR,
+        recurso="financeiro.fechamento_gerencial", recurso_id=fechamento.uuid,
+        descricao=f"Competencia gerencial reaberta: {fechamento.competencia_mes:02d}/{fechamento.competencia_ano}; motivo={motivo}.",
+        request=request)
+    return fechamento

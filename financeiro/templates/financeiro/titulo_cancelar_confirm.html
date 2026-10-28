@@ -1,23 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-fluid py-3">
-  <div class="card shadow-sm border-0">
-    <div class="card-body">
-      <h1 class="h3 mb-3">Cancelar título</h1>
-      <p class="mb-1"><strong>{{ titulo.descricao }}</strong></p>
-      <p class="text-muted">Título {{ titulo.uuid }} — R$ {{ titulo.valor_original|floatformat:2 }}</p>
-      <div class="alert alert-warning">
-        O cancelamento preserva o histórico financeiro. Só é permitido quando o total líquido baixado do título é zero.
-      </div>
-      {% if erro %}<div class="alert alert-danger">{{ erro }}</div>{% endif %}
-      <form method="post" action="?{{ query_escopo }}">
-        {% csrf_token %}
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
-          <a href="{% url 'financeiro:titulo_detalhe' titulo_uuid=titulo.uuid %}?escopo={{ escopo }}{% if loja %}&loja={{ loja.pk }}{% endif %}" class="btn btn-outline-secondary">Voltar</a>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+<div class="container-fluid py-3"><div class="card shadow-sm border-0"><div class="card-body">
+<h1 class="h3 mb-3">Cancelar título</h1>
+<p class="mb-1"><strong>{{ titulo.descricao }}</strong></p>
+<p class="text-muted">Título {{ titulo.uuid }} - R$ {{ titulo.valor_original|floatformat:2 }}</p>
+<div class="alert alert-warning"><strong>Atenção.</strong> O cancelamento preserva o histórico financeiro e não realiza exclusão física. Se houver baixa ativa, faça primeiro o estorno integral correspondente; a baixa e o estorno permanecem no histórico. Títulos de origem automática devem ser corrigidos no respectivo fluxo de origem.</div>
+{% if form.non_field_errors %}<div class="alert alert-danger">{% for erro in form.non_field_errors %}<div>{{ erro }}</div>{% endfor %}</div>{% endif %}
+<form method="post" action="?{{ query_escopo }}" novalidate>{% csrf_token %}
+<div class="mb-3"><label for="{{ form.motivo.id_for_label }}" class="form-label">{{ form.motivo.label }}</label>{{ form.motivo }}
+{% if form.motivo.help_text %}<div class="form-text">{{ form.motivo.help_text }}</div>{% endif %}
+{% for erro in form.motivo.errors %}<div class="invalid-feedback d-block">{{ erro }}</div>{% endfor %}</div>
+<div class="d-flex gap-2"><button type="submit" class="btn btn-danger">Confirmar cancelamento</button><a href="{% url 'financeiro:titulo_detalhe' titulo_uuid=titulo.uuid %}?{{ query_escopo }}" class="btn btn-outline-secondary">Voltar</a></div>
+</form></div></div></div>
 {% endblock %}

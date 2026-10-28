@@ -11,7 +11,7 @@ class PlanoContaForm(forms.ModelForm):
         super().__init__(*form_args, **form_kwargs)
         for name in ("codigo", "nome"):
             self.fields[name].widget.attrs["class"] = "form-control"
-        for name in ("tipo", "natureza", "pai"):
+        for name in ("tipo", "natureza", "classificacao_dre", "pai"):
             self.fields[name].widget.attrs["class"] = "form-select"
         for name in ("aceita_lancamento", "ativo"):
             self.fields[name].widget.attrs["class"] = "form-check-input"
@@ -22,6 +22,7 @@ class PlanoContaForm(forms.ModelForm):
             "nome",
             "tipo",
             "natureza",
+            "classificacao_dre",
             "pai",
             "aceita_lancamento",
             "ativo",
@@ -121,6 +122,24 @@ class LancamentoManualForm(forms.Form):
     def __init__(self, *form_args, matriz=None, lojas=None, **form_kwargs):
         super().__init__(*form_args, **form_kwargs)
 
+        labels = {
+            "plano_conta": "Plano de conta",
+            "centro_custo": "Centro de custo",
+            "entidade_nome": "Entidade",
+            "documento_referencia": "Documento de refer\u00eancia",
+            "data_emissao": "Data de emiss\u00e3o",
+            "data_competencia": "Data de compet\u00eancia",
+            "data_vencimento": "Data de vencimento",
+            "numero_parcelas": "N\u00famero de parcelas",
+            "observacao": "Observa\u00e7\u00e3o",
+        }
+        for nome, label in labels.items():
+            self.fields[nome].label = label
+        for nome in ("data_emissao", "data_competencia", "data_vencimento"):
+            self.fields[nome].widget.format = "%Y-%m-%d"
+            self.fields[nome].input_formats = ["%Y-%m-%d", "%d/%m/%Y"]
+
+
         for name in ("natureza", "loja", "plano_conta", "centro_custo"):
             self.fields[name].widget.attrs["class"] = "form-select"
         for name in (
@@ -158,6 +177,7 @@ class LancamentoManualForm(forms.Form):
         else:
             self.fields["loja"].queryset = lojas.order_by("nome")
 
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -176,6 +196,16 @@ class LancamentoManualForm(forms.Form):
                 cleaned_data["valor_final"] = valor_final
 
         return cleaned_data
+class CancelarTituloForm(forms.Form):
+    motivo = forms.CharField(
+        label="Motivo do cancelamento",
+        required=True,
+        strip=True,
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        help_text="Informe o motivo para manter a rastreabilidade da correção.",
+    )
+
+
 class BaixaDinheiroForm(forms.Form):
     valor = forms.DecimalField(max_digits=14, decimal_places=2, min_value=0.01)
     data = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))

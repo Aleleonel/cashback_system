@@ -1,3 +1,5 @@
+from django.core.exceptions import PermissionDenied
+from django.views.decorators.http import require_POST
 from datetime import date
 import csv
 import uuid
@@ -17,14 +19,17 @@ from accounts.services import usuario_tem_permissao
 from accounts.models import Usuario
 from accounts.permissions import (
     PERMISSAO_FINANCEIRO_BAIXAR,
+    PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO,
+    PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA,
+    PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO,
     PERMISSAO_FINANCEIRO_GERENCIAR,
     PERMISSAO_FINANCEIRO_LANCAR_DESPESA,
     PERMISSAO_FINANCEIRO_VISUALIZAR,
 )
 from empresas.models import Loja
 from financeiro.models import BaixaFinanceira, CentroCusto, ContaFinanceira, InstituicaoBancaria, PlanoConta, TituloFinanceiro
-from financeiro.services import cancelar_titulo_financeiro, criar_lancamento_manual
-from financeiro.forms import BaixaDinheiroForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
+from financeiro.services import cancelar_titulo_financeiro, atualizar_lancamento_manual, criar_lancamento_manual, competencia_gerencial_esta_fechada
+from financeiro.forms import BaixaDinheiroForm, CancelarTituloForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
 from financeiro.importacao_csv import importar_titulos_csv
 from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_fluxo_caixa, resumo_saldos
 
@@ -291,54 +296,100 @@ def titulo_detalhe(request, titulo_uuid):
     return render(request, "financeiro/titulo_detalhe.html", {
         "matriz": matriz, "lojas": lojas, "escopo": escopo, "loja": loja,
         "titulo": titulo, "parcelas": parcelas,
+        "pode_editar_titulo": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status == TituloFinanceiro.Status.ABERTO and not titulo.parcelas.filter(baixas__isnull=False).exists() and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
+        "pode_cancelar_titulo": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status != TituloFinanceiro.Status.CANCELADO and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
     })
 
 @login_required
-@require_permission(PERMISSAO_FINANCEIRO_BAIXAR)
-def titulo_cancelar(request, titulo_uuid):
+@require_permission(PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO)
+def titulo_editar(request, titulo_uuid):
     matriz = _matriz_usuario(request)
     escopo, loja, lojas = _resolver_escopo(request, matriz)
     if escopo is None:
         return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
-
     queryset = TituloFinanceiro.objects.filter(matriz=matriz)
     if escopo == ESCOPO_MATRIZ:
         queryset = queryset.filter(loja__isnull=True)
     elif escopo == ESCOPO_LOJA:
         queryset = queryset.filter(loja=loja)
     titulo = get_object_or_404(queryset, uuid=titulo_uuid)
+    if titulo.origem_tipo not in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} or titulo.status != TituloFinanceiro.Status.ABERTO or titulo.parcelas.filter(baixas__isnull=False).exists():
+        raise Http404("Titulo nao disponivel para edicao.")
+    primeira = titulo.parcelas.order_by("numero").first()
+    if competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia):
+        raise PermissionDenied("Competencia gerencial fechada para edicao.")
 
+    form = LancamentoManualForm(request.POST if request.method == "POST" else None,
+        initial={"natureza":titulo.natureza,"loja":titulo.loja_id,"plano_conta":titulo.plano_conta_id,
+        "centro_custo":titulo.centro_custo_id,"entidade_nome":titulo.entidade_nome,
+        "documento_referencia":titulo.documento_referencia,"data_emissao":titulo.data_emissao,
+        "data_competencia":titulo.data_competencia,"data_vencimento":primeira.vencimento if primeira else None,
+        "valor_bruto":titulo.valor_bruto,"valor_desconto":titulo.valor_desconto,"valor_juros":titulo.valor_juros,
+        "valor_final":titulo.valor_original,"numero_parcelas":titulo.parcelas.count(),"observacao":titulo.observacao},
+        matriz=matriz,lojas=_lojas_autorizadas(request,matriz))
+    if request.method == "POST" and form.is_valid():
+        d=form.cleaned_data
+        parcelas=_gerar_parcelas_lancamento_manual(d["valor_final"],d["numero_parcelas"],d["data_vencimento"])
+        try:
+            titulo=atualizar_lancamento_manual(titulo=titulo,loja=d["loja"],natureza=d["natureza"],
+                descricao=d["entidade_nome"] or d["documento_referencia"] or titulo.descricao,
+                data_emissao=d["data_emissao"],parcelas=parcelas,plano_conta=d["plano_conta"],
+                centro_custo=d["centro_custo"],entidade_nome=d["entidade_nome"],
+                documento_referencia=d["documento_referencia"],data_competencia=d["data_competencia"],
+                valor_bruto=d["valor_bruto"],valor_desconto=d["valor_desconto"] or Decimal("0.00"),
+                valor_juros=d["valor_juros"] or Decimal("0.00"),observacao=d["observacao"],
+                usuario=request.user,request=request)
+        except ValidationError as exc:
+            if hasattr(exc,"message_dict"):
+                for campo,mensagens in exc.message_dict.items():
+                    for mensagem in mensagens: form.add_error(campo if campo in form.fields else None,mensagem)
+            else:
+                for mensagem in exc.messages: form.add_error(None,mensagem)
+        else:
+            params=QueryDict(mutable=True);params["escopo"]=escopo
+            if loja is not None: params["loja"]=str(loja.pk)
+            detalhe=reverse("financeiro:titulo_detalhe",kwargs={"titulo_uuid":titulo.uuid})
+            return redirect(f"{detalhe}?{params.urlencode()}")
+    return render(request,"financeiro/titulo_editar.html",{"matriz":matriz,"titulo":titulo,"form":form,"escopo":escopo,"loja":loja})
+
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO)
+def titulo_cancelar(request, titulo_uuid):
+    matriz = _matriz_usuario(request)
+    escopo, loja, lojas = _resolver_escopo(request, matriz)
+    if escopo is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+    queryset = TituloFinanceiro.objects.filter(matriz=matriz)
+    if escopo == ESCOPO_MATRIZ:
+        queryset = queryset.filter(loja__isnull=True)
+    elif escopo == ESCOPO_LOJA:
+        queryset = queryset.filter(loja=loja)
+    titulo = get_object_or_404(queryset, uuid=titulo_uuid)
+    if titulo.origem_tipo not in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE}:
+        raise Http404("Titulo de origem automatica deve ser corrigido no fluxo de origem.")
+    if titulo.status == TituloFinanceiro.Status.CANCELADO:
+        raise Http404("Titulo ja cancelado.")
+    if competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia):
+        raise PermissionDenied("Competencia gerencial fechada para cancelamento.")
     params = QueryDict(mutable=True)
     params["escopo"] = escopo
     if loja is not None:
         params["loja"] = str(loja.pk)
     query_escopo = params.urlencode()
-
-    erro = None
-    if request.method == "POST":
+    form = CancelarTituloForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and form.is_valid():
         try:
-            cancelar_titulo_financeiro(
-                titulo=titulo,
-                usuario=request.user,
-                request=request,
-            )
+            cancelar_titulo_financeiro(titulo=titulo, usuario=request.user, request=request, motivo=form.cleaned_data["motivo"])
         except ValidationError as exc:
-            erro = " ".join(exc.messages)
+            for mensagem in getattr(exc, "messages", [str(exc)]):
+                form.add_error(None, mensagem)
         else:
             detalhe_url = reverse("financeiro:titulo_detalhe", kwargs={"titulo_uuid": titulo.uuid})
             return redirect(f"{detalhe_url}?{query_escopo}")
-
-    return render(
-        request,
-        "financeiro/titulo_cancelar_confirm.html",
-        {
-            "titulo": titulo,
-            "erro": erro,
-            "escopo": escopo,
-            "loja": loja,
-            "query_escopo": query_escopo,
-        },
-    )
+    return render(request, "financeiro/titulo_cancelar_confirm.html", {
+        "titulo": titulo, "form": form, "escopo": escopo, "loja": loja, "query_escopo": query_escopo,
+    })
 
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
@@ -919,3 +970,71 @@ def parcela_baixa_nova(request, titulo_uuid, parcela_id):
     return render(request, "financeiro/parcela_baixa_form.html", {
         "titulo": titulo, "parcela": parcela, "form": form, "chave_idempotencia": token_idempotencia,
     })
+
+# F26 - Fechamento Gerencial Mensal
+def _bloquear_operador_fechamento_gerencial(request):
+    if not request.user.is_superuser and getattr(request.user,"perfil",None)==getattr(request.user,"PERFIL_OPERADOR","operador"):
+        raise PermissionDenied("Fechamento gerencial restrito ao perfil administrativo da matriz.")
+
+def _contexto_matriz_fechamento_gerencial(request):
+    from empresas.models import Matriz
+    if request.user.is_superuser:
+        matrizes=Matriz.objects.order_by("nome","id");raw=(request.GET.get("matriz") or request.POST.get("matriz") or "").strip()
+        return (matrizes.filter(pk=raw).first() if raw.isdigit() else None),matrizes,raw
+    matriz=getattr(request.user,"matriz",None)
+    if matriz is None:
+        raise PermissionDenied("Usuario administrativo sem matriz vinculada.")
+    return matriz,Matriz.objects.none(),""
+
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
+def fechamento_gerencial(request):
+    from django.utils import timezone
+    from financeiro.models import FechamentoGerencial
+    from financeiro.services import validar_fechamento_gerencial
+    _bloquear_operador_fechamento_gerencial(request);matriz,matrizes,raw=_contexto_matriz_fechamento_gerencial(request);hoje=timezone.localdate()
+    try: ano=int(request.GET.get("ano") or hoje.year)
+    except (TypeError,ValueError): ano=hoje.year
+    try: mes=int(request.GET.get("mes") or hoje.month)
+    except (TypeError,ValueError): mes=hoje.month
+    checklist=fechamento=None
+    if matriz:
+        checklist=validar_fechamento_gerencial(matriz=matriz,competencia_ano=ano,competencia_mes=mes)
+        fechamento=FechamentoGerencial.objects.filter(matriz=matriz,competencia_ano=ano,competencia_mes=mes).first()
+    return render(request,"financeiro/fechamento_gerencial.html",{"matriz":matriz,"matrizes":matrizes,"matriz_filtro":raw,"ano":ano,"mes":mes,"checklist":checklist,"fechamento":fechamento})
+
+@login_required
+@require_POST
+@require_permission(PERMISSAO_FINANCEIRO_GERENCIAR)
+def fechamento_gerencial_fechar(request):
+    from django.contrib import messages
+    from django.core.exceptions import ValidationError
+    from django.shortcuts import redirect
+    from financeiro.services import fechar_competencia_gerencial
+    _bloquear_operador_fechamento_gerencial(request);matriz,_,raw=_contexto_matriz_fechamento_gerencial(request)
+    if not matriz: messages.error(request,"Selecione uma matriz.");return redirect("financeiro:fechamento_gerencial")
+    ano=request.POST.get("ano","");mes=request.POST.get("mes","")
+    try:
+        ano=int(ano);mes=int(mes);fechar_competencia_gerencial(matriz=matriz,competencia_ano=ano,competencia_mes=mes,usuario=request.user,request=request);messages.success(request,f"Competencia {mes:02d}/{ano} fechada com sucesso.")
+    except (TypeError,ValueError,ValidationError) as exc:messages.error(request,"; ".join(getattr(exc,"messages",[str(exc)])))
+    return redirect(reverse("financeiro:fechamento_gerencial")+f"?ano={ano}&mes={mes}"+(f"&matriz={raw}" if request.user.is_superuser and raw else ""))
+
+@login_required
+@require_POST
+@require_permission(PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA)
+def fechamento_gerencial_reabrir(request):
+    from django.contrib import messages
+    from django.core.exceptions import ValidationError
+    from django.shortcuts import redirect
+    from financeiro.models import FechamentoGerencial
+    from financeiro.services import reabrir_competencia_gerencial
+    _bloquear_operador_fechamento_gerencial(request);matriz,_,raw=_contexto_matriz_fechamento_gerencial(request)
+    if not matriz: messages.error(request,"Selecione uma matriz.");return redirect("financeiro:fechamento_gerencial")
+    ano=request.POST.get("ano","");mes=request.POST.get("mes","")
+    try:
+        ano=int(ano);mes=int(mes);motivo=(request.POST.get("motivo") or "").strip();fechamento = FechamentoGerencial.objects.filter(matriz=matriz, competencia_ano=ano, competencia_mes=mes).first()
+        if fechamento is None:
+            raise ValidationError("Fechamento gerencial não encontrado para esta competência.")
+        reabrir_competencia_gerencial(fechamento=fechamento, usuario=request.user, motivo=motivo, request=request);messages.success(request,f"Competencia {mes:02d}/{ano} reaberta com sucesso.")
+    except (TypeError,ValueError,ValidationError) as exc:messages.error(request,"; ".join(getattr(exc,"messages",[str(exc)])))
+    return redirect(reverse("financeiro:fechamento_gerencial")+f"?ano={ano}&mes={mes}"+(f"&matriz={raw}" if request.user.is_superuser and raw else ""))

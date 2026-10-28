@@ -141,6 +141,13 @@ def fechar_comissoes_competencia(*, loja, ano: int, mes: int):
     if existente is not None:
         return existente
 
+    from datetime import date
+    from financeiro.services import exigir_competencia_gerencial_aberta
+    exigir_competencia_gerencial_aberta(
+        matriz=loja.matriz,
+        data_competencia=date(ano, mes, 1),
+    )
+
     with transaction.atomic():
         existente = (
             FechamentoComissao.objects.select_for_update()

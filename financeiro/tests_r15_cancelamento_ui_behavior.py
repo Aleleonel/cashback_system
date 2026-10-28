@@ -9,12 +9,15 @@ class R15CancelamentoTituloUIBehaviorTests(SimpleTestCase):
         self.detail = Path("financeiro/templates/financeiro/titulo_detalhe.html").read_text(encoding="utf-8")
 
     def test_get_nao_invoca_servico_fora_do_bloco_post(self):
-        self.assertIn('if request.method == "POST":', self.views)
-        post_pos = self.views.index('if request.method == "POST":', self.views.index("def titulo_cancelar("))
-        service_pos = self.views.index("cancelar_titulo_financeiro(", post_pos)
-        render_pos = self.views.index('return render(', service_pos)
-        self.assertLess(post_pos, service_pos)
-        self.assertLess(service_pos, render_pos)
+        start = self.views.index("def titulo_cancelar")
+        end = self.views.index("@login_required", start)
+        bloco = self.views[start:end]
+        form_pos = bloco.index("CancelarTituloForm(")
+        post_pos = bloco.index('if request.method == "POST" and form.is_valid():', form_pos)
+        service_pos = bloco.index("cancelar_titulo_financeiro(", post_pos)
+        self.assertGreater(service_pos, post_pos)
+        self.assertNotIn("cancelar_titulo_financeiro(", bloco[form_pos:post_pos])
+
 
     def test_view_restringe_titulo_ao_mesmo_escopo_do_detalhe(self):
         start = self.views.index("def titulo_cancelar(")
@@ -32,8 +35,9 @@ class R15CancelamentoTituloUIBehaviorTests(SimpleTestCase):
         end = self.views.index("\ndef ", start + 5)
         block = self.views[start:end]
         self.assertIn("except ValidationError as exc:", block)
-        self.assertIn('"erro": erro', block)
-        self.assertIn("{% if erro %}", self.template)
+        self.assertIn("form.add_error(None, mensagem)", block)
+        self.assertIn('"form": form', block)
+        self.assertIn("{% if form.non_field_errors %}", self.template)
 
     def test_sucesso_redireciona_para_detalhe(self):
         start = self.views.index("def titulo_cancelar(")
@@ -48,5 +52,5 @@ class R15CancelamentoTituloUIBehaviorTests(SimpleTestCase):
         self.assertIn("Confirmar cancelamento", self.template)
 
     def test_detalhe_nao_oferece_cancelar_quando_status_cancelado(self):
-        self.assertIn('{% if titulo.status != "CANCELADO" %}', self.detail)
+        self.assertIn("{% if pode_cancelar_titulo %}", self.detail)
         self.assertIn("financeiro:titulo_cancelar", self.detail)

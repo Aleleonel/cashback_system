@@ -8,6 +8,7 @@ urlpatterns = [
     path("titulos/exportar.csv", views.titulos_exportar_csv, name="titulos_exportar_csv"),
     path("titulos/importar.csv", views.titulos_importar_csv, name="titulos_importar_csv"),
     path("titulos/<uuid:titulo_uuid>/", views.titulo_detalhe, name="titulo_detalhe"),
+    path("titulos/<uuid:titulo_uuid>/editar/", views.titulo_editar, name="titulo_editar"),
     path("titulos/<uuid:titulo_uuid>/cancelar/", views.titulo_cancelar, name="titulo_cancelar"),
     path("titulos/<uuid:titulo_uuid>/parcelas/<int:parcela_id>/baixa/", views.parcela_baixa_nova, name="parcela_baixa_nova"),
     path("titulos/<uuid:titulo_uuid>/parcelas/<int:parcela_id>/baixas/<int:baixa_id>/estornar/", views.baixa_estornar, name="baixa_estornar"),
@@ -26,4 +27,11 @@ urlpatterns = [
     path("contas-financeiras/<uuid:conta_uuid>/extrato/", views.conta_financeira_extrato, name="conta_financeira_extrato"),
     path("contas-financeiras/<uuid:conta_uuid>/extrato/pdf/", views.conta_financeira_extrato_pdf, name="conta_financeira_extrato_pdf"),
     path("lancamentos/novo/", views.lancamento_manual, name="lancamento_manual"),
+]
+
+from .views import fechamento_gerencial, fechamento_gerencial_fechar, fechamento_gerencial_reabrir
+urlpatterns += [
+ path("fechamento-gerencial/",fechamento_gerencial,name="fechamento_gerencial"),
+ path("fechamento-gerencial/fechar/",fechamento_gerencial_fechar,name="fechamento_gerencial_fechar"),
+ path("fechamento-gerencial/reabrir/",fechamento_gerencial_reabrir,name="fechamento_gerencial_reabrir"),
 ]

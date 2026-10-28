@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import PermissaoUsuario, Usuario
-from accounts.permissions import PERMISSAO_FINANCEIRO_BAIXAR
+from accounts.permissions import PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO
 from empresas.models import Loja, Matriz
 from financeiro.models import TituloFinanceiro
 from financeiro.services import criar_titulo_financeiro
@@ -33,9 +33,9 @@ class R15JEscopoCancelamentoFuncionalTests(TestCase):
             matriz=self.matriz_a, perfil=Usuario.PERFIL_OPERADOR,
         )
         self.operador.lojas.add(self.loja_a1)
-        PermissaoUsuario.objects.create(usuario=self.master, permissao=PERMISSAO_FINANCEIRO_BAIXAR)
-        PermissaoUsuario.objects.create(usuario=self.admin, permissao=PERMISSAO_FINANCEIRO_BAIXAR)
-        PermissaoUsuario.objects.create(usuario=self.operador, permissao=PERMISSAO_FINANCEIRO_BAIXAR)
+        PermissaoUsuario.objects.create(usuario=self.master, permissao=PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO)
+        PermissaoUsuario.objects.create(usuario=self.admin, permissao=PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO)
+        PermissaoUsuario.objects.create(usuario=self.operador, permissao=PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO)
 
         self.titulo_matriz = self._titulo(self.matriz_a, None, "r15j-matriz", "Titulo matriz")
         self.titulo_a1 = self._titulo(self.matriz_a, self.loja_a1, "r15j-a1", "Titulo A1")
@@ -89,7 +89,7 @@ class R15JEscopoCancelamentoFuncionalTests(TestCase):
 
     def test_post_master_matriz_cancela_e_preserva_escopo_no_redirect(self):
         self.client.force_login(self.master)
-        response = self.client.post(self._url(self.titulo_matriz) + "?escopo=matriz")
+        response = self.client.post(self._url(self.titulo_matriz) + "?escopo=matriz", {"motivo": "Correcao controlada de teste"})
         self.assertEqual(response.status_code, 302)
         self.assertIn("escopo=matriz", response["Location"])
         self.assertNotIn("loja=", response["Location"])
@@ -99,16 +99,16 @@ class R15JEscopoCancelamentoFuncionalTests(TestCase):
     def test_post_master_loja_cancela_e_preserva_loja_no_redirect(self):
         self.client.force_login(self.master)
         url = self._url(self.titulo_a2) + "?escopo=loja&loja=%s" % self.loja_a2.pk
-        response = self.client.post(url)
+        response = self.client.post(url, {"motivo": "Correcao controlada de teste"})
         self.assertEqual(response.status_code, 302)
         self.assertIn("escopo=loja", response["Location"])
         self.assertIn("loja=%s" % self.loja_a2.pk, response["Location"])
         self.titulo_a2.refresh_from_db()
         self.assertEqual(self.titulo_a2.status, TituloFinanceiro.Status.CANCELADO)
 
-    def test_sem_permissao_baixar_nao_cancela(self):
+    def test_sem_permissao_cancelar_lancamento_nao_cancela(self):
         PermissaoUsuario.objects.filter(
-            usuario=self.operador, permissao=PERMISSAO_FINANCEIRO_BAIXAR
+            usuario=self.operador, permissao=PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO
         ).delete()
         self.client.force_login(self.operador)
         response = self.client.post(self._url(self.titulo_a1))

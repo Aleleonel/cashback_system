@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from core.choices import StatusOperacional
@@ -18,6 +19,7 @@ from financeiro.selectors import listar_titulos, parcelas_em_aberto, resumo_sald
 class SelectorsHardeningContractTest(TestCase):
     def setUp(self):
         self.matriz = Matriz.objects.create(nome="Matriz Hardening")
+        self.usuario = get_user_model().objects.create_superuser(username="selectors_contract", password="x")
         self.loja_a = Loja.objects.create(matriz=self.matriz, nome="Loja A", status=StatusOperacional.ATIVA)
         self.loja_b = Loja.objects.create(matriz=self.matriz, nome="Loja B", status=StatusOperacional.ATIVA)
         self.titulo_a = criar_titulo_financeiro(
@@ -46,7 +48,7 @@ class SelectorsHardeningContractTest(TestCase):
         self.assertEqual(resumo["receber"], Decimal("100.00"))
 
     def test_cancelado_nao_entra_parcelas_abertas_nem_resumo(self):
-        cancelar_titulo_financeiro(titulo=self.titulo_a)
+        cancelar_titulo_financeiro(titulo=self.titulo_a, usuario=self.usuario, motivo="Correcao controlada de teste")
         ids=list(parcelas_em_aberto(matriz=self.matriz).values_list("titulo_id", flat=True))
         self.assertNotIn(self.titulo_a.pk, ids)
         self.assertEqual(resumo_saldos(matriz=self.matriz)["receber"], Decimal("50.00"))

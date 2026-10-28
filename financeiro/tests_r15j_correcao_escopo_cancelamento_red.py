@@ -31,9 +31,10 @@ class R15JCorrecaoEscopoCancelamentoRedTests(SimpleTestCase):
         self.assertIn("?escopo={{ escopo }}", self.detail)
         self.assertIn("&loja={{ loja.pk }}", self.detail)
 
-    def test_confirmacao_deve_preservar_escopo_no_post_e_voltar(self):
-        self.assertIn("escopo", self.confirm)
-        self.assertIn("loja", self.confirm)
+    def test_confirmacao_deve_preservar_query_escopo_no_post_e_voltar(self):
+        self.assertGreaterEqual(self.confirm.count("query_escopo"), 2)
+        self.assertIn('action="?{{ query_escopo }}"', self.confirm)
+        self.assertIn("?{{ query_escopo }}", self.confirm)
         self.assertIn("financeiro:titulo_detalhe", self.confirm)
 
     def test_sucesso_deve_preservar_query_de_escopo_no_redirect(self):

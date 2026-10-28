@@ -43,11 +43,17 @@ PERMISSAO_FINANCEIRO_GERENCIAR = 'financeiro.gerenciar'
 
 PERMISSAO_FINANCEIRO_LANCAR_DESPESA = 'financeiro.lancar_despesa'
 PERMISSAO_FINANCEIRO_BAIXAR = 'financeiro.baixar'
+PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO = 'financeiro.editar_lancamento'
+PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO = 'financeiro.cancelar_lancamento'
+PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA = 'financeiro.reabrir_competencia'
 PERMISSOES_FINANCEIRO = {
     PERMISSAO_FINANCEIRO_VISUALIZAR,
     PERMISSAO_FINANCEIRO_GERENCIAR,
     PERMISSAO_FINANCEIRO_LANCAR_DESPESA,
     PERMISSAO_FINANCEIRO_BAIXAR,
+    PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO,
+    PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO,
+    PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA,
 }
 
 
@@ -288,6 +294,9 @@ def get_permissoes_extras_disponiveis():
         {"codigo": PERMISSAO_FINANCEIRO_GERENCIAR, "nome": "Financeiro: gerenciar", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_LANCAR_DESPESA, "nome": "Financeiro: lançar despesa", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_BAIXAR, "nome": "Financeiro: registrar baixa", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO, "nome": "Financeiro: editar lançamento", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO, "nome": "Financeiro: cancelar lançamento", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA, "nome": "Financeiro: reabrir competência", "grupo": "Financeiro"},
     ]
     itens.extend(item for item in permissoes_financeiro if item["codigo"] not in codigos_existentes)
     codigos_existentes.update(item["codigo"] for item in permissoes_financeiro)

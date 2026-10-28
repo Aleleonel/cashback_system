@@ -445,13 +445,13 @@ def _contexto_dre(request):
         try:
             return date.fromisoformat(raw)
         except ValueError:
-            erro_filtros.append("Data invÃ¡lida")
+            erro_filtros.append("Data inválida")
             return None
 
     data_inicio = parse_data(data_inicio_input, inicio_padrao)
     data_fim = parse_data(data_fim_input, fim_padrao)
     if data_inicio is not None and data_fim is not None and data_fim < data_inicio:
-        erro_filtros.append("PerÃ­odo invÃ¡lido")
+        erro_filtros.append("Período inválido")
 
     if request.user.is_superuser and matriz is None:
         erro_filtros.append("Selecione uma matriz")
@@ -536,7 +536,7 @@ def exportar_dre_pdf(request):
     contexto = _contexto_dre(request)
     if not contexto.get("filtros_validos", contexto.get("resultado") is not None):
         return HttpResponse(
-            "; ".join(contexto.get("erro_filtros") or ["Filtros invÃ¡lidos"]),
+            "; ".join(contexto.get("erro_filtros") or ["Filtros inválidos"]),
             status=400,
             content_type="text/plain; charset=utf-8",
         )
@@ -544,9 +544,9 @@ def exportar_dre_pdf(request):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=14*mm, leftMargin=14*mm, topMargin=12*mm, bottomMargin=12*mm)
     styles=getSampleStyleSheet(); titulo=ParagraphStyle("DRETitulo",parent=styles["Title"],fontName="Helvetica-Bold",fontSize=15,leading=18)
-    story=[Paragraph("DemonstraÃ§Ã£o do Resultado - DRE",titulo),Paragraph(f"Matriz: {contexto['matriz']} | PerÃ­odo: {contexto['data_inicio'].strftime('%d/%m/%Y')} a {contexto['data_fim'].strftime('%d/%m/%Y')} | Regime: {contexto['regime']}",styles["Normal"]),Spacer(1,5*mm)]
-    linhas=[("Receita Bruta","receita_bruta"),("(-) DeduÃ§Ãµes da Receita","deducoes_receita"),("(=) Receita LÃ­quida","receita_liquida"),("(-) CMV","cmv"),("(=) Lucro Bruto","lucro_bruto"),("(-) Despesas Operacionais","despesas_operacionais"),("(=) Resultado Operacional","resultado_operacional"),("(+/-) Resultado Financeiro","resultado_financeiro"),("(+/-) Outras Receitas / Despesas","outras_receitas_despesas"),("(=) Resultado Antes dos Impostos","resultado_antes_impostos")]
-    rows=[["Linha","Valor","AnÃ¡lise vertical"]]+[[rotulo,_formatar_brl(getattr(resultado,campo)),f"{av.get(campo,0):.2f}%"] for rotulo,campo in linhas]
+    story=[Paragraph("Demonstração do Resultado - DRE",titulo),Paragraph(f"Matriz: {contexto['matriz']} | Período: {contexto['data_inicio'].strftime('%d/%m/%Y')} a {contexto['data_fim'].strftime('%d/%m/%Y')} | Regime: {contexto['regime']}",styles["Normal"]),Spacer(1,5*mm)]
+    linhas=[("Receita Bruta","receita_bruta"),("(-) Deduções da Receita","deducoes_receita"),("(=) Receita Líquida","receita_liquida"),("(-) CMV","cmv"),("(=) Lucro Bruto","lucro_bruto"),("(-) Despesas Operacionais","despesas_operacionais"),("(=) Resultado Operacional","resultado_operacional"),("(+/-) Resultado Financeiro","resultado_financeiro"),("(+/-) Outras Receitas / Despesas","outras_receitas_despesas"),("(=) Resultado Antes dos Impostos","resultado_antes_impostos")]
+    rows=[["Linha","Valor","Análise vertical"]]+[[rotulo,_formatar_brl(getattr(resultado,campo)),f"{av.get(campo,0):.2f}%"] for rotulo,campo in linhas]
     table=Table(rows,repeatRows=1,colWidths=[92*mm,48*mm,38*mm]);table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#343A40")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("GRID",(0,0),(-1,-1),0.3,colors.HexColor("#DEE2E6")),("ALIGN",(1,1),(-1,-1),"RIGHT"),("FONTSIZE",(0,0),(-1,-1),9)]))
     story.append(table);doc.build(story)
     response=HttpResponse(buffer.getvalue(),content_type="application/pdf");response["Content-Disposition"]='attachment; filename="relatorio_dre.pdf"';return response
@@ -562,14 +562,14 @@ def exportar_dre_xlsx(request):
     contexto = _contexto_dre(request)
     if not contexto.get("filtros_validos", contexto.get("resultado") is not None):
         return HttpResponse(
-            "; ".join(contexto.get("erro_filtros") or ["Filtros invÃ¡lidos"]),
+            "; ".join(contexto.get("erro_filtros") or ["Filtros inválidos"]),
             status=400,
             content_type="text/plain; charset=utf-8",
         )
     resultado = contexto["resultado"]; av = contexto["analise_vertical"]
-    wb=Workbook();ws=wb.active;ws.title="DRE";ws.append(["DemonstraÃ§Ã£o do Resultado - DRE","",""]);ws.merge_cells("A1:C1");ws["A1"].font=Font(bold=True,size=16)
-    ws.append(["Matriz",str(contexto["matriz"]),""]);ws.append(["PerÃ­odo",f"{contexto['data_inicio'].strftime('%d/%m/%Y')} a {contexto['data_fim'].strftime('%d/%m/%Y')}",""]);ws.append(["Regime",contexto["regime"],""]);ws.append([]);ws.append(["Linha","Valor","AnÃ¡lise vertical"])
-    linhas=[("Receita Bruta","receita_bruta"),("(-) DeduÃ§Ãµes da Receita","deducoes_receita"),("(=) Receita LÃ­quida","receita_liquida"),("(-) CMV","cmv"),("(=) Lucro Bruto","lucro_bruto"),("(-) Despesas Operacionais","despesas_operacionais"),("(=) Resultado Operacional","resultado_operacional"),("(+/-) Resultado Financeiro","resultado_financeiro"),("(+/-) Outras Receitas / Despesas","outras_receitas_despesas"),("(=) Resultado Antes dos Impostos","resultado_antes_impostos")]
+    wb=Workbook();ws=wb.active;ws.title="DRE";ws.append(["Demonstração do Resultado - DRE","",""]);ws.merge_cells("A1:C1");ws["A1"].font=Font(bold=True,size=16)
+    ws.append(["Matriz",str(contexto["matriz"]),""]);ws.append(["Período",f"{contexto['data_inicio'].strftime('%d/%m/%Y')} a {contexto['data_fim'].strftime('%d/%m/%Y')}",""]);ws.append(["Regime",contexto["regime"],""]);ws.append([]);ws.append(["Linha","Valor","Análise vertical"])
+    linhas=[("Receita Bruta","receita_bruta"),("(-) Deduções da Receita","deducoes_receita"),("(=) Receita Líquida","receita_liquida"),("(-) CMV","cmv"),("(=) Lucro Bruto","lucro_bruto"),("(-) Despesas Operacionais","despesas_operacionais"),("(=) Resultado Operacional","resultado_operacional"),("(+/-) Resultado Financeiro","resultado_financeiro"),("(+/-) Outras Receitas / Despesas","outras_receitas_despesas"),("(=) Resultado Antes dos Impostos","resultado_antes_impostos")]
     for rotulo,campo in linhas: ws.append([rotulo,float(getattr(resultado,campo)),float(av.get(campo,0))/100])
     fill=PatternFill("solid",fgColor="343A40")
     for c in ws[6]: c.font=Font(bold=True,color="FFFFFF");c.fill=fill;c.alignment=Alignment(horizontal="center")
