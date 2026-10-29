@@ -47,6 +47,8 @@ codigo="usuarios",
     ),
     GrupoConfiguracao(
         codigo="compras",
+            url_name="configuracoes:compras",
+            disponivel=True,
         titulo="Compras",
         descricao="Fornecedores, recebimentos e políticas de compra.",
         icone="bi-bag-check",

@@ -1,3 +1,4 @@
+from configuracoes.views_compras import compras
 from configuracoes.views_produtos_estoque import produtos_estoque
 from django.urls import path
 
@@ -44,4 +45,5 @@ urlpatterns = [
         name="regras_comerciais",
     ),
     path('produtos-estoque/', produtos_estoque, name='produtos_estoque'),
+    path('compras/', compras, name='compras'),
 ]
