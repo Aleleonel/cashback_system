@@ -2,6 +2,7 @@ from .views_notificacoes import notificacoes, notificacoes_novo
 from configuracoes.views_compras import compras
 from configuracoes.views_produtos_estoque import produtos_estoque
 from django.urls import path
+from configuracoes.views_vouchers import vouchers
 
 from . import views
 
@@ -9,6 +10,7 @@ from . import views
 app_name = "configuracoes"
 
 urlpatterns = [
+    path("vouchers/", vouchers, name="vouchers"),
     path('notificacoes/', notificacoes, name='notificacoes'),
     path('notificacoes/novo/', notificacoes_novo, name='notificacoes_novo'),
     path("", views.inicio, name="inicio"),

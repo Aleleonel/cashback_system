@@ -118,13 +118,17 @@
                 </div>
             </article>
         </div>
-    </div>
-    <div class="mt-4">
-        <a href="{% url 'empresa:configurar_cashback' %}" class="btn btn-outline-primary">
-            Configurar Cashback
-        </a>
-        <div class="form-text mt-2">
-            Percentual, liberação, validade, teto de uso e demais parâmetros administrativos.
+
+        <div class="col-12 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body d-flex flex-column">
+              <div class="fs-3 text-primary mb-3"><i class="bi bi-percent"></i></div>
+              <h5 class="card-title">Configuração do cashback</h5>
+              <p class="text-muted flex-grow-1">Defina percentual, liberação, validade, teto de uso e demais parâmetros administrativos.</p>
+              <a href="{% url 'empresa:configurar_cashback' %}" class="btn btn-outline-primary w-100">Abrir configuração</a>
+            </div>
+          </div>
         </div>
-    </div></div>
+</div>
+    </div>
 {% endblock %}
