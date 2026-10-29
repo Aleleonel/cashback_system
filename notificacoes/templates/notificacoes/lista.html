@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="mb-4">
+    <h1 class="h3 mb-1">Notificações internas</h1>
+    <p class="text-muted mb-0">Comunicados e lembretes da sua equipe.</p>
+  </div>
+
+  <div class="d-grid gap-3">
+    {% for item in itens %}
+      <article class="card shadow-sm {% if not item.lida %}border-primary{% else %}border-0{% endif %}">
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="flex-grow-1">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <h2 class="h5 mb-0">{{ item.aviso.titulo }}</h2>
+                <span class="badge text-bg-secondary">{{ item.aviso.get_prioridade_display }}</span>
+                {% if item.lida %}
+                  <span class="badge text-bg-light border">Lida</span>
+                {% else %}
+                  <span class="badge text-bg-primary">Não lida</span>
+                {% endif %}
+              </div>
+              <p class="mb-3">{{ item.aviso.mensagem }}</p>
+              <div class="small text-muted d-flex flex-wrap gap-3">
+                <span><i class="bi bi-calendar-event me-1"></i>Desde {{ item.aviso.inicio_exibicao|date:"d/m/Y H:i" }}</span>
+                {% if item.aviso.fim_exibicao %}<span>Até {{ item.aviso.fim_exibicao|date:"d/m/Y H:i" }}</span>{% endif %}
+                {% if item.aviso.loja %}<span><i class="bi bi-shop me-1"></i>{{ item.aviso.loja }}</span>{% else %}<span>Toda a matriz</span>{% endif %}
+              </div>
+            </div>
+            {% if not item.lida %}
+              <form method="post" action="{% url 'notificacoes:marcar_lida' item.aviso.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-check2 me-1"></i>Marcar como lida
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="bi bi-bell fs-2 d-block mb-2"></i>
+          Nenhuma notificação disponível.
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

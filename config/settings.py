@@ -103,6 +103,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notificacoes.context_processors.notificacoes_navbar',
                 'core.context_processors.menu_permissoes',
             ],
         },

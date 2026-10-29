@@ -1,3 +1,4 @@
+from .views_notificacoes import notificacoes, notificacoes_novo
 from configuracoes.views_compras import compras
 from configuracoes.views_produtos_estoque import produtos_estoque
 from django.urls import path
@@ -8,6 +9,8 @@ from . import views
 app_name = "configuracoes"
 
 urlpatterns = [
+    path('notificacoes/', notificacoes, name='notificacoes'),
+    path('notificacoes/novo/', notificacoes_novo, name='notificacoes_novo'),
     path("", views.inicio, name="inicio"),
     path("caixa-pagamentos/formas/", views.formas_pagamento, name="formas_pagamento"),
     path("caixa-pagamentos/formas/nova/", views.forma_pagamento_criar, name="forma_pagamento_criar"),

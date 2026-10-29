@@ -8,6 +8,7 @@ from accounts.views import CashbackLoginView
 
 
 urlpatterns = [
+    path('notificacoes/', include('notificacoes.urls')),
     path('configuracoes/', include('configuracoes.urls')),
     path('pdv/', include('pdv.urls')),
     path('fiscal/', include('fiscal.urls')),

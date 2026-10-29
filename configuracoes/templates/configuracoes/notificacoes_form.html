@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Novo comunicado interno{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <div class="text-uppercase small text-muted fw-semibold mb-1">Comunicação interna</div>
+      <h1 class="h3 mb-1">Novo comunicado</h1>
+      <p class="text-muted mb-0">Crie um aviso objetivo para toda a matriz ou para uma loja específica.</p>
+    </div>
+    <a href="{% url 'configuracoes:notificacoes' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if not matriz %}<div class="alert alert-warning">Não foi possível identificar a matriz para este usuário.</div>{% endif %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+    <div class="row g-3 align-items-start">
+      <div class="col-12 col-xl-8">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white py-3">
+            <div class="fw-semibold"><i class="bi bi-chat-left-text me-2 text-primary"></i>Conteúdo do comunicado</div>
+            <div class="small text-muted mt-1">O título e a mensagem serão exibidos para os usuários definidos ao lado.</div>
+          </div>
+          <div class="card-body p-4">
+            <div class="mb-3">
+              <label for="{{ form.titulo.id_for_label }}" class="form-label fw-semibold">Título</label>
+              {{ form.titulo }}
+              {% for error in form.titulo.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div>
+              <label for="{{ form.mensagem.id_for_label }}" class="form-label fw-semibold">Mensagem</label>
+              {{ form.mensagem }}
+              <div class="form-text">Prefira uma mensagem curta, direta e acionável.</div>
+              {% for error in form.mensagem.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-white py-3">
+            <div class="fw-semibold"><i class="bi bi-sliders me-2 text-primary"></i>Publicação</div>
+            <div class="small text-muted mt-1">Defina alcance, prioridade e período.</div>
+          </div>
+          <div class="card-body p-4">
+            <div class="mb-3">
+              <label for="{{ form.prioridade.id_for_label }}" class="form-label fw-semibold">Prioridade</label>
+              {{ form.prioridade }}
+              {% for error in form.prioridade.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.loja.id_for_label }}" class="form-label fw-semibold">Destino</label>
+              {{ form.loja }}
+              <div class="form-text">“Toda a matriz” envia o comunicado a todas as lojas.</div>
+              {% for error in form.loja.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.inicio_exibicao.id_for_label }}" class="form-label fw-semibold">Início da exibição</label>
+              {{ form.inicio_exibicao }}
+              {% for error in form.inicio_exibicao.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.fim_exibicao.id_for_label }}" class="form-label fw-semibold">Fim da exibição</label>
+              {{ form.fim_exibicao }}
+              <div class="form-text">Opcional. Sem data final, permanece vigente enquanto estiver ativo.</div>
+              {% for error in form.fim_exibicao.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="pt-3 border-top">
+              <div class="form-check form-switch mb-1 ms-0 ps-0 d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center flex-shrink-0"><input type="checkbox" name="{{ form.ativo.html_name }}" id="{{ form.ativo.id_for_label }}" class="form-check-input m-0" role="switch"{% if form.ativo.value %} checked{% endif %}></span>
+                <label class="form-check-label fw-semibold" for="{{ form.ativo.id_for_label }}">Comunicado ativo</label>
+              </div>
+              <div class="form-text ms-0">Desative para salvar sem disponibilizar à equipe.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body py-3 d-flex flex-wrap justify-content-end gap-2">
+            <a href="{% url 'configuracoes:notificacoes' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check2-circle me-1"></i>Salvar comunicado
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

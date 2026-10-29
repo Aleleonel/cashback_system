@@ -11,7 +11,16 @@
 
         {% if request.user.is_authenticated %}
 
-        <div class="text-muted small">
+                <a href="{% url 'notificacoes:lista' %}"
+           class="btn btn-sm btn-outline-secondary position-relative"
+           data-notificacoes-sino
+           aria-label="Notificações internas"
+           title="Notificações internas">
+            <i class="bi bi-bell"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  data-notificacoes-nao-lidas="{{ notificacoes_nao_lidas }}">{{ notificacoes_nao_lidas }}</span>
+        </a>
+<div class="text-muted small">
             <i class="bi bi-person-circle me-1"></i>
             {{ request.user.username }}
         </div>

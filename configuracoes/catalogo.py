@@ -80,8 +80,10 @@ codigo="usuarios",
     GrupoConfiguracao(
         codigo="notificacoes",
         titulo="Notificações",
-        descricao="E-mail, mensagens e comunicações automáticas.",
+        descricao="Avisos e comunicações internas para a equipe.",
         icone="bi-bell",
+        url_name="configuracoes:notificacoes",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="seguranca",
