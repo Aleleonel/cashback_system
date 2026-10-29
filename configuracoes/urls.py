@@ -1,3 +1,4 @@
+from configuracoes.views_produtos_estoque import produtos_estoque
 from django.urls import path
 
 from . import views
@@ -42,4 +43,5 @@ urlpatterns = [
         views.regras_comerciais,
         name="regras_comerciais",
     ),
+    path('produtos-estoque/', produtos_estoque, name='produtos_estoque'),
 ]

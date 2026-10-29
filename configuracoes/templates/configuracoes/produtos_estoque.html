@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4"><h1 class="h3 mb-1">Produtos e estoque</h1><p class="text-muted mb-0">Cadastros comerciais e acesso administrativo às informações de estoque.</p></div>
+  <div class="row g-3">
+    <div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body"><h2 class="h5">Produtos</h2><p class="text-muted">Cadastro e manutenção do catálogo comercial.</p><a class="btn btn-outline-primary" href="{% url 'produtos:lista_produtos' %}">Abrir produtos</a></div></div></div>
+    <div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body"><h2 class="h5">Categorias</h2><p class="text-muted">Organização dos produtos por categoria.</p><a class="btn btn-outline-primary" href="{% url 'produtos:lista_categorias' %}">Gerenciar categorias</a></div></div></div>
+    <div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body"><h2 class="h5">Marcas</h2><p class="text-muted">Cadastro das marcas utilizadas no catálogo.</p><a class="btn btn-outline-primary" href="{% url 'produtos:lista_marcas' %}">Gerenciar marcas</a></div></div></div>
+    <div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body"><h2 class="h5">Unidades de medida</h2><p class="text-muted">Unidades utilizadas na comercialização e controle.</p><a class="btn btn-outline-primary" href="{% url 'produtos:lista_unidades_medida' %}">Gerenciar unidades</a></div></div></div>
+    <div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body"><h2 class="h5">Estoque</h2><p class="text-muted">Indicadores e disponibilidade por matriz.</p><a class="btn btn-outline-secondary" href="{% url 'estoque:dashboard_estoque' %}">Consultar estoque</a></div></div></div>
+  </div>
+</div>
+{% endblock %}

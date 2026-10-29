@@ -42,6 +42,8 @@ codigo="usuarios",
         titulo="Produtos e estoque",
         descricao="Parâmetros comerciais, inventário e disponibilidade.",
         icone="bi-boxes",
+        url_name="configuracoes:produtos_estoque",
+        disponivel=True,
     ),
     GrupoConfiguracao(
         codigo="compras",
