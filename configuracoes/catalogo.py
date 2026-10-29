@@ -93,6 +93,8 @@ codigo="usuarios",
         titulo="Auditoria",
         descricao="Rastreamento e histórico de alterações.",
         icone="bi-clock-history",
+        url_name="auditoria:lista_auditoria",
+        disponivel=True,
     ),
 )
 

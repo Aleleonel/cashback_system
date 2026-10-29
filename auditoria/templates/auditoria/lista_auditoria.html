@@ -10,7 +10,11 @@
         <div class="card-header bg-white">
             <strong>
                 <i class="bi bi-shield-check me-2"></i>
-                Auditoria da Plataforma
+                {% if auditoria_plataforma %}
+                    Auditoria da Plataforma
+                {% else %}
+                    Auditoria da Empresa
+                {% endif %}
             </strong>
             <div class="text-muted small">
                 Registro das principais ações executadas no sistema.

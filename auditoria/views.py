@@ -1,16 +1,17 @@
+from configuracoes.decorators import central_configuracoes_required
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render
 
-from accounts.decorators import require_permission
-from accounts.permissions import PERMISSAO_PLATAFORMA_PAINEL_MASTER
 
 from .selectors import get_registros_auditoria
 from .models import RegistroAuditoria
 
 @login_required
-@require_permission(PERMISSAO_PLATAFORMA_PAINEL_MASTER)
+@central_configuracoes_required
 def lista_auditoria(request):
+    contexto_acesso = request.contexto_configuracoes
+    matriz_auditoria = contexto_acesso.get('matriz')
 
     acao = request.GET.get('acao', '').strip()
     busca = request.GET.get('q', '').strip()
@@ -22,6 +23,7 @@ def lista_auditoria(request):
         busca=busca,
         data_inicio=data_inicio,
         data_fim=data_fim,
+        matriz=matriz_auditoria,
     )
 
     paginator = Paginator(registros, 50)
@@ -39,6 +41,8 @@ def lista_auditoria(request):
             'busca': busca,
             'data_inicio': data_inicio,
             'data_fim': data_fim,
+            'contexto_auditoria': contexto_acesso,
+            'auditoria_plataforma': contexto_acesso.get('escopo') == 'plataforma',
             'acoes': [
                 {
                     'valor': valor,

@@ -6,7 +6,8 @@ def get_registros_auditoria(
     acao='',
     busca='',
     data_inicio='',
-    data_fim=''
+    data_fim='',
+    matriz=None
 ):
 
     registros = RegistroAuditoria.objects.select_related(
@@ -16,6 +17,9 @@ def get_registros_auditoria(
     ).order_by(
         '-criado_em'
     )
+
+    if matriz is not None:
+        registros = registros.filter(matriz=matriz)
 
     if acao:
         registros = registros.filter(
