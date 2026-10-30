@@ -8,3 +8,4 @@ from .cadastro import (
     criar_voucher_view,
     editar_voucher_view,
 )
+from .parceiros import lista_parceiros, criar_parceiro_view, editar_parceiro_view

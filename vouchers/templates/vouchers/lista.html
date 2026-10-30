@@ -93,6 +93,7 @@
                         <th>Tipo</th>
                         <th>Benefício</th>
                         <th>Cliente</th>
+                        <th>Parceiro</th>
                         <th>Validade</th>
                         <th>Uso</th>
                         <th>Status</th>
@@ -122,6 +123,13 @@
                             {{ voucher.cliente.nome }}
                             {% else %}
                             Geral
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if voucher.parceiro %}
+                            {{ voucher.parceiro.nome }}
+                            {% else %}
+                            —
                             {% endif %}
                         </td>
                         <td>

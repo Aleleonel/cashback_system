@@ -87,6 +87,13 @@
                     </div>
 
                     <div class="col-md-6">
+                        {{ form.parceiro.label_tag }}
+                        {{ form.parceiro }}
+                        {{ form.parceiro.errors }}
+                        <div class="form-text">Opcional. Vincule um parceiro/indicador para gerar comissão.</div>
+                    </div>
+
+                    <div class="col-md-6">
                         {{ form.limite_utilizacao.label_tag }}
                         {{ form.limite_utilizacao }}
                         {{ form.limite_utilizacao.errors }}

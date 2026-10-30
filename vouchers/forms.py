@@ -2,7 +2,7 @@ from django import forms
 
 from clientes.models import Cliente
 from empresas.models import Loja
-from .models import Voucher
+from .models import Parceiro, Voucher
 
 
 class VoucherForm(forms.ModelForm):
@@ -26,6 +26,7 @@ class VoucherForm(forms.ModelForm):
             'valor',
             'percentual',
             'cliente',
+            'parceiro',
             'data_inicio',
             'data_fim',
             'uso_unico_por_cliente',
@@ -40,6 +41,7 @@ class VoucherForm(forms.ModelForm):
             'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'percentual': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'cliente': forms.Select(attrs={'class': 'form-select'}),
+            'parceiro': forms.Select(attrs={'class': 'form-select'}),
             'data_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'data_fim': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'uso_unico_por_cliente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -57,6 +59,9 @@ class VoucherForm(forms.ModelForm):
         ).order_by('nome')
 
         self.fields['cliente'].required = False
+
+        self.fields['parceiro'].queryset = Parceiro.objects.filter(matriz=matriz, ativo=True).order_by('nome')
+        self.fields['parceiro'].required = False
 
         self.fields['lojas'].queryset = Loja.objects.filter(
             matriz=matriz
@@ -97,3 +102,18 @@ class VoucherForm(forms.ModelForm):
             )
 
         return dados
+
+class ParceiroForm(forms.ModelForm):
+    class Meta:
+        model = Parceiro
+        fields = ['nome','tipo_comissao','percentual_comissao','valor_comissao','base_calculo','ativo','vigencia_inicio','vigencia_fim']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class':'form-control'}),
+            'tipo_comissao': forms.Select(attrs={'class':'form-select'}),
+            'percentual_comissao': forms.NumberInput(attrs={'class':'form-control','step':'0.0001'}),
+            'valor_comissao': forms.NumberInput(attrs={'class':'form-control','step':'0.01'}),
+            'base_calculo': forms.Select(attrs={'class':'form-select'}),
+            'ativo': forms.CheckboxInput(attrs={'class':'form-check-input'}),
+            'vigencia_inicio': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'vigencia_fim': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+        }

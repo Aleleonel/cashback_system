@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import F
 
 from vouchers.models import Voucher, UsoVoucher
+from vouchers.services.comissoes_parceiro import gerar_comissao_parceiro_por_uso
 from .validacao import validar_voucher
 
 
@@ -57,6 +58,7 @@ def registrar_uso_voucher(
             raise ValidationError('Este voucher não é válido para esta loja.')
 
     uso = UsoVoucher.objects.create(
+        parceiro=voucher.parceiro,
         matriz=matriz,
         loja=loja,
         cliente=cliente,
@@ -67,6 +69,8 @@ def registrar_uso_voucher(
         valor_desconto=valor_desconto,
         observacao=observacao,
     )
+
+    gerar_comissao_parceiro_por_uso(uso_voucher=uso)
 
     Voucher.objects.filter(
         id=voucher_bloqueado.id,

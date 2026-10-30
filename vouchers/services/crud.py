@@ -13,6 +13,7 @@ def criar_voucher(*, matriz, dados, usuario_executor, request=None):
     voucher = Voucher.objects.create(
         matriz=matriz,
         cliente=dados.get('cliente'),
+        parceiro=dados.get('parceiro'),
         codigo=gerar_codigo_voucher(),
         nome=dados['nome'],
         descricao=dados.get('descricao', ''),
@@ -52,6 +53,7 @@ def criar_voucher(*, matriz, dados, usuario_executor, request=None):
 def editar_voucher(*, voucher, dados, usuario_executor, request=None):
 
     voucher.cliente = dados.get('cliente')
+    voucher.parceiro = dados.get('parceiro')
     voucher.nome = dados['nome']
     voucher.descricao = dados.get('descricao', '')
     voucher.tipo = dados['tipo']
