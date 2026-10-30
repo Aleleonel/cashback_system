@@ -261,3 +261,31 @@ def gerar_titulo_financeiro_comissao(*, comissao, vencimento, usuario=None, requ
         usuario=usuario,
         request=request,
     )
+
+def gerar_titulo_financeiro_comissao_parceiro(*, comissao, vencimento, usuario=None, request=None):
+    """Provisiona uma ComissaoParceiro no Financeiro com namespace idempotente proprio."""
+    from vouchers.models import ComissaoParceiro
+    from financeiro.models import TituloFinanceiro
+    from financeiro.services import criar_titulo_financeiro
+
+    if not isinstance(comissao, ComissaoParceiro) or comissao.pk is None:
+        raise ValueError("Comissao de parceiro invalida.")
+    if comissao.valor_comissao <= ZERO:
+        raise ValueError("Comissao de parceiro sem valor positivo para provisionamento.")
+
+    chave = f"COMISSAO_PARCEIRO:{comissao.pk}"
+    descricao = f"Comissao parceiro - {comissao.parceiro.nome}"
+
+    return criar_titulo_financeiro(
+        matriz=comissao.matriz,
+        loja=None,
+        natureza=TituloFinanceiro.Natureza.PAGAR,
+        descricao=descricao,
+        origem_tipo=TituloFinanceiro.OrigemTipo.COMISSAO,
+        origem_id=f"PARCEIRO:{comissao.pk}",
+        chave_idempotencia=chave,
+        data_emissao=comissao.criado_em.date(),
+        parcelas=[{"numero": 1, "vencimento": vencimento, "valor": comissao.valor_comissao}],
+        usuario=usuario,
+        request=request,
+    )

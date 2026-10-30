@@ -233,6 +233,32 @@ def comissoes(request):
                 else:
                     messages.success(request, "Comissao provisionada no Financeiro com sucesso.")
                     return redirect(redirect_comissoes)
+        elif acao == "provisionar_comissao_parceiro":
+            if not usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_LANCAR_DESPESA):
+                messages.error(request, "Voce nao tem permissao para provisionar comissoes no Financeiro.")
+                return redirect(redirect_comissoes)
+            from datetime import date
+            from django.core.exceptions import ValidationError
+            from vouchers.models import ComissaoParceiro
+            from .services_comissoes import gerar_titulo_financeiro_comissao_parceiro
+            comissao_parceiro_id = request.POST.get("comissao_parceiro_id")
+            try:
+                vencimento = date.fromisoformat((request.POST.get("vencimento") or "").strip())
+            except (TypeError, ValueError):
+                messages.error(request, "Informe um vencimento valido para provisionar a comissao do parceiro.")
+                return redirect(redirect_comissoes)
+            try:
+                comissao_parceiro = ComissaoParceiro.objects.select_related("parceiro", "uso_voucher__voucher", "uso_voucher__loja").get(pk=comissao_parceiro_id, matriz=matriz)
+            except (ComissaoParceiro.DoesNotExist, TypeError, ValueError):
+                messages.error(request, "Comissao de parceiro invalida para o contexto selecionado.")
+            else:
+                try:
+                    gerar_titulo_financeiro_comissao_parceiro(comissao=comissao_parceiro, vencimento=vencimento, usuario=request.user, request=request)
+                except ValidationError as exc:
+                    messages.error(request, "; ".join(exc.messages))
+                else:
+                    messages.success(request, "Comissao do parceiro provisionada no Financeiro com sucesso.")
+                    return redirect(redirect_comissoes)
         elif acao == "fechamento_comissao":
             from .services_comissoes import fechar_comissoes_competencia
             loja_fechamento_id = request.POST.get("loja_fechamento_id")
@@ -258,6 +284,7 @@ def comissoes(request):
                     fechar_comissoes_competencia(loja=loja_fechamento, ano=ano, mes=mes)
                     messages.success(request, f"Fechamento de {mes:02d}/{ano} para {loja_fechamento.nome} disponÃ­vel no histÃ³rico.")
                 return redirect(redirect_comissoes)
+    from vouchers.models import ComissaoParceiro
     metas = MetaComissaoLoja.objects.filter(loja__in=lojas).order_by("loja__nome", "valor_meta") if matriz else MetaComissaoLoja.objects.none()
     fechamentos_comissao = FechamentoComissao.objects.filter(loja__in=lojas).select_related("loja").prefetch_related("comissoes_vendedores").order_by("-competencia_ano", "-competencia_mes", "loja__nome", "-pk") if matriz else FechamentoComissao.objects.none()
     from financeiro.models import TituloFinanceiro
@@ -265,9 +292,13 @@ def comissoes(request):
     for fechamento in fechamentos_comissao:
         for comissao in fechamento.comissoes_vendedores.all():
             comissao.titulo_financeiro = titulos_comissao.get(str(comissao.pk))
+    comissoes_parceiros = (ComissaoParceiro.objects.filter(matriz=matriz).select_related("parceiro", "uso_voucher__voucher", "uso_voucher__loja").order_by("-criado_em", "-pk")) if matriz else ComissaoParceiro.objects.none()
+    titulos_comissao_parceiro = {titulo.origem_id: titulo for titulo in TituloFinanceiro.objects.filter(matriz=matriz, natureza=TituloFinanceiro.Natureza.PAGAR, origem_tipo=TituloFinanceiro.OrigemTipo.COMISSAO, origem_id__startswith="PARCEIRO:", chave_idempotencia__startswith="COMISSAO_PARCEIRO:")} if matriz else {}
+    for comissao_parceiro in comissoes_parceiros:
+        comissao_parceiro.titulo_financeiro = titulos_comissao_parceiro.get(f"PARCEIRO:{comissao_parceiro.pk}")
     pode_provisionar_comissao = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_LANCAR_DESPESA)
     pode_visualizar_financeiro = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_VISUALIZAR)
-    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao, "pode_provisionar_comissao": pode_provisionar_comissao, "pode_visualizar_financeiro": pode_visualizar_financeiro})
+    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao, "comissoes_parceiros": comissoes_parceiros, "pode_provisionar_comissao": pode_provisionar_comissao, "pode_visualizar_financeiro": pode_visualizar_financeiro})
 
 @central_configuracoes_required
 def meta_comissao_editar(request, pk):
