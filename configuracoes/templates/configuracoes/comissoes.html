@@ -189,26 +189,74 @@
       </div></div>
     </div>
     <div class="col-12"><div class="card shadow-sm border-0"><div class="card-body p-4">
-      <div class="small text-uppercase fw-semibold text-secondary mb-1">Vendedores</div>
-      <h2 class="h5 mb-1"><i class="bi bi-clock-history me-2"></i>Histórico de fechamentos</h2>
-      <p class="text-secondary small">Snapshots mensais preservados; não há exclusão nem recálculo pela interface.</p>
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-3">
+        <div>
+          <div class="small text-uppercase fw-semibold text-secondary mb-1">Vendedores</div>
+          <h2 class="h5 mb-1"><i class="bi bi-clock-history me-2"></i>Histórico de fechamentos</h2>
+          <p class="text-secondary small mb-0">Por padrão, exibe somente a competência vigente. Use mês e ano para consultar competências anteriores.</p>
+        </div>
+        <form method="get" class="row g-2 align-items-end">
+          {% if contexto_configuracoes.escopo == "plataforma" and matriz %}<input type="hidden" name="matriz" value="{{ matriz.pk }}">{% endif %}
+          <div class="col-auto"><label class="form-label small mb-1">Mês</label><input class="form-control form-control-sm" type="number" name="historico_mes" min="1" max="12" value="{{ historico_mes }}"></div>
+          <div class="col-auto"><label class="form-label small mb-1">Ano</label><input class="form-control form-control-sm" type="number" name="historico_ano" min="1" value="{{ historico_ano }}"></div>
+          <div class="col-auto"><button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-funnel me-1"></i>Filtrar</button></div>
+        </form>
+      </div>
+      <div class="small text-secondary mb-3">Competência exibida: <strong>{{ competencia_historico }}</strong></div>
       <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Competência</th><th>Loja</th><th class="text-end">Vendas</th><th class="text-end">Meta</th><th class="text-end">Percentual</th><th>Regra individual</th></tr></thead><tbody>
       {% for fechamento in fechamentos_comissao %}<tr><td>{{ fechamento.competencia_mes }}/{{ fechamento.competencia_ano }}</td><td>{{ fechamento.loja.nome }}</td><td class="text-end">R$ {{ fechamento.total_vendas_loja|moeda_br }}</td><td class="text-end">{% if fechamento.valor_meta_atingida is not None %}R$ {{ fechamento.valor_meta_atingida|moeda_br }}{% else %}-{% endif %}</td><td class="text-end">{{ fechamento.percentual_aplicado }}%</td><td>{% if fechamento.exigir_minimo_individual %}Mínimo R$ {{ fechamento.minimo_individual|moeda_br }}{% else %}Sem mínimo individual{% endif %}</td></tr>
-      <tr class="table-light"><td colspan="6"><div class="small fw-semibold">Comissões dos vendedores</div><div class="table-responsive"><table class="table table-sm mb-0"><tbody>{% for comissao in fechamento.comissoes_vendedores.all %}<tr><td>{{ comissao.vendedor_nome_original }}</td><td class="text-end">R$ {{ comissao.total_vendas_vendedor|moeda_br }}</td><td>{% if comissao.elegivel %}Elegível{% else %}Não elegível{% endif %}</td><td class="text-end">R$ {{ comissao.valor_comissao|moeda_br }}</td><td class="text-end">{% if comissao.titulo_financeiro and pode_visualizar_financeiro %}<a class="btn btn-sm btn-outline-primary" href="{% url 'financeiro:titulo_detalhe' comissao.titulo_financeiro.uuid %}?escopo=loja&loja={{ comissao.titulo_financeiro.loja_id }}">Ver no Financeiro</a>{% elif not comissao.titulo_financeiro and pode_provisionar_comissao and comissao.elegivel and comissao.valor_comissao > 0 %}<form method="post" class="d-inline-flex align-items-center gap-2">{% csrf_token %}<input type="hidden" name="acao" value="provisionar_comissao"><input type="hidden" name="comissao_id" value="{{ comissao.pk }}"><input type="date" name="vencimento" class="form-control form-control-sm" required aria-label="Vencimento da comissao"><button type="submit" class="btn btn-sm btn-primary">Provisionar</button></form>{% else %}<span class="text-muted">Sem valor a provisionar</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="5" class="text-secondary">Nenhuma comissão individual registrada.</td></tr>{% endfor %}</tbody></table></div></td></tr>
+      <tr class="table-light"><td colspan="6"><div class="small fw-semibold mb-2">Comissões dos vendedores</div><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead class="table-light"><tr><th>Vendedor</th><th class="text-end">Vendas</th><th>Status</th><th class="text-end">Comissão</th><th class="text-end">Financeiro</th></tr></thead><tbody>{% for comissao in fechamento.comissoes_vendedores.all %}<tr><td>{{ comissao.vendedor_nome_original }}</td><td class="text-end">R$ {{ comissao.total_vendas_vendedor|moeda_br }}</td><td>{% if comissao.elegivel %}Elegível{% else %}Não elegível{% endif %}</td><td class="text-end">R$ {{ comissao.valor_comissao|moeda_br }}</td><td class="text-end">{% if comissao.titulo_financeiro and pode_visualizar_financeiro %}<a class="btn btn-sm btn-outline-primary" href="{% url 'financeiro:titulo_detalhe' comissao.titulo_financeiro.uuid %}?escopo=loja&loja={{ comissao.titulo_financeiro.loja_id }}">Ver no Financeiro</a>{% elif not comissao.titulo_financeiro and pode_provisionar_comissao and comissao.elegivel and comissao.valor_comissao > 0 %}<form method="post" class="d-inline-flex align-items-center gap-2">{% csrf_token %}<input type="hidden" name="acao" value="provisionar_comissao"><input type="hidden" name="comissao_id" value="{{ comissao.pk }}"><input type="date" name="vencimento" class="form-control form-control-sm" required aria-label="Vencimento da comissao"><button type="submit" class="btn btn-sm btn-primary">Provisionar</button></form>{% else %}<span class="text-muted">Sem valor a provisionar</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="5" class="text-secondary">Nenhuma comissão individual registrada.</td></tr>{% endfor %}</tbody></table></div></td></tr>
       {% empty %}<tr><td colspan="6" class="text-center text-secondary py-4">Nenhum fechamento mensal registrado.</td></tr>{% endfor %}</tbody></table></div>
     </div></div></div>
     <div class="col-12"><div class="card shadow-sm border-0"><div class="card-body p-4">
       <div class="small text-uppercase fw-semibold text-secondary">Parceiros</div>
-      <h2 class="h5 mb-1"><i class="bi bi-people me-2"></i>Comissões de parceiros</h2>
-      <p class="text-secondary small">Independentes das comissões dos vendedores; originadas por vouchers vinculados a parceiros/indicadores.</p>
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-3">
+        <div>
+          <h2 class="h5 mb-1"><i class="bi bi-people me-2"></i>Comissões de parceiros</h2>
+          <p class="text-secondary small mb-0">Visão consolidada por parceiro e competência, preservando os lançamentos individuais para rastreabilidade.</p>
+        </div>
+        <form method="get" class="row g-2 align-items-end">
+          {% if contexto_configuracoes.escopo == "plataforma" and matriz %}<input type="hidden" name="matriz" value="{{ matriz.pk }}">{% endif %}
+          <div class="col-auto"><label class="form-label small mb-1">Mês</label><input class="form-control form-control-sm" type="number" name="parceiros_mes" min="1" max="12" value="{{ competencia_mes_parceiros }}"></div>
+          <div class="col-auto"><label class="form-label small mb-1">Ano</label><input class="form-control form-control-sm" type="number" name="parceiros_ano" min="1" value="{{ competencia_ano_parceiros }}"></div>
+          <div class="col-auto"><button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-funnel me-1"></i>Filtrar</button></div>
+        </form>
+      </div>
+      <div class="small text-secondary mb-3">Competência: <strong>{{ competencia_parceiros }}</strong></div>
       <div class="table-responsive"><table class="table table-hover align-middle mb-0">
-      <thead><tr><th>Parceiro</th><th>Voucher</th><th>Loja</th><th class="text-end">Venda</th><th class="text-end">Desconto</th><th class="text-end">Base</th><th class="text-end">Comissao</th><th class="text-end">Financeiro</th></tr></thead><tbody>
-      {% for comissao_parceiro in comissoes_parceiros %}<tr>
-      <td>{{ comissao_parceiro.parceiro.nome }}</td><td>{{ comissao_parceiro.uso_voucher.voucher.codigo }}</td><td>{% if comissao_parceiro.uso_voucher.loja %}{{ comissao_parceiro.uso_voucher.loja.nome }}{% else %}-{% endif %}</td>
-      <td class="text-end">R$ {{ comissao_parceiro.uso_voucher.valor_compra|moeda_br }}</td><td class="text-end">R$ {{ comissao_parceiro.uso_voucher.valor_desconto|moeda_br }}</td><td class="text-end">R$ {{ comissao_parceiro.valor_base|moeda_br }}</td><td class="text-end">R$ {{ comissao_parceiro.valor_comissao|moeda_br }}</td>
-      <td class="text-end">{% if comissao_parceiro.titulo_financeiro and pode_visualizar_financeiro %}<a class="btn btn-sm btn-outline-primary" href="{% url 'financeiro:titulo_detalhe' comissao_parceiro.titulo_financeiro.uuid %}">Ver no Financeiro</a>{% elif not comissao_parceiro.titulo_financeiro and pode_provisionar_comissao and comissao_parceiro.valor_comissao > 0 %}<form method="post" class="d-inline-flex gap-2">{% csrf_token %}<input type="hidden" name="acao" value="provisionar_comissao_parceiro"><input type="hidden" name="comissao_parceiro_id" value="{{ comissao_parceiro.pk }}"><input type="date" name="vencimento" class="form-control form-control-sm" required><button class="btn btn-sm btn-primary">Provisionar</button></form>{% else %}<span class="text-muted">Sem valor a provisionar</span>{% endif %}</td>
-      </tr>{% empty %}<tr><td colspan="8" class="text-center text-secondary py-4">Nenhuma comissão de parceiro registrada.</td></tr>{% endfor %}
-      </tbody></table></div></div></div></div>
+      <thead><tr><th>Parceiro</th><th class="text-end">Vendas</th><th class="text-end">Total vendido</th><th class="text-end">Descontos</th><th class="text-end">Base</th><th class="text-end">Comissão</th><th class="text-end">Ações</th></tr></thead><tbody>
+      {% for grupo in comissoes_parceiros_consolidadas %}<tr>
+      <td>{{ grupo.parceiro_nome }}</td><td class="text-end">{{ grupo.quantidade_vendas }}</td>
+      <td class="text-end">R$ {{ grupo.total_vendas|moeda_br }}</td><td class="text-end">R$ {{ grupo.total_descontos|moeda_br }}</td>
+      <td class="text-end">R$ {{ grupo.total_base|moeda_br }}</td><td class="text-end fw-semibold">R$ {{ grupo.total_comissao|moeda_br }}</td>
+      <td class="text-end">
+        <div class="d-flex justify-content-end align-items-center">
+          <a class="btn btn-sm btn-outline-primary" href="?{% if contexto_configuracoes.escopo == 'plataforma' and matriz %}matriz={{ matriz.pk }}&{% endif %}parceiros_mes={{ competencia_mes_parceiros }}&parceiros_ano={{ competencia_ano_parceiros }}&parceiro_detalhes={{ grupo.parceiro_id }}#detalhes-parceiro">Ver detalhes</a>
+        </div>
+      </td>
+      </tr>{% empty %}<tr><td colspan="7" class="text-center text-secondary py-4">Nenhuma comissão de parceiro registrada nesta competência.</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% if parceiro_detalhes %}
+      <div id="detalhes-parceiro" class="border-top mt-4 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div><h3 class="h6 mb-1">Detalhes do parceiro</h3><div class="small text-secondary">Lançamentos individuais da competência {{ competencia_parceiros }}.</div></div>
+        </div>
+        <div class="table-responsive"><table class="table table-sm align-middle">
+          <thead><tr><th>Data</th><th>Voucher</th><th>Loja</th><th class="text-end text-nowrap" style="min-width: 8.5rem;">Venda</th><th class="text-end text-nowrap" style="min-width: 8.5rem;">Desconto</th><th class="text-end text-nowrap" style="min-width: 8.5rem;">Base</th><th class="text-end text-nowrap" style="min-width: 8.5rem;">Comissão</th></tr></thead>
+          <tbody>{% for detalhe in parceiro_detalhes %}<tr>
+            <td>{{ detalhe.uso_voucher.criado_em|date:"d/m/Y H:i" }}</td><td>{{ detalhe.uso_voucher.voucher.codigo }}</td><td>{{ detalhe.uso_voucher.loja.nome }}</td>
+            <td class="text-end text-nowrap" style="min-width: 8.5rem;">R$ {{ detalhe.uso_voucher.valor_compra|moeda_br }}</td><td class="text-end text-nowrap" style="min-width: 8.5rem;">R$ {{ detalhe.uso_voucher.valor_desconto|moeda_br }}</td>
+            <td class="text-end text-nowrap" style="min-width: 8.5rem;">R$ {{ detalhe.valor_base|moeda_br }}</td><td class="text-end text-nowrap fw-semibold" style="min-width: 8.5rem;">R$ {{ detalhe.valor_comissao|moeda_br }}</td>
+          </tr>{% empty %}<tr><td colspan="7" class="text-center text-secondary py-3">Nenhum lançamento encontrado.</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% if parceiro_detalhes.paginator.num_pages > 1 %}<nav aria-label="Paginação dos detalhes"><ul class="pagination pagination-sm justify-content-end mb-0">
+          {% if parceiro_detalhes.has_previous %}<li class="page-item"><a class="page-link" href="?{% if contexto_configuracoes.escopo == 'plataforma' and matriz %}matriz={{ matriz.pk }}&{% endif %}parceiros_mes={{ competencia_mes_parceiros }}&parceiros_ano={{ competencia_ano_parceiros }}&parceiro_detalhes={{ parceiro_detalhes_id }}&parceiro_pagina={{ parceiro_detalhes.previous_page_number }}#detalhes-parceiro">Anterior</a></li>{% endif %}
+          <li class="page-item disabled"><span class="page-link">{{ parceiro_detalhes.number }} / {{ parceiro_detalhes.paginator.num_pages }}</span></li>
+          {% if parceiro_detalhes.has_next %}<li class="page-item"><a class="page-link" href="?{% if contexto_configuracoes.escopo == 'plataforma' and matriz %}matriz={{ matriz.pk }}&{% endif %}parceiros_mes={{ competencia_mes_parceiros }}&parceiros_ano={{ competencia_ano_parceiros }}&parceiro_detalhes={{ parceiro_detalhes_id }}&parceiro_pagina={{ parceiro_detalhes.next_page_number }}#detalhes-parceiro">Próxima</a></li>{% endif %}
+        </ul></nav>{% endif %}
+      </div>
+      {% endif %}
+    </div></div></div>
   </div>
   {% else %}
   <div class="alert alert-info mb-0">

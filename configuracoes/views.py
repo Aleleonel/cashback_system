@@ -286,19 +286,71 @@ def comissoes(request):
                 return redirect(redirect_comissoes)
     from vouchers.models import ComissaoParceiro
     metas = MetaComissaoLoja.objects.filter(loja__in=lojas).order_by("loja__nome", "valor_meta") if matriz else MetaComissaoLoja.objects.none()
-    fechamentos_comissao = FechamentoComissao.objects.filter(loja__in=lojas).select_related("loja").prefetch_related("comissoes_vendedores").order_by("-competencia_ano", "-competencia_mes", "loja__nome", "-pk") if matriz else FechamentoComissao.objects.none()
+    from django.utils import timezone
+    hoje = timezone.localdate()
+
+    try:
+        historico_ano = int(request.GET.get("historico_ano", hoje.year))
+        historico_mes = int(request.GET.get("historico_mes", hoje.month))
+        if historico_ano < 1 or not 1 <= historico_mes <= 12:
+            raise ValueError
+    except (TypeError, ValueError):
+        historico_ano = hoje.year
+        historico_mes = hoje.month
+
+    fechamentos_comissao = (
+        FechamentoComissao.objects.filter(
+            loja__in=lojas,
+            competencia_ano=historico_ano,
+            competencia_mes=historico_mes,
+        )
+        .select_related("loja")
+        .prefetch_related("comissoes_vendedores")
+        .order_by("loja__nome", "-pk")
+        if matriz
+        else FechamentoComissao.objects.none()
+    )
+    competencia_historico = f"{historico_mes:02d}/{historico_ano}"
     from financeiro.models import TituloFinanceiro
     titulos_comissao = {titulo.origem_id: titulo for titulo in TituloFinanceiro.objects.filter(matriz=matriz, loja__in=lojas, natureza=TituloFinanceiro.Natureza.PAGAR, origem_tipo=TituloFinanceiro.OrigemTipo.COMISSAO)} if matriz else {}
     for fechamento in fechamentos_comissao:
         for comissao in fechamento.comissoes_vendedores.all():
             comissao.titulo_financeiro = titulos_comissao.get(str(comissao.pk))
-    comissoes_parceiros = (ComissaoParceiro.objects.filter(matriz=matriz).select_related("parceiro", "uso_voucher__voucher", "uso_voucher__loja").order_by("-criado_em", "-pk")) if matriz else ComissaoParceiro.objects.none()
-    titulos_comissao_parceiro = {titulo.origem_id: titulo for titulo in TituloFinanceiro.objects.filter(matriz=matriz, natureza=TituloFinanceiro.Natureza.PAGAR, origem_tipo=TituloFinanceiro.OrigemTipo.COMISSAO, origem_id__startswith="PARCEIRO:", chave_idempotencia__startswith="COMISSAO_PARCEIRO:")} if matriz else {}
-    for comissao_parceiro in comissoes_parceiros:
-        comissao_parceiro.titulo_financeiro = titulos_comissao_parceiro.get(f"PARCEIRO:{comissao_parceiro.pk}")
+    from .services_comissoes_parceiros import consolidar_comissoes_parceiros, listar_detalhes_comissoes_parceiro
+    try:
+        competencia_ano_parceiros = int(request.GET.get("parceiros_ano", hoje.year))
+        competencia_mes_parceiros = int(request.GET.get("parceiros_mes", hoje.month))
+        if competencia_ano_parceiros < 1 or not 1 <= competencia_mes_parceiros <= 12:
+            raise ValueError
+    except (TypeError, ValueError):
+        competencia_ano_parceiros = hoje.year
+        competencia_mes_parceiros = hoje.month
+    competencia_parceiros = f"{competencia_mes_parceiros:02d}/{competencia_ano_parceiros}"
+    comissoes_parceiros_consolidadas = (
+        consolidar_comissoes_parceiros(matriz=matriz, ano=competencia_ano_parceiros, mes=competencia_mes_parceiros)
+        if matriz else []
+    )
+    parceiro_detalhes = None
+    parceiro_detalhes_id = request.GET.get("parceiro_detalhes", "").strip()
+    if matriz and parceiro_detalhes_id:
+        try:
+            parceiro_detalhes_id = int(parceiro_detalhes_id)
+            parceiro_detalhes_pagina = int(request.GET.get("parceiro_pagina", 1))
+        except (TypeError, ValueError):
+            parceiro_detalhes_id = None
+            parceiro_detalhes_pagina = 1
+        if parceiro_detalhes_id:
+            parceiro_detalhes = listar_detalhes_comissoes_parceiro(
+                matriz=matriz,
+                parceiro_id=parceiro_detalhes_id,
+                ano=competencia_ano_parceiros,
+                mes=competencia_mes_parceiros,
+                pagina=parceiro_detalhes_pagina,
+                por_pagina=20,
+            )
     pode_provisionar_comissao = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_LANCAR_DESPESA)
     pode_visualizar_financeiro = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_VISUALIZAR)
-    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao, "comissoes_parceiros": comissoes_parceiros, "pode_provisionar_comissao": pode_provisionar_comissao, "pode_visualizar_financeiro": pode_visualizar_financeiro})
+    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao, "historico_mes": historico_mes, "historico_ano": historico_ano, "competencia_historico": competencia_historico, "comissoes_parceiros_consolidadas": comissoes_parceiros_consolidadas, "competencia_parceiros": competencia_parceiros, "competencia_ano_parceiros": competencia_ano_parceiros, "competencia_mes_parceiros": competencia_mes_parceiros, "parceiro_detalhes": parceiro_detalhes, "parceiro_detalhes_id": parceiro_detalhes_id, "pode_provisionar_comissao": pode_provisionar_comissao, "pode_visualizar_financeiro": pode_visualizar_financeiro})
 
 @central_configuracoes_required
 def meta_comissao_editar(request, pk):

@@ -116,7 +116,10 @@ class F24HttpDinamicoTests(TestCase):
     @patch("configuracoes.views.usuario_tem_permissao", return_value=True)
     def test_titulo_existente_aparece_com_link_escopo_loja(self, _):
         self.post()
-        response=self.client.get(self.url)
+        response=self.client.get(self.url, {
+            "historico_mes": self.fechamento.competencia_mes,
+            "historico_ano": self.fechamento.competencia_ano,
+        })
         self.assertEqual(response.status_code,200)
         titulo=TituloFinanceiro.objects.get(origem_tipo="COMISSAO",origem_id=str(self.comissao.pk))
         alvo=reverse("financeiro:titulo_detalhe",args=[titulo.uuid])
