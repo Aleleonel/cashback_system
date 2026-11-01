@@ -16,7 +16,7 @@ def _decimal(valor, campo):
     try:
         return Decimal(str(valor or "0").replace(",", ".")).quantize(CENTAVOS)
     except (InvalidOperation, ValueError):
-        raise ValidationError({campo: "Informe um valor monetÃ¡rio vÃ¡lido."})
+        raise ValidationError({campo: "Informe um valor monetário válido."})
 
 
 def calcular_base_cashback_pagamentos(pagamentos):
@@ -38,8 +38,8 @@ def garantir_formas_pagamento_basicas(*, matriz):
     padroes = (
         ("DINHEIRO", "Dinheiro", TipoFormaPagamento.DINHEIRO, False, 1, True),
         ("PIX", "PIX", TipoFormaPagamento.PIX, False, 1, False),
-        ("CREDITO", "CartÃ£o de crÃ©dito", TipoFormaPagamento.CARTAO_CREDITO, True, 12, False),
-        ("DEBITO", "CartÃ£o de dÃ©bito", TipoFormaPagamento.CARTAO_DEBITO, False, 1, False),
+        ("CREDITO", "Cartão de crédito", TipoFormaPagamento.CARTAO_CREDITO, True, 12, False),
+        ("DEBITO", "Cartão de débito", TipoFormaPagamento.CARTAO_DEBITO, False, 1, False),
     )
     for codigo, nome, tipo, parcelamento, maximo, troco in padroes:
         FormaPagamento.objects.get_or_create(
@@ -84,7 +84,7 @@ def _registrar_beneficio(venda, usuario, tipo, cashback, voucher, valor_base_cas
 
     if tipo != "nenhum" and not identificado:
         raise ValidationError(
-            {"cliente": "Identifique o cliente para utilizar benefÃ­cios."}
+            {"cliente": "Identifique o cliente para utilizar benefícios."}
         )
 
     beneficio_resolvido = resolver_beneficio_da_venda(
@@ -142,9 +142,9 @@ def _registrar_beneficio(venda, usuario, tipo, cashback, voucher, valor_base_cas
         raise ValidationError(
             {
                 "beneficio": (
-                    "DivergÃªncia no cÃ¡lculo do benefÃ­cio: "
+                    "Divergência no cálculo do benefício: "
                     f"adaptador={beneficio_resolvido.valor} e "
-                    f"persistÃªncia={valor_persistido}."
+                    f"persistência={valor_persistido}."
                 )
             }
         )
@@ -170,10 +170,10 @@ def _registrar_pagamentos(venda, pagamentos):
                 ativa=True,
             )
         except FormaPagamento.DoesNotExist:
-            raise ValidationError({"pagamentos": f"Forma invÃ¡lida na linha {indice}."})
+            raise ValidationError({"pagamentos": f"Forma inválida na linha {indice}."})
 
         if forma.exige_autorizacao:
-            raise ValidationError({"pagamentos": f"{forma.nome} exige autorizaÃ§Ã£o."})
+            raise ValidationError({"pagamentos": f"{forma.nome} exige autorização."})
 
         valor = _decimal(dados.get("valor"), "pagamentos")
         parcelas = int(dados.get("parcelas") or 1)
@@ -230,7 +230,7 @@ def fechar_venda_web(
     venda.uf_destino = (uf_destino or "").strip().upper()
 
     if tipo_beneficio not in {"nenhum", "voucher", "cashback"}:
-        raise ValidationError({"beneficio": "Escolha um benefÃ­cio vÃ¡lido."})
+        raise ValidationError({"beneficio": "Escolha um benefício válido."})
 
     cashback = _decimal(valor_cashback, "cashback")
     if tipo_beneficio != "cashback":

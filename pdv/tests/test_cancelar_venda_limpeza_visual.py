@@ -19,11 +19,11 @@ class CancelarVendaLimpezaVisualTests(SimpleTestCase):
 
     def test_limpa_cliente_quando_estado_vem_sem_cliente(self):
         self.assertIn(
-            "clienteNome.textContent = clienteNomePadrao;",
+            "clienteNome.textContent = \"CONSUMIDOR\";",
             self.javascript,
         )
         self.assertIn(
-            "clienteDocumento.textContent = clienteDocumentoPadrao;",
+            "clienteDocumento.textContent = \"Cliente padrão da matriz\";",
             self.javascript,
         )
 

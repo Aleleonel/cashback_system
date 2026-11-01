@@ -162,19 +162,21 @@ class RecebimentoCompraForm(forms.Form):
     vencimento_financeiro = forms.DateField(
         label='Vencimento',
         required=True,
-        widget=forms.DateInput(attrs={'type': 'date'}),
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
     )
     loja = forms.ModelChoiceField(
         queryset=None,
         label='Loja de entrada',
+        widget=forms.Select(attrs={'class': 'form-select'}),
     )
     documento_referencia = forms.CharField(
         required=False,
         max_length=80,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
     )
     observacoes = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={'rows': 3}),
+        widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
     )
     chave_idempotencia = forms.CharField(
         widget=forms.HiddenInput(),
@@ -210,6 +212,7 @@ class RecebimentoCompraForm(forms.Form):
                 decimal_places=3,
                 max_digits=12,
                 initial=item.quantidade_pendente,
+                widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm text-end', 'step': '0.001'}),
                 label=(
                     f'{item.produto} '
                     f'(pendente: '
@@ -242,7 +245,7 @@ class DevolucaoCompraForm(forms.Form):
     )
     motivo = forms.CharField(
         required=True,
-        widget=forms.Textarea(attrs={'rows': 3}),
+        widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
         label='Motivo da devolucao',
     )
     chave_idempotencia = forms.CharField(

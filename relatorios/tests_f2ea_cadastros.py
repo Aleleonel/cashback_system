@@ -13,8 +13,8 @@ class RelatoriosCadastrosContratoTests(TestCase):
         self.outra_loja = Loja.objects.create(matriz=self.outra_matriz, nome="Outra Loja F2EA")
         User = get_user_model()
         self.user = User.objects.create_user(username="f2ea", password="teste123")
-        # O vÃ­nculo/contexto real do usuÃ¡rio jÃ¡ existe no projeto; a implementaÃ§Ã£o deverÃ¡
-        # reutilizÃ¡-lo. Estes testes RED focam primeiro no contrato pÃºblico de URLs.
+        # O vínculo/contexto real do usuário já existe no projeto; a implementação deverá
+        # reutilizá-lo. Estes testes RED focam primeiro no contrato público de URLs.
         self.client.force_login(self.user)
 
     def test_url_relatorio_clientes_existe(self):

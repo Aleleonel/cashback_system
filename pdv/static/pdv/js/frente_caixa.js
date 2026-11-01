@@ -10,6 +10,7 @@
     const corpoItens = document.getElementById("pdv-itens");
     const formCliente = document.getElementById("pdv-form-cliente");
     const buscaCliente = document.getElementById("pdv-busca-cliente");
+    const cadastrarCliente = document.getElementById("pdv-cadastrar-cliente");
     const resultadosClientes = document.getElementById("pdv-resultados-clientes");
     const clienteNome = document.getElementById("pdv-cliente-nome");
     const clienteDocumento = document.getElementById("pdv-cliente-documento");
@@ -235,8 +236,11 @@
             clienteDocumento.textContent =
                 venda.cliente.cpf || venda.cliente.telefone || "Cliente identificado";
         } else {
-            clienteNome.textContent = clienteNomePadrao;
-            clienteDocumento.textContent = clienteDocumentoPadrao;
+            // Sem venda atual/cliente identificado: o PDV volta ao cliente padrao.
+            // Nao usar o texto capturado no carregamento da pagina, pois a pagina
+            // pode ter sido aberta ja com um cliente identificado selecionado.
+            clienteNome.textContent = "CONSUMIDOR";
+            clienteDocumento.textContent = "Cliente padrão da matriz";
         }
 
         if (venda.vendedor) {
@@ -407,6 +411,14 @@
             mostrarAlerta(erro.message);
         }
     };
+
+    cadastrarCliente?.addEventListener("click", (evento) => {
+        evento.preventDefault();
+        const nome = buscaCliente?.value.trim() || "";
+        const url = new URL(cadastrarCliente.href, window.location.origin);
+        if (nome) url.searchParams.set("nome", nome);
+        window.location.assign(url.toString());
+    });
 
     formCliente?.addEventListener("submit", (evento) => {
         evento.preventDefault();
@@ -828,7 +840,7 @@
     };
 
     const cancelarVenda = async () => {
-        if (!window.confirm("Cancelar toda a venda? Itens, cliente, vendedor, voucher e pagamentos serao removidos.")) return;
+
 
         const botao = document.getElementById("pdv-cancelar-venda");
         if (!botao) {
@@ -867,7 +879,28 @@
     document.getElementById("pdv-remover-voucher")?.addEventListener("click", removerVoucher);
 
 
-    document.getElementById("pdv-cancelar-venda")?.addEventListener("click", cancelarVenda);
+    document.getElementById("pdv-cancelar-venda")?.addEventListener("click", () => {
+        const modalEl = document.getElementById("pdv-modal-cancelar-venda");
+        if (!modalEl || !window.bootstrap?.Modal) {
+            mostrarAlerta("Nao foi possivel abrir a confirmacao de cancelamento.", "danger");
+            return;
+        }
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    });
+
+    document.getElementById("pdv-confirmar-cancelamento-venda")?.addEventListener("click", async () => {
+        const modalEl = document.getElementById("pdv-modal-cancelar-venda");
+        const botaoConfirmar = document.getElementById("pdv-confirmar-cancelamento-venda");
+        if (botaoConfirmar) botaoConfirmar.disabled = true;
+        try {
+            await cancelarVenda();
+            if (modalEl && window.bootstrap?.Modal) {
+                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+            }
+        } finally {
+            if (botaoConfirmar) botaoConfirmar.disabled = false;
+        }
+    });
 
     botaoFinalizar?.addEventListener("click", abrirFechamento);
     document.getElementById("pdv-confirmar-fechamento")?.addEventListener("click", confirmarFechamento);

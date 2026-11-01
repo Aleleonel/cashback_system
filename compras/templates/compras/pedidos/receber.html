@@ -363,11 +363,11 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <div class="text-muted small">Loja</div>
-                            <div class="fw-semibold" id="resumo-recebimento-loja">â€”</div>
+                            <div class="fw-semibold" id="resumo-recebimento-loja">—</div>
                         </div>
                         <div class="col-md-6">
                             <div class="text-muted small">Vencimento</div>
-                            <div class="fw-semibold" id="resumo-recebimento-vencimento">â€”</div>
+                            <div class="fw-semibold" id="resumo-recebimento-vencimento">—</div>
                         </div>
                     </div>
 
@@ -417,11 +417,11 @@
                     const opcao = loja.options[loja.selectedIndex];
                     resumoLoja.textContent = opcao && opcao.value
                         ? opcao.text
-                        : "NÃ£o informada";
+                        : "Não informada";
                 }
 
                 if (vencimento && resumoVencimento) {
-                    resumoVencimento.textContent = vencimento.value || "NÃ£o informado";
+                    resumoVencimento.textContent = vencimento.value || "Não informado";
                 }
 
                 if (resumoItens) {

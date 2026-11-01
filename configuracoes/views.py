@@ -272,17 +272,17 @@ def comissoes(request):
                 fechamento_global = loja_fechamento_id == "todas"
                 loja_fechamento = None if fechamento_global else lojas.get(pk=loja_fechamento_id)
             except (Loja.DoesNotExist, TypeError, ValueError):
-                messages.error(request, "Loja ou competÃªncia invÃ¡lida para o fechamento.")
+                messages.error(request, "Loja ou competência inválida para o fechamento.")
             else:
                 if fechamento_global:
                     lojas_fechadas = list(lojas)
                     with transaction.atomic():
                         for loja_alvo in lojas_fechadas:
                             fechar_comissoes_competencia(loja=loja_alvo, ano=ano, mes=mes)
-                    messages.success(request, f"Fechamento de {mes:02d}/{ano} disponÃ­vel no histÃ³rico para {len(lojas_fechadas)} loja(s).")
+                    messages.success(request, f"Fechamento de {mes:02d}/{ano} disponível no histórico para {len(lojas_fechadas)} loja(s).")
                 else:
                     fechar_comissoes_competencia(loja=loja_fechamento, ano=ano, mes=mes)
-                    messages.success(request, f"Fechamento de {mes:02d}/{ano} para {loja_fechamento.nome} disponÃ­vel no histÃ³rico.")
+                    messages.success(request, f"Fechamento de {mes:02d}/{ano} para {loja_fechamento.nome} disponível no histórico.")
                 return redirect(redirect_comissoes)
     from vouchers.models import ComissaoParceiro
     metas = MetaComissaoLoja.objects.filter(loja__in=lojas).order_by("loja__nome", "valor_meta") if matriz else MetaComissaoLoja.objects.none()

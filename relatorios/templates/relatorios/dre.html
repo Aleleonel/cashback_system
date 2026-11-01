@@ -19,7 +19,7 @@
 <div class="col-md-3"><label class="form-label">Centro de custo</label><select name="centro_custo" class="form-select"><option value="">Todos</option>{% for cc in centros_custo %}<option value="{{ cc.pk }}" {% if centro_custo_filtro and cc.pk == centro_custo_filtro.pk %}selected{% endif %}>{{ cc.nome }}</option>{% endfor %}</select></div><div class="col-md-auto"><button class="btn btn-primary">Filtrar</button> <a href="{% url 'relatorios:dre' %}" class="btn btn-outline-secondary">Limpar</a></div></div></div></form>
 {% if erro_filtros %}
 <div class="alert alert-danger mt-3" role="alert">
-  <strong>NÃ£o foi possÃ­vel apurar a DRE.</strong>
+  <strong>Não foi possível apurar a DRE.</strong>
   <ul class="mb-0">{% for erro in erro_filtros %}<li>{{ erro }}</li>{% endfor %}</ul>
 </div>
 {% endif %}

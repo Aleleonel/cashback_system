@@ -185,7 +185,7 @@
                                     <div class="fw-semibold">{{ venda.cliente.nome|default:"Consumidor" }}</div>
                                     {% if venda.cliente.cpf %}<div class="text-muted small">{{ venda.cliente.cpf }}</div>{% endif %}
                                 {% else %}
-                                    <div class="fw-semibold text-muted">Cliente nÃ£o informado</div>
+                                    <div class="fw-semibold text-muted">Cliente não informado</div>
                                 {% endif %}
                             </td>
                             <td>
@@ -194,7 +194,7 @@
                                     {% if venda.vendedor %}
                                         {{ venda.vendedor.get_full_name|default:venda.vendedor.username }}
                                     {% else %}
-                                        <span class="text-muted">NÃ£o informado</span>
+                                        <span class="text-muted">Não informado</span>
                                     {% endif %}
                                 </div>
                                 <div class="small">
@@ -202,7 +202,7 @@
                                     {% if venda.operador %}
                                         {{ venda.operador.get_full_name|default:venda.operador.username }}
                                     {% else %}
-                                        <span class="text-muted">NÃ£o informado</span>
+                                        <span class="text-muted">Não informado</span>
                                     {% endif %}
                                 </div>
                             </td>

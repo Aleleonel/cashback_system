@@ -67,14 +67,14 @@ class ConfiguracaoComissaoMatriz(models.Model):
     atualizada_em = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "ConfiguraÃ§Ã£o de comissÃ£o da matriz"
-        verbose_name_plural = "ConfiguraÃ§Ãµes de comissÃ£o das matrizes"
+        verbose_name = "Configuração de comissão da matriz"
+        verbose_name_plural = "Configurações de comissão das matrizes"
         constraints = [
             models.CheckConstraint(condition=models.Q(minimo_vendas_vendedor__gte=0), name="ck_cfg_comissao_minimo_nao_negativo"),
         ]
 
     def __str__(self):
-        return f"ComissÃµes - {self.matriz}"
+        return f"Comissões - {self.matriz}"
 
 
 class MetaComissaoLoja(models.Model):
@@ -87,8 +87,8 @@ class MetaComissaoLoja(models.Model):
 
     class Meta:
         ordering = ["valor_meta", "pk"]
-        verbose_name = "Meta de comissÃ£o da loja"
-        verbose_name_plural = "Metas de comissÃ£o das lojas"
+        verbose_name = "Meta de comissão da loja"
+        verbose_name_plural = "Metas de comissão das lojas"
         constraints = [
             models.UniqueConstraint(fields=["loja", "valor_meta"], name="uq_meta_comissao_loja_valor"),
             models.CheckConstraint(condition=models.Q(valor_meta__gte=0), name="ck_meta_comissao_valor_nao_negativo"),

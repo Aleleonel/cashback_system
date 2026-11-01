@@ -24,8 +24,8 @@ class Migration(migrations.Migration):
                 ('matriz', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='configuracao_comissao', to='empresas.matriz')),
             ],
             options={
-                'verbose_name': 'ConfiguraÃ§Ã£o de comissÃ£o da matriz',
-                'verbose_name_plural': 'ConfiguraÃ§Ãµes de comissÃ£o das matrizes',
+                'verbose_name': 'Configuração de comissão da matriz',
+                'verbose_name_plural': 'Configurações de comissão das matrizes',
                 'constraints': [models.CheckConstraint(condition=models.Q(('minimo_vendas_vendedor__gte', 0)), name='ck_cfg_comissao_minimo_nao_negativo')],
             },
         ),
@@ -41,8 +41,8 @@ class Migration(migrations.Migration):
                 ('loja', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='metas_comissao', to='empresas.loja')),
             ],
             options={
-                'verbose_name': 'Meta de comissÃ£o da loja',
-                'verbose_name_plural': 'Metas de comissÃ£o das lojas',
+                'verbose_name': 'Meta de comissão da loja',
+                'verbose_name_plural': 'Metas de comissão das lojas',
                 'ordering': ['valor_meta', 'pk'],
                 'constraints': [models.UniqueConstraint(fields=('loja', 'valor_meta'), name='uq_meta_comissao_loja_valor'), models.CheckConstraint(condition=models.Q(('valor_meta__gte', 0)), name='ck_meta_comissao_valor_nao_negativo'), models.CheckConstraint(condition=models.Q(('percentual_comissao__gte', 0)), name='ck_meta_comissao_percentual_nao_negativo')],
             },

@@ -17,6 +17,6 @@ class F26Z24ParidadeFechamentoUITest(TestCase):
     def test_aberta(self):
         self.assertContains(self.client.get(self.detail()),"Editar t\u00edtulo");self.assertEqual(self.client.get(self.edit()).status_code,200)
     def test_fechada_oculta(self):
-        FechamentoGerencial.objects.create(matriz=self.matriz,competencia_ano=2026,competencia_mes=10,status="FECHADO");self.assertNotContains(self.client.get(self.detail()),"Editar tÃ­tulo")
+        FechamentoGerencial.objects.create(matriz=self.matriz,competencia_ano=2026,competencia_mes=10,status="FECHADO");self.assertNotContains(self.client.get(self.detail()),"Editar título")
     def test_fechada_bloqueia_get(self):
         FechamentoGerencial.objects.create(matriz=self.matriz,competencia_ano=2026,competencia_mes=10,status="FECHADO");self.assertIn(self.client.get(self.edit()).status_code,(403,404))

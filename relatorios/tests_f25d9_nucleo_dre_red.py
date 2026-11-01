@@ -58,7 +58,7 @@ class F25D9NucleoDREContratoRedTests(SimpleTestCase):
         ):
             self.assertIn(token, fonte)
 
-    def test_titulo_cancelado_nao_compÃµe_dre(self):
+    def test_titulo_cancelado_nao_compõe_dre(self):
         fonte = self.fonte()
         self.assertIn("TituloFinanceiro.Status.CANCELADO", fonte)
 

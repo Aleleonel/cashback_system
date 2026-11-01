@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='titulofinanceiro',
             name='origem_tipo',
-            field=models.CharField(choices=[('COMPRA_RECEBIMENTO', 'Compra - recebimento'), ('VENDA_PAGAMENTO', 'Venda - pagamento'), ('MANUAL', 'Manual'), ('AJUSTE', 'Ajuste'), ('COMISSAO', 'ComissÃ£o')], max_length=40),
+            field=models.CharField(choices=[('COMPRA_RECEBIMENTO', 'Compra - recebimento'), ('VENDA_PAGAMENTO', 'Venda - pagamento'), ('MANUAL', 'Manual'), ('AJUSTE', 'Ajuste'), ('COMISSAO', 'Comissão')], max_length=40),
         ),
     ]

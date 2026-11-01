@@ -585,6 +585,7 @@ def lista_clientes(request):
 def criar_cliente(request):
 
     contexto = get_contexto_operacional_usuario(request.user)
+    origem_pdv = (request.GET.get("origem") or request.POST.get("origem")) == "pdv"
 
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -611,10 +612,57 @@ def criar_cliente(request):
 
             messages.success(request, 'Cliente cadastrado com sucesso.')
 
+            if origem_pdv:
+                from pdv.models import Venda, StatusOperacaoVenda
+                from pdv.choices import StatusSessaoCaixa
+                from pdv.models import SessaoCaixa
+
+                sessao = (
+                    SessaoCaixa.objects
+                    .filter(
+                        caixa__matriz=contexto["matriz"],
+                        caixa__loja=contexto["loja"],
+                        operador_abertura=request.user,
+                        status=StatusSessaoCaixa.ABERTA,
+                    )
+                    .order_by("aberta_em", "id")
+                    .first()
+                )
+                venda = None
+                if sessao is not None:
+                    venda = Venda.objects.filter(
+                        matriz=contexto["matriz"],
+                        loja=contexto["loja"],
+                        sessao_caixa=sessao,
+                        operador=request.user,
+                        status__in=[
+                            StatusOperacaoVenda.RASCUNHO,
+                            StatusOperacaoVenda.ABERTA,
+                        ],
+                    ).order_by("-criada_em").first()
+
+                    if venda is None:
+                        venda = Venda.objects.create(
+                            matriz=contexto["matriz"],
+                            loja=contexto["loja"],
+                            sessao_caixa=sessao,
+                            cliente=cliente,
+                            operador=request.user,
+                            vendedor=request.user,
+                            status=StatusOperacaoVenda.RASCUNHO,
+                        )
+                    else:
+                        venda.cliente = cliente
+                        venda.full_clean()
+                        venda.save(update_fields=["cliente", "atualizada_em"])
+
+                return redirect("pdv:inicio")
+
             return redirect('clientes:lista_clientes')
 
     else:
-        form = ClienteForm()
+        nome_inicial = (request.GET.get("nome") or "").strip() if origem_pdv else ""
+        form = ClienteForm(initial={"nome": nome_inicial} if nome_inicial else None)
 
     return render(
         request,
@@ -622,6 +670,7 @@ def criar_cliente(request):
         {
             'form': form,
             'titulo': 'Novo Cliente',
+            'origem_pdv': origem_pdv,
         }
     )
 

@@ -244,7 +244,7 @@ def gerar_titulo_financeiro_comissao(*, comissao, vencimento, usuario=None, requ
     chave = f"COMISSAO:{comissao.pk}"
     competencia = date(fechamento.competencia_ano, fechamento.competencia_mes, 1)
     descricao = (
-        f"ComissÃ£o {fechamento.competencia_mes:02d}/{fechamento.competencia_ano} - "
+        f"Comissão {fechamento.competencia_mes:02d}/{fechamento.competencia_ano} - "
         f"{comissao.vendedor_nome_original}"
     )
 

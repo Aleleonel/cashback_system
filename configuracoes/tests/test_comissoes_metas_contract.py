@@ -8,7 +8,7 @@ from configuracoes.models import ConfiguracaoComissaoMatriz, MetaComissaoLoja
 
 
 class ComissoesMetasDominioContractTests(TestCase):
-    """Contrato persistente F2D: polÃ­tica da matriz e N faixas por loja."""
+    """Contrato persistente F2D: política da matriz e N faixas por loja."""
 
     def setUp(self):
         self.matriz = Matriz.objects.create(nome="Matriz F2D")

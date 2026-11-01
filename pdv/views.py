@@ -518,8 +518,15 @@ def buscar_clientes(request):
         return JsonResponse({"ok": True, "clientes": []})
 
     somente_numeros = "".join(caractere for caractere in termo if caractere.isdigit())
+    termo_tem_letras = any(caractere.isalpha() for caractere in termo)
+
     filtros = Q(nome__icontains=termo) | Q(email__icontains=termo)
-    if somente_numeros:
+
+    # CPF/telefone so participam quando o termo nao contem letras.
+    # Ex.: "MARCOS TESTE F30" deve continuar sendo uma busca nominal;
+    # os digitos "30" nao podem ampliar a consulta para qualquer CPF/telefone
+    # que contenha 30.
+    if somente_numeros and not termo_tem_letras:
         filtros |= Q(cpf_normalizado__icontains=somente_numeros)
         filtros |= Q(telefone_normalizado__icontains=somente_numeros)
         filtros |= Q(cpf__icontains=termo)
