@@ -13,8 +13,13 @@ class F29ComissoesParceirosUIContractTests(SimpleTestCase):
         bloco = VIEWS[inicio:fim]
         self.assertIn("ComissaoParceiro", bloco)
         self.assertIn("comissoes_parceiros", bloco)
-        self.assertIn("PARCEIRO:", bloco)
-        self.assertIn("COMISSAO_PARCEIRO:", bloco)
+        self.assertIn("consolidar_comissoes_parceiros", bloco)
+        self.assertIn("listar_detalhes_comissoes_parceiro", bloco)
+        self.assertIn("parceiro_detalhes", bloco)
+        # A idempotencia financeira individual continua protegida pelo teste
+        # test_f29_comissao_parceiro_financeiro; a view F31 nao materializa
+        # namespaces/titulos individuais na consulta principal consolidada.
+        self.assertNotIn("COMISSAO_PARCEIRO:", bloco)
 
     def test_view_tem_acao_financeira_especifica_para_parceiro(self):
         inicio = VIEWS.index("def comissoes(request):")
@@ -27,7 +32,9 @@ class F29ComissoesParceirosUIContractTests(SimpleTestCase):
         self.assertIn("Vendedores", TPL)
         self.assertIn("Parceiros", TPL)
         self.assertIn("comissoes_parceiros", TPL)
-        self.assertIn('value="provisionar_comissao_parceiro"', TPL)
+        self.assertIn("comissoes_parceiros_consolidadas", TPL)
+        self.assertIn("Ver detalhes", TPL)
+        self.assertNotIn('value="provisionar_comissao_parceiro"', TPL)
 
     def test_template_parceiros_expoe_metricas_do_snapshot_e_uso(self):
         for termo in (

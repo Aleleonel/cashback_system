@@ -40,20 +40,21 @@ class ComissoesUIHistoricoAgrupadoFuncionalTests(TestCase):
         )
 
     def test_view_entrega_detalhes_agrupados_no_proprio_fechamento(self):
-        resposta = self.client.get(reverse("configuracoes:comissoes"))
+        resposta = self.client.get(reverse("configuracoes:comissoes"), {"historico_mes": self.com_detalhe.competencia_mes, "historico_ano": self.com_detalhe.competencia_ano})
         self.assertEqual(resposta.status_code, 200)
         fechamentos = list(resposta.context["fechamentos_comissao"])
         f9 = next(f for f in fechamentos if f.pk == self.com_detalhe.pk)
-        f8 = next(f for f in fechamentos if f.pk == self.sem_detalhe.pk)
         self.assertEqual([c.vendedor_nome_original for c in f9.comissoes_vendedores.all()], ["Vendedor Historico"])
-        self.assertEqual(list(f8.comissoes_vendedores.all()), [])
 
     def test_template_usa_relacao_do_fechamento_e_estado_vazio_por_fechamento(self):
-        resposta = self.client.get(reverse("configuracoes:comissoes"))
+        resposta = self.client.get(reverse("configuracoes:comissoes"), {"historico_mes": self.com_detalhe.competencia_mes, "historico_ano": self.com_detalhe.competencia_ano})
         self.assertEqual(resposta.status_code, 200)
         html = resposta.content.decode("utf-8")
         self.assertIn("Vendedor Historico", html)
-        self.assertIn("Nenhuma comissão individual registrada.", html)
+        resposta_sem_detalhe = self.client.get(resposta.request["PATH_INFO"], {"historico_mes": self.sem_detalhe.competencia_mes, "historico_ano": self.sem_detalhe.competencia_ano})
+        self.assertEqual(resposta_sem_detalhe.status_code, 200)
+        html_sem_detalhe = resposta_sem_detalhe.content.decode()
+        self.assertIn("Nenhuma comissão individual registrada.", html_sem_detalhe)
         self.assertEqual(html.count("Vendedor Historico"), 1)
 
     def test_template_nao_depende_de_lista_global_de_comissoes(self):
