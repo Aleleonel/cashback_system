@@ -9,6 +9,7 @@ class Pdv04E1FinalizacaoFechamentoTests(SimpleTestCase):
         cls.views = Path("pdv/views.py").read_text(encoding="utf-8")
         cls.close = Path("pdv/templates/pdv/fechar_caixa.html").read_text(encoding="utf-8")
         cls.home = Path("pdv/templates/pdv/inicio.html").read_text(encoding="utf-8")
+        cls.base = Path("templates/base.html").read_text(encoding="utf-8")
 
     def test_valor_calculado_preenche_o_campo_em_reais(self):
         self.assertIn('value="{{ valor_fechamento_inicial }}"', self.close)
@@ -23,7 +24,8 @@ class Pdv04E1FinalizacaoFechamentoTests(SimpleTestCase):
 
     def test_mensagens_sao_visiveis(self):
         self.assertIn("{% if messages %}", self.close)
-        self.assertIn("{% if messages %}", self.home)
+        self.assertIn('{% extends "base.html" %}', self.home)
+        self.assertIn("{% if messages %}", self.base)
 
     def test_erro_preserva_valor_e_observacao(self):
         self.assertIn('request.session["pdv_valor_fechamento_informado"]', self.views)
