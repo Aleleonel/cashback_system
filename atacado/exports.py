@@ -305,7 +305,7 @@ def _gerar_xlsx(obj, pedido=False):
     ws.append(["Numero", d["numero"]])
     ws.append(["Cliente", d["cliente"]])
     ws.append(["Vendedor", d["vendedor"]])
-    ws.append(["Validade", str(d["validade"])])
+    ws.append(["Validade", _pdf_data(d["validade"]) if d["validade"] != "-" else "-"])
     ws.append([])
     ws.append(["Produto", "Quantidade", "Preco original", "Preco base", "Preco final", "% atacado", "Desconto", "Ajuste", "Promocional", "Justificativa"])
     for linha in d["itens"]:

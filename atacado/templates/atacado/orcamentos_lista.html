@@ -42,7 +42,7 @@
     <div class="table-responsive"><table class="table table-hover align-middle f32m5p12e-table">
       <thead><tr><th>Número</th><th>Cliente</th><th>Loja</th><th>Data</th><th>Situação</th><th class="text-end">Total</th><th class="text-end">Exportar</th><th class="text-end">Ações</th></tr></thead>
       <tbody>{% for orc in pagina %}<tr>
-        <td>{{ orc.numero|default:orc.pk }}</td><td><a class="link-primary text-decoration-underline" href="{% url 'clientes:extrato_cliente' orc.cliente_id %}" title="Consultar cadastro e dados do cliente">{{ orc.cliente.nome }}</a></td><td>{{ orc.loja.nome|default:"—" }}</td>
+        <td>{{ orc.numero|default:orc.pk }}</td><td><a class="link-primary text-decoration-underline" href="{% url 'clientes:consultar_cadastro_cliente' orc.cliente_id %}?origem=atacado" title="Consultar cadastro e dados do cliente">{{ orc.cliente.nome }}</a></td><td>{{ orc.loja.nome|default:"—" }}</td>
         <td>{{ orc.criado_em|date:"d/m/Y H:i" }}</td><td>
 {# F32M5P12F6_STATUS_VISUAL #}
 {% if orc.status == "CANCELADO" %}<span class="badge rounded-pill text-bg-danger">{{ orc.get_status_display }}</span>
