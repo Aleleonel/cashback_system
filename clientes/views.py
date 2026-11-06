@@ -675,8 +675,37 @@ def criar_cliente(request):
     )
 
 @login_required
+@require_permission(PERMISSAO_CLIENTES_VISUALIZAR)
+def consultar_cadastro_cliente(request, cliente_id):
+    # Consulta isolada por matriz; nenhuma escrita e permitida nesta rota.
+    from django.http import HttpResponseNotAllowed
+    from accounts.services import usuario_tem_permissao
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    contexto = get_contexto_operacional_usuario(request.user)
+    cliente = get_object_or_404(
+        Cliente.objects.select_related("matriz", "loja_cadastro"),
+        id=cliente_id,
+        matriz=contexto["matriz"],
+    )
+    form = ClienteForm(instance=cliente)
+    for campo in form.fields.values():
+        campo.disabled = True
+    return render(request, "clientes/form_cliente.html", {
+        "form": form,
+        "titulo": "Consultar cadastro do cliente",
+            'origem_atacado': request.GET.get('origem') == 'atacado',
+        "cliente": cliente,
+        "somente_leitura": True,
+        "pode_editar_cliente": usuario_tem_permissao(request.user, PERMISSAO_CLIENTES_EDITAR),
+    })
+
+
+@login_required
 @require_permission(PERMISSAO_CLIENTES_EDITAR)
 def editar_cliente(request, cliente_id):
+    origem_atacado = (request.POST.get('origem') or request.GET.get('origem')) == 'atacado'
+
 
     contexto = get_contexto_operacional_usuario(request.user)
 
@@ -705,7 +734,7 @@ def editar_cliente(request, cliente_id):
 
             messages.success(request, 'Cliente atualizado com sucesso.')
 
-            return redirect('clientes:lista_clientes')
+            return redirect('atacado:orcamentos_lista') if origem_atacado else redirect('clientes:lista_clientes')
 
     else:
         form = ClienteForm(instance=cliente)
@@ -716,6 +745,7 @@ def editar_cliente(request, cliente_id):
         {
             'form': form,
             'titulo': 'Editar Cliente',
+            'origem_atacado': origem_atacado,
             'cliente': cliente,
         }
     )

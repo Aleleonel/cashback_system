@@ -18,6 +18,8 @@ CAMPOS_EDITAVEIS = [
     'custo_base',
     'preco_venda',
     'origem_preco',
+    'atacado_elegivel',
+    'promocional',
     'peso_liquido_gramas',
     'peso_bruto_gramas',
     'altura_cm',

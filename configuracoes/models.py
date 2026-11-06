@@ -24,6 +24,8 @@ class ConfiguracaoComercial(models.Model):
         default=Decimal("0.00"),
     )
 
+    produto_promocional_conta_para_faixa_atacado = models.BooleanField(default=False)
+
     cashback_ativo = models.BooleanField(default=True)
     voucher_ativo = models.BooleanField(default=True)
     promocoes_ativas = models.BooleanField(default=True)
@@ -53,6 +55,88 @@ class ConfiguracaoComercial(models.Model):
             erros["desconto_atacado_percentual"] = (
                 "O desconto do atacado deve estar entre 0 e 100."
             )
+
+        if erros:
+            raise ValidationError(erros)
+
+
+class FaixaAtacado(models.Model):
+    configuracao = models.ForeignKey(
+        ConfiguracaoComercial,
+        on_delete=models.CASCADE,
+        related_name="faixas_atacado",
+    )
+    valor_minimo = models.DecimalField(max_digits=12, decimal_places=2)
+    valor_maximo = models.DecimalField(
+        max_digits=12, decimal_places=2, blank=True, null=True,
+    )
+    percentual_desconto = models.DecimalField(max_digits=5, decimal_places=2)
+    criada_em = models.DateTimeField(auto_now_add=True)
+    atualizada_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "faixa de atacado"
+        verbose_name_plural = "faixas de atacado"
+        ordering = ("configuracao_id", "valor_minimo", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor_minimo__gte=0),
+                name="ck_faixa_atacado_minimo_nao_negativo",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(percentual_desconto__gte=0)
+                & models.Q(percentual_desconto__lte=100),
+                name="ck_faixa_atacado_percentual_valido",
+            ),
+        ]
+
+    def __str__(self):
+        limite = self.valor_maximo if self.valor_maximo is not None else "sem limite"
+        return f"Atacado {self.valor_minimo} a {limite} - {self.percentual_desconto}%"
+
+    def clean(self):
+        erros = {}
+
+        if self.valor_minimo is not None and self.valor_minimo < 0:
+            erros["valor_minimo"] = "O valor minimo da faixa nao pode ser negativo."
+
+        if (
+            self.valor_maximo is not None
+            and self.valor_minimo is not None
+            and self.valor_maximo < self.valor_minimo
+        ):
+            erros["valor_maximo"] = (
+                "O valor maximo da faixa nao pode ser menor que o valor minimo."
+            )
+
+        if (
+            self.percentual_desconto is not None
+            and not 0 <= self.percentual_desconto <= 100
+        ):
+            erros["percentual_desconto"] = (
+                "O percentual de desconto deve estar entre 0 e 100."
+            )
+
+        if self.configuracao_id and self.valor_minimo is not None:
+            existentes = type(self).objects.filter(configuracao_id=self.configuracao_id)
+            if self.pk:
+                existentes = existentes.exclude(pk=self.pk)
+
+            for existente in existentes:
+                inicio_a = self.valor_minimo
+                fim_a = self.valor_maximo
+                inicio_b = existente.valor_minimo
+                fim_b = existente.valor_maximo
+                sobrepoe = (
+                    (fim_a is None or inicio_b <= fim_a)
+                    and (fim_b is None or inicio_a <= fim_b)
+                )
+                if sobrepoe:
+                    erros["valor_minimo"] = (
+                        "A faixa de atacado se sobrepoe a outra faixa "
+                        "da mesma configuracao."
+                    )
+                    break
 
         if erros:
             raise ValidationError(erros)

@@ -10,6 +10,7 @@ from accounts.views import CashbackLoginView
 urlpatterns = [
     path('notificacoes/', include('notificacoes.urls')),
     path('configuracoes/', include('configuracoes.urls')),
+    path('atacado/', include('atacado.urls')),
     path('pdv/', include('pdv.urls')),
     path('fiscal/', include('fiscal.urls')),
     path('rh/', include('rh.urls')),

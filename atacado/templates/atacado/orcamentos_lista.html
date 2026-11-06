@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load atacado_moeda %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <div class="text-uppercase text-secondary small fw-semibold mb-1">Gestão comercial</div>
+      <h1 class="h3 mb-1"><i class="bi bi-file-earmark-text me-2"></i>Orçamentos de atacado</h1>
+      <p class="text-secondary mb-0">Consulta e exportação de orçamentos, por matriz.</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap gap-2 f32m5p12d-toolbar">
+      {% if matriz_selecionada %}
+      <a class="btn btn-outline-primary" href="{% url 'atacado:pedidos_lista' %}{% if request.user.is_superuser %}?matriz={{ matriz_selecionada.pk }}{% endif %}"><i class="bi bi-box-seam me-1" aria-hidden="true"></i>Consultar pedidos</a>
+      <a class="btn btn-primary" href="{% url 'atacado:orcamento_novo' %}{% if request.user.is_superuser %}?matriz={{ matriz_selecionada.pk }}{% endif %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo orçamento</a>
+      {% endif %}
+    </div>
+  </div>
+  <section class="card border-0 shadow-sm mb-4"><div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      {% if matrizes_plataforma is not None %}
+      <div class="col-lg-4"><label class="form-label" for="matriz">Matriz</label>
+        <select class="form-select" id="matriz" name="matriz" required>
+          <option value="">Selecione uma matriz</option>
+          {% for m in matrizes_plataforma %}<option value="{{ m.pk }}" {% if matriz_selecionada.pk == m.pk %}selected{% endif %}>{{ m.nome }}</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="col-lg-3"><label class="form-label" for="q">Número ou cliente</label><input class="form-control" id="q" name="q" value="{{ busca }}" maxlength="100"></div>
+      <div class="col-lg-3"><label class="form-label" for="status">Situação</label>
+        <select class="form-select" id="status" name="status"><option value="">Todas</option>
+          {% for codigo, nome in status_opcoes %}<option value="{{ codigo }}" {% if status_atual == codigo %}selected{% endif %}>{{ nome }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-2"><button class="btn btn-primary w-100" type="submit">Filtrar</button></div>
+    </form>
+  </div></section>
+  {% if not matriz_selecionada %}
+  <div class="alert alert-info">Selecione uma matriz para consultar os orçamentos.</div>
+  {% else %}
+  <section class="card border-0 shadow-sm"><div class="card-body">
+    <div class="table-responsive"><table class="table table-hover align-middle f32m5p12e-table">
+      <thead><tr><th>Número</th><th>Cliente</th><th>Loja</th><th>Data</th><th>Situação</th><th class="text-end">Total</th><th class="text-end">Exportar</th><th class="text-end">Ações</th></tr></thead>
+      <tbody>{% for orc in pagina %}<tr>
+        <td>{{ orc.numero|default:orc.pk }}</td><td><a class="link-primary text-decoration-underline" href="{% url 'clientes:consultar_cadastro_cliente' orc.cliente_id %}?origem=atacado" title="Consultar cadastro e dados do cliente">{{ orc.cliente.nome }}</a></td><td>{{ orc.loja.nome|default:"—" }}</td>
+        <td>{{ orc.criado_em|date:"d/m/Y H:i" }}</td><td>
+{# F32M5P12F6_STATUS_VISUAL #}
+{% if orc.status == "CANCELADO" %}<span class="badge rounded-pill text-bg-danger">{{ orc.get_status_display }}</span>
+{% elif orc.status == "PEDIDO_GERADO" or orc.status == "APROVADO" %}<span class="badge rounded-pill text-bg-success">{{ orc.get_status_display }}</span>
+{% elif orc.status == "ENVIADO" %}<span class="badge rounded-pill text-bg-primary">{{ orc.get_status_display }}</span>
+{% elif orc.status == "RASCUNHO" %}<span class="badge rounded-pill text-bg-secondary">{{ orc.get_status_display }}</span>
+{% elif orc.status == "RECUSADO" or orc.status == "EXPIRADO" %}<span class="badge rounded-pill text-bg-warning">{{ orc.get_status_display }}</span>
+{% else %}{{ orc.get_status_display }}{% endif %}
+</td>
+        <td class="text-end">R$ {{ orc.total|moeda_br }}</td>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'atacado:orcamento_pdf' orc.pk %}{% if matrizes_plataforma is not None %}?matriz={{ matriz_selecionada.pk }}{% endif %}">PDF</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'atacado:orcamento_xlsx' orc.pk %}{% if matrizes_plataforma is not None %}?matriz={{ matriz_selecionada.pk }}{% endif %}">Excel</a>
+        </td>
+        <td class="text-end f32m5p12d-acoes"><div class="f32m5p12e-slots">
+          {% if pode_gerar_pedido and orc.status == "RASCUNHO" or pode_gerar_pedido and orc.status == "ENVIADO" %}
+          <form method="post" class="d-inline" action="{% url 'atacado:orcamento_cancelar' orc.pk %}{% if request.user.is_superuser %}?matriz={{ matriz_selecionada.pk }}{% endif %}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger" type="button" data-f32m5p12f4-cancelar="1" data-orcamento="{{ orc.numero|default:orc.pk }}">Cancelar orçamento</button></form>
+          {% endif %}
+          {% if pode_gerar_pedido %}{% if orc.status == "RASCUNHO" or orc.status == "ENVIADO" %}
+          <form method="post" action="{% url 'atacado:orcamento_acao' orc.pk %}{% if request.user.is_superuser %}?matriz={{ matriz_selecionada.pk }}{% endif %}" class="d-inline">
+            {% csrf_token %}
+            {% if orc.status == "RASCUNHO" %}
+              <button class="btn btn-sm btn-outline-primary" type="submit" name="acao" value="enviar">Marcar enviado</button>
+            {% else %}
+              <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#f32m5p11g4Modal" data-orcamento="{{ orc.numero|default:orc.pk }}">Aprovar e gerar pedido</button>
+            {% endif %}
+          </form>
+          {% endif %}{% endif %}
+        </div></td>
+      </tr>{% empty %}<tr><td colspan="8" class="text-center text-secondary py-4">Nenhum orçamento encontrado.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% if pagina.paginator.num_pages > 1 %}<nav aria-label="Paginação"><div class="d-flex justify-content-between align-items-center">
+      <span class="text-secondary small">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span><div class="d-flex gap-2">
+      {% if pagina.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if matrizes_plataforma is not None %}matriz={{ matriz_selecionada.pk }}&amp;{% endif %}q={{ busca|urlencode }}&amp;status={{ status_atual|urlencode }}&amp;page={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+      {% if pagina.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if matrizes_plataforma is not None %}matriz={{ matriz_selecionada.pk }}&amp;{% endif %}q={{ busca|urlencode }}&amp;status={{ status_atual|urlencode }}&amp;page={{ pagina.next_page_number }}">Próxima</a>{% endif %}
+      </div></div></nav>{% endif %}
+  </div></section>
+  {% endif %}
+</div>
+
+{# F32M5P11G4: confirmacao integrada; POST original preserva CSRF e escopo da matriz. #}
+<div class="modal fade" id="f32m5p11g4Modal" tabindex="-1" aria-labelledby="f32m5p11g4Titulo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="f32m5p11g4Titulo"><i class="bi bi-check-circle me-2"></i>Confirmar aprovação do orçamento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja aprovar o <strong id="f32m5p11g4Numero"></strong> e gerar o pedido automaticamente?</p>
+        <p class="text-secondary small mb-0">Esta operação reserva o estoque disponível. Não finaliza a venda e não emite documento fiscal.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="f32m5p11g4Confirmar">Aprovar e gerar pedido</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var modal = document.getElementById('f32m5p11g4Modal');
+  var confirmar = document.getElementById('f32m5p11g4Confirmar');
+  var numero = document.getElementById('f32m5p11g4Numero');
+  var formulario = null;
+  if (!modal || !confirmar || !numero) return;
+  modal.addEventListener('show.bs.modal', function (evento) {
+    var botao = evento.relatedTarget;
+    formulario = botao ? botao.closest('form') : null;
+    numero.textContent = botao ? ('orçamento nº ' + (botao.getAttribute('data-orcamento') || '')) : 'orçamento';
+    confirmar.disabled = false;
+  });
+  modal.addEventListener('hidden.bs.modal', function () {
+    formulario = null;
+    confirmar.disabled = false;
+  });
+  confirmar.addEventListener('click', function () {
+    if (!formulario || confirmar.disabled) return;
+    confirmar.disabled = true;
+    var acao = formulario.querySelector('input[name="acao"][value="aprovar"]');
+    if (!acao) {
+      acao = document.createElement('input');
+      acao.type = 'hidden';
+      acao.name = 'acao';
+      acao.value = 'aprovar';
+      formulario.appendChild(acao);
+    }
+    formulario.submit();
+  });
+}());
+</script>
+{# F32M5P12D_UX: barra de acoes no cabecalho e coluna de acoes uniforme. #}
+<style>
+  .f32m5p12d-toolbar .btn { white-space: nowrap; }
+  .f32m5p12d-acoes { min-width: 280px; }
+  .f32m5p12d-acoes form { display: inline-flex !important; vertical-align: middle; margin: 2px 0; }
+  .f32m5p12d-acoes .btn { white-space: nowrap; }
+  @media (max-width: 767.98px) {
+    .f32m5p12d-toolbar { width: 100%; }
+    .f32m5p12d-toolbar .btn { flex: 1 1 auto; }
+  }
+</style>
+
+{# F32M5P12E_SLOTS: colunas estaveis; duas posicoes fixas, sem mudanca de ordem. #}
+<style>
+  .f32m5p12e-table { table-layout: fixed; width: 100%; min-width: 1420px; }
+  .f32m5p12e-table th:nth-child(1) { width: 65px; }
+  .f32m5p12e-table th:nth-child(2) { width: 210px; }
+  .f32m5p12e-table th:nth-child(3) { width: 155px; }
+  .f32m5p12e-table th:nth-child(4) { width: 145px; }
+  .f32m5p12e-table th:nth-child(5) { width: 135px; }
+  .f32m5p12e-table th:nth-child(6) { width: 110px; }
+  .f32m5p12e-table th:nth-child(7) { width: 115px; }
+  .f32m5p12e-table th:nth-child(8) { width: 365px; }
+  .f32m5p12e-table td { vertical-align: middle; }
+  .f32m5p12e-table td:nth-child(2), .f32m5p12e-table td:nth-child(3) { overflow-wrap: anywhere; }
+  .f32m5p12d-acoes { min-width: 0; }
+  .f32m5p12e-slots { display: grid; grid-template-columns: 160px 185px; gap: 6px; align-items: center; justify-content: end; }
+  .f32m5p12e-slots > form { display: block !important; margin: 0 !important; min-width: 0; }
+  .f32m5p12e-slots > form:first-of-type { grid-column: 1; }
+  .f32m5p12e-slots > form:nth-of-type(2) { grid-column: 2; }
+  .f32m5p12e-slots > form .btn { width: 100%; min-height: 34px; white-space: normal; line-height: 1.15; }
+  .f32m5p12e-slots > form:only-of-type { grid-column: 1; }
+</style>
+
+{# F32M5P12F1_MODAL_CANCELAMENTO: POST original preserva CSRF e matriz. #}
+<div class="modal fade" id="f32m5p12f1CancelarModal" tabindex="-1" aria-labelledby="f32m5p12f1Titulo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow">
+    <div class="modal-header"><h5 class="modal-title" id="f32m5p12f1Titulo">Cancelar orçamento</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+    <div class="modal-body">
+      <p>Confirma o cancelamento do <strong id="f32m5p12f1Numero"></strong>? Esta ação será registrada no histórico.</p>
+      <label for="f32m5p12f1Motivo" class="form-label fw-semibold">Motivo do cancelamento (obrigatório)</label>
+      <textarea id="f32m5p12f1Motivo" class="form-control" rows="3" minlength="10" maxlength="500" required placeholder="Descreva o motivo (mínimo de 10 caracteres)"></textarea>
+      <div class="invalid-feedback">Informe um motivo de 10 a 500 caracteres.</div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="button" class="btn btn-danger" id="f32m5p12f1Confirmar">Confirmar cancelamento</button></div>
+  </div></div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var modal = document.getElementById('f32m5p12f1CancelarModal');
+  var motivo = document.getElementById('f32m5p12f1Motivo');
+  var numero = document.getElementById('f32m5p12f1Numero');
+  var confirmar = document.getElementById('f32m5p12f1Confirmar');
+  var formulario = null;
+  if (!modal || !motivo || !numero || !confirmar) return;
+  // F32M5P12F4_CLIQUE_EXPLICITO: evita conflitos com acionadores globais/data-api.
+  // O evento e interceptado antes de outros listeners de clique no documento.
+  document.querySelectorAll('[data-f32m5p12f4-cancelar="1"]').forEach(function (botao) {
+    botao.addEventListener('click', function (evento) {
+      evento.preventDefault();
+      evento.stopImmediatePropagation();
+      evento.stopPropagation();
+      if (!window.bootstrap || !window.bootstrap.Modal) {
+        console.error('F32M5P12F4: Bootstrap Modal indisponivel');
+        return;
+      }
+      window.bootstrap.Modal.getOrCreateInstance(modal).show(botao);
+    }, true);
+  });
+
+  modal.addEventListener('show.bs.modal', function (evento) {
+    var botao = evento.relatedTarget;
+    formulario = botao ? botao.closest('form') : null;
+    numero.textContent = 'orçamento nº ' + (botao ? botao.getAttribute('data-orcamento') || '' : '');
+    motivo.value = '';
+    motivo.classList.remove('is-invalid');
+    confirmar.disabled = false;
+  });
+  modal.addEventListener('hidden.bs.modal', function () { formulario = null; motivo.value = ''; confirmar.disabled = false; });
+  confirmar.addEventListener('click', function () {
+    if (!formulario || confirmar.disabled) return;
+    var valor = motivo.value.trim();
+    if (valor.length < 10 || valor.length > 500) { motivo.classList.add('is-invalid'); motivo.focus(); return; }
+    motivo.classList.remove('is-invalid');
+    var campo = formulario.querySelector('input[name="motivo"]');
+    if (!campo) { campo = document.createElement('input'); campo.type = 'hidden'; campo.name = 'motivo'; formulario.appendChild(campo); }
+    campo.value = valor;
+    confirmar.disabled = true;
+    formulario.submit();
+  });
+}());
+</script>
+{% endblock %}

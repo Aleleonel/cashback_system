@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4" id="f32-orcamento-profissional" data-busca="{% url 'atacado:busca_comercial' %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div><div class="small text-secondary text-uppercase fw-semibold">Vendas / Atacado / Or&ccedil;amentos</div><h1 class="h3 mb-1">Adicionar or&ccedil;amento</h1><p class="text-secondary mb-0">Proposta comercial &bull; {{ matriz.nome }}</p></div>
+    <span class="badge text-bg-light border">Em elabora&ccedil;&atilde;o</span>
+  </div>
+  <form method="post" novalidate id="f32-orcamento-form">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
+    <section class="card border-0 shadow-sm mb-3"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Dados do or&ccedil;amento</h2></div><div class="card-body"><div class="row g-3">
+      <div class="col-lg-4"><label class="form-label fw-semibold" for="f32-cliente">Cliente <span class="text-danger">*</span></label>{{ form.cliente }}<div class="position-relative"><input type="search" class="form-control f32-search" id="f32-cliente" autocomplete="off" placeholder="Buscar por nome, CPF ou CNPJ" data-kind="clientes"><div class="f32-options list-group position-absolute w-100 shadow" hidden></div></div>{% for e in form.cliente.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+      <div class="col-lg-4"><label class="form-label fw-semibold" for="{{ form.loja.id_for_label }}">Loja <span class="text-danger">*</span></label>{{ form.loja }}{% for e in form.loja.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+      <div class="col-lg-4"><label class="form-label fw-semibold">Vendedor</label>{{ form.vendedor }}{% for e in form.vendedor.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+      <div class="col-lg-4"><label class="form-label fw-semibold" for="{{ form.validade.id_for_label }}">Validade da proposta</label>{{ form.validade }}{% for e in form.validade.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    </div></div></section>
+    <section class="card border-0 shadow-sm mb-3"><div class="card-header bg-white py-3 d-flex align-items-center justify-content-between"><h2 class="h5 mb-0">Produtos</h2><button type="button" class="btn btn-outline-primary btn-sm" id="adicionar-item"><i class="bi bi-plus-lg me-1"></i>Adicionar produto</button></div><div class="card-body">
+      {{ formset.management_form }}
+      <div class="row g-2 d-none d-lg-flex small fw-semibold text-secondary border-bottom pb-2 mb-2"><div class="col-lg-5">Produto</div><div class="col-lg-2">Quantidade</div><div class="col-lg-2 text-end">Valor unit.</div><div class="col-lg-2 text-end">Subtotal</div><div class="col-lg-1"></div></div>
+      <div id="itens-orcamento">{% for linha in formset %}<div class="row g-2 align-items-center mb-3 linha-item border-bottom pb-3"><div class="col-lg-5">{{ linha.produto }}<div class="position-relative"><input type="search" class="form-control f32-search" autocomplete="off" placeholder="Digite nome, SKU ou c&oacute;digo" data-kind="produtos"><div class="f32-options list-group position-absolute w-100 shadow" hidden></div></div>{% for e in linha.produto.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div><div class="col-lg-2">{{ linha.quantidade }}{% for e in linha.quantidade.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div><div class="col-lg-2 text-lg-end"><span class="f32-preco">R$ 0,00</span></div><div class="col-lg-2 text-lg-end fw-semibold"><span class="f32-subtotal">R$ 0,00</span></div><div class="col-lg-1 text-lg-end"><span class="d-none">{{ linha.DELETE }}</span><button class="btn btn-sm btn-outline-danger remover-item" type="button" aria-label="Remover produto"><i class="bi bi-trash"></i></button></div></div>{% endfor %}</div>
+      <template id="modelo-item"><div class="row g-2 align-items-center mb-3 linha-item border-bottom pb-3"><div class="col-lg-5">{{ formset.empty_form.produto }}<div class="position-relative"><input type="search" class="form-control f32-search" autocomplete="off" placeholder="Digite nome, SKU ou c&oacute;digo" data-kind="produtos"><div class="f32-options list-group position-absolute w-100 shadow" hidden></div></div></div><div class="col-lg-2">{{ formset.empty_form.quantidade }}</div><div class="col-lg-2 text-lg-end"><span class="f32-preco">R$ 0,00</span></div><div class="col-lg-2 text-lg-end fw-semibold"><span class="f32-subtotal">R$ 0,00</span></div><div class="col-lg-1 text-lg-end"><span class="d-none">{{ formset.empty_form.DELETE }}</span><button class="btn btn-sm btn-outline-danger remover-item" type="button" aria-label="Remover produto"><i class="bi bi-trash"></i></button></div></div></template>
+      <p class="small text-secondary mb-0">Valores exibidos s&atilde;o estimativas. A pol&iacute;tica oficial &eacute; recalculada no servidor ao salvar.</p>
+    </div></section>
+    <section class="card border-0 shadow-sm mb-3"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Totaliza&ccedil;&atilde;o</h2></div><div class="card-body"><div class="row justify-content-end"><div class="col-lg-5"><div class="d-flex justify-content-between mb-2"><span>Produtos</span><strong id="f32-produtos">R$ 0,00</strong></div><div class="d-flex justify-content-between mb-2"><span>Desconto atacadista estimado</span><strong id="f32-desconto">R$ 0,00</strong></div><div class="d-flex justify-content-between align-items-center mb-2 gap-3"><label for="{{ form.frete.id_for_label }}">Frete (R$)</label><div style="max-width:170px">{{ form.frete }}{% for e in form.frete.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div></div><div class="d-flex justify-content-between border-top pt-3 fs-5"><strong>Total estimado</strong><strong id="f32-total">R$ 0,00</strong></div><p class="small text-secondary mt-2" id="f32-politica-aviso">Adicione produtos para simular o enquadramento.</p></div></div></div></section>
+    <section class="card border-0 shadow-sm mb-3" id="f32-condicoes-pagamento">
+      <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Condi&ccedil;&otilde;es de pagamento</h2></div>
+      <div class="card-body"><div class="row g-3">
+        <div class="col-lg-6"><label class="form-label fw-semibold" for="{{ form.forma_pagamento.id_for_label }}">Forma de pagamento</label>{{ form.forma_pagamento }}{% for e in form.forma_pagamento.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+        <div class="col-lg-3"><label class="form-label fw-semibold" for="{{ form.parcelas.id_for_label }}">Parcelas</label>{{ form.parcelas }}{% for e in form.parcelas.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+      </div><p class="small text-secondary mb-0 mt-3">Condi&ccedil;&atilde;o comercial da proposta. N&atilde;o gera cobran&ccedil;as, caixa ou contas a receber.</p></div>
+    </section>
+    {{ formas_parcelamento|json_script:"f32-formas-parcelamento" }}
+    <section class="card border-0 shadow-sm mb-3"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Observa&ccedil;&otilde;es</h2></div><div class="card-body">{{ form.observacoes }}{% for e in form.observacoes.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div></section>
+    <div class="d-flex justify-content-between align-items-center bg-white border rounded p-3 sticky-bottom shadow-sm"><div><span class="small text-secondary">Total estimado</span><div class="fw-bold fs-5" id="f32-total-rodape">R$ 0,00</div></div><div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'atacado:orcamentos_lista' %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">Cancelar</a><button class="btn btn-primary" type="submit">Cadastrar or&ccedil;amento</button></div></div>
+  </form>
+  <div id="f32-aviso-cliente" class="alert alert-warning mt-3" hidden>Selecione um cliente na lista de resultados antes de cadastrar o or&ccedil;amento.</div>
+  <div class="modal fade" id="f32-modal-cliente-obrigatorio" tabindex="-1" aria-labelledby="f32-modal-cliente-titulo" aria-describedby="f32-modal-cliente-descricao" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-3">
+        <div class="modal-header border-bottom-0 pb-0">
+          <h2 class="modal-title fs-5 fw-semibold" id="f32-modal-cliente-titulo"><i class="bi bi-exclamation-circle text-warning me-2" aria-hidden="true"></i>Selecione um cliente</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body pt-3" id="f32-modal-cliente-descricao">Para cadastrar o or&ccedil;amento, escolha um cliente entre os resultados da pesquisa. Apenas digitar o nome n&atilde;o conclui a sele&ccedil;&atilde;o.</div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Selecionar cliente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+/* F32M5F3F: keep search results visible above adjacent cards and rows. */
+#f32-orcamento-profissional section.card { position: relative; overflow: visible; }
+#f32-orcamento-profissional section.card:focus-within { z-index: 1200; }
+#f32-orcamento-profissional section.card .card-body { overflow: visible; }
+#f32-orcamento-profissional .linha-item { position: relative; }
+#f32-orcamento-profissional .linha-item:focus-within { z-index: 1201; }
+#f32-orcamento-profissional .f32-options { z-index: 1300; }
+
+#f32-orcamento-profissional .f32-options{z-index:1100;max-height:260px;overflow:auto}#f32-orcamento-profissional .f32-options[hidden]{display:none!important}#f32-orcamento-profissional .f32-options button{text-align:left}#f32-orcamento-profissional .linha-item input[type=number]{max-width:160px}#f32-orcamento-profissional .sticky-bottom{bottom:0;z-index:1010}
+</style>
+<script>
+(function(){'use strict';
+const root=document.getElementById('f32-orcamento-profissional'),base=root.dataset.busca,form=document.getElementById('f32-orcamento-form');
+const area=document.getElementById('itens-orcamento'),counter=document.getElementById('id_itens-TOTAL_FORMS'),max=document.getElementById('id_itens-MAX_NUM_FORMS'),tpl=document.getElementById('modelo-item');
+const money=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v);
+let politica=null;
+function url(tipo,q){return base+(base.includes('?')?'&':'?')+'tipo='+encodeURIComponent(tipo)+'&q='+encodeURIComponent(q)}
+function refresh(){let bruto=0,baseFaixa=0;const rows=[];area.querySelectorAll('.linha-item:not([hidden])').forEach(row=>{const produto=row._f32produto,q=Number(row.querySelector('input[name$="-quantidade"]')?.value||0),subtotal=produto&&q>0?Math.round(q*Number(produto.preco)*100)/100:0;row.querySelector('.f32-preco').textContent=money(produto?Number(produto.preco):0);row.querySelector('.f32-subtotal').textContent=money(subtotal);bruto+=subtotal;if(produto){rows.push({produto,subtotal});if(!produto.promocional||politica?.promocional_conta)baseFaixa+=subtotal;}});let pct=0;if(politica){for(const f of politica.faixas||[]){if(baseFaixa>=Number(f.minimo)&&(f.maximo===null||baseFaixa<=Number(f.maximo)))pct=Number(f.percentual);}}let desconto=0;for(const x of rows){if(x.produto.elegivel&&!x.produto.promocional)desconto+=Math.round(x.subtotal*pct)/100;}bruto=Math.round(bruto*100)/100;desconto=Math.round(desconto*100)/100;const freteInput=form.querySelector('[name="frete"]');const frete=Math.max(0,Number(freteInput?.value||0));const total=Math.max(0,bruto-desconto)+frete;document.getElementById('f32-produtos').textContent=money(bruto);document.getElementById('f32-desconto').textContent=money(desconto);document.getElementById('f32-total').textContent=money(total);document.getElementById('f32-total-rodape').textContent=money(total);document.getElementById('f32-politica-aviso').textContent=politica&&bruto<Number(politica.minimo)?'Abaixo do pedido m\u00ednimo de atacado ('+money(Number(politica.minimo))+').':('Faixa estimada: '+pct+'% de desconto; valores definitivos ao salvar.');}
+async function search(input){const q=input.value.trim(),holder=input.parentElement.querySelector('.f32-options'),hidden=input.closest('.linha-item')?.querySelector('input[data-f32-product-id]')||input.closest('.col-lg-4')?.querySelector('input[data-f32-client-id]');if(hidden)hidden.value='';if(input.dataset.kind==='produtos'){const row=input.closest('.linha-item');row._f32produto=null;refresh();}holder.replaceChildren();holder.hidden=true;if(q.length<2)return;const stamp=(input._f32stamp||0)+1;input._f32stamp=stamp;try{const res=await fetch(url(input.dataset.kind,q),{credentials:'same-origin',headers:{'Accept':'application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();if(input._f32stamp!==stamp)return;if(data.politica)politica=data.politica;for(const item of data.resultados||[]){const btn=document.createElement('button');btn.type='button';btn.className='list-group-item list-group-item-action';btn.textContent=item.texto+(item.detalhe?' \u2014 '+item.detalhe:'')+(item.preco?' \u2014 '+money(Number(item.preco)):'');btn.addEventListener('click',()=>{input.value=item.texto;if(hidden)hidden.value=item.id;const row=input.closest('.linha-item');if(row)row._f32produto=item;holder.hidden=true;refresh();});holder.appendChild(btn);}holder.hidden=!(data.resultados||[]).length;}catch(err){holder.hidden=false;const el=document.createElement('div');el.className='list-group-item text-danger small';el.textContent='Falha na pesquisa. Tente novamente.';holder.appendChild(el);}}
+let timer;root.addEventListener('input',e=>{if(e.target.matches('.f32-search')){clearTimeout(timer);const el=e.target;timer=setTimeout(()=>search(el),220);}if(e.target.matches('input[name$="-quantidade"], input[name="frete"]'))refresh();});
+root.addEventListener('click',e=>{const btn=e.target.closest('.remover-item');if(btn){const row=btn.closest('.linha-item'),check=row.querySelector('input[name$="-DELETE"]');if(check){check.checked=true;row.hidden=true;}refresh();}});
+document.getElementById('adicionar-item').addEventListener('click',()=>{const n=Number(counter.value);if(n>=Number(max.value)){alert('Limite de produtos atingido.');return;}const holder=document.createElement('div');holder.innerHTML=tpl.innerHTML.replace(/__prefix__/g,String(n)).trim();area.appendChild(holder.firstElementChild);counter.value=String(n+1);});
+root.addEventListener('focusout',e=>{if(e.target.matches('.f32-search'))setTimeout(()=>{const holder=e.target.parentElement.querySelector('.f32-options');if(holder)holder.hidden=true;},250);});
+form.addEventListener('submit',e=>{const client=form.querySelector('input[data-f32-client-id]');if(!client?.value){
+  e.preventDefault();
+  const campo=document.getElementById('f32-cliente');
+  const modalEl=document.getElementById('f32-modal-cliente-obrigatorio');
+  if(modalEl && window.bootstrap && window.bootstrap.Modal){
+    const modal=window.bootstrap.Modal.getOrCreateInstance(modalEl);
+    modalEl.addEventListener('hidden.bs.modal',()=>{if(campo)campo.focus();},{once:true});
+    modal.show();
+  }else{
+    const aviso=document.getElementById('f32-aviso-cliente');
+    if(aviso){aviso.hidden=false;aviso.setAttribute('role','alert');}
+    if(campo)campo.focus();
+  }
+}});
+ const formaEl=form.querySelector('[name="forma_pagamento"]'), parcelasEl=form.querySelector('[name="parcelas"]');
+ const limites=JSON.parse(document.getElementById('f32-formas-parcelamento').textContent);
+ function atualizarParcelas(){
+   const item=limites.find(x=>String(x.id)===formaEl.value);
+   const limite=item?item.maximo:1;
+   parcelasEl.max=String(limite);
+   if(Number(parcelasEl.value)>limite||Number(parcelasEl.value)<1)parcelasEl.value='1';
+   parcelasEl.readOnly=limite===1;
+ }
+ formaEl.addEventListener('change',atualizarParcelas);
+ atualizarParcelas();
+ refresh();
+})();
+</script>
+{% endblock %}

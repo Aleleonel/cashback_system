@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4" id="politica-atacado-f32m4s7b">
+  <!-- F32M4S7H_ALINHAMENTO -->
+  <style>
+    #politica-atacado-f32m4s7b .f32-politica-geral-grid .f32-politica-col-label {
+      display: block; min-height: 2.25rem; margin-bottom: .5rem; line-height: 1.35;
+    }
+    #politica-atacado-f32m4s7b .f32-politica-geral-grid .form-check { min-height: 2.375rem; }
+    @media (max-width: 991.98px) {
+      #politica-atacado-f32m4s7b .f32-politica-geral-grid .f32-politica-col-label { min-height: 0; }
+    }
+  </style>
+
+  <!-- F32M4S7B_UX_ATACADO -->
+  <div class="mb-4">
+    <a href="{% url 'configuracoes:vendas_comissoes' %}" class="text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>Vendas e comissões</a>
+    <div class="text-uppercase text-secondary small fw-semibold mt-3 mb-1">Gestão comercial</div>
+    <h1 class="h3 mb-1"><i class="bi bi-box-seam me-2"></i>Política de Atacado</h1>
+    <p class="text-secondary mb-0">Configure a habilitação, o pedido mínimo, os produtos promocionais e as faixas progressivas.</p>
+  </div>
+  {% if not pode_editar_atacado %}
+  <div class="alert alert-warning"><strong>Contexto de matriz necessário.</strong> A política de atacado somente pode ser alterada no contexto da própria matriz.</div>
+  {% endif %}
+  <form method="post" novalidate id="form-politica-atacado">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <section class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-3 p-lg-4">
+        <h2 class="h5 mb-4">Política geral</h2>
+        <div class="row g-4 align-items-start f32-politica-geral-grid">
+          <div class="col-12 col-lg-4">
+            <div class="form-label fw-semibold f32-politica-col-label">Situa&#231;&#227;o do atacado</div>
+            <div class="form-check form-switch ps-5">
+              {{ form.atacado_ativo }}
+              <label class="form-check-label fw-semibold" for="{{ form.atacado_ativo.id_for_label }}">{{ form.atacado_ativo.label }}</label>
+            </div>
+            {% for erro in form.atacado_ativo.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label fw-semibold f32-politica-col-label" for="{{ form.pedido_minimo_atacado.id_for_label }}">{{ form.pedido_minimo_atacado.label }}</label>
+            <div class="input-group"><span class="input-group-text">R$</span>{{ form.pedido_minimo_atacado }}</div>
+            {% for erro in form.pedido_minimo_atacado.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}
+            <div class="form-text">Valor mínimo de produtos para um pedido de atacado. Zero permite qualquer valor.</div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <div class="form-label fw-semibold f32-politica-col-label">Produtos promocionais</div>
+            <div class="form-check form-switch ps-5">
+              {{ form.produto_promocional_conta_para_faixa_atacado }}
+              <label class="form-check-label fw-semibold" for="{{ form.produto_promocional_conta_para_faixa_atacado.id_for_label }}">{{ form.produto_promocional_conta_para_faixa_atacado.label }}</label>
+            </div>
+            {% for erro in form.produto_promocional_conta_para_faixa_atacado.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}
+            <div class="form-text mt-2">Produtos promocionais podem contar para atingir a faixa, mas não recebem desconto atacadista automático.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="card border-0 shadow-sm">
+      <div class="card-body p-3 p-lg-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <div><h2 class="h5 mb-1">Faixas progressivas</h2><p class="text-secondary small mb-0">O limite máximo pode ficar vazio na última faixa. As faixas não podem se sobrepor.</p></div>
+          {% if pode_editar_atacado and formset %}<button type="button" id="adicionar-faixa-atacado" class="btn btn-primary fw-semibold shadow-sm btn-sm"><i class="bi bi-plus-lg me-1"></i>Adicionar faixa</button>{% endif %}
+        </div>
+        {% if formset %}
+          {{ formset.management_form }}
+          {% if formset.non_form_errors %}<div class="alert alert-danger" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0" id="tabela-faixas-atacado">
+              <thead class="table-light"><tr><th scope="col">Valor mínimo (R$)</th><th scope="col">Valor máximo (R$)</th><th scope="col">Desconto (%)</th><th scope="col" class="text-center">A&#231;&#245;es</th></tr></thead>
+              <tbody id="linhas-faixas-atacado">
+                {% for faixa_form in formset %}
+                <tr class="linha-faixa-atacado">
+                  <td>{{ faixa_form.id }}<div class="input-group"><span class="input-group-text">R$</span>{{ faixa_form.valor_minimo }}</div>{% for erro in faixa_form.valor_minimo.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}</td>
+                  <td><div class="input-group"><span class="input-group-text">R$</span>{{ faixa_form.valor_maximo }}</div>{% for erro in faixa_form.valor_maximo.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}</td>
+                  <td><div class="input-group">{{ faixa_form.percentual_desconto }}<span class="input-group-text">%</span></div>{% for erro in faixa_form.percentual_desconto.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}</td>
+                  <td class="text-center"><span class="d-none">{{ faixa_form.DELETE }}</span><button type="button" class="btn btn-outline-danger btn-sm remover-faixa-atacado" aria-label="Remover faixa" title="Remover faixa" {% if not pode_editar_atacado %}disabled{% endif %}><i class="bi bi-trash" aria-hidden="true"></i></button>{% for erro in faixa_form.non_field_errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if pode_editar_atacado %}
+          <template id="modelo-faixa-atacado">
+            <tr class="linha-faixa-atacado">
+              <td>{{ formset.empty_form.id }}<div class="input-group"><span class="input-group-text">R$</span>{{ formset.empty_form.valor_minimo }}</div></td>
+              <td><div class="input-group"><span class="input-group-text">R$</span>{{ formset.empty_form.valor_maximo }}</div></td>
+              <td><div class="input-group">{{ formset.empty_form.percentual_desconto }}<span class="input-group-text">%</span></div></td>
+              <td class="text-center"><span class="d-none">{{ formset.empty_form.DELETE }}</span><button type="button" class="btn btn-outline-danger btn-sm remover-faixa-atacado" aria-label="Remover faixa" title="Remover faixa"><i class="bi bi-trash" aria-hidden="true"></i></button></td>
+            </tr>
+          </template>
+          <p class="form-text mt-2 mb-0" id="ajuda-faixas-atacado">Clique em Adicionar faixa para incluir um intervalo. A lixeira remove a linha da tela; a exclus&#227;o definitiva ocorre ao salvar a pol&#237;tica.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </section>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <a href="{% url 'configuracoes:vendas_comissoes' %}" class="btn btn-outline-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary" {% if not pode_editar_atacado %}disabled{% endif %}>Salvar política</button>
+    </div>
+  </form>
+</div>
+<script>
+(function () {
+  'use strict';
+  const botao = document.getElementById('adicionar-faixa-atacado');
+  const modelo = document.getElementById('modelo-faixa-atacado');
+  const corpo = document.getElementById('linhas-faixas-atacado');
+  const total = document.getElementById('id_faixas-TOTAL_FORMS');
+  const maximo = document.getElementById('id_faixas-MAX_NUM_FORMS');
+  if (!botao || !modelo || !corpo || !total) return;
+  botao.addEventListener('click', function () {
+    const indice = Number.parseInt(total.value, 10);
+    const limite = maximo ? Number.parseInt(maximo.value, 10) : 1000;
+    if (!Number.isInteger(indice) || indice < 0 || indice >= limite) {
+      window.alert('Limite de faixas atingido.');
+      return;
+    }
+    const html = modelo.innerHTML.replace(/__prefix__/g, String(indice));
+    const container = document.createElement('tbody');
+    container.innerHTML = html.trim();
+    const linha = container.firstElementChild;
+    if (!linha) return;
+    corpo.appendChild(linha);
+    total.value = String(indice + 1);
+    const primeiro = linha.querySelector('input[name$="-valor_minimo"]');
+    if (primeiro) primeiro.focus();
+  });
+})();
+</script>
+<script>
+
+  // F32M4S7F_LIXEIRA: preserve Django formset indices and hidden DELETE controls.
+  (function () {
+    'use strict';
+    const tbody = document.getElementById('linhas-faixas-atacado');
+    if (!tbody) return;
+    function hasValue(row) {
+      return Array.from(row.querySelectorAll('input[name$="-valor_minimo"], input[name$="-valor_maximo"], input[name$="-percentual_desconto"]'))
+        .some(function (input) { return input.value.trim() !== ''; });
+    }
+    function isPersisted(row) {
+      const id = row.querySelector('input[name$="-id"]');
+      return !!(id && id.value.trim());
+    }
+    function hasErrors(row) {
+      return !!row.querySelector('.text-danger, .invalid-feedback, .errorlist');
+    }
+    function markDeleted(row) {
+      const checkbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      if (!checkbox) return false;
+      checkbox.checked = true;
+      row.hidden = true;
+      row.style.display = 'none';
+      return true;
+    }
+    // Django extra=1: hide its empty row instead of showing an unusable blank row.
+    Array.from(tbody.querySelectorAll('tr.linha-faixa-atacado')).forEach(function (row) {
+      if (!isPersisted(row) && !hasValue(row) && !hasErrors(row)) markDeleted(row);
+      else {
+        const checkbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        if (checkbox && checkbox.checked) { row.hidden = true; row.style.display = 'none'; }
+      }
+    });
+    tbody.addEventListener('click', function (event) {
+      const button = event.target.closest('button.remover-faixa-atacado');
+      if (!button || button.disabled) return;
+      const row = button.closest('tr.linha-faixa-atacado');
+      if (row) markDeleted(row);
+    });
+  })();
+
+</script>
+<script>
+/* F32M4S7J_FORMATACAO_BR: camada visual; valores submetidos continuam canonicos. */
+(function () {
+  'use strict';
+  const form = document.getElementById('form-politica-atacado');
+  if (!form) return;
+  const fmt = new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const selectors = [
+    '[name="pedido_minimo_atacado"]',
+    'input[name$="-valor_minimo"]',
+    'input[name$="-valor_maximo"]',
+    'input[name$="-percentual_desconto"]'
+  ].join(',');
+  function toNumber(text) {
+    let value = String(text || '').trim().replace(/\s/g, '');
+    if (!value) return null;
+    // pt-BR: 7.999,00; canonico: 7999.00; entrada simples: 750,00.
+    if (value.includes(',')) value = value.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(value)) value = value.replace(/\./g, '');
+    if (!/^\d+(?:\.\d{0,2})?$/.test(value)) return NaN;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : NaN;
+  }
+  function canonicalize(proxy, original) {
+    const raw = proxy.value.trim();
+    if (!raw) { original.value = ''; proxy.classList.remove('is-invalid'); return true; }
+    const n = toNumber(raw);
+    const isPercent = original.name.endsWith('-percentual_desconto');
+    if (!Number.isFinite(n) || n < 0 || (isPercent && n > 100)) {
+      proxy.classList.add('is-invalid');
+      return false;
+    }
+    original.value = n.toFixed(2);
+    proxy.value = fmt.format(n);
+    proxy.classList.remove('is-invalid');
+    return true;
+  }
+  function setup(original) {
+    if (original.dataset.f32BrProxy === '1' || original.type === 'hidden') return;
+    original.dataset.f32BrProxy = '1';
+    const proxy = document.createElement('input');
+    proxy.type = 'text';
+    proxy.className = original.className;
+    proxy.inputMode = 'decimal';
+    proxy.autocomplete = 'off';
+    proxy.setAttribute('aria-label', original.getAttribute('aria-label') || original.name.replace(/-/g, ' '));
+    proxy.dataset.f32BrDisplay = '1';
+    proxy.disabled = original.disabled;
+    proxy.readOnly = original.readOnly;
+    if (original.id) proxy.id = original.id + '_br';
+    if (original.value.trim()) {
+      const n = toNumber(original.value);
+      proxy.value = Number.isFinite(n) ? fmt.format(n) : original.value;
+    }
+    original.classList.add('d-none');
+    original.setAttribute('aria-hidden', 'true');
+    original.tabIndex = -1;
+    original.insertAdjacentElement('afterend', proxy);
+    proxy.addEventListener('blur', function () { canonicalize(proxy, original); });
+    proxy.addEventListener('input', function () { proxy.classList.remove('is-invalid'); });
+  }
+  function initialize(root) {
+    if (root.matches && root.matches(selectors)) setup(root);
+    if (root.querySelectorAll) root.querySelectorAll(selectors).forEach(setup);
+  }
+  initialize(form);
+  const tbody = document.getElementById('linhas-faixas-atacado');
+  if (tbody && window.MutationObserver) {
+    new MutationObserver(function (changes) {
+      changes.forEach(function (change) {
+        change.addedNodes.forEach(function (node) { if (node.nodeType === 1) initialize(node); });
+      });
+    }).observe(tbody, {childList: true, subtree: true});
+  }
+  form.addEventListener('submit', function (event) {
+    let valid = true;
+    form.querySelectorAll('[data-f32-br-display="1"]').forEach(function (proxy) {
+      const original = proxy.previousElementSibling;
+      if (original && !canonicalize(proxy, original)) valid = false;
+    });
+    if (!valid) { event.preventDefault(); event.stopPropagation(); }
+  });
+})();
+</script>
+{% endblock %}

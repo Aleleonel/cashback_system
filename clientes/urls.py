@@ -5,6 +5,7 @@ from .views import (
     buscar_cliente_cpf,
     criar_cliente,
     editar_cliente,
+    consultar_cadastro_cliente,
     extrato_cliente,
     detalhe_compra_cliente,
     lista_clientes,
@@ -39,6 +40,12 @@ urlpatterns = [
         'importar/confirmar/',
         confirmar_importacao_clientes,
         name='confirmar_importacao_clientes'
+    ),
+
+    path(
+        '<int:cliente_id>/consultar/',
+        consultar_cadastro_cliente,
+        name='consultar_cadastro_cliente'
     ),
 
     path(

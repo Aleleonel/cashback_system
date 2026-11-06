@@ -109,6 +109,18 @@ class Produto(models.Model):
         db_index=True
     )
 
+    atacado_elegivel = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text='Permite aplicar desconto de atacado a este produto.'
+    )
+
+    promocional = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text='Identifica produto com preco promocional, sem desconto atacadista automatico.'
+    )
+
     peso_liquido_gramas = models.PositiveIntegerField(
         blank=True,
         null=True,

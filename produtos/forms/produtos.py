@@ -56,6 +56,8 @@ class ProdutoForm(BootstrapModelForm):
             'descricao',
             'custo_base',
             'preco_venda',
+            'atacado_elegivel',
+            'promocional',
             'peso_liquido_gramas',
             'peso_bruto_gramas',
             'altura_cm',

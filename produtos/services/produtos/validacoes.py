@@ -425,6 +425,14 @@ def preparar_dados_produto(
             campo='comprimento_cm',
             valor=dados.get('comprimento_cm'),
         ),
+        'atacado_elegivel': dados.get(
+            'atacado_elegivel',
+            produto_excluido.atacado_elegivel if produto_excluido else True
+        ),
+        'promocional': dados.get(
+            'promocional',
+            produto_excluido.promocional if produto_excluido else False
+        ),
         'controla_estoque': dados.get(
             'controla_estoque',
             True,
