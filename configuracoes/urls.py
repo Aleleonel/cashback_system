@@ -45,6 +45,11 @@ urlpatterns = [
         name="meta_comissao_editar",
     ),
     path(
+        "vendas-comissoes/atacado/",
+        views.politica_atacado,
+        name="politica_atacado",
+    ),
+    path(
         "vendas-comissoes/regras-comerciais/",
         views.regras_comerciais,
         name="regras_comerciais",

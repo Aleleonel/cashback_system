@@ -332,3 +332,12 @@ def get_permissoes_extras_disponiveis():
         if item["codigo"] not in codigos_existentes
     )
     return itens
+
+
+# F32M4F - PERMISSOES COMERCIAIS ATACADO
+PERMISSAO_ATACADO_VISUALIZAR = "atacado.visualizar"
+PERMISSAO_ATACADO_CRIAR_ORCAMENTO = "atacado.criar_orcamento"
+PERMISSAO_ATACADO_GERAR_PEDIDO = "atacado.gerar_pedido"
+PERMISSOES_ATACADO = {PERMISSAO_ATACADO_VISUALIZAR, PERMISSAO_ATACADO_CRIAR_ORCAMENTO, PERMISSAO_ATACADO_GERAR_PEDIDO}
+for _perfil_atacado in ("master", "admin_loja", "operador"):
+    PERMISSOES_POR_PERFIL[_perfil_atacado].update(PERMISSOES_ATACADO)

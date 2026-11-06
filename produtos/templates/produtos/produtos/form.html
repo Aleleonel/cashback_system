@@ -85,6 +85,24 @@
                 </div>
 
                 <div class="col-12">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="fw-semibold mb-2">Classificacao comercial</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {% include 'partials/campo_formulario.html' with campo=form.atacado_elegivel %}
+                            </div>
+                            <div class="col-md-6">
+                                {% include 'partials/campo_formulario.html' with campo=form.promocional %}
+                            </div>
+                        </div>
+                        <div class="form-text">
+                            Produto promocional pode participar do enquadramento conforme a politica da matriz,
+                            mas nao recebe automaticamente o desconto de atacado.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
                     {% include 'partials/campo_formulario.html' with campo=form.controla_estoque %}
                 </div>
             </div>

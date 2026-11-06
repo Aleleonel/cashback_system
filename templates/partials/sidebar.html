@@ -55,6 +55,11 @@
             Fiscal
         </a>
 
+        <!-- F32M4R-MENU-ATACADO -->
+        <a href="{% url 'atacado:orcamentos_lista' %}" class="nav-link text-warning {% if request.resolver_match.namespace == 'atacado' %}active bg-primary text-white{% endif %}">
+            <i class="bi bi-box-seam me-2"></i> Atacado
+        </a>
+
         <!-- CFG-01.01-CENTRAL-CONFIGURACOES-MASTER -->
         <a href="{% url 'configuracoes:inicio' %}"
            class="nav-link text-warning {% if request.resolver_match.namespace == 'configuracoes' %}active bg-primary text-white{% endif %}">
@@ -102,6 +107,13 @@
         </a>
         {% endif %}
 
+
+        <!-- F32M4R-MENU-ATACADO -->
+        {% if request.user.is_active and request.user.perfil == 'master' or request.user.is_active and request.user.perfil == 'admin_loja' or request.user.is_active and request.user.perfil == 'operador' %}
+        <a href="{% url 'atacado:orcamentos_lista' %}" class="nav-link {% if request.resolver_match.namespace == 'atacado' %}active bg-primary text-white{% else %}text-white{% endif %}">
+            <i class="bi bi-box-seam me-2"></i> Atacado
+        </a>
+        {% endif %}
 
         <div class="sidebar-section-heading" data-sidebar-section="clientes" data-sidebar-icon="bi-people">
             <div class="text-uppercase text-white-50 small fw-semibold"

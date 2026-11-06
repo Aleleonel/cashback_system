@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load atacado_moeda %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h3">Pedidos de atacado</h1><p class="text-secondary mb-0">Pedidos gerados a partir de orçamentos aprovados.</p></div><a class="btn btn-outline-primary" href="{% url 'atacado:orcamentos_lista' %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">Voltar aos orçamentos</a></div>
+  <div class="card border-0 shadow-sm mb-3"><div class="card-body"><form method="get" class="row g-3 align-items-end">
+    {% if request.user.is_superuser %}<input type="hidden" name="matriz" value="{{ matriz.pk }}">{% endif %}
+    <div class="col-md-5"><label class="form-label">Pedido, orçamento ou cliente</label><input class="form-control" name="q" value="{{ busca }}"></div>
+    <div class="col-md-4"><label class="form-label">Situação</label><select name="status" class="form-select"><option value="">Todas</option>{% for codigo, nome in status_opcoes %}<option value="{{ codigo }}" {% if status_atual == codigo %}selected{% endif %}>{{ nome }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><button class="btn btn-primary w-100">Filtrar</button></div>
+  </form></div></div>
+  <div class="card border-0 shadow-sm"><div class="card-body table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Pedido</th><th>Orçamento</th><th>Cliente</th><th>Loja</th><th>Data</th><th>Situação</th><th class="text-end">Total</th><th class="text-end">Exportar</th></tr></thead><tbody>
+  {% for pedido in pagina %}<tr><td>#{{ pedido.pk }}</td><td>{{ pedido.orcamento_origem.numero|default:pedido.orcamento_origem.pk }}</td><td>{{ pedido.cliente.nome }}</td><td>{{ pedido.loja.nome|default:"—" }}</td><td>{{ pedido.criado_em|date:"d/m/Y H:i" }}</td><td>{{ pedido.get_status_display }}</td><td class="text-end">R$ {{ pedido.total|moeda_br }}</td><td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{% url 'atacado:pedido_pdf' pedido.pk %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">PDF</a> <a class="btn btn-sm btn-outline-secondary" href="{% url 'atacado:pedido_xlsx' pedido.pk %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">Excel</a></td></tr>
+  {% empty %}<tr><td colspan="8" class="text-center text-secondary">Nenhum pedido encontrado.</td></tr>{% endfor %}
+  </tbody></table>
+  {% if pagina.paginator.num_pages > 1 %}<div class="d-flex justify-content-between align-items-center"><span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span><div>{% if pagina.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if request.user.is_superuser %}matriz={{ matriz.pk }}&amp;{% endif %}q={{ busca|urlencode }}&amp;status={{ status_atual|urlencode }}&amp;page={{ pagina.previous_page_number }}">Anterior</a>{% endif %} {% if pagina.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if request.user.is_superuser %}matriz={{ matriz.pk }}&amp;{% endif %}q={{ busca|urlencode }}&amp;status={{ status_atual|urlencode }}&amp;page={{ pagina.next_page_number }}">Próxima</a>{% endif %}</div></div>{% endif %}
+  </div></div>
+</div>
+{% endblock %}

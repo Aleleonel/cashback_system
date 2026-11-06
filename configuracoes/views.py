@@ -1,3 +1,4 @@
+from .forms_atacado import FaixaAtacadoFormSet, PoliticaAtacadoForm
 from django.urls import reverse
 from django.contrib import messages
 from django.db import transaction
@@ -123,8 +124,10 @@ def vendas_comissoes(request):
         },
         {
             "titulo": "Atacado",
-            "descricao": "Parâmetros futuros para vendas em quantidade e condições de atacado.",
+            "descricao": "Faixas progressivas, elegibilidade promocional e politica de vendas no atacado.",
             "icone": "bi-box-seam",
+            "url_name": "configuracoes:politica_atacado",
+            "disponivel": True,
         },
         {
             "titulo": "Cashback Comercial",
@@ -485,3 +488,50 @@ def forma_pagamento_editar(request,pk):
         if contexto["escopo"]=="plataforma": return redirect(f"{reverse('configuracoes:formas_pagamento')}?matriz={matriz.pk}")
         return redirect("configuracoes:formas_pagamento")
     return render(request,"configuracoes/forma_pagamento_form.html",{"contexto_configuracoes":contexto,"matriz_alvo":matriz,"form":form,"forma_pagamento":forma,"titulo_pagina":"Editar forma de pagamento"})
+
+@central_configuracoes_required
+def politica_atacado(request):
+    contexto_acesso = request.contexto_configuracoes
+    matriz = contexto_acesso["matriz"]
+    pode_editar = contexto_acesso["escopo"] == "empresa" and matriz is not None
+    configuracao = obter_ou_criar_configuracao_comercial(matriz=matriz) if matriz is not None else None
+
+    if request.method == "POST":
+        if not pode_editar or configuracao is None:
+            messages.error(
+                request,
+                "Selecione um contexto de empresa valido para alterar a politica de atacado.",
+            )
+            return redirect("configuracoes:politica_atacado")
+        form = PoliticaAtacadoForm(request.POST, instance=configuracao, pode_editar=True)
+        formset = FaixaAtacadoFormSet(request.POST, instance=configuracao, prefix="faixas")
+        if form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                configuracao = form.save()
+                formset.instance = configuracao
+                formset.save()
+            messages.success(request, "Politica de atacado atualizada com sucesso.")
+            return redirect("configuracoes:politica_atacado")
+    else:
+        form = PoliticaAtacadoForm(instance=configuracao, pode_editar=pode_editar)
+        formset = (
+            FaixaAtacadoFormSet(instance=configuracao, prefix="faixas")
+            if configuracao is not None else None
+        )
+
+    if formset is not None and not pode_editar:
+        for faixa_form in formset.forms:
+            for campo in faixa_form.fields.values():
+                campo.disabled = True
+
+    return render(
+        request,
+        "configuracoes/politica_atacado.html",
+        {
+            "contexto_configuracoes": contexto_acesso,
+            "configuracao": configuracao,
+            "form": form,
+            "formset": formset,
+            "pode_editar_atacado": pode_editar,
+        },
+    )
