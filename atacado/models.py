@@ -225,6 +225,11 @@ class TransicaoOrcamentoAtacado(models.Model):
 
 
 class PedidoAtacado(models.Model):
+    # F32P1: vinculo unico para consolidacao comercial no PDV.
+    venda_pdv = models.OneToOneField(
+        "pdv.Venda", on_delete=models.PROTECT, null=True, blank=True,
+        related_name="pedido_atacado_origem",
+    )
     tipo_emissao = models.CharField(
         max_length=16, choices=TipoEmissaoPedidoAtacado.choices,
         default=TipoEmissaoPedidoAtacado.NAO_FISCAL,

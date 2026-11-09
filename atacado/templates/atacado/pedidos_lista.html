@@ -9,11 +9,107 @@
     <div class="col-md-4"><label class="form-label">Situação</label><select name="status" class="form-select"><option value="">Todas</option>{% for codigo, nome in status_opcoes %}<option value="{{ codigo }}" {% if status_atual == codigo %}selected{% endif %}>{{ nome }}</option>{% endfor %}</select></div>
     <div class="col-md-3"><button class="btn btn-primary w-100">Filtrar</button></div>
   </form></div></div>
-  <div class="card border-0 shadow-sm"><div class="card-body table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Pedido</th><th>Orçamento</th><th>Cliente</th><th>Loja</th><th>Data</th><th>Situação</th><th class="text-end">Total</th><th class="text-end">Exportar</th></tr></thead><tbody>
-  {% for pedido in pagina %}<tr><td>#{{ pedido.pk }}</td><td>{{ pedido.orcamento_origem.numero|default:pedido.orcamento_origem.pk }}</td><td>{{ pedido.cliente.nome }}</td><td>{{ pedido.loja.nome|default:"—" }}</td><td>{{ pedido.criado_em|date:"d/m/Y H:i" }}</td><td>{{ pedido.get_status_display }}</td><td class="text-end">R$ {{ pedido.total|moeda_br }}</td><td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{% url 'atacado:pedido_pdf' pedido.pk %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">PDF</a> <a class="btn btn-sm btn-outline-secondary" href="{% url 'atacado:pedido_xlsx' pedido.pk %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">Excel</a></td></tr>
-  {% empty %}<tr><td colspan="8" class="text-center text-secondary">Nenhum pedido encontrado.</td></tr>{% endfor %}
+  <div class="card border-0 shadow-sm"><div class="card-body table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Pedido</th><th>Orçamento</th><th>Cliente</th><th>Loja</th><th>Data</th><th>Situação</th><th class="text-end">Total</th><th class="text-end">Exportar</th><th class="text-end">Operacao</th></tr></thead><tbody>
+  {% for pedido in pagina %}<tr><td>#{{ pedido.pk }}</td><td>{{ pedido.orcamento_origem.numero|default:pedido.orcamento_origem.pk }}</td><td>{{ pedido.cliente.nome }}</td><td>{{ pedido.loja.nome|default:"—" }}</td><td>{{ pedido.criado_em|date:"d/m/Y H:i" }}</td><td>{{ pedido.get_status_display }}</td><td class="text-end">R$ {{ pedido.total|moeda_br }}</td><td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{% url 'atacado:pedido_pdf' pedido.pk %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">PDF</a> <a class="btn btn-sm btn-outline-secondary" href="{% url 'atacado:pedido_xlsx' pedido.pk %}{% if request.user.is_superuser %}?matriz={{ matriz.pk }}{% endif %}">Excel</a></td><td class="text-end text-nowrap">
+      {% if pedido.venda_pdv_id %}<span class="badge text-bg-success">Finalizado no PDV</span>
+      {% elif pode_consolidar and sessao_operacional and pedido.status == status_gerado and pedido.tipo_emissao == tipo_nao_fiscal and pedido.loja_id == sessao_operacional.caixa.loja_id and formas_consolidacao %}
+      <button type="button" class="btn btn-sm btn-primary f32p4e-abrir" data-url="{% url 'atacado:pedido_consolidar_pdv' pedido.pk %}" data-pedido="{{ pedido.pk }}" data-total="{{ pedido.total }}" data-cliente="{{ pedido.cliente.nome }}">Finalizar no caixa</button>
+      {% elif pedido.status == status_gerado and pedido.tipo_emissao == tipo_nao_fiscal and pode_consolidar %}<span class="text-muted small">Abra o caixa da loja</span>
+      {% endif %}
+    </td></tr>
+  {% empty %}<tr><td colspan="9" class="text-center text-secondary">Nenhum pedido encontrado.</td></tr>{% endfor %}
   </tbody></table>
   {% if pagina.paginator.num_pages > 1 %}<div class="d-flex justify-content-between align-items-center"><span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span><div>{% if pagina.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if request.user.is_superuser %}matriz={{ matriz.pk }}&amp;{% endif %}q={{ busca|urlencode }}&amp;status={{ status_atual|urlencode }}&amp;page={{ pagina.previous_page_number }}">Anterior</a>{% endif %} {% if pagina.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if request.user.is_superuser %}matriz={{ matriz.pk }}&amp;{% endif %}q={{ busca|urlencode }}&amp;status={{ status_atual|urlencode }}&amp;page={{ pagina.next_page_number }}">Próxima</a>{% endif %}</div></div>{% endif %}
   </div></div>
 </div>
+<!-- F32P4E_UI_ATACADO: interface de pagamento unico, sem alterar o PDV -->
+{% if pode_consolidar and sessao_operacional and formas_consolidacao %}
+<div class="modal fade" id="f32p4e-modal" tabindex="-1" aria-labelledby="f32p4e-titulo" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="f32p4e-titulo">Finalizar pedido no caixa</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+  <div class="modal-body"><div class="d-none" id="f32p4h7-csrf">{% csrf_token %}</div>
+   <p class="mb-2" id="f32p4e-resumo"></p>
+   <p class="small text-muted">Caixa: {{ sessao_operacional.caixa.nome }} — {{ sessao_operacional.caixa.loja.nome }}</p>
+   <label class="form-label" for="f32p4e-forma">Forma de pagamento</label>
+   <select class="form-select" id="f32p4e-forma" required><option value="">Selecione</option>
+    {% for forma in formas_consolidacao %}<option value="{{ forma.pk }}" data-parcelamento="{% if forma.permite_parcelamento %}1{% else %}0{% endif %}" data-max="{{ forma.maximo_parcelas }}">{{ forma.nome }}</option>{% endfor %}
+   </select>
+   <label class="form-label mt-3" for="f32p4e-parcelas">Parcelas</label>
+   <select class="form-select" id="f32p4e-parcelas"><option value="1">1 parcela</option></select>
+   <div class="alert alert-danger mt-3 d-none" id="f32p4e-erro" role="alert"></div>
+   <div class="alert alert-success mt-3 d-none" id="f32p4e-sucesso" role="status"></div>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="f32p4e-confirmar">Confirmar finalizacao</button></div>
+ </div></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}{{ block.super }}
+{% if pode_consolidar and sessao_operacional and formas_consolidacao %}
+<script>
+(function () {
+  'use strict';
+  const modalEl = document.getElementById('f32p4e-modal');
+  if (!modalEl) return;
+  const forma = document.getElementById('f32p4e-forma');
+  const parcelas = document.getElementById('f32p4e-parcelas');
+  const erro = document.getElementById('f32p4e-erro');
+  const sucesso = document.getElementById('f32p4e-sucesso');
+  const confirmar = document.getElementById('f32p4e-confirmar');
+  const resumo = document.getElementById('f32p4e-resumo');
+  let pedido = null;
+  let enviando = false;
+  function csrf() {
+    const campo = document.querySelector('#f32p4h7-csrf input[name="csrfmiddlewaretoken"]');
+    return campo ? campo.value : '';
+  }
+  function mostrar(el, mensagem) { el.textContent = mensagem; el.classList.remove('d-none'); }
+  function ocultar(el) { el.textContent = ''; el.classList.add('d-none'); }
+  forma.addEventListener('change', function () {
+    const opt = forma.selectedOptions[0];
+    const max = opt && opt.dataset.parcelamento === '1' ? Math.min(24, Math.max(1, Number(opt.dataset.max) || 1)) : 1;
+    parcelas.replaceChildren();
+    for (let i = 1; i <= max; i++) {
+      const o = document.createElement('option'); o.value = String(i); o.textContent = i + (i === 1 ? ' parcela' : ' parcelas'); parcelas.appendChild(o);
+    }
+    parcelas.disabled = max === 1;
+  });
+  document.querySelectorAll('.f32p4e-abrir').forEach(btn => btn.addEventListener('click', function () {
+    if (enviando) return;
+    pedido = { url: btn.dataset.url, total: btn.dataset.total, id: btn.dataset.pedido };
+    resumo.textContent = 'Pedido #' + pedido.id + ' — ' + btn.dataset.cliente + ' — R$ ' + pedido.total;
+    forma.value = ''; forma.dispatchEvent(new Event('change')); ocultar(erro); ocultar(sucesso);
+    if (typeof bootstrap === 'undefined' || !bootstrap.Modal) { mostrar(erro, 'Modal indisponivel. Recarregue a pagina.'); return; }
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }));
+  confirmar.addEventListener('click', async function () {
+    if (!pedido || enviando) return;
+    ocultar(erro); ocultar(sucesso);
+    if (!forma.value) { mostrar(erro, 'Selecione uma forma de pagamento.'); return; }
+    enviando = true; confirmar.disabled = true;
+    try {
+      const resposta = await fetch(pedido.url, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf(), 'Accept': 'application/json' },
+        body: JSON.stringify({ pagamentos: [{ forma_pagamento_id: Number(forma.value), valor: pedido.total, parcelas: Number(parcelas.value) }] })
+      });
+      const tipo = resposta.headers.get('content-type') || '';
+      let dados = null;
+      if (tipo.toLowerCase().includes('application/json')) {
+        dados = await resposta.json();
+      }
+      if (!dados || typeof dados !== 'object') {
+        mostrar(erro, 'Servidor retornou HTTP ' + resposta.status + ' sem JSON. Verifique o log do Django.');
+        return;
+      }
+      if (!resposta.ok || !dados.ok) { mostrar(erro, dados.erro || 'Nao foi possivel finalizar o pedido.'); return; }
+      mostrar(sucesso, 'Pedido finalizado. Venda PDV #' + dados.venda_id + '. Atualizando a lista...');
+      window.location.reload();
+    } catch (e) { mostrar(erro, 'Falha na comunicacao. Verifique a lista antes de tentar novamente.'); }
+    finally { enviando = false; confirmar.disabled = false; }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

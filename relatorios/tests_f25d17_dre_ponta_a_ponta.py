@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -76,7 +76,7 @@ class F25D17DREPontaAPontaTests(TestCase):
         # preserva os snapshots controlados da fixture sem executar a finalizacao real.
         Venda.objects.filter(pk=v.pk).update(
             status=StatusOperacaoVenda.FINALIZADA,
-            finalizada_em=timezone.now(),
+            finalizada_em=timezone.make_aware(datetime(2026, 10, 15, 12, 0)),
         )
         v.refresh_from_db()
 

@@ -11,6 +11,7 @@ urlpatterns = [
     path("orcamentos/<int:pk>/exportar/pdf/", views.orcamento_pdf, name="orcamento_pdf"),
     path("orcamentos/<int:pk>/exportar/xlsx/", views.orcamento_xlsx, name="orcamento_xlsx"),
     path("pedidos/", views.listar_pedidos_atacado, name="pedidos_lista"),
+    path("pedidos/<int:pk>/consolidar-pdv/", views.consolidar_pedido_atacado_http, name="pedido_consolidar_pdv"),
     path("orcamentos/<int:pk>/cancelar/", views.cancelar_orcamento_atacado_http, name="orcamento_cancelar"),
     path("pedidos/<int:pk>/exportar/pdf/", views.pedido_pdf, name="pedido_pdf"),
     path("pedidos/<int:pk>/exportar/xlsx/", views.pedido_xlsx, name="pedido_xlsx"),

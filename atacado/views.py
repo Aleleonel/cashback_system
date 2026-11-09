@@ -281,10 +281,38 @@ def listar_pedidos_atacado(request):
         if busca.isdecimal():
             condicao |= Q(pk=int(busca)) | Q(orcamento_origem__numero=int(busca))
         qs = qs.filter(condicao)
+    # F32P4E_CONTEXTO_UI: somente operadores com sessao aberta podem finalizar.
+    from accounts.services import usuario_tem_permissao
+    from accounts.permissions import PERMISSAO_PDV_OPERAR
+    from pdv.models import SessaoCaixa, FormaPagamento
+    from pdv.choices import StatusSessaoCaixa
+    from .models import TipoEmissaoPedidoAtacado
+    pode_consolidar = (
+        not request.user.is_superuser
+        and usuario_tem_permissao(request.user, PERMISSAO_PDV_OPERAR)
+    )
+    sessao_operacional = None
+    formas_consolidacao = FormaPagamento.objects.none()
+    if pode_consolidar:
+        sessao_operacional = SessaoCaixa.objects.filter(
+            operador_abertura=request.user,
+            caixa__matriz=matriz,
+            caixa__loja__in=lojas,
+            status=StatusSessaoCaixa.ABERTA,
+        ).select_related('caixa', 'caixa__loja').first()
+        if sessao_operacional:
+            formas_consolidacao = FormaPagamento.objects.filter(
+                matriz=matriz, ativa=True,
+            ).order_by('nome', 'pk')
     pagina = Paginator(qs.order_by("-pk"), 20).get_page(request.GET.get("page"))
     return render(request, "atacado/pedidos_lista.html", {
         "pagina": pagina, "matriz": matriz, "busca": busca, "status_atual": status,
         "status_opcoes": StatusPedidoAtacado.choices,
+        "pode_consolidar": pode_consolidar,
+        "sessao_operacional": sessao_operacional,
+        "formas_consolidacao": formas_consolidacao,
+        "tipo_nao_fiscal": TipoEmissaoPedidoAtacado.NAO_FISCAL,
+        "status_gerado": StatusPedidoAtacado.GERADO,
     })
 
 
@@ -328,3 +356,52 @@ def cancelar_orcamento_atacado_http(request, pk):
     if request.user.is_superuser:
         destino += "?matriz=" + str(matriz.pk)
     return redirect(destino)
+
+
+# F32P4B_ENTRADA_HTTP_ATACADO - contrato JSON nao fiscal, sem alteracao no PDV.
+@login_required
+def consolidar_pedido_atacado_http(request, pk):
+    import json
+    from django.http import JsonResponse
+    from django.core.exceptions import ValidationError
+    from django.views.decorators.http import require_POST
+    from accounts.permissions import PERMISSAO_PDV_OPERAR, PERMISSAO_ATACADO_VISUALIZAR
+    from accounts.services import usuario_tem_permissao
+    from pdv.models import SessaoCaixa
+    from pdv.choices import StatusSessaoCaixa
+    from .models import StatusPedidoAtacado, TipoEmissaoPedidoAtacado
+    from .integracao_transacional_pdv import consolidar_pedido_atacado_pdv
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'erro': 'Metodo nao permitido.'}, status=405)
+    usuario = request.user
+    # Superuser administra a plataforma; nao opera caixa.
+    if usuario.is_superuser or not usuario_tem_permissao(usuario, PERMISSAO_PDV_OPERAR) or not usuario_tem_permissao(usuario, PERMISSAO_ATACADO_VISUALIZAR):
+        return JsonResponse({'ok': False, 'erro': 'Sem permissao operacional.'}, status=403)
+    matriz, lojas = exigir_acesso_comercial(request, PERMISSAO_ATACADO_VISUALIZAR)
+    pedido = get_object_or_404(PedidoAtacado.objects.filter(matriz=matriz, loja__in=lojas), pk=pk)
+    if pedido.tipo_emissao != TipoEmissaoPedidoAtacado.NAO_FISCAL:
+        return JsonResponse({'ok': False, 'erro': 'Pedido fiscal exige fluxo especifico.'}, status=409)
+    if pedido.status != StatusPedidoAtacado.GERADO or pedido.venda_pdv_id:
+        return JsonResponse({'ok': False, 'erro': 'Pedido nao disponivel para consolidacao.'}, status=409)
+    sessao = SessaoCaixa.objects.filter(
+        operador_abertura=usuario, caixa__matriz=matriz, caixa__loja=pedido.loja,
+        status=StatusSessaoCaixa.ABERTA,
+    ).order_by('aberta_em', 'pk').first()
+    if sessao is None:
+        return JsonResponse({'ok': False, 'erro': 'Abra o caixa desta loja antes de finalizar.'}, status=409)
+    try:
+        dados = json.loads(request.body.decode('utf-8') or '{}')
+        if not isinstance(dados, dict):
+            raise ValueError('Objeto JSON obrigatorio.')
+        pagamentos = dados.get('pagamentos')
+        if not isinstance(pagamentos, list) or not pagamentos:
+            raise ValueError('Informe a lista de pagamentos.')
+        venda = consolidar_pedido_atacado_pdv(
+            pedido=pedido, sessao_caixa=sessao, operador=usuario,
+            pagamentos=pagamentos, request=request,
+        )
+    except (ValueError, TypeError, UnicodeDecodeError, ValidationError) as exc:
+        mensagem = '; '.join(exc.messages) if isinstance(exc, ValidationError) else str(exc)
+        return JsonResponse({'ok': False, 'erro': mensagem}, status=400)
+    return JsonResponse({'ok': True, 'pedido_id': pedido.pk, 'venda_id': venda.pk, 'venda_uuid': str(venda.uuid)})
