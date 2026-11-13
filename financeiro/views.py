@@ -178,12 +178,69 @@ def painel_relatorio(request):
     return render(request, "financeiro/painel.html", contexto)
 
 
+def _query_navegacao_titulos(request, incluir_pagina=True):
+    permitidos = ("natureza", "status", "escopo", "loja", "criterio_data", "data_inicio", "data_fim")
+    if incluir_pagina:
+        permitidos += ("page",)
+    params = QueryDict(mutable=True)
+    for chave in permitidos:
+        if chave in request.GET:
+            params[chave] = request.GET[chave]
+    return params.urlencode()
+
+
+def _filtros_periodo_titulos(request):
+    criterio = (request.GET.get("criterio_data") or "emissao").strip().lower()
+    if criterio not in {"emissao", "vencimento", "competencia"}:
+        criterio = "emissao"
+    erros = []
+    def parse(valor, nome):
+        if not valor:
+            return None
+        try:
+            return date.fromisoformat(valor)
+        except ValueError:
+            erros.append("Data " + nome + " invalida.")
+            return None
+    inicio = parse((request.GET.get("data_inicio") or "").strip(), "inicial")
+    fim = parse((request.GET.get("data_fim") or "").strip(), "final")
+    if inicio and fim and inicio > fim:
+        erros.append("Data inicial posterior a data final.")
+    return criterio, inicio, fim, erros
+
+
+def _aplicar_periodo_titulos(qs, criterio, inicio, fim):
+    campos = {"emissao": "data_emissao", "competencia": "data_competencia", "vencimento": "parcelas__vencimento"}
+    campo = campos[criterio]
+    limites = {}
+    if inicio is not None:
+        limites[campo + "__gte"] = inicio
+    if fim is not None:
+        limites[campo + "__lte"] = fim
+    if limites:
+        qs = qs.filter(**limites)
+    return qs.distinct() if criterio == "vencimento" and limites else qs
+
+
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
 def titulos(request):
     contexto = _contexto_financeiro(request)
     if contexto is None:
         return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+    criterio, inicio, fim, erros = _filtros_periodo_titulos(request)
+    contexto["criterio_data"] = criterio
+    contexto["filtro_data_inicio"] = request.GET.get("data_inicio", "")
+    contexto["filtro_data_fim"] = request.GET.get("data_fim", "")
+    contexto["erros_periodo"] = erros
+    contexto["query_filtros"] = _query_navegacao_titulos(request)
+    contexto["query_paginacao"] = _query_navegacao_titulos(request, incluir_pagina=False)
+    if not erros:
+        qs = listar_titulos(matriz=contexto["matriz"], natureza=contexto["natureza"] or None,
+            status=contexto["status"] or None, escopo=contexto["escopo"], loja=contexto["loja"])
+        contexto["pagina"] = Paginator(_aplicar_periodo_titulos(qs, criterio, inicio, fim), 20).get_page(request.GET.get("page"))
+    else:
+        contexto["pagina"] = Paginator(TituloFinanceiro.objects.none(), 20).get_page(1)
     return render(request, "financeiro/titulos.html", contexto)
 
 
@@ -207,13 +264,12 @@ def titulos_exportar_csv(request):
     }:
         status = None
 
-    titulos = listar_titulos(
-        matriz=matriz,
-        natureza=natureza,
-        status=status,
-        escopo=escopo,
-        loja=loja,
-    )
+    criterio, inicio, fim, erros = _filtros_periodo_titulos(request)
+    if erros:
+        return HttpResponse(" ".join(erros), status=400, content_type="text/plain; charset=utf-8")
+    titulos = _aplicar_periodo_titulos(listar_titulos(
+        matriz=matriz, natureza=natureza, status=status, escopo=escopo, loja=loja,
+    ), criterio, inicio, fim)
     response = HttpResponse(content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = 'attachment; filename="titulos_financeiros.csv"'
     response.write("\ufeff")
@@ -295,7 +351,7 @@ def titulo_detalhe(request, titulo_uuid):
     parcelas = titulo.parcelas.all().prefetch_related(Prefetch("baixas", queryset=BaixaFinanceira.objects.select_related("forma_pagamento", "conta_financeira"))).order_by("numero")
     return render(request, "financeiro/titulo_detalhe.html", {
         "matriz": matriz, "lojas": lojas, "escopo": escopo, "loja": loja,
-        "titulo": titulo, "parcelas": parcelas,
+        "titulo": titulo, "parcelas": parcelas, "query_filtros": _query_navegacao_titulos(request),
         "pode_editar_titulo": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status == TituloFinanceiro.Status.ABERTO and not titulo.parcelas.filter(baixas__isnull=False).exists() and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
         "pode_cancelar_titulo": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status != TituloFinanceiro.Status.CANCELADO and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
     })
