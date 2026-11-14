@@ -37,10 +37,13 @@
                     <span class="text-muted small">Caixa: {{ sessao_caixa.caixa.nome }}</span>
                     <span class="text-muted small">Loja: {{ loja.nome }}</span>
 
-                    <a href="{% url 'pdv:historico_fechamentos' %}" class="btn btn-outline-primary">
+                    {% if pode_operar_pdv and sessao_caixa %}<a href="{% url 'pdv:movimentacoes_sessao_aberta' %}" class="btn btn-outline-primary"><i class="bi bi-list-ul me-1"></i>Movimentações do caixa</a>{% endif %}
+{% if pode_fechar_caixa %}
+<a href="{% url 'pdv:historico_fechamentos' %}" class="btn btn-outline-primary">
                         <i class="bi bi-clock-history me-1"></i>
                         Histórico de Fechamentos
                     </a>
+{% endif %}
                     {% if pode_suprimento_caixa %}
                     <a href="{% url 'pdv:suprimento_caixa' %}" class="btn btn-outline-success">
                         <i class="bi bi-plus-circle me-1"></i>Suprimento
@@ -51,10 +54,12 @@
                         <i class="bi bi-dash-circle me-1"></i>Sangria
                     </a>
                     {% endif %}                    <!-- PDV-04C.1 - NAVEGACAO FECHAMENTO -->
-                    <a href="{% url 'pdv:fechar_caixa' %}" class="btn btn-outline-danger">
+                    {% if pode_fechar_caixa %}
+<a href="{% url 'pdv:fechar_caixa' %}" class="btn btn-outline-danger">
                         <i class="bi bi-lock-fill me-1"></i>
                         Fechar caixa
                     </a>
+{% endif %}
                 {% else %}
                 <div class="alert alert-warning">
                     <span class="badge text-bg-danger">Caixa fechado</span>
@@ -323,9 +328,11 @@
                     </div>
                 </div>
 
+{% if pode_cancelar_venda %}
 <button id="pdv-cancelar-venda" class="btn btn-outline-danger w-100 mb-2" type="button">
                             <i class="bi bi-trash3 me-1"></i>Cancelar venda
                         </button>
+{% endif %}
 
 <button
                             class="btn btn-primary btn-lg w-100"

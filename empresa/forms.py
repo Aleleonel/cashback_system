@@ -249,6 +249,13 @@ class UsuarioEmpresaForm(forms.Form):
 
         permissoes_disponiveis = get_permissoes_extras_disponiveis()
 
+        # F32-RET31: mapa apenas para apresentacao; autorizacao continua no servidor.
+        from accounts.permissions import PERMISSOES_POR_PERFIL
+        self.mapa_permissoes_perfil = {
+            str(perfil): sorted(str(codigo) for codigo in codigos)
+            for perfil, codigos in PERMISSOES_POR_PERFIL.items()
+        }
+
         self.fields['permissoes_extras'].choices = [
             (
                 item['codigo'],

@@ -47,6 +47,7 @@ from pdv.services.vendas.cancelamento import cancelar_venda
 from pdv.services.vendas.caixa import abrir_sessao_caixa, calcular_saldo_sessao_caixa, registrar_movimentacao_caixa_operacional
 from accounts.decorators import require_permission
 from accounts.services import usuario_tem_permissao
+from pdv.acesso_restrito import acesso_restrito_pdv
 from accounts.permissions import PERMISSAO_RELATORIOS_DASHBOARD
 from pdv.constants import (
     PERMISSAO_PDV_ABRIR_CAIXA,
@@ -489,6 +490,8 @@ def inicio(request):
         "sessao_caixa": sessao if pode_operar_pdv else None,
         "caixa_aberto": bool(sessao) if pode_operar_pdv else False,
         "pode_suprimento_caixa": usuario_tem_permissao(request.user, PERMISSAO_PDV_SUPRIMENTO),
+        "pode_fechar_caixa": usuario_tem_permissao(request.user, PERMISSAO_PDV_FECHAR_CAIXA),
+        "pode_cancelar_venda": usuario_tem_permissao(request.user, PERMISSAO_PDV_CANCELAR_VENDA),
         "pode_sangria_caixa": usuario_tem_permissao(request.user, PERMISSAO_PDV_SANGRIA),
     }
     return render(request, "pdv/inicio.html", contexto)
@@ -952,7 +955,7 @@ def fechar_caixa(request):
         request.user,
         PERMISSAO_PDV_FECHAR_CAIXA,
     ):
-        return HttpResponseForbidden("Usuario sem permissao para fechar o caixa.")
+        return acesso_restrito_pdv(request, 'Fechamento de caixa')
 
     try:
         sessao = _pdv04c1_sessao_aberta_do_usuario(request)
@@ -1002,7 +1005,7 @@ def confirmar_fechamento_caixa(request):
         request.user,
         PERMISSAO_PDV_FECHAR_CAIXA,
     ):
-        return HttpResponseForbidden("Usuario sem permissao para fechar o caixa.")
+        return acesso_restrito_pdv(request, 'Fechamento de caixa')
 
     try:
         sessao = _pdv04c1_sessao_aberta_do_usuario(request)
@@ -1075,6 +1078,9 @@ def historico_fechamentos(request):
         == getattr(request.user, "PERFIL_OPERADOR", "operador")
     )
 
+    if not modo_relatorio and not usuario_tem_permissao(request.user, PERMISSAO_PDV_FECHAR_CAIXA):
+        return acesso_restrito_pdv(request, 'Histórico de fechamentos de caixa')
+
     if matriz is None:
         messages.error(
             request,
@@ -1087,9 +1093,7 @@ def historico_fechamentos(request):
             request.user,
             PERMISSAO_RELATORIOS_DASHBOARD,
         ):
-            return HttpResponseForbidden(
-                "Sem permissao para consultar relatorios."
-            )
+            return acesso_restrito_pdv(request, 'Consulta de relat\xf3rios')
 
         if usuario_operacional:
             loja_operacional_id = request.session.get("loja_operacional_id")
@@ -1104,8 +1108,6 @@ def historico_fechamentos(request):
             lojas = Loja.objects.filter(matriz=matriz).order_by("nome")
             loja_filtro = (request.GET.get("loja") or "").strip()
     else:
-        if not usuario_tem_permissao(request.user, PERMISSAO_PDV_FECHAR_CAIXA):
-            return HttpResponseForbidden("Sem permissao para consultar fechamentos de caixa.")
         lojas_relacao = getattr(request.user, "lojas", None)
         if lojas_relacao is None:
             messages.error(
@@ -1258,9 +1260,9 @@ def _contexto_demonstrativo_caixa(request, sessao_id):
     modo_relatorio = (request.GET.get("modo_relatorio") or "").strip() == "1"
     if modo_relatorio:
         if not usuario_tem_permissao(request.user, PERMISSAO_RELATORIOS_DASHBOARD):
-            return None, HttpResponseForbidden("Sem permissao para consultar relatorios.")
+            return None, acesso_restrito_pdv(request, 'Consulta de relat\xf3rios')
     elif not usuario_tem_permissao(request.user, PERMISSAO_PDV_FECHAR_CAIXA):
-        return None, HttpResponseForbidden("Sem permissao para consultar fechamentos de caixa.")
+        return None, acesso_restrito_pdv(request, 'Hist\xf3rico de fechamentos de caixa')
     if matriz is None:
         return None, redirect("pdv:inicio")
 
@@ -1757,7 +1759,7 @@ def cupom_venda_nao_fiscal(request, venda_uuid):
 def _movimento_caixa_operacional(request, *, tipo, permissao, titulo):
     if not usuario_tem_permissao(request.user, permissao):
         from django.http import HttpResponseForbidden
-        return HttpResponseForbidden("Usuario sem permissao para esta operacao de caixa.")
+        return acesso_restrito_pdv(request, 'Movimenta\xe7\xe3o de caixa')
     sessao = _pdv04c1_sessao_aberta_do_usuario(request)
     if sessao is None:
         messages.warning(request, "Nao existe caixa aberto por este usuario.")
@@ -1799,3 +1801,28 @@ def sangria_caixa(request):
         request, tipo=TipoMovimentacaoCaixa.SANGRIA,
         permissao=PERMISSAO_PDV_SANGRIA, titulo="Sangria",
     )
+
+@login_required
+@require_GET
+@require_permission(PERMISSAO_PDV_VISUALIZAR)
+def movimentacoes_sessao_aberta(request):
+    """Consulta somente leitura da sessao aberta do proprio operador."""
+    if not _usuario_pode_operar_pdv(request.user):
+        return acesso_restrito_pdv(request, 'Consulta de movimenta\xe7\xf5es do caixa')
+    matriz, loja, sessao = _contexto_operacional(request)
+    if matriz is None or loja is None or sessao is None:
+        return render(request, "pdv/movimentacoes_sessao_aberta.html", {
+            "sessao": None, "movimentos": [], "saldo": None,
+        })
+    if (sessao.operador_abertura_id != request.user.pk or
+            sessao.caixa.matriz_id != matriz.pk or
+            sessao.caixa.loja_id != loja.pk or
+            sessao.status != StatusSessaoCaixa.ABERTA):
+        return acesso_restrito_pdv(request, 'Sess\xe3o de caixa')
+    movimentos = list(MovimentacaoCaixa.objects.filter(
+        sessao_caixa=sessao
+    ).select_related("operador", "venda", "movimentacao_estornada").order_by("criada_em", "id"))
+    saldo = calcular_saldo_sessao_caixa(sessao=sessao)
+    return render(request, "pdv/movimentacoes_sessao_aberta.html", {
+        "sessao": sessao, "movimentos": movimentos, "saldo": saldo,
+    })

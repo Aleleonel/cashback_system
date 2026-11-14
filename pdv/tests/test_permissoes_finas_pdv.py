@@ -55,11 +55,44 @@ class PerfisPermissoesPdvTests(TestCase):
         ):
             self.assertFalse(usuario_tem_permissao(usuario, permissao))
 
-    def test_admin_loja_possui_todas(self):
+    def test_administradores_nao_herdam_pdv(self):
         User = get_user_model()
-        usuario = self.criar_usuario("admin_loja_acl", User.PERFIL_ADMIN_LOJA)
-        for permissao in PERMISSOES_PDV:
-            self.assertTrue(usuario_tem_permissao(usuario, permissao))
+        for perfil in (User.PERFIL_MASTER, User.PERFIL_ADMIN_LOJA):
+            with self.subTest(perfil=perfil):
+                usuario = self.criar_usuario('sem_pdv_' + perfil, perfil)
+                for permissao in (PERMISSOES_PDV - {"clientes.criar"}):
+                    self.assertFalse(usuario_tem_permissao(usuario, permissao), permissao)
+
+    def test_administrador_so_opera_com_concessao_explicita(self):
+        User = get_user_model()
+        usuario = self.criar_usuario('admin_pdv_concedido', User.PERFIL_ADMIN_LOJA)
+        PermissaoUsuario.objects.create(usuario=usuario, permissao=PERMISSAO_PDV_OPERAR)
+        self.assertTrue(usuario_tem_permissao(usuario, PERMISSAO_PDV_OPERAR))
+        self.assertFalse(usuario_tem_permissao(usuario, PERMISSAO_PDV_ABRIR_CAIXA))
+        self.assertFalse(usuario_tem_permissao(usuario, PERMISSAO_PDV_FECHAR_CAIXA))
+
+    def test_administrador_pode_receber_abertura_individual(self):
+        User = get_user_model()
+        usuario = self.criar_usuario('master_abertura_concedida', User.PERFIL_MASTER)
+        PermissaoUsuario.objects.create(usuario=usuario, permissao=PERMISSAO_PDV_ABRIR_CAIXA)
+        self.assertTrue(usuario_tem_permissao(usuario, PERMISSAO_PDV_ABRIR_CAIXA))
+        self.assertFalse(usuario_tem_permissao(usuario, PERMISSAO_PDV_OPERAR))
+
+    def test_revogacao_individual_remove_acesso_administrador(self):
+        User = get_user_model()
+        usuario = self.criar_usuario('admin_pdv_revogado', User.PERFIL_ADMIN_LOJA)
+        extra = PermissaoUsuario.objects.create(usuario=usuario, permissao=PERMISSAO_PDV_OPERAR)
+        self.assertTrue(usuario_tem_permissao(usuario, PERMISSAO_PDV_OPERAR))
+        extra.delete()
+        self.assertFalse(usuario_tem_permissao(usuario, PERMISSAO_PDV_OPERAR))
+
+    def test_administrador_inativo_nao_usa_concessao(self):
+        User = get_user_model()
+        usuario = self.criar_usuario('admin_pdv_inativo', User.PERFIL_ADMIN_LOJA)
+        PermissaoUsuario.objects.create(usuario=usuario, permissao=PERMISSAO_PDV_OPERAR)
+        usuario.ativo = False
+        usuario.save(update_fields=['ativo'])
+        self.assertFalse(usuario_tem_permissao(usuario, PERMISSAO_PDV_OPERAR))
 
     def test_permissao_extra_eleva_operador(self):
         User = get_user_model()

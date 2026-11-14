@@ -85,25 +85,111 @@
                             {{ form.permissoes_extras.label }}
                         </label>
 
-                        <div class="border rounded p-3 bg-light">
-                            <div class="row g-2">
-                                {% for checkbox in form.permissoes_extras %}
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        {{ checkbox.tag }}
-                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
-                                            {{ checkbox.choice_label }}
-                                        </label>
-                                    </div>
+                         <div id="f32-ret34-dual" class="border rounded p-3 bg-light">
+                            <p class="small text-muted mb-3">Selecione permissoes adicionais. As permissoes herdadas do perfil aparecem separadamente e nao podem ser revogadas aqui.</p>
+                            <div class="row g-3">
+                                <div class="col-lg-5">
+                                    <label for="ret34-available" class="form-label fw-semibold">Permissoes disponiveis <span id="ret34-available-count" class="badge bg-secondary"></span></label>
+                                    <input id="ret34-search-available" type="search" class="form-control form-control-sm mb-2" placeholder="Pesquisar por modulo ou permissao" aria-label="Filtrar permissoes disponiveis">
+                                    <select id="ret34-available" class="form-select" multiple size="12" aria-label="Permissoes disponiveis" style="min-height:260px"></select>
                                 </div>
-                                {% empty %}
-                                <div class="col-12 text-muted small">
-                                    Nenhuma permissão extra disponível.
+                                <div class="col-lg-2 d-flex flex-lg-column justify-content-center align-items-center gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" id="ret34-add" title="Conceder selecionadas">Adicionar &gt;</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" id="ret34-add-all" title="Conceder todas as filtradas">Adicionar todas &gt;&gt;</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="ret34-remove" title="Revogar selecionadas">&lt; Remover</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="ret34-remove-all" title="Revogar todas as filtradas">&lt;&lt; Remover todas</button>
                                 </div>
-                                {% endfor %}
+                                <div class="col-lg-5">
+                                    <label for="ret34-granted" class="form-label fw-semibold">Concedidas individualmente <span id="ret34-granted-count" class="badge bg-primary"></span></label>
+                                    <input id="ret34-search-granted" type="search" class="form-control form-control-sm mb-2" placeholder="Pesquisar concessoes" aria-label="Filtrar permissoes concedidas">
+                                    <select id="ret34-granted" class="form-select" multiple size="12" aria-label="Permissoes concedidas individualmente" style="min-height:260px"></select>
+                                </div>
+                            </div>
+                            <div class="mt-3 border-top pt-3">
+                                <div class="fw-semibold mb-2">Incluidas no perfil <span id="ret34-inherited-count" class="badge bg-secondary"></span></div>
+                                <div id="ret34-inherited" class="small text-muted" aria-live="polite"></div>
+                                <div class="form-text">A concessao individual continua registrada mesmo quando tambem esta incluida no perfil. Alterar o perfil nao apaga concessoes.</div>
                             </div>
                         </div>
-
+                        <div id="ret34-original" class="d-none" aria-hidden="true">
+                            {% for checkbox in form.permissoes_extras %}
+                            <div class="form-check">{{ checkbox.tag }}<label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label></div>
+                            {% endfor %}
+                        </div>
+                        {{ form.mapa_permissoes_perfil|json_script:"f32-ret34-acl-map" }}
+                        <script>
+                        (function () {
+                            "use strict";
+                            document.addEventListener("DOMContentLoaded", function () {
+                                var root = document.getElementById("f32-ret34-dual");
+                                var profile = document.getElementById("id_perfil");
+                                var mapNode = document.getElementById("f32-ret34-acl-map");
+                                if (!root || !profile || !mapNode) return;
+                                var map;
+                                try { map = JSON.parse(mapNode.textContent); } catch (e) { return; }
+                                var inputs = Array.from(document.querySelectorAll('#ret34-original input[name="permissoes_extras"]'));
+                                var items = inputs.map(function (input) {
+                                    var label = document.querySelector('label[for="' + input.id + '"]');
+                                    return { input: input, code: input.value, label: label ? label.textContent.trim() : input.value };
+                                });
+                                var available = document.getElementById("ret34-available");
+                                var granted = document.getElementById("ret34-granted");
+                                var searchA = document.getElementById("ret34-search-available");
+                                var searchG = document.getElementById("ret34-search-granted");
+                                var inherited = document.getElementById("ret34-inherited");
+                                function normalized(value) { return (value || "").toLocaleLowerCase(); }
+                                function fill(select, list, filter) {
+                                    var selected = new Set(Array.from(select.selectedOptions).map(function (o) { return o.value; }));
+                                    select.replaceChildren();
+                                    list.filter(function (item) { return normalized(item.label + " " + item.code).includes(normalized(filter)); })
+                                        .sort(function (a, b) { return a.label.localeCompare(b.label, "pt-BR"); })
+                                        .forEach(function (item) {
+                                            var option = new Option(item.label, item.code);
+                                            option.selected = selected.has(item.code);
+                                            select.add(option);
+                                        });
+                                }
+                                function refresh() {
+                                    var a = items.filter(function (i) { return !i.input.checked; });
+                                    var g = items.filter(function (i) { return i.input.checked; });
+                                    fill(available, a, searchA.value);
+                                    fill(granted, g, searchG.value);
+                                    document.getElementById("ret34-available-count").textContent = a.length;
+                                    document.getElementById("ret34-granted-count").textContent = g.length;
+                                    var codes = map[profile.value] || [];
+                                    document.getElementById("ret34-inherited-count").textContent = codes.length;
+                                    inherited.replaceChildren();
+                                    if (!codes.length) { inherited.textContent = "Nenhuma permissao herdada para este perfil."; return; }
+                                    var list = document.createElement("div");
+                                    list.className = "d-flex flex-wrap gap-2";
+                                    codes.slice().sort().forEach(function (code) {
+                                        var item = items.find(function (i) { return i.code === code; });
+                                        var tag = document.createElement("span");
+                                        tag.className = "badge bg-secondary";
+                                        tag.textContent = item ? item.label : code;
+                                        tag.title = item && item.input.checked ? "Incluida no perfil e concedida individualmente" : "Incluida no perfil";
+                                        list.appendChild(tag);
+                                    });
+                                    inherited.appendChild(list);
+                                }
+                                function move(select, checked, all) {
+                                    var codes = new Set(Array.from(select.options).filter(function (o) { return all || o.selected; }).map(function (o) { return o.value; }));
+                                    items.forEach(function (i) { if (codes.has(i.code)) i.input.checked = checked; });
+                                    refresh();
+                                }
+                                document.getElementById("ret34-add").addEventListener("click", function () { move(available, true, false); });
+                                document.getElementById("ret34-add-all").addEventListener("click", function () { move(available, true, true); });
+                                document.getElementById("ret34-remove").addEventListener("click", function () { move(granted, false, false); });
+                                document.getElementById("ret34-remove-all").addEventListener("click", function () { move(granted, false, true); });
+                                available.addEventListener("dblclick", function () { move(available, true, false); });
+                                granted.addEventListener("dblclick", function () { move(granted, false, false); });
+                                searchA.addEventListener("input", refresh);
+                                searchG.addEventListener("input", refresh);
+                                profile.addEventListener("change", refresh);
+                                refresh();
+                            });
+                        }());
+                        </script>
                         {{ form.permissoes_extras.errors }}
 
                         <div class="form-text">
