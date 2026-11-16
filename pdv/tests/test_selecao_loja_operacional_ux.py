@@ -1,4 +1,4 @@
-﻿from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import get_resolver, reverse
 
@@ -109,9 +109,5 @@ class SelecaoVisualLojaOperacionalUxTests(TestCase):
         self.client.force_login(admin)
         resposta = self.client.get(reverse("pdv:inicio"))
 
-        self.assertEqual(resposta.status_code, 200)
-        self.assertNotContains(
-            resposta,
-            'data-acao-abrir-caixa="true"',
-            html=False,
-        )
+        self.assertEqual(resposta.status_code, 403)
+        self.assertNotIn(b'data-acao-abrir-caixa=true', resposta.content)

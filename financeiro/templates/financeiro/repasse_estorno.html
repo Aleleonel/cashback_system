@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+      <header class="mb-3">
+        <h1 class="h3 mb-1">Estornar repasse de cart&#227;o</h1>
+        <p class="text-muted mb-0">Revise os dados antes de efetivar o estorno integral.</p>
+      </header>
+      <div class="alert alert-warning border-start border-warning border-3" role="alert">
+        <strong>Aten&#231;&#227;o:</strong> esta opera&#231;&#227;o estorna integralmente a baixa de
+        <strong>R$ {{ baixa.valor|floatformat:2 }}</strong> e a taxa financeira vinculada, quando existente.
+      </div>
+      <form method="post" id="form-estorno-repasse" class="card shadow-sm border-0" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+        <div class="card-body p-4">
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="{{ form.data.id_for_label }}">{{ form.data.label }}</label>
+              <input type="date" class="form-control{% if form.data.errors %} is-invalid{% endif %}"
+                     name="{{ form.data.html_name }}" id="{{ form.data.id_for_label }}"
+                     value="{{ form.data.value|stringformat:'s' }}" required>
+              {% for error in form.data.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold" for="{{ form.motivo.id_for_label }}">{{ form.motivo.label }}</label>
+              <textarea class="form-control{% if form.motivo.errors %} is-invalid{% endif %}"
+                        name="{{ form.motivo.html_name }}" id="{{ form.motivo.id_for_label }}"
+                        rows="4" minlength="11" maxlength="500" required
+                        placeholder="Descreva o motivo do estorno (m&#237;nimo de 11 caracteres).">{{ form.motivo.value|default_if_none:'' }}</textarea>
+              <div class="form-text">Informe uma justificativa objetiva para fins de auditoria.</div>
+              {% for error in form.motivo.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <div class="form-check border rounded p-3 ps-5">
+                <input class="form-check-input{% if form.confirmar.errors %} is-invalid{% endif %}"
+                       type="checkbox" name="{{ form.confirmar.html_name }}" id="{{ form.confirmar.id_for_label }}"
+                       value="on" {% if form.confirmar.value %}checked{% endif %} required>
+                <label class="form-check-label fw-semibold" for="{{ form.confirmar.id_for_label }}">{{ form.confirmar.label }}</label>
+                {% for error in form.confirmar.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-3 border-top">
+            <a class="btn btn-outline-secondary" href="{% url 'financeiro:titulo_detalhe' baixa.parcela.titulo.uuid %}">Cancelar</a>
+            <button class="btn btn-danger" type="submit" id="btn-estornar-repasse">Confirmar estorno completo</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

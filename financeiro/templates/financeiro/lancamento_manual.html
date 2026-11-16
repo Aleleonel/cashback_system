@@ -9,7 +9,7 @@
       <p class="ui-page-header__description">{{ matriz.nome }}</p>
     </div>
     <div class="ui-page-header__actions">
-      <a href="{% url 'financeiro:titulos' %}" class="btn btn-outline-secondary">Voltar</a>
+      <a href="{% if request.user.perfil == 'operador' %}{% url 'pdv:inicio' %}{% else %}{% url 'financeiro:titulos' %}{% endif %}" class="btn btn-outline-secondary">Voltar</a>
     </div>
   </header>
 
@@ -32,25 +32,38 @@
           <div class="alert alert-danger">{{ form.non_field_errors }}</div>
           {% endif %}
 
-          <form method="post" novalidate>
+          <form method="post" novalidate id="form-lancamento-manual">
             {% csrf_token %}
             <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
 
             <div class="row g-3">
               {% for field in form %}
+              {% if pode_baixar or field.name != 'liquidar_agora' and field.name != 'forma_pagamento_imediato' and field.name != 'conta_financeira_imediata' %}
+              {% if field.name == 'liquidar_agora' or field.name == 'forma_pagamento_imediato' or field.name == 'conta_financeira_imediata' %}
+              <div class="col-12 {% if field.name != 'liquidar_agora' %}col-md-6 pagamento-imediato-dados{% endif %}">
+              {% else %}
               <div class="{% if field.name == 'observacao' %}col-12{% else %}col-12 col-md-6{% endif %}">
+              {% endif %}
                 {% if field.field.widget.input_type == 'checkbox' %}
                 <div class="form-check mt-4">
                   {{ field }}
                   <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                 </div>
                 {% else %}
+                {% if field.name == 'loja' and request.user.perfil == 'operador' %}
+                <label class="form-label" for="loja_operacional_exibicao">{{ field.label }}</label>
+                <input type="text" id="loja_operacional_exibicao" class="form-control" value="{{ field.field.queryset.first.nome }}" readonly aria-readonly="true">
+                <input type="hidden" name="loja" value="{{ field.value }}">
+                {% else %}
                 <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                 {{ field }}
                 {% endif %}
+                {% endif %}
+                {% if field.name == 'valor_final' %}<div id="ret129-valor-final-legivel" class="form-text fw-semibold" aria-live="polite"></div>{% endif %}
                 {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                 {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
               </div>
+              {% endif %}
               {% endfor %}
             </div>
 
@@ -61,10 +74,142 @@
             </div>
 
             <div class="ui-form-actions mt-4">
-              <button type="submit" class="btn btn-primary">Criar lançamento</button>
-              <a href="{% url 'financeiro:titulos' %}" class="btn btn-outline-secondary">Cancelar</a>
+              <button type="submit" class="btn btn-primary" id="btn-criar-lancamento">Criar lançamento</button>
+              <a href="{% if request.user.perfil == 'operador' %}{% url 'pdv:inicio' %}{% else %}{% url 'financeiro:titulos' %}{% endif %}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
           </form>
+          {% if pode_baixar %}
+          <dialog id="confirmacao-pagamento-imediato" aria-labelledby="titulo-confirmacao-pagamento" style="border:0;border-radius:12px;max-width:560px;width:calc(100% - 32px);padding:0;box-shadow:0 16px 64px rgba(0,0,0,.28)">
+            <div class="p-4">
+              <h2 id="titulo-confirmacao-pagamento" class="h5 mb-2">Confirmar pagamento imediato</h2>
+              <p class="text-muted mb-3">Confira os dados antes de registrar a despesa e efetivar a baixa financeira.</p>
+              <dl class="row mb-3">
+                <dt class="col-sm-5">Favorecido / descrição</dt><dd class="col-sm-7" id="conf-pag-descricao"></dd>
+                <dt class="col-sm-5">Loja</dt><dd class="col-sm-7" id="conf-pag-loja"></dd>
+                <dt class="col-sm-5">Forma de pagamento</dt><dd class="col-sm-7" id="conf-pag-forma"></dd>
+                <dt class="col-sm-5">Conta financeira</dt><dd class="col-sm-7" id="conf-pag-conta"></dd>
+                <dt class="col-sm-5">Valor final</dt><dd class="col-sm-7 fw-bold" id="conf-pag-valor"></dd>
+              </dl>
+              <div class="alert alert-warning py-2 small" id="conf-pag-aviso" role="status">A confirma&#231;&#227;o registrar&#225; o lan&#231;amento e a baixa financeira.</div>
+              <div class="d-flex justify-content-end gap-2 flex-wrap">
+                <button type="button" class="btn btn-outline-secondary" id="conf-pag-voltar">Voltar e corrigir</button>
+                <button type="button" class="btn btn-primary" id="conf-pag-confirmar">Confirmar pagamento</button>
+              </div>
+            </div>
+          </dialog>
+          <script>
+          (function(){
+            const check=document.getElementById('id_liquidar_agora');
+            const btn=document.getElementById('btn-criar-lancamento');
+            if(!check)return;
+            const form=document.getElementById('form-lancamento-manual');
+            const dialog=document.getElementById('confirmacao-pagamento-imediato');
+            const forma=document.getElementById('id_forma_pagamento_imediato');
+            const conta=document.getElementById('id_conta_financeira_imediata');
+            // RET127: o valor exibido e calculado no navegador; o servidor recalcula na validacao.
+            const atualizarValorFinal=()=>{
+              const campo=document.getElementById('id_valor_final') || form.querySelector('[name="valor_final"]');
+              if(!campo)return;
+              const ler=(id)=>{
+                const el=document.getElementById(id);
+                if(!el || !el.value.trim())return 0;
+                const bruto=el.value.trim().replace(/\s/g,'').replace(/R\$/g,'');
+                const normalizado=bruto.includes(',')?bruto.replace(/\./g,'').replace(',','.'):bruto;
+                const n=Number(normalizado);
+                return Number.isFinite(n)?n:0;
+              };
+              const total=ler('id_valor_bruto')-ler('id_valor_desconto')+ler('id_valor_juros');
+              if(!Number.isFinite(total)){campo.value='';return;}
+              // input[type=number] accepts a dot decimal, not pt-BR comma decimals.
+              campo.value=campo.type==='number'?total.toFixed(2):total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+              const espelho=document.getElementById('ret129-valor-final-legivel');
+              if(espelho)espelho.textContent=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(total);
+            };
+            ['id_valor_bruto','id_valor_desconto','id_valor_juros'].forEach(id=>{
+              const el=document.getElementById(id);
+              if(el)el.addEventListener('input',atualizarValorFinal);
+            });
+            atualizarValorFinal();
+            const dinheiroSelecionado=()=>{
+              if(!forma || !forma.value)return false;
+              const opt=forma.options[forma.selectedIndex];
+              return !!opt && /\bdinheiro\b/i.test(opt.textContent || '');
+            };
+            const updateConta=()=>{
+              if(!conta)return;
+              const dinheiro=check.checked && dinheiroSelecionado();
+              if(dinheiro)conta.value='';
+              conta.disabled=dinheiro;
+              const grupo=conta.closest('.pagamento-imediato-dados');
+              if(grupo)grupo.classList.toggle('d-none',dinheiro || !check.checked);
+            };
+            const update=()=>{
+              document.querySelectorAll('.pagamento-imediato-dados').forEach(el=>el.classList.toggle('d-none',!check.checked));
+              if(btn)btn.textContent=check.checked?'Revisar e confirmar pagamento':'Criar lançamento';
+              updateConta();
+            };
+            const valorCampo=id=>{
+              const el=document.getElementById(id);
+              if(!el)return 0;
+              let t=(el.value||'').trim().replace(/\s/g,'').replace(/R\$/g,'');
+              if(t.includes(','))t=t.replace(/\./g,'').replace(',','.');
+              const n=Number(t);return Number.isFinite(n)?n:0;
+            };
+            const texto=id=>{
+              const el=document.getElementById(id);
+              if(!el)return '-';
+              if(el.tagName==='SELECT'){
+                const opt=el.options[el.selectedIndex];return opt?(opt.textContent||'-').trim():'-';
+              }
+              return (el.value||'').trim()||'-';
+            };
+            const escrever=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+            let confirmado=false;
+            let enviando=false;
+            form.addEventListener('submit',event=>{
+              if(!check.checked || confirmado){
+                if(enviando){event.preventDefault();return;}
+                enviando=true;
+                if(btn)btn.disabled=true;
+                return;
+              }
+              event.preventDefault();
+              if(!dialog || typeof dialog.showModal!=='function'){
+                // Falha segura: nunca efetivar pagamento sem confirmacao.
+                window.alert('Seu navegador nao suporta a confirmacao de pagamento. Atualize o navegador.');
+                return;
+              }
+              const bruto=valorCampo('id_valor_bruto');
+              const desconto=valorCampo('id_valor_desconto');
+              const juros=valorCampo('id_valor_juros');
+              const total=bruto-desconto+juros;
+              escrever('conf-pag-descricao',texto('id_entidade_nome')!=='-'?texto('id_entidade_nome'):texto('id_documento_referencia'));
+              const loja=document.getElementById('id_loja');
+              const lojaTexto=document.getElementById('loja_operacional_exibicao');
+              escrever('conf-pag-loja',lojaTexto?(lojaTexto.value||'-'):texto('id_loja'));
+              escrever('conf-pag-forma',texto('id_forma_pagamento_imediato'));
+              escrever('conf-pag-conta',dinheiroSelecionado()?'Nao se aplica (dinheiro)':texto('id_conta_financeira_imediata'));
+              escrever('conf-pag-valor',new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(total));
+                            const aviso=document.getElementById('conf-pag-aviso');
+              if(aviso){
+                aviso.textContent=dinheiroSelecionado()
+                  ? 'A confirma\u00e7\u00e3o registrar\u00e1 o lan\u00e7amento e a baixa financeira. O pagamento em dinheiro movimentar\u00e1 o caixa aberto.'
+                  : 'A confirma\u00e7\u00e3o registrar\u00e1 o lan\u00e7amento e a baixa financeira. O pagamento ser\u00e1 debitado da conta financeira selecionada.';
+              }
+              dialog.showModal();
+            });
+            document.getElementById('conf-pag-voltar').addEventListener('click',()=>dialog.close());
+            document.getElementById('conf-pag-confirmar').addEventListener('click',()=>{
+              if(enviando)return;
+              confirmado=true;
+              dialog.close();
+              if(form.requestSubmit)form.requestSubmit(btn);else form.submit();
+            });
+            if(forma)forma.addEventListener('change',updateConta);
+            check.addEventListener('change',update);update();
+          })();
+          </script>
+          {% endif %}
         </div>
       </div>
     </div>

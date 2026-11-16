@@ -351,7 +351,20 @@ def registrar_baixa_financeira(
             )
         return existente
 
+    from financeiro._contexto_repasse import registro_repasse_autorizado
     eventos = list(parcela.baixas.all())
+    eh_taxa_adquirente = (
+        (titulo.chave_idempotencia or "").startswith("adquirente:")
+        and (titulo.chave_idempotencia or "").endswith(":taxa")
+    )
+    ja_conciliada = any(
+        (evento.chave_idempotencia or "").startswith("adquirente:")
+        and (evento.chave_idempotencia or "").endswith(":bruto")
+        and evento.tipo == BaixaFinanceira.Tipo.BAIXA
+        for evento in eventos
+    )
+    if (eh_taxa_adquirente or ja_conciliada) and not registro_repasse_autorizado():
+        raise ValidationError({"parcela": "Lancamento vinculado a adquirente: utilize o fluxo de conciliacao autorizado."})
     total_baixas = sum(
         (evento.valor for evento in eventos if evento.tipo == BaixaFinanceira.Tipo.BAIXA),
         Decimal("0.00"),
@@ -412,6 +425,12 @@ def estornar_baixa_financeira(
     )
     if baixa_original.tipo != BaixaFinanceira.Tipo.BAIXA:
         raise ValidationError({"baixa": "Somente um evento de baixa pode ser estornado."})
+    from financeiro._contexto_repasse import estorno_repasse_autorizado
+    chave_original = baixa_original.chave_idempotencia or ""
+    if (chave_original.startswith("adquirente:") and
+            (chave_original.endswith(":bruto") or chave_original.endswith(":pagamento-taxa")) and
+            not estorno_repasse_autorizado()):
+        raise ValidationError({"baixa": "Repasse de adquirente exige estorno conjunto autorizado."})
 
     parcela = ParcelaFinanceira.objects.select_for_update().get(pk=baixa_original.parcela_id)
     titulo = TituloFinanceiro.objects.select_for_update().get(pk=parcela.titulo_id)
@@ -575,6 +594,9 @@ def cancelar_titulo_financeiro(*, titulo, usuario=None, request=None, motivo=Non
 
     if titulo.status == TituloFinanceiro.Status.CANCELADO:
         return titulo
+
+    if (titulo.chave_idempotencia or "").startswith("adquirente:") and (titulo.chave_idempotencia or "").endswith(":taxa"):
+        raise ValidationError({"titulo": "Taxa vinculada a repasse: cancelamento isolado nao permitido."})
 
     if titulo.origem_tipo not in {
         TituloFinanceiro.OrigemTipo.MANUAL,

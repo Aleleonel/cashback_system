@@ -39,18 +39,26 @@ PERMISSAO_VOUCHERS_GERENCIAR = 'vouchers.gerenciar'
 # ==========================================================
 
 PERMISSAO_FINANCEIRO_VISUALIZAR = 'financeiro.visualizar'
+PERMISSAO_FINANCEIRO_VISUALIZAR_LANCAMENTOS_LOJA = 'financeiro.visualizar_lancamentos_loja'
 PERMISSAO_FINANCEIRO_GERENCIAR = 'financeiro.gerenciar'
 
 PERMISSAO_FINANCEIRO_LANCAR_DESPESA = 'financeiro.lancar_despesa'
+PERMISSAO_FINANCEIRO_PAGAR_DESPESA_OPERACIONAL = 'financeiro.pagar_despesa_operacional'
+PERMISSAO_FINANCEIRO_IMPORTAR_CSV = 'financeiro.importar_csv'
 PERMISSAO_FINANCEIRO_BAIXAR = 'financeiro.baixar'
+PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA = 'financeiro.estornar_baixa'
 PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO = 'financeiro.editar_lancamento'
 PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO = 'financeiro.cancelar_lancamento'
 PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA = 'financeiro.reabrir_competencia'
 PERMISSOES_FINANCEIRO = {
+    PERMISSAO_FINANCEIRO_VISUALIZAR_LANCAMENTOS_LOJA,
     PERMISSAO_FINANCEIRO_VISUALIZAR,
     PERMISSAO_FINANCEIRO_GERENCIAR,
     PERMISSAO_FINANCEIRO_LANCAR_DESPESA,
+    PERMISSAO_FINANCEIRO_PAGAR_DESPESA_OPERACIONAL,
+    PERMISSAO_FINANCEIRO_IMPORTAR_CSV,
     PERMISSAO_FINANCEIRO_BAIXAR,
+    PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA,
     PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO,
     PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO,
     PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA,
@@ -227,6 +235,11 @@ PERMISSOES_POR_PERFIL = {
 def get_permissoes_extras_disponiveis():
     return [
         {
+            'codigo': PERMISSAO_FINANCEIRO_VISUALIZAR_LANCAMENTOS_LOJA,
+            'nome': 'Financeiro: consultar lançamentos da própria loja',
+            'grupo': 'Financeiro',
+        },
+        {
             'codigo': PERMISSAO_PRODUTOS_EDITAR,
             'nome': 'Produtos: editar',
             'grupo': 'Produtos',
@@ -294,7 +307,10 @@ def get_permissoes_extras_disponiveis():
         {"codigo": PERMISSAO_FINANCEIRO_VISUALIZAR, "nome": "Financeiro: visualizar", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_GERENCIAR, "nome": "Financeiro: gerenciar", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_LANCAR_DESPESA, "nome": "Financeiro: lançar despesa", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_PAGAR_DESPESA_OPERACIONAL, "nome": "Financeiro: pagar despesa operacional da loja", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_IMPORTAR_CSV, "nome": "Financeiro: importar CSV", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_BAIXAR, "nome": "Financeiro: registrar baixa", "grupo": "Financeiro"},
+        {"codigo": PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA, "nome": "Financeiro: estornar baixa", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO, "nome": "Financeiro: editar lançamento", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO, "nome": "Financeiro: cancelar lançamento", "grupo": "Financeiro"},
         {"codigo": PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA, "nome": "Financeiro: reabrir competência", "grupo": "Financeiro"},
@@ -331,6 +347,11 @@ def get_permissoes_extras_disponiveis():
         for item in permissoes_pdv
         if item["codigo"] not in codigos_existentes
     )
+    itens.extend([
+        {"codigo": "atacado.visualizar", "nome": "Atacado: visualizar", "grupo": "Atacado"},
+        {"codigo": "atacado.criar_orcamento", "nome": "Atacado: criar orçamentos", "grupo": "Atacado"},
+        {"codigo": "atacado.gerar_pedido", "nome": "Atacado: gerar pedidos", "grupo": "Atacado"},
+    ])
     return itens
 
 
@@ -339,5 +360,5 @@ PERMISSAO_ATACADO_VISUALIZAR = "atacado.visualizar"
 PERMISSAO_ATACADO_CRIAR_ORCAMENTO = "atacado.criar_orcamento"
 PERMISSAO_ATACADO_GERAR_PEDIDO = "atacado.gerar_pedido"
 PERMISSOES_ATACADO = {PERMISSAO_ATACADO_VISUALIZAR, PERMISSAO_ATACADO_CRIAR_ORCAMENTO, PERMISSAO_ATACADO_GERAR_PEDIDO}
-for _perfil_atacado in ("master", "admin_loja", "operador"):
+for _perfil_atacado in ("master", "admin_loja"):
     PERMISSOES_POR_PERFIL[_perfil_atacado].update(PERMISSOES_ATACADO)

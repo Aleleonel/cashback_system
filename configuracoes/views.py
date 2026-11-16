@@ -313,6 +313,28 @@ def comissoes(request):
         if matriz
         else FechamentoComissao.objects.none()
     )
+    # F32-RET85: previa somente leitura pelo motor oficial
+    from decimal import Decimal
+    from pdv.models import Venda
+    from django.contrib.auth import get_user_model
+    from .services_comissoes import selecionar_vendas_validas_competencia, orquestrar_comissoes_competencia
+    previa_comissoes = []
+    if matriz is not None:
+        for loja_previa in lojas:
+            if FechamentoComissao.objects.filter(loja=loja_previa, competencia_ano=historico_ano, competencia_mes=historico_mes).exists():
+                continue
+            metas_previa = [{"valor_meta": m.valor_meta, "percentual": m.percentual_comissao} for m in MetaComissaoLoja.objects.filter(loja=loja_previa, ativa=True)]
+            vendas_previa = list(selecionar_vendas_validas_competencia(Venda.objects.select_related("vendedor"), loja_id=loja_previa.pk, ano=historico_ano, mes=historico_mes))
+            exigir_minimo = configuracao.exigir_minimo_individual if configuracao else False
+            minimo = configuracao.minimo_vendas_vendedor if configuracao else Decimal("0.00")
+            resultado = orquestrar_comissoes_competencia(vendas_validas=vendas_previa, metas=metas_previa, exigir_minimo_individual=exigir_minimo, minimo_individual=minimo)
+            usuarios = get_user_model().objects.in_bulk(resultado.vendas_por_vendedor.keys())
+            vendedores_previa = []
+            for vendedor_id, total in sorted(resultado.vendas_por_vendedor.items()):
+                usuario = usuarios.get(vendedor_id)
+                nome = (usuario.get_full_name().strip() or usuario.get_username()) if usuario else str(vendedor_id)
+                vendedores_previa.append({"nome": nome, "total": total, "elegivel": not exigir_minimo or total >= minimo, "comissao": resultado.comissoes.get(vendedor_id, Decimal("0.00"))})
+            previa_comissoes.append({"loja": loja_previa, "vendas": resultado.total_loja, "percentual": resultado.percentual_aplicado, "comissao": sum((v["comissao"] for v in vendedores_previa), Decimal("0.00")), "vendedores": vendedores_previa})
     competencia_historico = f"{historico_mes:02d}/{historico_ano}"
     from financeiro.models import TituloFinanceiro
     titulos_comissao = {titulo.origem_id: titulo for titulo in TituloFinanceiro.objects.filter(matriz=matriz, loja__in=lojas, natureza=TituloFinanceiro.Natureza.PAGAR, origem_tipo=TituloFinanceiro.OrigemTipo.COMISSAO)} if matriz else {}
@@ -353,7 +375,7 @@ def comissoes(request):
             )
     pode_provisionar_comissao = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_LANCAR_DESPESA)
     pode_visualizar_financeiro = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_VISUALIZAR)
-    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao, "historico_mes": historico_mes, "historico_ano": historico_ano, "competencia_historico": competencia_historico, "comissoes_parceiros_consolidadas": comissoes_parceiros_consolidadas, "competencia_parceiros": competencia_parceiros, "competencia_ano_parceiros": competencia_ano_parceiros, "competencia_mes_parceiros": competencia_mes_parceiros, "parceiro_detalhes": parceiro_detalhes, "parceiro_detalhes_id": parceiro_detalhes_id, "pode_provisionar_comissao": pode_provisionar_comissao, "pode_visualizar_financeiro": pode_visualizar_financeiro})
+    return render(request, "configuracoes/comissoes.html", {"contexto_configuracoes": contexto_acesso, "matriz": matriz, "matrizes_plataforma": matrizes_plataforma, "erro_matriz": erro_matriz, "lojas": lojas, "configuracao_comissao": configuracao, "form_configuracao": form_configuracao, "metas": metas, "meta_form": meta_form, "fechamentos_comissao": fechamentos_comissao, "historico_mes": historico_mes, "historico_ano": historico_ano, "competencia_historico": competencia_historico, "previa_comissoes": previa_comissoes, "comissoes_parceiros_consolidadas": comissoes_parceiros_consolidadas, "competencia_parceiros": competencia_parceiros, "competencia_ano_parceiros": competencia_ano_parceiros, "competencia_mes_parceiros": competencia_mes_parceiros, "parceiro_detalhes": parceiro_detalhes, "parceiro_detalhes_id": parceiro_detalhes_id, "pode_provisionar_comissao": pode_provisionar_comissao, "pode_visualizar_financeiro": pode_visualizar_financeiro})
 
 @central_configuracoes_required
 def meta_comissao_editar(request, pk):

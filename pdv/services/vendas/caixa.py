@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from pdv.choices import StatusSessaoCaixa, TipoMovimentacaoCaixa
+from pdv.choices import StatusSessaoCaixa, TipoMovimentacaoCaixa, TipoFormaPagamento
 from pdv.models import MovimentacaoCaixa, Venda
 
 
@@ -13,7 +13,7 @@ def calcular_valor_movimenta_caixa(*, venda):
     pagamentos = (
         venda.pagamentos
         .select_related("forma_pagamento")
-        .filter(forma_pagamento__movimenta_caixa=True)
+        .filter(forma_pagamento__movimenta_caixa=True, forma_pagamento__tipo=TipoFormaPagamento.DINHEIRO)
         .order_by("criado_em")
     )
 

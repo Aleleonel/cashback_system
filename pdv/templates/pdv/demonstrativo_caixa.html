@@ -18,7 +18,7 @@
 {% for f in formas_pagamento %}<tr><td>{{ f.nome }}</td><td>R$ {{ f.recebido|floatformat:2 }}</td><td>R$ {{ f.a_receber|floatformat:2 }}</td><td>R$ {{ f.total|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Nenhum pagamento.</td></tr>{% endfor %}
 </tbody></table>
 <h5>Movimentações registradas</h5><table class="table table-bordered table-sm"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody>
-{% for m in movimentos %}<tr><td>{{ m.criada_em|date:"d/m/Y H:i:s" }}</td><td>{{ m.get_tipo_display }}</td><td>{{ m.descricao|default:"-" }}</td><td>R$ {{ m.valor|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Nenhuma movimentação.</td></tr>{% endfor %}
+{% for m in movimentos %}<tr><td>{{ m.criada_em|date:"d/m/Y H:i:s" }}</td><td>{{ m.get_tipo_display }}</td><td>{% if m.tipo|lower == "venda" and m.venda_id %}Recebimento de venda — PDV<div class="small text-muted">Referência: {{ m.venda.uuid|stringformat:"s"|slice:":8" }}</div>{% else %}{{ m.descricao|default:"-" }}{% endif %}{% if m.movimentacao_estornada_id %}<div class="small text-muted">Estorno da movimentação #{{ m.movimentacao_estornada_id }}</div>{% endif %}</td><td>{% if m.tipo|lower == "sangria" %}− {% elif m.tipo|lower == "estorno" %}± {% else %}+ {% endif %}R$ {{ m.valor|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Nenhuma movimentação.</td></tr>{% endfor %}
 </tbody></table>
 <div class="row justify-content-end"><div class="col-md-5"><table class="table table-bordered">
 <tr><th>Saldo calculado</th><td>R$ {{ saldo_calculado|floatformat:2 }}</td></tr>

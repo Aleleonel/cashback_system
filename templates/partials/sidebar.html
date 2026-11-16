@@ -1,3 +1,4 @@
+{% load acl_atacado_sidebar %}
 <aside class="bg-dark text-white min-vh-100 p-3" style="width: 260px;">
 
     <!-- UI-SIDEBAR-BRAND-INICIO -->
@@ -109,7 +110,8 @@
 
 
         <!-- F32M4R-MENU-ATACADO -->
-        {% if request.user.is_active and request.user.perfil == 'master' or request.user.is_active and request.user.perfil == 'admin_loja' or request.user.is_active and request.user.perfil == 'operador' %}
+        {% pode_visualizar_atacado request.user as mostrar_atacado_sidebar %}
+        {% if mostrar_atacado_sidebar %}
         <a href="{% url 'atacado:orcamentos_lista' %}" class="nav-link {% if request.resolver_match.namespace == 'atacado' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-box-seam me-2"></i> Atacado
         </a>
@@ -284,13 +286,21 @@
         </a>
         <!-- UI-COMPRAS-FIM -->
 
-        {% if pode_ver_financeiro or pode_lancar_despesa_financeiro or pode_baixar_financeiro or pode_gerenciar_financeiro %}
+        {% if pode_ver_financeiro or pode_lancar_despesa_financeiro or pode_baixar_financeiro or pode_gerenciar_financeiro or request.user.perfil == 'operador' %}
         <div class="sidebar-section-heading" data-sidebar-section="financeiro" data-sidebar-icon="bi-cash-stack">
             <div class="text-uppercase text-white-50 small fw-semibold" style="letter-spacing: .06em;">Financeiro</div>
         </div>
         {% if pode_ver_financeiro %}
         <a href="{% url 'financeiro:painel' %}" class="nav-link {% if request.resolver_match.namespace == 'financeiro' and request.resolver_match.url_name == 'painel' %}active bg-primary text-white{% else %}text-white{% endif %}"><i class="bi bi-cash-stack me-2"></i>Painel financeiro</a>
+        {% if pode_baixar_financeiro %}<a href="{% url 'financeiro:repasse_novo' %}" class="nav-link {% if request.resolver_match.namespace == 'financeiro' and request.resolver_match.url_name == 'repasse_novo' %}active bg-primary text-white{% else %}text-white{% endif %}"><i class="bi bi-credit-card me-2"></i>Conciliação de cartões</a>{% endif %}
         <a href="{% url 'financeiro:titulos' %}" class="nav-link {% if request.resolver_match.namespace == 'financeiro' and request.resolver_match.url_name == 'titulos' %}active bg-primary text-white{% else %}text-white{% endif %}"><i class="bi bi-journal-text me-2"></i>T&iacute;tulos</a>
+        {% endif %}
+        {% if request.user.perfil == 'operador' %}
+        {% for permissao_extra in request.user.permissoes_extras.all %}
+        {% if permissao_extra.permissao == 'financeiro.visualizar_lancamentos_loja' %}
+        <a href="{% url 'financeiro:titulos' %}" class="nav-link {% if request.resolver_match.namespace == 'financeiro' and request.resolver_match.url_name == 'titulos' %}active bg-primary text-white{% else %}text-white{% endif %}"><i class="bi bi-journal-text me-2"></i>Lan&ccedil;amentos da loja</a>
+        {% endif %}
+        {% endfor %}
         {% endif %}
         {% if pode_lancar_despesa_financeiro %}
         <a href="{% url 'financeiro:lancamento_manual' %}" class="nav-link {% if request.resolver_match.namespace == 'financeiro' and request.resolver_match.url_name == 'lancamento_manual' %}active bg-primary text-white{% else %}text-white{% endif %}"><i class="bi bi-plus-circle me-2"></i>Novo lan&ccedil;amento</a>

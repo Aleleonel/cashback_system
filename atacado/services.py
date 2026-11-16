@@ -37,8 +37,11 @@ def transicionar_orcamento(orcamento, destino, *, usuario=None, observacao=""):
         )
 
     agora = timezone.now()
-    if destino == StatusOrcamentoAtacado.APROVADO and orcamento.esta_expirado:
-        raise ValidationError("Orçamento expirado não pode ser aprovado.")
+    if destino in (StatusOrcamentoAtacado.ENVIADO, StatusOrcamentoAtacado.APROVADO):
+        if orcamento.valido_ate is None:
+            raise ValidationError("Defina a validade da proposta antes de enviar ou aprovar.")
+        if orcamento.valido_ate <= agora:
+            raise ValidationError("Orcamento expirado nao pode ser enviado ou aprovado.")
 
     campos_data = {
         StatusOrcamentoAtacado.ENVIADO: "enviado_em",

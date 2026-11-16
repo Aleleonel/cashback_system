@@ -51,7 +51,8 @@ def garantir_formas_pagamento_basicas(*, matriz):
                 "ativa": True,
                 "permite_parcelamento": parcelamento,
                 "maximo_parcelas": maximo,
-                "movimenta_caixa": True,
+                "movimenta_caixa": tipo == TipoFormaPagamento.DINHEIRO,
+                "gera_contas_receber": tipo in (TipoFormaPagamento.CARTAO_CREDITO, TipoFormaPagamento.CARTAO_DEBITO),
                 "permite_troco": troco,
             },
         )

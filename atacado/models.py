@@ -138,6 +138,12 @@ class OrcamentoAtacado(models.Model):
             raise ValidationError(errors)
 
     @property
+    def status_efetivo(self):
+        if self.status == StatusOrcamentoAtacado.ENVIADO and self.esta_expirado:
+            return StatusOrcamentoAtacado.EXPIRADO
+        return self.status
+
+    @property
     def esta_expirado(self):
         return bool(self.valido_ate and timezone.now() > self.valido_ate)
 

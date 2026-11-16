@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load atacado_moeda %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div><div class="small text-uppercase text-secondary fw-semibold">Gestão comercial / Atacado</div><h1 class="h3 mb-1">Orçamento nº {{ orc.numero|default:orc.pk }}</h1><p class="text-secondary mb-0">Consulta comercial somente leitura</p></div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary" href="{% url 'atacado:orcamentos_lista' %}{% if request.user.is_superuser %}?matriz={{ orc.matriz_id }}{% endif %}">Voltar à listagem</a>
+      <a class="btn btn-outline-primary" target="_blank" rel="noopener" href="{% url 'atacado:orcamento_pdf' orc.pk %}{% if request.user.is_superuser %}?matriz={{ orc.matriz_id }}{% endif %}">Abrir PDF</a>
+    </div>
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col-lg-8"><section class="card border-0 shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Identificação e titularidade</h2>
+      <div class="row g-3"><div class="col-md-6"><div class="text-secondary small">Cliente</div><strong>{{ orc.cliente.nome }}</strong></div>
+      <div class="col-md-6"><div class="text-secondary small">Vendedor responsável</div><strong>{{ orc.vendedor|default:"Não informado" }}</strong></div>
+      <div class="col-md-6"><div class="text-secondary small">Matriz / Loja</div>{{ orc.matriz.nome }} / {{ orc.loja.nome|default:"Não informada" }}</div>
+      <div class="col-md-6"><div class="text-secondary small">Emissão</div>{{ orc.criado_em|date:"d/m/Y H:i" }}</div>
+      <div class="col-md-6"><div class="text-secondary small">Validade comercial</div><strong>{{ orc.valido_ate|date:"d/m/Y"|default:"Não definida" }}</strong></div>
+      <div class="col-md-6"><div class="text-secondary small">Situação</div><strong>{{ orc.get_status_display }}</strong>{% if orc.status_efetivo == "EXPIRADO" and orc.status == "ENVIADO" %} <span class="badge text-bg-warning">Expirado</span>{% endif %}</div></div>
+    </div></section></div>
+    <div class="col-lg-4"><section class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h5 mb-3">Condições comerciais</h2>
+      <div class="mb-2"><div class="text-secondary small">Pagamento</div>{{ orc.forma_pagamento.nome|default:"Não informado" }}</div>
+      <div class="mb-2"><div class="text-secondary small">Parcelas</div>{{ orc.parcelas }}</div>
+      <div class="text-secondary small">Total da proposta</div><div class="fs-4 fw-bold">R$ {{ orc.total|moeda_br }}</div>
+    </div></section></div>
+  </div>
+  <section class="card border-0 shadow-sm mb-3"><div class="card-body"><h2 class="h5 mb-3">Produtos e valores</h2>
+    <div class="table-responsive"><table class="table table-hover align-middle f32p4h61-itens"><thead><tr><th>Produto</th><th class="text-end">Quantidade</th><th class="text-end">Valor unitário líquido</th><th class="text-end">Desconto atacado</th><th class="text-end">Total</th></tr></thead>
+    <tbody>{% for item in itens %}<tr><td>{{ item.produto.nome }}{% if item.produto_promocional %} <span class="badge text-bg-warning">Promocional</span>{% endif %}{% if not item.atacado_elegivel %} <span class="badge text-bg-secondary">Sem desconto atacado</span>{% endif %}</td><td class="text-end">{{ item.quantidade|floatformat:"-3" }}</td><td class="text-end">R$ {{ item.preco_unitario_final|moeda_br }}</td><td class="text-end">R$ {{ item.desconto_atacado|moeda_br }}</td><td class="text-end">R$ {{ item.total_final|moeda_br }}</td></tr>{% empty %}<tr><td colspan="5">Nenhum item.</td></tr>{% endfor %}</tbody></table></div>
+    <div class="f32p4h61-resumo-wrap"><div class="f32p4h61-resumo"><div class="d-flex justify-content-between"><span>Subtotal</span><span>R$ {{ orc.subtotal_produtos|moeda_br }}</span></div><div class="d-flex justify-content-between"><span>Desconto atacado</span><span>R$ {{ orc.desconto_atacado|moeda_br }}</span></div><div class="d-flex justify-content-between"><span>Frete</span><span>R$ {{ orc.frete|moeda_br }}</span></div><div class="d-flex justify-content-between border-top pt-2 fs-5"><strong>Total</strong><strong>R$ {{ orc.total|moeda_br }}</strong></div></div></div>
+  </div></section>
+  {% if orc.observacoes %}<section class="card border-0 shadow-sm mb-3"><div class="card-body"><h2 class="h5">Observações</h2><p class="mb-0" style="white-space:pre-wrap">{{ orc.observacoes }}</p></div></section>{% endif %}
+  <section class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5 mb-3">Histórico de situação</h2><div class="table-responsive"><table class="table"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Responsável</th><th>Observação</th></tr></thead><tbody>{% for transicao in historico %}<tr><td>{{ transicao.ocorrido_em|date:"d/m/Y H:i" }}</td><td>{{ transicao.get_status_origem_display }}</td><td>{{ transicao.get_status_destino_display }}</td><td>{{ transicao.usuario|default:"Sistema" }}</td><td>{{ transicao.observacao|default:"—" }}</td></tr>{% empty %}<tr><td colspan="5" class="text-secondary">Nenhuma transição registrada.</td></tr>{% endfor %}</tbody></table></div></div></section>
+  <p class="small text-secondary mt-3">Consulta somente leitura. A aprovação e a geração de pedidos permanecem no fluxo operacional existente.</p>
+</div>
+
+{# F32P4H61_ALINHAMENTO: espacamento consistente sem alterar calculos. #}
+<style>
+  .f32p4h61-itens { width: 100%; min-width: 920px; table-layout: fixed; margin-bottom: 0; }
+  .f32p4h61-itens th, .f32p4h61-itens td { padding: 12px 16px; vertical-align: middle; }
+  .f32p4h61-itens th:nth-child(1) { width: 40%; }
+  .f32p4h61-itens th:nth-child(2) { width: 11%; }
+  .f32p4h61-itens th:nth-child(3) { width: 19%; }
+  .f32p4h61-itens th:nth-child(4) { width: 15%; }
+  .f32p4h61-itens th:nth-child(5) { width: 15%; }
+  .f32p4h61-itens th:not(:first-child), .f32p4h61-itens td:not(:first-child) { white-space: nowrap; }
+  .f32p4h61-itens th:last-child, .f32p4h61-itens td:last-child { padding-right: 20px; }
+  .f32p4h61-resumo-wrap { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .f32p4h61-resumo { width: min(100%, 480px); }
+  .f32p4h61-resumo > .d-flex { align-items: baseline; gap: 24px; padding: 6px 16px; }
+  .f32p4h61-resumo > .d-flex > span:last-child,
+  .f32p4h61-resumo > .d-flex > strong:last-child { margin-left: auto; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .f32p4h61-resumo > .d-flex:last-child { margin-top: 6px; padding-top: 12px !important; }
+  @media (max-width: 575.98px) { .f32p4h61-resumo { width: 100%; } }
+</style>
+{% endblock %}

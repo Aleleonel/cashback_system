@@ -13,6 +13,7 @@ class ConfiguracaoComercial(models.Model):
     )
 
     atacado_ativo = models.BooleanField(default=False)
+    prazo_validade_orcamento_atacado_dias = models.PositiveSmallIntegerField(default=7)
     pedido_minimo_atacado = models.DecimalField(
         max_digits=12,
         decimal_places=2,

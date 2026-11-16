@@ -119,7 +119,7 @@ def _pdf_numero(valor, casas=2):
 
 def _pdf_data(valor):
     if not valor or valor == "-":
-        return "Nao informada"
+        return "Não informada"
     if hasattr(valor, "tzinfo"):
         if timezone.is_aware(valor):
             valor = timezone.localtime(valor)
@@ -167,7 +167,7 @@ def _gerar_pdf(obj, pedido=False):
     if loja is not None and getattr(loja, 'pk', None):
         from fiscal.models import ConfiguracaoEmissaoFiscalLoja
         cfg = ConfiguracaoEmissaoFiscalLoja.objects.filter(loja_id=loja.pk).first()
-    nome = txt(cfg, 'nome_fantasia') or txt(loja, 'nome') or txt(cfg, 'razao_social') or 'EMPRESA NAO CADASTRADA'
+    nome = txt(cfg, 'nome_fantasia') or txt(loja, 'nome') or txt(cfg, 'razao_social') or 'EMPRESA NÃO CADASTRADA'
     razao = txt(cfg, 'razao_social')
     cnpj = txt(loja, 'cnpj')
     ie = txt(cfg, 'inscricao_estadual')
@@ -180,11 +180,11 @@ def _gerar_pdf(obj, pedido=False):
     telefone = txt(loja,'telefone')
     vendedor = d['vendedor']
     esquerda = [P(nome, negrito)]
-    if razao and razao != nome: esquerda.append(P('Razao social: ' + razao, pequeno))
-    esquerda.extend([P('CNPJ: ' + (cnpj or 'Nao cadastrado') + ('   IE: ' + ie if ie else ''), pequeno),
-                     P(endereco or 'Endereco nao cadastrado', pequeno),
+    if razao and razao != nome: esquerda.append(P('Razão social: ' + razao, pequeno))
+    esquerda.extend([P('CNPJ: ' + (cnpj or 'Não cadastrado') + ('   IE: ' + ie if ie else ''), pequeno),
+                     P(endereco or 'Endereço não cadastrado', pequeno),
                      P(end2 + (' - CEP: ' + cep if cep else ''), pequeno)])
-    direita_em = [P('Telefone: ' + (telefone or 'Nao cadastrado'), pequeno),
+    direita_em = [P('Telefone: ' + (telefone or 'Não cadastrado'), pequeno),
                   P('Vendedor: ' + str(vendedor), pequeno)]
     cab = tabela([[esquerda, direita_em]], [largura*.66, largura*.34],
                  [('BOX',(0,0),(-1,-1),.6,borda),('TOPPADDING',(0,0),(-1,-1),7),
@@ -193,7 +193,7 @@ def _gerar_pdf(obj, pedido=False):
     emissao = getattr(obj,'criado_em',None)
     if emissao is not None and timezone.is_aware(emissao):
         emissao = timezone.localtime(emissao)
-    nome_doc = 'PEDIDO' if pedido else 'ORCAMENTO'
+    nome_doc = 'PEDIDO' if pedido else 'ORÇAMENTO'
     faixa_doc = tabela([[P(nome_doc + ' Nº ' + str(d['numero']), centro), P(_pdf_data(emissao), direita)]],
                        [largura*.77, largura*.23],
                        [('BACKGROUND',(0,0),(-1,-1),faixa),('BOX',(0,0),(-1,-1),.5,borda)])
@@ -212,19 +212,22 @@ def _gerar_pdf(obj, pedido=False):
     if txt(cliente,'bairro'): end_cli += ' - ' + txt(cliente,'bairro')
     local_cli = '/'.join(x for x in (txt(cliente,'cidade'),txt(cliente,'uf')) if x)
     pares = [
-        ('Nome / Razao social:', nome_cli, 'Nome fantasia:', fantasia_cli),
-        ('CNPJ / CPF:', doc_cli, 'Endereco:', end_cli),
+        ('Nome / Razão social:', nome_cli, 'Nome fantasia:' if fantasia_cli else '', fantasia_cli),
+        ('CNPJ / CPF:', doc_cli, 'Endereço:', end_cli),
         ('CEP:', txt(cliente,'cep'), 'Cidade / UF:', local_cli),
         ('Telefone:', txt(cliente,'telefone'), 'E-mail:', txt(cliente,'email')),
     ]
     if not pf and txt(cliente,'inscricao_estadual'):
-        pares.append(('Inscricao estadual:', txt(cliente,'inscricao_estadual'), 'Contato:', txt(cliente,'contato_responsavel')))
+        pares.append(('Inscrição estadual:', txt(cliente,'inscricao_estadual'), 'Contato:', txt(cliente,'contato_responsavel')))
     elif txt(cliente,'contato_responsavel'):
         pares.append(('Contato:', txt(cliente,'contato_responsavel'), '', ''))
     dados_cliente = [[P(a, negrito), P(b, pequeno), P(c, negrito), P(e, pequeno)] for a,b,c,e in pares]
+    estilos_cliente = [('GRID',(0,0),(-1,-1),.4,borda)]
+    if not fantasia_cli:
+        estilos_cliente.append(('SPAN',(1,0),(3,0)))
     story.extend([titulo_secao('DADOS DO CLIENTE'),
                   tabela(dados_cliente,[largura*.19,largura*.31,largura*.17,largura*.33],
-                         [('GRID',(0,0),(-1,-1),.4,borda)]), Spacer(1,7)])
+                         estilos_cliente), Spacer(1,7)])
     story.append(titulo_secao('PRODUTOS'))
     colunas = [largura*x for x in (.055,.405,.075,.105,.125,.105,.13)]
     linhas = [[P('ITEM',negrito),P('NOME',negrito),P('UND.',negrito),
@@ -277,9 +280,14 @@ def _gerar_pdf(obj, pedido=False):
         forma = getattr(obj,'forma_pagamento',None)
         parcelas = getattr(obj,'parcelas',1) or 1
         cond = str(forma) + ' - ' + str(parcelas) + (' parcela' if parcelas==1 else ' parcelas') if forma else 'A definir'
-        story.extend([P('Condicoes de pagamento: '+cond,pequeno),Spacer(1,5)])
+        story.extend([P('Condições de pagamento: '+cond,pequeno),Spacer(1,5)])
+        if getattr(obj, 'valido_ate', None):
+            aviso = ('Os preços, descontos e condições comerciais apresentados são válidos até '
+                     + _pdf_data(obj.valido_ate)
+                     + '. Após essa data, poderão ser revisados mediante nova negociação.')
+            story.extend([P(aviso, pequeno), Spacer(1,5)])
     if d['observacoes']:
-        story.extend([P('OBSERVACOES:',negrito),P(d['observacoes'],pequeno),Spacer(1,7)])
+        story.extend([P('OBSERVAÇÕES:',negrito),P(d['observacoes'],pequeno),Spacer(1,7)])
     assinatura = tabela([[P('_______________________________________________',centro)],
                         [P('Assinatura do cliente',centro)]],[largura],
                        [('BOX',(0,0),(-1,-1),.7,borda),('TOPPADDING',(0,0),(-1,0),12),
@@ -290,7 +298,7 @@ def _gerar_pdf(obj, pedido=False):
         canvas.setFont(normal,6.5)
         canvas.setFillColor(preto)
         canvas.drawString(28,22,'Documento comercial - PRO Cash')
-        canvas.drawRightString(A4[0]-28,22,'Pagina '+str(documento.page))
+        canvas.drawRightString(A4[0]-28,22,'Página '+str(documento.page))
         canvas.restoreState()
     doc.build(story,onFirstPage=rodape,onLaterPages=rodape)
     return buffer.getvalue()

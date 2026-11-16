@@ -18,6 +18,9 @@ from pdv.models import Caixa, FormaPagamento, MovimentacaoCaixa, SessaoCaixa
 from pdv.services.vendas.caixa import calcular_saldo_sessao_caixa
 
 
+from accounts.permissions import PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA
+
+
 class R14EstornoUIBehaviorTests(TestCase):
     def setUp(self):
         self.matriz = Matriz.objects.create(nome="Matriz R14H2", cnpj="93939393000193")
@@ -32,6 +35,10 @@ class R14EstornoUIBehaviorTests(TestCase):
         PermissaoUsuario.objects.create(
             usuario=self.operador,
             permissao=PERMISSAO_FINANCEIRO_BAIXAR,
+        )
+        PermissaoUsuario.objects.create(
+            usuario=self.operador,
+            permissao=PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA,
         )
 
         self.pix = FormaPagamento.objects.create(
@@ -133,12 +140,12 @@ class R14EstornoUIBehaviorTests(TestCase):
         self.assertIsNone(estorno.movimentacao_caixa_id)
         self.assertEqual(MovimentacaoCaixa.objects.count(), 0)
 
-    def test_sem_permissao_baixar_estorno_e_bloqueado(self):
+    def test_sem_permissao_estornar_estorno_e_bloqueado(self):
         titulo, parcela = self.criar_titulo("r14h2-permissao")
         baixa = self.criar_baixa_pix(parcela)
         PermissaoUsuario.objects.filter(
             usuario=self.operador,
-            permissao=PERMISSAO_FINANCEIRO_BAIXAR,
+            permissao=PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA,
         ).delete()
         self.client.force_login(self.operador)
 
@@ -148,6 +155,26 @@ class R14EstornoUIBehaviorTests(TestCase):
         self.assertEqual(
             parcela.baixas.filter(tipo=BaixaFinanceira.Tipo.ESTORNO).count(), 0
         )
+
+    def test_baixar_sem_estornar_bloqueia_get_e_post(self):
+        titulo, parcela = self.criar_titulo("r14h2-acl-independente")
+        baixa = self.criar_baixa_pix(parcela)
+        PermissaoUsuario.objects.filter(
+            usuario=self.operador,
+            permissao=PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA,
+        ).delete()
+        self.client.force_login(self.operador)
+        url = self.url(titulo, baixa)
+        resposta_get = self.client.get(url)
+        resposta_post = self.client.post(url, {
+            "valor": "40.00",
+            "data": date.today().isoformat(),
+            "observacao": "Tentativa nao autorizada",
+            "chave_idempotencia": "00000000-0000-4000-8000-000000000001",
+        })
+        self.assertIn(resposta_get.status_code, (403, 404))
+        self.assertIn(resposta_post.status_code, (403, 404))
+        self.assertEqual(parcela.baixas.filter(tipo=BaixaFinanceira.Tipo.ESTORNO).count(), 0)
 
     def test_loja_nao_autorizada_retorna_404_sem_estorno(self):
         titulo, parcela = self.criar_titulo("r14h2-escopo")

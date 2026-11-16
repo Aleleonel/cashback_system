@@ -18,9 +18,9 @@
     <tbody>{% for m in movimentos %}<tr>
       <td class="text-nowrap">{{ m.criada_em|date:"d/m/Y H:i:s" }}</td>
       <td>{{ m.get_tipo_display }}</td>
-      <td>{{ m.descricao|default:"-" }}{% if m.venda_id %}<div class="small text-muted">Venda: {{ m.venda.uuid }}</div>{% endif %}{% if m.movimentacao_estornada_id %}<div class="small text-muted">Estorno da movimentação #{{ m.movimentacao_estornada_id }}</div>{% endif %}</td>
+      <td>{% if m.tipo|lower == "venda" and m.venda_id %}Recebimento de venda — PDV<div class="small text-muted">Referência: {{ m.venda.uuid|stringformat:"s"|slice:":8" }}</div>{% else %}{{ m.descricao|default:"-" }}{% endif %}{% if m.movimentacao_estornada_id %}<div class="small text-muted">Estorno da movimentação #{{ m.movimentacao_estornada_id }}</div>{% endif %}</td>
       <td>{{ m.operador.get_full_name|default:m.operador.username }}</td>
-      <td class="text-end text-nowrap">R$ {{ m.valor|floatformat:2 }}</td>
+      <td class="text-end text-nowrap">{% if m.tipo|lower == "sangria" %}− {% elif m.tipo|lower == "estorno" %}± {% else %}+ {% endif %}R$ {{ m.valor|floatformat:2 }}</td>
     </tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma movimentação registrada.</td></tr>{% endfor %}</tbody>
   </table></div></div></div>
   {% else %}<div class="alert alert-info">Você não possui uma sessão de caixa aberta. Abra seu caixa para consultar as movimentações.</div>{% endif %}

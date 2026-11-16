@@ -19,11 +19,13 @@ from accounts.services import usuario_tem_permissao
 from accounts.models import Usuario
 from accounts.permissions import (
     PERMISSAO_FINANCEIRO_BAIXAR,
+    PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA,
     PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO,
     PERMISSAO_FINANCEIRO_REABRIR_COMPETENCIA,
     PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO,
     PERMISSAO_FINANCEIRO_GERENCIAR,
     PERMISSAO_FINANCEIRO_LANCAR_DESPESA,
+    PERMISSAO_FINANCEIRO_IMPORTAR_CSV,
     PERMISSAO_FINANCEIRO_VISUALIZAR,
 )
 from empresas.models import Loja
@@ -31,6 +33,7 @@ from financeiro.models import BaixaFinanceira, CentroCusto, ContaFinanceira, Ins
 from financeiro.services import cancelar_titulo_financeiro, atualizar_lancamento_manual, criar_lancamento_manual, competencia_gerencial_esta_fechada
 from financeiro.forms import BaixaDinheiroForm, CancelarTituloForm, CentroCustoForm, ContaFinanceiraForm, EstornoBaixaForm, InstituicaoBancariaForm, LancamentoManualForm, PlanoContaForm
 from financeiro.importacao_csv import importar_titulos_csv
+from financeiro.identificacao_comercial import enriquecer_titulos
 from financeiro.selectors import ESCOPO_CONSOLIDADO, ESCOPO_LOJA, ESCOPO_MATRIZ, listar_titulos, resumo_fluxo_caixa, resumo_saldos
 
 
@@ -140,6 +143,7 @@ def _contexto_financeiro(request, modo_relatorio=False):
     saldos = resumo_saldos(matriz=matriz, escopo=escopo, loja=loja)
     queryset = listar_titulos(matriz=matriz, natureza=natureza, status=status, escopo=escopo, loja=loja)
     pagina = Paginator(queryset, 20).get_page(request.GET.get("page"))
+    enriquecer_titulos(pagina.object_list)
     return {
         "matriz": matriz,
         "lojas": lojas,
@@ -159,23 +163,6 @@ def _contexto_financeiro(request, modo_relatorio=False):
         "pagina": pagina,
     }
 
-
-@login_required
-@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
-def painel(request):
-    contexto = _contexto_financeiro(request)
-    if contexto is None:
-        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
-    return render(request, "financeiro/painel.html", contexto)
-
-
-@login_required
-@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
-def painel_relatorio(request):
-    contexto = _contexto_financeiro(request, modo_relatorio=True)
-    if contexto is None:
-        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
-    return render(request, "financeiro/painel.html", contexto)
 
 
 def _query_navegacao_titulos(request, incluir_pagina=True):
@@ -221,10 +208,28 @@ def _aplicar_periodo_titulos(qs, criterio, inicio, fim):
         qs = qs.filter(**limites)
     return qs.distinct() if criterio == "vencimento" and limites else qs
 
+@login_required
+@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
+def painel(request):
+    contexto = _contexto_financeiro(request)
+    if contexto is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+    return render(request, "financeiro/painel.html", contexto)
+
 
 @login_required
 @require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
+def painel_relatorio(request):
+    contexto = _contexto_financeiro(request, modo_relatorio=True)
+    if contexto is None:
+        return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
+    return render(request, "financeiro/painel.html", contexto)
+
+
+@login_required
 def titulos(request):
+    if not (usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_VISUALIZAR) or usuario_tem_permissao(request.user, "financeiro.visualizar_lancamentos_loja")):
+        return render(request, "403.html", {"mensagem": "Sem permissão de consulta financeira."}, status=403)
     contexto = _contexto_financeiro(request)
     if contexto is None:
         return HttpResponseForbidden("Usuario sem acesso ao Financeiro.")
@@ -241,6 +246,8 @@ def titulos(request):
         contexto["pagina"] = Paginator(_aplicar_periodo_titulos(qs, criterio, inicio, fim), 20).get_page(request.GET.get("page"))
     else:
         contexto["pagina"] = Paginator(TituloFinanceiro.objects.none(), 20).get_page(1)
+    enriquecer_titulos(contexto["pagina"].object_list)
+    contexto["pode_importar_csv"] = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_IMPORTAR_CSV)
     return render(request, "financeiro/titulos.html", contexto)
 
 
@@ -275,11 +282,11 @@ def titulos_exportar_csv(request):
     response.write("\ufeff")
     writer = csv.writer(response, delimiter=";")
     writer.writerow(["Emissao", "Natureza", "Descricao", "Loja", "Status", "Valor"])
-    for titulo in titulos:
+    for titulo in enriquecer_titulos(titulos):
         writer.writerow([
             titulo.data_emissao.strftime("%d/%m/%Y"),
             titulo.get_natureza_display(),
-            titulo.descricao,
+            titulo.descricao_comercial + ((" | " + titulo.referencia_comercial) if titulo.referencia_comercial else "") + ((" | " + titulo.forma_comercial) if titulo.forma_comercial else ""),
             titulo.loja.nome if titulo.loja else "Matriz",
             titulo.get_status_display(),
             str(titulo.valor_original).replace(".", ","),
@@ -289,7 +296,7 @@ def titulos_exportar_csv(request):
 
 
 @login_required
-@require_permission(PERMISSAO_FINANCEIRO_LANCAR_DESPESA)
+@require_permission(PERMISSAO_FINANCEIRO_IMPORTAR_CSV)
 def titulos_importar_csv(request):
     matriz = _matriz_usuario(request)
     escopo, loja, lojas = _resolver_escopo(request, matriz)
@@ -336,8 +343,9 @@ def titulos_importar_csv(request):
         },
     )
 @login_required
-@require_permission(PERMISSAO_FINANCEIRO_VISUALIZAR)
 def titulo_detalhe(request, titulo_uuid):
+    if not (usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_VISUALIZAR) or usuario_tem_permissao(request.user, "financeiro.visualizar_lancamentos_loja")):
+        return render(request, "403.html", {"mensagem": "Sem permissão de consulta financeira."}, status=403)
     matriz = _matriz_usuario(request)
     escopo, loja, lojas = _resolver_escopo(request, matriz)
     if escopo is None:
@@ -348,12 +356,19 @@ def titulo_detalhe(request, titulo_uuid):
     elif escopo == ESCOPO_LOJA:
         queryset = queryset.filter(loja=loja)
     titulo = get_object_or_404(queryset, uuid=titulo_uuid)
+    enriquecer_titulos([titulo])
+    repasse_taxa_protegido = (titulo.chave_idempotencia or "").startswith("adquirente:") and (titulo.chave_idempotencia or "").endswith(":taxa")
+    repasse_parcelas_protegidas = set(
+        BaixaFinanceira.objects.filter(parcela__titulo=titulo, tipo=BaixaFinanceira.Tipo.BAIXA,
+            chave_idempotencia__startswith="adquirente:", chave_idempotencia__endswith=":bruto")
+        .values_list("parcela_id", flat=True)
+    )
     parcelas = titulo.parcelas.all().prefetch_related(Prefetch("baixas", queryset=BaixaFinanceira.objects.select_related("forma_pagamento", "conta_financeira"))).order_by("numero")
     return render(request, "financeiro/titulo_detalhe.html", {
         "matriz": matriz, "lojas": lojas, "escopo": escopo, "loja": loja,
-        "titulo": titulo, "parcelas": parcelas, "query_filtros": _query_navegacao_titulos(request),
+        "titulo": titulo, "parcelas": parcelas, "query_filtros": _query_navegacao_titulos(request), "repasse_taxa_protegido": repasse_taxa_protegido, "repasse_parcelas_protegidas": repasse_parcelas_protegidas, "pode_registrar_baixa": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_BAIXAR), "pode_estornar_baixa": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA), "pode_estornar_repasse": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_GERENCIAR),
         "pode_editar_titulo": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_EDITAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status == TituloFinanceiro.Status.ABERTO and not titulo.parcelas.filter(baixas__isnull=False).exists() and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
-        "pode_cancelar_titulo": usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status != TituloFinanceiro.Status.CANCELADO and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
+        "pode_cancelar_titulo": not repasse_taxa_protegido and usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_CANCELAR_LANCAMENTO) and titulo.origem_tipo in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE} and titulo.status != TituloFinanceiro.Status.CANCELADO and not competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia),
     })
 
 @login_required
@@ -424,6 +439,8 @@ def titulo_cancelar(request, titulo_uuid):
     titulo = get_object_or_404(queryset, uuid=titulo_uuid)
     if titulo.origem_tipo not in {TituloFinanceiro.OrigemTipo.MANUAL, TituloFinanceiro.OrigemTipo.AJUSTE}:
         raise Http404("Titulo de origem automatica deve ser corrigido no fluxo de origem.")
+    if (titulo.chave_idempotencia or "").startswith("adquirente:") and (titulo.chave_idempotencia or "").endswith(":taxa"):
+        raise Http404("Taxa vinculada a repasse nao admite cancelamento isolado.")
     if titulo.status == TituloFinanceiro.Status.CANCELADO:
         raise Http404("Titulo ja cancelado.")
     if competencia_gerencial_esta_fechada(matriz=titulo.matriz, data_competencia=titulo.data_competencia):
@@ -711,9 +728,15 @@ def _extrato_conta_contexto(request, conta_uuid):
     matriz = _matriz_usuario(request)
     conta = get_object_or_404(ContaFinanceira.objects.select_related("loja", "instituicao"), uuid=conta_uuid, matriz=matriz)
     lojas = _lojas_autorizadas(request, matriz)
-    if conta.loja_id is not None and not lojas.filter(pk=conta.loja_id).exists():
+    if request.user.perfil == Usuario.PERFIL_OPERADOR:
+        escopo, loja_operacional, _ = _resolver_escopo(request, matriz)
+        if conta.loja_id != loja_operacional.pk:
+            raise Http404("Conta financeira fora da loja operacional.")
+    elif conta.loja_id is not None and not lojas.filter(pk=conta.loja_id).exists():
         raise Http404("Conta financeira fora do escopo autorizado.")
     eventos = BaixaFinanceira.objects.filter(conta_financeira=conta).select_related("forma_pagamento", "parcela__titulo", "parcela__titulo__loja")
+    if request.user.perfil == Usuario.PERFIL_OPERADOR:
+        eventos = eventos.filter(parcela__titulo__loja=loja_operacional)
     data_inicio=(request.GET.get("data_inicio") or "").strip(); data_fim=(request.GET.get("data_fim") or "").strip()
     tipo=(request.GET.get("tipo") or "").strip().upper(); natureza=(request.GET.get("natureza") or "").strip().upper()
     forma_pagamento=(request.GET.get("forma_pagamento") or "").strip(); busca=(request.GET.get("busca") or "").strip()
@@ -804,14 +827,42 @@ def lancamento_manual(request):
         matriz=matriz,
         lojas=lojas,
     )
+    if request.user.perfil == Usuario.PERFIL_OPERADOR:
+        escopo_operador, loja_operacional, _ = _resolver_escopo(request, matriz)
+        form.fields["loja"].required = True
+        form.fields["loja"].queryset = lojas.filter(pk=loja_operacional.pk)
+        if request.method != "POST":
+            form.fields["loja"].initial = loja_operacional.pk
+        if request.method == "POST" and (request.POST.get("loja") or "").strip() != str(loja_operacional.pk):
+            form.add_error("loja", "O lancamento deve pertencer a loja operacional.")
+    pode_baixar = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_BAIXAR)
+    # RET125C: a permissao operacional nao libera baixa financeira geral.
+    pode_pagar_despesa_operacional = (
+        request.user.perfil == Usuario.PERFIL_OPERADOR
+        and usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_LANCAR_DESPESA)
+        and usuario_tem_permissao(request.user, "financeiro.pagar_despesa_operacional")
+    )
+    pode_liquidar_lancamento = pode_baixar or pode_pagar_despesa_operacional
+    # F32P4H88Q4E39L: operators can debit only accounts of their own store.
+    # ModelChoiceField validates POST values against this same queryset.
+    if request.user.perfil == Usuario.PERFIL_OPERADOR:
+        form.fields["conta_financeira_imediata"].queryset = ContaFinanceira.objects.filter(
+            matriz=matriz, loja=loja_operacional, ativo=True,
+        ).order_by("nome")
     pode_gerenciar_financeiro = usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_GERENCIAR)
     if not pode_gerenciar_financeiro:
         form.fields["natureza"].choices = [
             (TituloFinanceiro.Natureza.PAGAR, TituloFinanceiro.Natureza.PAGAR.label),
         ]
 
+    if request.method == "POST" and request.POST.get("liquidar_agora") and not pode_liquidar_lancamento:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("Sem permissao para registrar baixa financeira.")
     if request.method == "POST" and form.is_valid():
         dados = form.cleaned_data
+        if dados.get("liquidar_agora") and not pode_liquidar_lancamento:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied("Sem permissao para registrar baixa financeira.")
         if not pode_gerenciar_financeiro:
             dados["natureza"] = TituloFinanceiro.Natureza.PAGAR
         valor_final = dados["valor_final"]
@@ -828,13 +879,19 @@ def lancamento_manual(request):
             return render(
                 request,
                 "financeiro/lancamento_manual.html",
-                {"matriz": matriz, "form": form, "chave_idempotencia": token_idempotencia},
+                {"matriz": matriz, "form": form, "chave_idempotencia": token_idempotencia, "pode_baixar": pode_liquidar_lancamento},
             )
         chave_idempotencia = f"manual-ui:{matriz.pk}:{request.user.pk}:{token_idempotencia}"
         descricao = dados["entidade_nome"] or dados["documento_referencia"] or "Lancamento manual"
 
         try:
-            titulo = criar_lancamento_manual(
+            from django.db import transaction
+            from django.utils import timezone
+            from pdv.choices import TipoFormaPagamento, StatusSessaoCaixa
+            from pdv.models import SessaoCaixa
+            from financeiro.services import registrar_baixa_financeira_com_caixa
+            with transaction.atomic():
+                titulo = criar_lancamento_manual(
                 matriz=matriz,
                 loja=dados["loja"],
                 natureza=dados["natureza"],
@@ -853,7 +910,32 @@ def lancamento_manual(request):
                 observacao=dados["observacao"],
                 usuario=request.user,
                 request=request,
-            )
+                )
+                if dados.get("liquidar_agora"):
+                    forma = dados["forma_pagamento_imediato"]
+                    conta = dados["conta_financeira_imediata"]
+                    dinheiro = forma.tipo == TipoFormaPagamento.DINHEIRO
+                    if dinheiro:
+                        if conta is not None:
+                            raise ValidationError({"conta_financeira_imediata": "Pagamento em dinheiro nao utiliza conta financeira."})
+                        sessao = SessaoCaixa.objects.select_for_update().filter(
+                            caixa__matriz=matriz, caixa__loja=dados["loja"],
+                            status=StatusSessaoCaixa.ABERTA, operador_abertura=request.user,
+                        ).first()
+                        if sessao is None:
+                            raise ValidationError("Abra uma sessao de caixa nesta loja antes de pagar em dinheiro.")
+                    else:
+                        sessao = None
+                        if conta is None:
+                            raise ValidationError({"conta_financeira_imediata": "Selecione a conta financeira."})
+                    parcela = titulo.parcelas.get(numero=1)
+                    registrar_baixa_financeira_com_caixa(
+                        parcela=parcela, valor=valor_final, data=timezone.localdate(),
+                        chave_idempotencia=f"{chave_idempotencia}:baixa-imediata",
+                        forma_pagamento=forma, conta_financeira=conta,
+                        sessao_caixa=sessao, operador=request.user if dinheiro else None,
+                        observacao=dados["observacao"], usuario=request.user, request=request,
+                    )
         except ValidationError as exc:
             if hasattr(exc, "message_dict"):
                 for campo, mensagens in exc.message_dict.items():
@@ -864,6 +946,10 @@ def lancamento_manual(request):
                 for mensagem in exc.messages:
                     form.add_error(None, mensagem)
         else:
+            if request.user.perfil == Usuario.PERFIL_OPERADOR and not usuario_tem_permissao(request.user, PERMISSAO_FINANCEIRO_VISUALIZAR):
+                from django.contrib import messages
+                messages.success(request, "Despesa registrada. Confira o pagamento e o caixa.")
+                return redirect("financeiro:lancamento_manual")
             return redirect("financeiro:titulo_detalhe", titulo_uuid=titulo.uuid)
 
     chave_idempotencia = (
@@ -874,11 +960,11 @@ def lancamento_manual(request):
     return render(
         request,
         "financeiro/lancamento_manual.html",
-        {"matriz": matriz, "form": form, "chave_idempotencia": chave_idempotencia},
+        {"matriz": matriz, "form": form, "chave_idempotencia": chave_idempotencia, "pode_baixar": pode_liquidar_lancamento},
     )
 
 @login_required
-@require_permission(PERMISSAO_FINANCEIRO_BAIXAR)
+@require_permission(PERMISSAO_FINANCEIRO_ESTORNAR_BAIXA)
 def baixa_estornar(request, titulo_uuid, parcela_id, baixa_id):
     from django.utils import timezone
     from financeiro.services import estornar_baixa_financeira_com_caixa
@@ -969,6 +1055,13 @@ def parcela_baixa_nova(request, titulo_uuid, parcela_id):
     if titulo.loja_id is None or not lojas.filter(pk=titulo.loja_id).exists():
         raise Http404("Titulo sem loja autorizada para baixa.")
     parcela = get_object_or_404(titulo.parcelas.all(), pk=parcela_id)
+    taxa_protegida = (titulo.chave_idempotencia or "").startswith("adquirente:") and (titulo.chave_idempotencia or "").endswith(":taxa")
+    recebivel_conciliado = BaixaFinanceira.objects.filter(
+        parcela=parcela, tipo=BaixaFinanceira.Tipo.BAIXA,
+        chave_idempotencia__startswith="adquirente:", chave_idempotencia__endswith=":bruto",
+    ).exists()
+    if taxa_protegida or recebivel_conciliado:
+        raise Http404("Baixa manual indisponivel para lancamento vinculado a adquirente.")
     formas_pagamento = FormaPagamento.objects.filter(matriz=matriz, ativa=True).order_by("nome")
     contas_financeiras = ContaFinanceira.objects.filter(matriz=matriz, ativo=True).filter(
         Q(loja__isnull=True) | Q(loja=titulo.loja)

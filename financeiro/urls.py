@@ -35,3 +35,10 @@ urlpatterns += [
  path("fechamento-gerencial/fechar/",fechamento_gerencial_fechar,name="fechamento_gerencial_fechar"),
  path("fechamento-gerencial/reabrir/",fechamento_gerencial_reabrir,name="fechamento_gerencial_reabrir"),
 ]
+
+# F32P4H88Q3 - conciliação de adquirente
+from . import views_conciliacao
+urlpatterns += [
+    path("adquirentes/repasses/novo/", views_conciliacao.repasse_novo, name="repasse_novo"),
+    path("adquirentes/repasses/<int:baixa_id>/estornar/", views_conciliacao.repasse_estornar, name="repasse_estornar"),
+]

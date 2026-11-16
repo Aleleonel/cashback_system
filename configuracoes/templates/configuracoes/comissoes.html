@@ -188,6 +188,19 @@
         </form>
       </div></div>
     </div>
+    {# F32-RET85: previa de comissoes #}
+    <div class="col-12" id="previa-comissoes"><div class="card shadow-sm border-0"><div class="card-body p-4">
+      <h2 class="h5 mb-1"><i class="bi bi-calculator me-2"></i>Prévia de comissões — {{ competencia_historico }}</h2>
+      <p class="small text-secondary">Estimativa somente para consulta. Valores podem mudar até o fechamento. Nenhum título financeiro é criado.</p>
+      {% for previa in previa_comissoes %}
+      <div class="border rounded-3 p-3 mb-3">
+        <div class="fw-semibold mb-2">{{ previa.loja.nome }} <span class="badge text-bg-warning">Não fechada</span></div>
+        <div class="row g-2 mb-3"><div class="col-md-4">Vendas: <strong>R$ {{ previa.vendas|moeda_br }}</strong></div><div class="col-md-4">Percentual: <strong>{{ previa.percentual }}%</strong></div><div class="col-md-4">Comissão prevista: <strong>R$ {{ previa.comissao|moeda_br }}</strong></div></div>
+        <div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Vendedor</th><th class="text-end">Vendas</th><th>Status</th><th class="text-end">Comissão prevista</th></tr></thead><tbody>
+        {% for vendedor in previa.vendedores %}<tr><td>{{ vendedor.nome }}</td><td class="text-end">R$ {{ vendedor.total|moeda_br }}</td><td>{% if vendedor.elegivel %}Elegível{% else %}Não elegível{% endif %}</td><td class="text-end">R$ {{ vendedor.comissao|moeda_br }}</td></tr>{% empty %}<tr><td colspan="4">Nenhuma venda elegível.</td></tr>{% endfor %}
+        </tbody></table></div>
+      </div>{% empty %}<p class="text-secondary">Nenhuma competência em aberto para as lojas selecionadas. Consulte o histórico abaixo.</p>{% endfor %}
+    </div></div></div>
     <div class="col-12"><div class="card shadow-sm border-0"><div class="card-body p-4">
       <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-3">
         <div>

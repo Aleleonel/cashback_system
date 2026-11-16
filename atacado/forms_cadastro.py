@@ -32,6 +32,13 @@ class OrcamentoAtacadoCadastroForm(forms.Form):
             matriz=matriz, ativo=True, is_active=True
         ).filter(Q(perfil="master") | Q(lojas__in=self.fields["loja"].queryset)).distinct().order_by("first_name", "username")
         self.fields["vendedor"].label_from_instance = lambda u: u.get_full_name() or u.username
+        from datetime import timedelta
+        from django.utils import timezone
+        from configuracoes.models import ConfiguracaoComercial
+        cfg = ConfiguracaoComercial.objects.filter(matriz=matriz).first()
+        dias = cfg.prazo_validade_orcamento_atacado_dias if cfg else 7
+        if not self.is_bound:
+            self.fields["validade"].initial = timezone.localdate() + timedelta(days=dias)
         self._matriz = matriz
         self._lojas = self.fields["loja"].queryset
         self.fields["cliente"].widget = forms.HiddenInput(attrs={"data-f32-client-id": "1"})

@@ -75,6 +75,8 @@ def listar_orcamentos(request):
     from django.core.paginator import Paginator
     from django.shortcuts import render
     from django.db.models import Q
+    from django.utils import timezone
+    from .models import StatusOrcamentoAtacado
 
     exigir_permissao(request.user, PERMISSAO_ATACADO_VISUALIZAR)
     matriz = None
@@ -102,7 +104,13 @@ def listar_orcamentos(request):
         qs = filtrar_orcamentos_autorizados(
             request, OrcamentoAtacado.objects.all()
         ).select_related("cliente", "loja", "vendedor")
-        if status:
+        # Situação efetiva: consulta somente leitura, inclusive nos filtros.
+        vencido = Q(status=StatusOrcamentoAtacado.ENVIADO, valido_ate__lt=timezone.now())
+        if status == StatusOrcamentoAtacado.EXPIRADO:
+            qs = qs.filter(Q(status=StatusOrcamentoAtacado.EXPIRADO) | vencido)
+        elif status == StatusOrcamentoAtacado.ENVIADO:
+            qs = qs.filter(status=StatusOrcamentoAtacado.ENVIADO).exclude(valido_ate__lt=timezone.now())
+        elif status:
             qs = qs.filter(status=status)
         if busca:
             filtros = Q(cliente__nome__icontains=busca)
@@ -121,6 +129,27 @@ def listar_orcamentos(request):
         "pode_gerar_pedido": __import__("accounts.services", fromlist=["usuario_tem_permissao"]).usuario_tem_permissao(request.user, __import__("accounts.permissions", fromlist=["PERMISSAO_ATACADO_GERAR_PEDIDO"]).PERMISSAO_ATACADO_GERAR_PEDIDO),
     })
 
+
+
+
+# F32P4H55 - Consulta comercial somente leitura, com escopo por matriz e loja.
+@login_required
+def detalhar_orcamento(request, pk):
+    from django.shortcuts import render
+    from accounts.permissions import PERMISSAO_ATACADO_VISUALIZAR
+    from .commercial_access import filtrar_orcamentos_autorizados
+    orc = get_object_or_404(
+        filtrar_orcamentos_autorizados(
+            request, OrcamentoAtacado.objects.select_related(
+                "matriz", "loja", "cliente", "vendedor", "forma_pagamento"
+            ), PERMISSAO_ATACADO_VISUALIZAR,
+        ), pk=pk,
+    )
+    return render(request, "atacado/orcamento_detalhes.html", {
+        "orc": orc,
+        "itens": orc.itens.select_related("produto").all(),
+        "historico": orc.transicoes.select_related("usuario").order_by("ocorrido_em", "pk"),
+    })
 
 # F32M5D - Cadastro inicial de orcamentos de atacado
 @login_required

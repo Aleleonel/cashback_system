@@ -49,6 +49,12 @@ class F2EA21DemonstrativoCaixaDBTests(TestCase):
             tipo=TipoFormaPagamento.OUTRO, gera_contas_receber=True,
             movimenta_caixa=False, ativa=True,
         )
+        # F32-RET60: grant explicito apenas na fixture; admin_loja nao herda PDV.
+        from accounts.models import PermissaoUsuario
+        from pdv.constants import PERMISSAO_PDV_FECHAR_CAIXA
+        PermissaoUsuario.objects.create(
+            usuario=self.admin, permissao=PERMISSAO_PDV_FECHAR_CAIXA
+        )
         self.client.force_login(self.admin)
 
     def venda(self, *, status, forma, valor):

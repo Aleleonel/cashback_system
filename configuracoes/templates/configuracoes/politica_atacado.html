@@ -55,6 +55,28 @@
         </div>
       </div>
     </section>
+    <!-- F32P4H51_VALIDADE_COMERCIAL -->
+    <section class="card border-0 shadow-sm mb-4" id="f32-validade-atacado">
+      <div class="card-body p-3 p-lg-4">
+        <h2 class="h5 mb-2">Validade comercial dos orçamentos</h2>
+        <p class="text-secondary small mb-3">Defina o prazo padrão das novas propostas de atacado da matriz.</p>
+        <div class="row g-3 align-items-start">
+          <div class="col-12 col-md-5 col-lg-4">
+            <label class="form-label fw-semibold" for="{{ form.prazo_validade_orcamento_atacado_dias.id_for_label }}">{{ form.prazo_validade_orcamento_atacado_dias.label }}</label>
+            <div class="input-group">
+              {{ form.prazo_validade_orcamento_atacado_dias }}
+              <span class="input-group-text">dias</span>
+            </div>
+            {% for erro in form.prazo_validade_orcamento_atacado_dias.errors %}<div class="text-danger small">{{ erro }}</div>{% endfor %}
+            <div class="form-text">Informe de 1 a 365 dias corridos. Padrão inicial: 7 dias.</div>
+          </div>
+          <div class="col-12 col-md-7 col-lg-8">
+            <p class="small text-secondary mb-1">A validade será sugerida nos novos orçamentos. Propostas vencidas ou sem data de validade não podem ser enviadas ou aprovadas.</p>
+            <p class="small text-secondary mb-0">Alterar este prazo não modifica orçamentos já cadastrados nem transfere sua titularidade para outro vendedor.</p>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="card border-0 shadow-sm">
       <div class="card-body p-3 p-lg-4">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">

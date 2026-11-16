@@ -65,14 +65,18 @@ class F32FDominioOrcamentoAtacadoTests(TestCase):
             transicionar_orcamento(o, StatusOrcamentoAtacado.PEDIDO_GERADO)
 
     def test_orcamento_expirado_nao_pode_ser_aprovado(self):
-        o = self.novo_orcamento(valido_ate=timezone.now() - timedelta(minutes=1))
+        o = self.novo_orcamento()
         transicionar_orcamento(o, StatusOrcamentoAtacado.ENVIADO)
+        o.valido_ate = timezone.now() - timedelta(minutes=1)
+        o.save(update_fields=["valido_ate"])
         with self.assertRaises(ValidationError):
             transicionar_orcamento(o, StatusOrcamentoAtacado.APROVADO)
 
     def test_expiracao_automatica_de_enviado(self):
-        o = self.novo_orcamento(valido_ate=timezone.now() - timedelta(minutes=1))
+        o = self.novo_orcamento()
         transicionar_orcamento(o, StatusOrcamentoAtacado.ENVIADO)
+        o.valido_ate = timezone.now() - timedelta(minutes=1)
+        o.save(update_fields=["valido_ate"])
         expirar_orcamento_se_necessario(o)
         self.assertEqual(o.status, StatusOrcamentoAtacado.EXPIRADO)
 

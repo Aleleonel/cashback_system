@@ -117,6 +117,9 @@ class LancamentoManualForm(forms.Form):
     )
 
     numero_parcelas = forms.IntegerField(min_value=1, initial=1)
+    liquidar_agora = forms.BooleanField(required=False, label="Pagar agora")
+    forma_pagamento_imediato = forms.ModelChoiceField(queryset=FormaPagamento.objects.none(), required=False, label="Forma de pagamento")
+    conta_financeira_imediata = forms.ModelChoiceField(queryset=ContaFinanceira.objects.none(), required=False, label="Conta financeira")
     observacao = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
 
     def __init__(self, *form_args, matriz=None, lojas=None, **form_kwargs):
@@ -172,6 +175,12 @@ class LancamentoManualForm(forms.Form):
                 ativo=True,
             ).order_by("codigo", "nome")
 
+        if matriz is not None:
+            from django.db.models import Q
+            self.fields["forma_pagamento_imediato"].queryset = FormaPagamento.objects.filter(matriz=matriz, ativa=True).order_by("nome")
+            self.fields["conta_financeira_imediata"].queryset = ContaFinanceira.objects.filter(matriz=matriz, ativo=True).filter(Q(loja__isnull=True) | Q(loja__in=lojas if lojas is not None else Loja.objects.none())).distinct().order_by("nome")
+        self.fields["forma_pagamento_imediato"].widget.attrs["class"] = "form-select"
+        self.fields["conta_financeira_imediata"].widget.attrs["class"] = "form-select"
         if lojas is None:
             self.fields["loja"].queryset = Loja.objects.none()
         else:
@@ -195,6 +204,13 @@ class LancamentoManualForm(forms.Form):
             else:
                 cleaned_data["valor_final"] = valor_final
 
+        if cleaned_data.get("liquidar_agora"):
+            if cleaned_data.get("natureza") != TituloFinanceiro.Natureza.PAGAR:
+                self.add_error("liquidar_agora", "Pagamento imediato exige natureza a pagar.")
+            if cleaned_data.get("numero_parcelas") != 1:
+                self.add_error("numero_parcelas", "Pagamento imediato exige parcela unica.")
+            if not cleaned_data.get("forma_pagamento_imediato"):
+                self.add_error("forma_pagamento_imediato", "Informe a forma de pagamento.")
         return cleaned_data
 class CancelarTituloForm(forms.Form):
     motivo = forms.CharField(

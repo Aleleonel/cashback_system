@@ -76,6 +76,7 @@ class RegrasComerciaisFormTests(TestCase):
             "atacado_ativo": True,
             "pedido_minimo_atacado": "750.00",
             "produto_promocional_conta_para_faixa_atacado": True,
+            "prazo_validade_orcamento_atacado_dias": "7",
         }, instance=self.configuracao)
         self.assertTrue(form.is_valid(), form.errors)
         form.save()

@@ -16,6 +16,11 @@ class F32P3YCaixaFinanceiroComissoesTests(TestCase):
 
     def test_recebimento_imediato_movimenta_caixa_uma_vez(self):
         pedido, sessao, operador, pagamentos = self.preparar()
+        # Este caso valida recebimento em DINHEIRO, nao pagamento eletronico.
+        self.assertEqual(len(pagamentos), 1)
+        FormaPagamento.objects.filter(pk=pagamentos[0]["forma_pagamento_id"]).update(
+            tipo="dinheiro", movimenta_caixa=True
+        )
         venda = consolidar_pedido_atacado_pdv(pedido=pedido, sessao_caixa=sessao, operador=operador, pagamentos=pagamentos)
         qs = MovimentacaoCaixa.objects.filter(venda=venda, tipo=TipoMovimentacaoCaixa.VENDA)
         self.assertEqual(qs.count(), 1)

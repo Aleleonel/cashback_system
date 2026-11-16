@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <h1 class="h3 mb-1">Conciliar repasse de cartão</h1>
+  <p class="text-muted mb-3">Selecione o recebível da venda. A taxa será descontada do crédito bancário.</p>
+  <form method="post" id="repasse-form" class="card card-body shadow-sm border-0" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+    {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-3">
+      {% for field in form %}
+      <div class="col-md-6">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<div class="text-danger small" role="alert">{{ error }}</div>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if not detalhes_recebiveis %}<div class="alert alert-info mt-3" role="status">Nenhum recebível elegível de cartão com saldo disponível foi encontrado para suas lojas. Títulos de crediário não podem ser conciliados aqui.</div>{% endif %}
+    <section id="detalhe-recebivel" class="border rounded p-3 mt-3 bg-light" aria-live="polite" hidden>
+      <h2 class="h6 mb-3">Detalhes do recebível selecionado</h2>
+      <div class="row g-2">
+        <div class="col-md-6"><span class="text-muted small">Cliente</span><div id="det-cliente" class="fw-semibold text-break"></div></div>
+        <div class="col-md-3"><span class="text-muted small">Loja</span><div id="det-loja"></div></div>
+        <div class="col-md-3"><span class="text-muted small">Situação</span><div id="det-status"></div></div>
+        <div class="col-md-3"><span class="text-muted small">Título / parcela</span><div id="det-titulo"></div></div>
+        <div class="col-md-3"><span class="text-muted small">Vencimento</span><div id="det-vencimento"></div></div>
+        <div class="col-md-3"><span class="text-muted small">Valor original</span><div id="det-original" class="fw-semibold"></div></div>
+        <div class="col-md-3"><span class="text-muted small">Forma original</span><div id="det-forma"></div></div><div class="col-md-3"><span class="text-muted small">Saldo disponível</span><div id="det-saldo" class="fw-bold"></div></div>
+      </div>
+    </section>
+    <div class="row g-3 mt-1">
+      <div class="col-md-6"><div class="border rounded p-3 bg-light" aria-live="polite"><div class="text-muted small">Crédito líquido previsto</div><div id="repasse-liquido" class="fs-4 fw-semibold">R$ 0,00</div><div id="repasse-aviso" class="small text-muted">Informe o valor bruto e a taxa.</div></div></div>
+      <div class="col-md-6"><div class="border rounded p-3"><div class="text-muted small">Identificador da operação</div><div class="small font-monospace text-break">{{ chave_idempotencia }}</div><div class="small text-muted">Identifica esta tentativa e ajuda a impedir lançamentos duplicados.</div></div></div>
+    </div>
+    <div class="mt-3 d-flex gap-2"><button type="button" id="repasse-revisar" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalConfirmarRepasse">Revisar e confirmar repasse</button><a href="{% url 'financeiro:painel' %}" class="btn btn-outline-secondary">Cancelar</a></div>
+    <div class="modal fade" id="modalConfirmarRepasse" tabindex="-1" aria-labelledby="tituloConfirmarRepasse" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="tituloConfirmarRepasse">Confirmar conciliação bancária</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+        <div class="modal-body"><p>Confira os valores antes de registrar o repasse.</p><dl class="row mb-0"><dt class="col-5">Bruto</dt><dd class="col-7" id="confirmar-bruto">—</dd><dt class="col-5">Taxa</dt><dd class="col-7" id="confirmar-taxa">—</dd><dt class="col-5">Crédito líquido</dt><dd class="col-7 fw-semibold" id="confirmar-liquido">—</dd></dl></div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="submit" id="repasse-enviar" class="btn btn-primary">Confirmar repasse</button></div>
+      </div></div>
+    </div>
+  </form>
+</div>
+{{ detalhes_recebiveis|json_script:"dados-recebiveis" }}
+<script>
+(function () {
+  const detalhes = JSON.parse(document.getElementById('dados-recebiveis').textContent);
+  const seletor = document.getElementById('id_parcela');
+  const painel = document.getElementById('detalhe-recebivel');
+  const formatar = new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'});
+  function mostrarDetalhes() {
+    const d = detalhes[seletor.value];
+    painel.hidden = !d;
+    if (!d) return;
+    const preencher = (id, valor) => document.getElementById(id).textContent = valor;
+    preencher('det-cliente', d.cliente);
+    preencher('det-loja', d.loja);
+    preencher('det-status', d.status);
+    preencher('det-titulo', '#' + d.titulo + ' / ' + d.parcela);
+    preencher('det-vencimento', d.vencimento);
+    preencher('det-original', formatar.format(Number(d.original)));
+    preencher('det-saldo', formatar.format(Number(d.saldo)));
+    preencher('det-forma', d.forma);
+    const forma = document.getElementById('id_forma_pagamento');
+    if (forma && d.forma_id && [...forma.options].some(o => o.value === String(d.forma_id))) forma.value = String(d.forma_id);
+  }
+  seletor.addEventListener('change', mostrarDetalhes);
+  mostrarDetalhes();
+  'use strict';
+  const bruto = document.getElementById('id_bruto');
+  const taxa = document.getElementById('id_taxa');
+  const saida = document.getElementById('repasse-liquido');
+  const aviso = document.getElementById('repasse-aviso');
+  const form = document.getElementById('repasse-form');
+  const botao = document.getElementById('repasse-enviar');
+  const moeda = new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'});
+  function numero(valor) {
+    const s = String(valor || '').trim().replace(/\s/g, '').replace(/^R\$/, '');
+    if (!s) return NaN;
+    const normalized = s.includes(',') ? s.replace(/\./g,'').replace(',', '.') : s;
+    return Number(normalized);
+  }
+  function atualizar() {
+    const b = numero(bruto.value), t = numero(taxa.value);
+    const selecionado = detalhes[seletor.value];
+    const saldo = selecionado ? Number(selecionado.saldo) : 0;
+    const valido = Number.isFinite(b) && Number.isFinite(t) && b > 0 && t >= 0 && t < b && b <= saldo;
+    saida.textContent = valido ? moeda.format(b-t) : '—';
+    aviso.textContent = valido ? 'Valor previsto para crédito na conta selecionada.' : 'Selecione um recebível e informe bruto até o saldo disponível, com taxa inferior ao bruto.';
+    document.getElementById('confirmar-bruto').textContent = Number.isFinite(b) ? moeda.format(b) : '—';
+    document.getElementById('confirmar-taxa').textContent = Number.isFinite(t) ? moeda.format(t) : '—';
+    document.getElementById('confirmar-liquido').textContent = valido ? moeda.format(b-t) : '—';
+  }
+  [bruto,taxa].forEach(el => el.addEventListener('input',atualizar));
+  seletor.addEventListener('change', function () {
+    const selecionado = detalhes[seletor.value];
+    if (selecionado) bruto.value = Number(selecionado.saldo).toFixed(2);
+    atualizar();
+  });
+  document.getElementById('repasse-revisar').addEventListener('click',atualizar);
+  form.addEventListener('submit',function(){botao.disabled=true;botao.textContent='Registrando...';});
+  atualizar();
+})();
+</script>
+{% endblock %}

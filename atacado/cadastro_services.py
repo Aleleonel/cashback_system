@@ -1,11 +1,20 @@
 from decimal import Decimal
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Max
 from .models import OrcamentoAtacado, ItemOrcamentoAtacado
 from .pricing import ItemPrecificacao, precificar_atacado
+
+def justificativa_comercial_atacado(*, promocional, elegivel):
+    """Motivo comercial registrado no snapshot do item do orcamento."""
+    if promocional:
+        return "Produto em promo\u00e7\u00e3o - desconto de atacado n\u00e3o cumulativo."
+    if not elegivel:
+        return "Produto n\u00e3o eleg\u00edvel \u00e0 pol\u00edtica de descontos de atacado."
+    return ""
+
 
 @transaction.atomic
 def criar_orcamento_atacado(*, matriz, loja, cliente, vendedor, itens, observacoes="", frete=Decimal("0.00"), validade=None, forma_pagamento=None, parcelas=1):
@@ -14,6 +23,11 @@ def criar_orcamento_atacado(*, matriz, loja, cliente, vendedor, itens, observaco
     frete = Decimal(str(frete if frete is not None else "0"))
     if not frete.is_finite() or frete < 0 or frete.as_tuple().exponent < -2 or frete >= Decimal("1000000000000"):
         raise ValidationError("Frete invalido.")
+    if validade is None:
+        from configuracoes.models import ConfiguracaoComercial
+        cfg = ConfiguracaoComercial.objects.filter(matriz=matriz).first()
+        dias = cfg.prazo_validade_orcamento_atacado_dias if cfg else 7
+        validade = timezone.localdate() + timedelta(days=dias)
     if validade is not None:
         if validade < timezone.localdate():
             raise ValidationError("A validade nao pode estar no passado.")
@@ -63,6 +77,9 @@ def criar_orcamento_atacado(*, matriz, loja, cliente, vendedor, itens, observaco
             produto_promocional=item.produto_promocional,
             atacado_elegivel=item.atacado_elegivel,
             conta_para_enquadramento=item.conta_para_enquadramento,
+            justificativa_negociacao=justificativa_comercial_atacado(
+                promocional=item.produto_promocional, elegivel=item.atacado_elegivel,
+            ),
         )
     orc.recalcular_totais()
     if orc.total != resultado.total_produtos + frete:

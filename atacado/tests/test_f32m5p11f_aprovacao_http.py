@@ -1,4 +1,6 @@
 from decimal import Decimal
+from datetime import timedelta
+from django.utils import timezone
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -44,7 +46,8 @@ class F32M5P11FHTTPTests(TestCase):
     def orcamento(self, status=StatusOrcamentoAtacado.ENVIADO, quantidade='4.000', loja=None):
         orc = OrcamentoAtacado.objects.create(
             matriz=self.matriz, loja=loja or self.loja, cliente=self.cliente,
-            status=status, subtotal_produtos=Decimal('40.00'), total=Decimal('40.00'),
+            status=status, valido_ate=timezone.now() + timedelta(days=10),
+            subtotal_produtos=Decimal('40.00'), total=Decimal('40.00'),
         )
         ItemOrcamentoAtacado.objects.create(
             orcamento=orc, produto=self.produto, quantidade=Decimal(quantidade),
@@ -143,6 +146,61 @@ class F32M5P11FHTTPTests(TestCase):
         self.client.force_login(self.master)
         orc = self.orcamento()
         self.assertEqual(self.post(orc, 'acao_invalida').status_code, 404)
+        self.assertFalse(PedidoAtacado.objects.exists())
+
+    # F32P4H58_VALIDACAO_DETALHES - testes HTTP de leitura e isolamento.
+    def test_detalhes_master_autorizado_sem_mutacao(self):
+        self.client.force_login(self.master)
+        orc = self.orcamento(status=StatusOrcamentoAtacado.ENVIADO)
+        antes = (orc.status, orc.vendedor_id, orc.valido_ate, orc.total)
+        response = self.client.get(reverse('atacado:orcamento_detalhes', args=[orc.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'atacado/orcamento_detalhes.html')
+        self.assertContains(response, self.cliente.nome)
+        self.assertContains(response, self.produto.nome)
+        orc.refresh_from_db()
+        self.assertEqual((orc.status, orc.vendedor_id, orc.valido_ate, orc.total), antes)
+        self.assertFalse(PedidoAtacado.objects.exists())
+        self.assertFalse(TransicaoOrcamentoAtacado.objects.exists())
+
+    def test_detalhes_outra_matriz_retorna_404(self):
+        self.client.force_login(self.master)
+        orc = OrcamentoAtacado.objects.create(
+            matriz=self.outra, loja=self.loja_b, cliente=self.cliente_b,
+        )
+        response = self.client.get(reverse('atacado:orcamento_detalhes', args=[orc.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_detalhes_loja_nao_autorizada_retorna_404(self):
+        usuario = get_user_model().objects.create_user(
+            username='f32p4h58_loja', password='F32P4H58!234',
+        )
+        usuario.perfil = 'admin_loja'
+        usuario.matriz = self.matriz
+        usuario.save()
+        usuario.lojas.add(self.loja)
+        self.client.force_login(usuario)
+        orc = self.orcamento(loja=self.loja2)
+        response = self.client.get(reverse('atacado:orcamento_detalhes', args=[orc.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_detalhes_superuser_exige_matriz_explicita(self):
+        superuser = get_user_model().objects.create_superuser(
+            username='f32p4h58_super', email='f32p4h58@example.test',
+            password='F32P4H58!234',
+        )
+        self.client.force_login(superuser)
+        orc = self.orcamento()
+        url = reverse('atacado:orcamento_detalhes', args=[orc.pk])
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.get(url + '?matriz=999999999').status_code, 404)
+        self.assertEqual(self.client.get(url + f'?matriz={self.outra.pk}').status_code, 404)
+        self.assertEqual(self.client.get(url + f'?matriz={self.matriz.pk}').status_code, 200)
+
+    def test_detalhes_sem_login_redireciona(self):
+        orc = self.orcamento()
+        response = self.client.get(reverse('atacado:orcamento_detalhes', args=[orc.pk]))
+        self.assertEqual(response.status_code, 302)
         self.assertFalse(PedidoAtacado.objects.exists())
 
     def test_sem_login_nao_altera(self):

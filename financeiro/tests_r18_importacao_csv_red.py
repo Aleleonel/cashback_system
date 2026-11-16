@@ -20,7 +20,7 @@ class R18ImportacaoCsvContratoRedTests(SimpleTestCase):
         inicio = self.views.index("def titulos_importar_csv")
         trecho = self.views[max(0, inicio - 350):inicio + 2600]
         self.assertIn("@login_required", trecho)
-        self.assertIn("@require_permission(PERMISSAO_FINANCEIRO_LANCAR_DESPESA)", trecho)
+        self.assertIn("@require_permission(PERMISSAO_FINANCEIRO_IMPORTAR_CSV)", trecho)
 
     def test_view_revalida_matriz_e_escopo_no_backend(self):
         inicio = self.views.index("def titulos_importar_csv")

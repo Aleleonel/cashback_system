@@ -6,6 +6,7 @@ urlpatterns = [
     path("", RedirectView.as_view(pattern_name="atacado:orcamentos_lista", permanent=False), name="inicio"),
     path("orcamentos/", views.listar_orcamentos, name="orcamentos_lista"),
     path("orcamentos/novo/", views.novo_orcamento, name="orcamento_novo"),
+    path("orcamentos/<int:pk>/detalhes/", views.detalhar_orcamento, name="orcamento_detalhes"),
     path("orcamentos/<int:pk>/acao/", views.acao_orcamento, name="orcamento_acao"),
     path("orcamentos/busca-comercial/", views.f32m5f3d_busca_comercial, name="busca_comercial"),
     path("orcamentos/<int:pk>/exportar/pdf/", views.orcamento_pdf, name="orcamento_pdf"),
