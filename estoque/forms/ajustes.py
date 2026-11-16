@@ -1,6 +1,7 @@
 """Formulário de ajuste manual de estoque."""
 
 from django import forms
+from estoque.forms.widgets_loja_fixa import LojaOperacionalFixaWidget
 
 from empresas.models import Loja
 from produtos.models import Produto
@@ -49,11 +50,12 @@ class AjusteEstoqueForm(forms.Form):
         }),
     )
 
-    def __init__(self, *args, matriz, loja_inicial=None, **kwargs):
+    def __init__(self, *args, matriz, loja_inicial=None, lojas_permitidas=None, fixar_loja=False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['loja'].queryset = Loja.objects.filter(
-            matriz=matriz
-        ).order_by('nome')
+        lojas = Loja.objects.filter(matriz=matriz)
+        if lojas_permitidas is not None:
+            lojas = lojas.filter(pk__in=lojas_permitidas.values_list('pk', flat=True))
+        self.fields['loja'].queryset = lojas.order_by('nome')
         self.fields['produto'].queryset = Produto.objects.filter(
             matriz=matriz,
             controla_estoque=True,
@@ -61,6 +63,12 @@ class AjusteEstoqueForm(forms.Form):
 
         if loja_inicial is not None:
             self.fields['loja'].initial = loja_inicial
+        if fixar_loja:
+            lojas_validas = self.fields['loja'].queryset
+            if lojas_validas.count() != 1:
+                raise ValueError('Loja operacional fixa exige exatamente uma loja autorizada.')
+            self.fields['loja'].initial = lojas_validas.get()
+            self.fields['loja'].widget = LojaOperacionalFixaWidget(loja_id=lojas_validas.get().pk, loja_nome=str(lojas_validas.get()))
 
     def clean_quantidade_ajuste(self):
         quantidade = self.cleaned_data['quantidade_ajuste']

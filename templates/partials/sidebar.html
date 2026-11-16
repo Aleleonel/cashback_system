@@ -149,6 +149,7 @@
             <i class="bi bi-boxes me-2"></i>
             Estoque
         </a>
+
         <a href="{% url 'relatorios:financeiro' %}" class="nav-link {% if request.resolver_match.namespace == 'relatorios' and request.resolver_match.url_name == 'financeiro' or request.resolver_match.url_name == 'financeiro_painel' %}active bg-primary text-white{% else %}text-white{% endif %}">
             <i class="bi bi-cash-stack me-2"></i>
             Financeiro
@@ -189,6 +190,7 @@
 
 
 
+        {% if pode_ver_produtos or pode_ver_estoque %}
         <div class="sidebar-section-heading" data-sidebar-section="produtos-estoque" data-sidebar-icon="bi-box-seam">
             <div class="text-uppercase text-white-50 small fw-semibold"
                  style="letter-spacing: .06em;">
@@ -203,10 +205,13 @@
         </a>
         {% endif %}
 
+        {% if pode_ver_estoque %}
         <a href="{% url 'estoque:lista_movimentacoes' %}" class="nav-link text-white" data-menu-pdv-estoque="true">
             <i class="bi bi-boxes me-2"></i>
             Estoque
         </a>
+        {% endif %}
+        {% endif %}
 
 
 

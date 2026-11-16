@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views.dashboard import dashboard_estoque
+from .views.saldos import posicao_estoque
 from .views import (
     criar_ajuste_estoque,
     criar_entrada_estoque,
@@ -14,6 +15,7 @@ app_name = 'estoque'
 
 
 urlpatterns = [
+    path('posicao/', posicao_estoque, name='posicao_estoque'),
     path(
         'dashboard/',
         dashboard_estoque,

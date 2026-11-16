@@ -1,6 +1,7 @@
 """Formulário de transferência de estoque entre lojas."""
 
 from django import forms
+from estoque.forms.widgets_loja_fixa import LojaOperacionalFixaWidget
 
 from empresas.models import Loja
 from produtos.models import Produto
@@ -55,10 +56,13 @@ class TransferenciaEstoqueForm(forms.Form):
         }),
     )
 
-    def __init__(self, *args, matriz, loja_inicial=None, **kwargs):
+    def __init__(self, *args, matriz, loja_inicial=None, lojas_origem_permitidas=None, fixar_loja=False, **kwargs):
         super().__init__(*args, **kwargs)
         lojas = Loja.objects.filter(matriz=matriz).order_by('nome')
-        self.fields['loja_origem'].queryset = lojas
+        origens = lojas
+        if lojas_origem_permitidas is not None:
+            origens = lojas.filter(pk__in=lojas_origem_permitidas.values_list('pk', flat=True))
+        self.fields['loja_origem'].queryset = origens
         self.fields['loja_destino'].queryset = lojas
         self.fields['produto'].queryset = Produto.objects.filter(
             matriz=matriz,
@@ -67,6 +71,12 @@ class TransferenciaEstoqueForm(forms.Form):
 
         if loja_inicial is not None:
             self.fields['loja_origem'].initial = loja_inicial
+        if fixar_loja:
+            lojas_validas = self.fields['loja_origem'].queryset
+            if lojas_validas.count() != 1:
+                raise ValueError('Loja operacional fixa exige exatamente uma loja autorizada.')
+            self.fields['loja_origem'].initial = lojas_validas.get()
+            self.fields['loja_origem'].widget = LojaOperacionalFixaWidget(loja_id=lojas_validas.get().pk, loja_nome=str(lojas_validas.get()))
 
     def clean(self):
         dados = super().clean()

@@ -96,6 +96,21 @@ PERMISSAO_PRODUTOS_GERENCIAR_AUXILIARES = (
 )
 
 
+PERMISSAO_ESTOQUE_VISUALIZAR = 'estoque.visualizar'
+
+# F33B1 - Permissoes granulares para operacoes manuais de estoque
+PERMISSAO_ESTOQUE_ENTRADA_MANUAL = 'estoque.entrada_manual'
+PERMISSAO_ESTOQUE_SAIDA_MANUAL = 'estoque.saida_manual'
+PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL = 'estoque.transferencia_manual'
+PERMISSAO_ESTOQUE_AJUSTE_MANUAL = 'estoque.ajuste_manual'
+PERMISSOES_ESTOQUE_OPERACOES = {
+    PERMISSAO_ESTOQUE_ENTRADA_MANUAL,
+    PERMISSAO_ESTOQUE_SAIDA_MANUAL,
+    PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL,
+    PERMISSAO_ESTOQUE_AJUSTE_MANUAL,
+}
+
+
 # ==========================================================
 # CASHBACK
 # ==========================================================
@@ -191,6 +206,9 @@ PERMISSOES_PDV = PERMISSOES_PDV_OPERADOR | PERMISSOES_PDV_SUPERVISAO
 # PDV-ACL-01 - PERFIS CONSOLIDADOS
 PERMISSOES_POR_PERFIL = {
     'master': (
+        {PERMISSAO_ESTOQUE_VISUALIZAR}
+        | PERMISSOES_ESTOQUE_OPERACOES
+        |
         PERMISSOES_CLIENTES
         | PERMISSOES_CASHBACK
         | PERMISSOES_CAMPANHAS
@@ -203,6 +221,9 @@ PERMISSOES_POR_PERFIL = {
 
     ),
     'admin_loja': (
+        {PERMISSAO_ESTOQUE_VISUALIZAR}
+        | PERMISSOES_ESTOQUE_OPERACOES
+        |
         PERMISSOES_CLIENTES
         | PERMISSOES_EMPRESA
         | PERMISSOES_CASHBACK
@@ -301,6 +322,12 @@ def get_permissoes_extras_disponiveis():
     )
 
     itens = list(_get_permissoes_extras_disponiveis_sem_pdv())
+    itens.extend([
+        {'codigo': PERMISSAO_ESTOQUE_ENTRADA_MANUAL, 'nome': 'Estoque: entrada manual', 'grupo': 'Estoque'},
+        {'codigo': PERMISSAO_ESTOQUE_SAIDA_MANUAL, 'nome': 'Estoque: saida manual', 'grupo': 'Estoque'},
+        {'codigo': PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL, 'nome': 'Estoque: transferencia manual', 'grupo': 'Estoque'},
+        {'codigo': PERMISSAO_ESTOQUE_AJUSTE_MANUAL, 'nome': 'Estoque: ajuste manual', 'grupo': 'Estoque'},
+    ])
     codigos_existentes = {item["codigo"] for item in itens}
 
     permissoes_financeiro = [
@@ -329,6 +356,16 @@ def get_permissoes_extras_disponiveis():
         if item["codigo"] not in codigos_existentes
     )
     codigos_existentes.update(item["codigo"] for item in permissoes_fiscal)
+
+    permissoes_estoque = [
+        {"codigo": PERMISSAO_ESTOQUE_VISUALIZAR, "nome": "Estoque: consultar movimentacoes da loja", "grupo": "Estoque"},
+        {"codigo": PERMISSAO_ESTOQUE_ENTRADA_MANUAL, "nome": "Estoque: entrada manual", "grupo": "Estoque"},
+        {"codigo": PERMISSAO_ESTOQUE_SAIDA_MANUAL, "nome": "Estoque: saida manual", "grupo": "Estoque"},
+        {"codigo": PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL, "nome": "Estoque: transferencia manual", "grupo": "Estoque"},
+        {"codigo": PERMISSAO_ESTOQUE_AJUSTE_MANUAL, "nome": "Estoque: ajuste manual", "grupo": "Estoque"},
+    ]
+    itens.extend(item for item in permissoes_estoque if item["codigo"] not in codigos_existentes)
+    codigos_existentes.update(item["codigo"] for item in permissoes_estoque)
 
     permissoes_pdv = [
         {"codigo": PERMISSAO_PDV_VISUALIZAR, "nome": "Visualizar PDV", "grupo": "PDV / Frente de Caixa"},

@@ -1,4 +1,9 @@
 from accounts.permissions import (
+    PERMISSAO_ESTOQUE_VISUALIZAR,
+    PERMISSAO_ESTOQUE_ENTRADA_MANUAL,
+    PERMISSAO_ESTOQUE_SAIDA_MANUAL,
+    PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL,
+    PERMISSAO_ESTOQUE_AJUSTE_MANUAL,
     PERMISSAO_FINANCEIRO_VISUALIZAR,
     PERMISSAO_FINANCEIRO_GERENCIAR,
     PERMISSAO_FINANCEIRO_LANCAR_DESPESA,
@@ -27,7 +32,15 @@ def menu_permissoes(request):
     if not usuario.is_authenticated:
         return {}
 
+    estoque_acl = {
+        'pode_ver_estoque': usuario_tem_permissao(usuario, PERMISSAO_ESTOQUE_VISUALIZAR),
+        'pode_entrada_estoque': usuario_tem_permissao(usuario, PERMISSAO_ESTOQUE_ENTRADA_MANUAL),
+        'pode_saida_estoque': usuario_tem_permissao(usuario, PERMISSAO_ESTOQUE_SAIDA_MANUAL),
+        'pode_transferencia_estoque': usuario_tem_permissao(usuario, PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL),
+        'pode_ajuste_estoque': usuario_tem_permissao(usuario, PERMISSAO_ESTOQUE_AJUSTE_MANUAL),
+    }
     return {
+        **estoque_acl,
         'pode_ver_financeiro': usuario_tem_permissao(
             usuario,
             PERMISSAO_FINANCEIRO_VISUALIZAR

@@ -8,6 +8,14 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 
+from accounts.services import exigir_permissao
+from accounts.permissions import (
+    PERMISSAO_ESTOQUE_VISUALIZAR,
+    PERMISSAO_ESTOQUE_ENTRADA_MANUAL,
+    PERMISSAO_ESTOQUE_SAIDA_MANUAL,
+    PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL,
+    PERMISSAO_ESTOQUE_AJUSTE_MANUAL,
+)
 from core.services import get_contexto_operacional_usuario
 from estoque.choices import OrigemMovimentacao
 from estoque.forms import (
@@ -27,6 +35,7 @@ from estoque.services import (
 
 @login_required
 def lista_movimentacoes(request):
+    exigir_permissao(request.user, PERMISSAO_ESTOQUE_VISUALIZAR)
     contexto = get_contexto_operacional_usuario(request.user)
     matriz = contexto['matriz']
     lojas_relacao = request.user.lojas.filter(matriz=matriz)
@@ -120,16 +129,39 @@ def _render_operacao(request, *, form, titulo, subtitulo, icone, texto_botao):
     )
 
 
+def _lojas_permitidas_movimentacao(request, matriz, contexto):
+    from django.core.exceptions import PermissionDenied
+    from empresas.models import Loja
+
+    lojas_matriz = Loja.objects.filter(matriz=matriz)
+    if getattr(request.user, 'perfil', None) != getattr(request.user, 'PERFIL_OPERADOR', 'operador'):
+        return lojas_matriz
+    lojas_usuario = request.user.lojas.filter(matriz=matriz)
+    loja_id = request.session.get('loja_operacional_id')
+    loja = lojas_usuario.filter(pk=loja_id).first() if loja_id is not None else None
+    if loja is None:
+        loja_contexto = contexto.get('loja')
+        if loja_contexto is not None:
+            loja = lojas_usuario.filter(pk=loja_contexto.pk).first()
+    if loja is None:
+        raise PermissionDenied('Operador sem loja operacional valida para movimentacao.')
+    return lojas_usuario.filter(pk=loja.pk)
+
+
 @login_required
 def criar_entrada_estoque(request):
+    exigir_permissao(request.user, PERMISSAO_ESTOQUE_ENTRADA_MANUAL)
     contexto = get_contexto_operacional_usuario(request.user)
     matriz = contexto['matriz']
     loja_inicial = contexto.get('loja')
+    lojas_autorizadas = _lojas_permitidas_movimentacao(request, matriz, contexto)
 
     form = EntradaEstoqueForm(
         request.POST or None,
         matriz=matriz,
         loja_inicial=loja_inicial,
+        lojas_permitidas=lojas_autorizadas,
+        fixar_loja=(getattr(request.user, 'perfil', None) == getattr(request.user, 'PERFIL_OPERADOR', 'operador')),
     )
 
     if request.method == 'POST' and form.is_valid():
@@ -170,14 +202,18 @@ def criar_entrada_estoque(request):
 
 @login_required
 def criar_saida_estoque(request):
+    exigir_permissao(request.user, PERMISSAO_ESTOQUE_SAIDA_MANUAL)
     contexto = get_contexto_operacional_usuario(request.user)
     matriz = contexto['matriz']
     loja_inicial = contexto.get('loja')
+    lojas_autorizadas = _lojas_permitidas_movimentacao(request, matriz, contexto)
 
     form = SaidaEstoqueForm(
         request.POST or None,
         matriz=matriz,
         loja_inicial=loja_inicial,
+        lojas_permitidas=lojas_autorizadas,
+        fixar_loja=(getattr(request.user, 'perfil', None) == getattr(request.user, 'PERFIL_OPERADOR', 'operador')),
     )
 
     if request.method == 'POST' and form.is_valid():
@@ -218,14 +254,18 @@ def criar_saida_estoque(request):
 
 @login_required
 def criar_transferencia_estoque(request):
+    exigir_permissao(request.user, PERMISSAO_ESTOQUE_TRANSFERENCIA_MANUAL)
     contexto = get_contexto_operacional_usuario(request.user)
     matriz = contexto['matriz']
     loja_inicial = contexto.get('loja')
+    lojas_autorizadas = _lojas_permitidas_movimentacao(request, matriz, contexto)
 
     form = TransferenciaEstoqueForm(
         request.POST or None,
         matriz=matriz,
         loja_inicial=loja_inicial,
+        lojas_origem_permitidas=lojas_autorizadas,
+        fixar_loja=(getattr(request.user, 'perfil', None) == getattr(request.user, 'PERFIL_OPERADOR', 'operador')),
     )
 
     if request.method == 'POST' and form.is_valid():
@@ -265,14 +305,18 @@ def criar_transferencia_estoque(request):
 
 @login_required
 def criar_ajuste_estoque(request):
+    exigir_permissao(request.user, PERMISSAO_ESTOQUE_AJUSTE_MANUAL)
     contexto = get_contexto_operacional_usuario(request.user)
     matriz = contexto['matriz']
     loja_inicial = contexto.get('loja')
+    lojas_autorizadas = _lojas_permitidas_movimentacao(request, matriz, contexto)
 
     form = AjusteEstoqueForm(
         request.POST or None,
         matriz=matriz,
         loja_inicial=loja_inicial,
+        lojas_permitidas=lojas_autorizadas,
+        fixar_loja=(getattr(request.user, 'perfil', None) == getattr(request.user, 'PERFIL_OPERADOR', 'operador')),
     )
 
     if request.method == 'POST' and form.is_valid():

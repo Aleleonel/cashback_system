@@ -15,15 +15,19 @@
                     Ver movimentações
                 </a>
 
+{% if pode_entrada_estoque %}
                 <a class="btn btn-outline-primary" href="{% url 'estoque:criar_entrada_estoque' %}">
                     <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>
                     Nova entrada
                 </a>
+                {% endif %}
 
+{% if pode_saida_estoque %}
                 <a class="btn btn-outline-primary" href="{% url 'estoque:criar_saida_estoque' %}">
                     <i class="bi bi-box-arrow-up me-1" aria-hidden="true"></i>
                     Nova saída
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
