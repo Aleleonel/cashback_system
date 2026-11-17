@@ -16,7 +16,7 @@
 
     <div class="card-body">
 
-        <form method="post" novalidate>
+        <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -26,6 +26,21 @@
             {% endif %}
 
             <h2 class="h6 mb-3">Identificação</h2>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form.imagem_principal.id_for_label }}">Imagem principal do produto</label>
+                {{ form.imagem_principal }}
+                {{ form.imagem_principal.errors }}
+                <div class="form-text" role="note">
+                    <strong>Orientações para a imagem:</strong> JPG, PNG ou WebP; tamanho máximo de 3 MB.
+                    Dimensão recomendada: <strong>600 × 800 pixels</strong> (não obrigatória).
+                    Mantenha o produto inteiro, centralizado, preferencialmente com fundo branco ou transparente.
+                    A proporção será preservada na exibição do PDV.
+                </div>
+                {% if produto.imagem_principal %}
+                <img src="{{ produto.imagem_principal.url }}" alt="Imagem atual de {{ produto.nome }}" style="max-height:110px;max-width:110px;object-fit:contain" class="d-block my-2 rounded border">
+                {{ form.remover_imagem }} <label for="{{ form.remover_imagem.id_for_label }}">Remover imagem atual</label>
+                {% endif %}
+            </div>
 
             <div class="row g-3">
                 <div class="col-md-4">

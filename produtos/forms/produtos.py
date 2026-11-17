@@ -19,6 +19,18 @@ def somente_numeros(valor):
 
 
 class ProdutoForm(BootstrapModelForm):
+    remover_imagem = forms.BooleanField(required=False, label='Remover imagem atual')
+
+    def clean_imagem_principal(self):
+        imagem = self.cleaned_data.get('imagem_principal')
+        if imagem:
+            if imagem.size > 3 * 1024 * 1024:
+                raise forms.ValidationError('A imagem deve ter no máximo 3 MB.')
+            from pathlib import Path
+            if Path(imagem.name).suffix.lower() not in {'.jpg', '.jpeg', '.png', '.webp'}:
+                raise forms.ValidationError('Use JPG, PNG ou WebP.')
+        return imagem
+
     gtin = forms.CharField(
         required=False,
         max_length=18,
@@ -54,6 +66,7 @@ class ProdutoForm(BootstrapModelForm):
             'ncm',
             'nome',
             'descricao',
+            'imagem_principal',
             'custo_base',
             'preco_venda',
             'atacado_elegivel',

@@ -1,4 +1,4 @@
-﻿from django.db import transaction
+from django.db import transaction
 
 from produtos.models import Produto
 from produtos.services.auditoria import auditar_criacao
@@ -19,10 +19,12 @@ def criar_produto(
         matriz=matriz,
         dados=dados,
     )
+    imagem = dados.get('imagem_principal')
 
     produto = Produto.objects.create(
         matriz=matriz,
         **dados_validados,
+        imagem_principal=imagem,
     )
 
     auditar_criacao(

@@ -14,6 +14,11 @@ from .marcas import Marca
 from .unidades_medida import UnidadeMedida
 
 
+def caminho_imagem_produto(instancia, nome_arquivo):
+    # Caminho gerado pelo servidor, sem confiar no nome original do upload.
+    return f'produtos/matriz_{instancia.matriz_id}/{instancia.uuid.hex}/{__import__("uuid").uuid4().hex}.{nome_arquivo.rsplit(".", 1)[-1].lower()}'
+
+
 class Produto(models.Model):
     uuid = models.UUIDField(
         default=uuid.uuid4,
@@ -82,6 +87,13 @@ class Produto(models.Model):
 
     descricao = models.TextField(
         blank=True
+    )
+
+    imagem_principal = models.ImageField(
+        upload_to=caminho_imagem_produto,
+        blank=True,
+        null=True,
+        verbose_name='Imagem principal',
     )
 
     custo_base = models.DecimalField(

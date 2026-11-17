@@ -1,4 +1,5 @@
 from django.db import transaction
+from produtos.models import Produto
 
 from produtos.services.auditoria import auditar_edicao
 
@@ -50,6 +51,12 @@ def editar_produto(
     loja=None,
     request=None,
 ):
+    imagem = dados.get('imagem_principal')
+    remover_imagem = bool(dados.get('remover_imagem'))
+    imagem_anterior = produto.imagem_principal.name if produto.imagem_principal else None
+    armazenamento_anterior = produto.imagem_principal.storage if imagem_anterior else None
+    # Os dados de imagem nao entram nas validacoes comerciais/fiscais.
+    dados = {k: v for k, v in dados.items() if k not in {'imagem_principal', 'remover_imagem'}}
     dados_completos = {
         campo: getattr(produto, campo)
         for campo in CAMPOS_EDITAVEIS
@@ -66,14 +73,26 @@ def editar_produto(
     for campo, valor in dados_validados.items():
         setattr(produto, campo, valor)
 
+    campos_update = [*CAMPOS_EDITAVEIS, 'atualizado_em']
+    if remover_imagem:
+        produto.imagem_principal = None
+        campos_update.append('imagem_principal')
+    elif imagem:
+        produto.imagem_principal = imagem
+        campos_update.append('imagem_principal')
+
     produto.full_clean()
 
     produto.save(
-        update_fields=[
-            *CAMPOS_EDITAVEIS,
-            'atualizado_em',
-        ]
+        update_fields=campos_update
     )
+
+    imagem_atual = produto.imagem_principal.name if produto.imagem_principal else None
+    if imagem_anterior and imagem_anterior != imagem_atual:
+        def limpar_imagem_anterior():
+            if not Produto.objects.filter(imagem_principal=imagem_anterior).exists():
+                armazenamento_anterior.delete(imagem_anterior)
+        transaction.on_commit(limpar_imagem_anterior)
 
     auditar_edicao(
         recurso='produtos.produto',

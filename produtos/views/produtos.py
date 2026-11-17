@@ -201,6 +201,7 @@ def criar_produto_view(request):
     if request.method == 'POST':
         form = ProdutoForm(
             request.POST,
+            request.FILES,
             matriz=matriz,
         )
 
@@ -267,6 +268,7 @@ def editar_produto_view(
     if request.method == 'POST':
         form = ProdutoForm(
             request.POST,
+            request.FILES,
             instance=produto,
             matriz=matriz,
         )

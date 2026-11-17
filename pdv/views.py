@@ -251,9 +251,14 @@ def _serializar_beneficios(venda):
                 voucher = candidato
                 desconto = desconto_candidato
 
-    cashback_previsto = calcular_cashback(
-        valor_compra=valor_compra,
-        percentual=configuracao.percentual_cashback,
+    cliente_identificado = venda.cliente.cpf != "CONSUMIDOR"
+    cashback_previsto = (
+        calcular_cashback(
+            valor_compra=valor_compra,
+            percentual=configuracao.percentual_cashback,
+        )
+        if cliente_identificado
+        else Decimal("0.00")
     )
 
     voucher_serializado = None
@@ -666,6 +671,7 @@ def buscar_produtos(request):
             "gtin": produto.gtin,
             "preco": str(produto.preco_venda),
             "controla_estoque": produto.controla_estoque,
+            "imagem_url": produto.imagem_principal.url if produto.imagem_principal else None,
         }
         for produto in produtos[:12]
     ]

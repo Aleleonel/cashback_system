@@ -1,4 +1,4 @@
-﻿{% extends 'produtos/base_catalogo.html' %}
+{% extends 'produtos/base_catalogo.html' %}
 
 {% block nav_produtos %}active{% endblock %}
 
@@ -37,6 +37,9 @@
     </div>
 
     <div class="card-body">
+        {% if produto.imagem_principal %}
+        <div class="mb-3"><img src="{{ produto.imagem_principal.url }}" alt="Imagem de {{ produto.nome }}" style="max-width:180px;max-height:180px;object-fit:contain" class="rounded border"></div>
+        {% endif %}
 
         <div class="row g-3 mb-4">
 

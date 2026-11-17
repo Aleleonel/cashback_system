@@ -195,9 +195,6 @@
                     <td class="text-end fw-semibold">${moeda(item.total)}</td>
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary pdv-salvar-item" type="button">
-                                Salvar
-                            </button>
                             <button class="btn btn-outline-danger pdv-remover-item" type="button">
                                 Remover
                             </button>
@@ -396,9 +393,10 @@
                     (produto) => `
                     <button class="pdv-product-result" type="button"
                         data-produto-id="${produto.id}">
-                        <span>
-                            <strong>${escapar(produto.nome)}</strong>
-                            <small>${escapar(produto.codigo)}${produto.gtin ? ` · ${escapar(produto.gtin)}` : ""}</small>
+                        <span class="d-flex align-items-center gap-2">
+                            ${produto.imagem_url ? `<img src="${escapar(produto.imagem_url)}" alt="" loading="lazy" style="width:72px;height:72px;object-fit:contain" class="rounded border">` : `<span class="d-inline-flex align-items-center justify-content-center rounded border" style="width:48px;height:48px" aria-hidden="true">📦</span>`}
+                            <span><strong>${escapar(produto.nome)}</strong>
+                            <small>${escapar(produto.codigo)}${produto.gtin ? ` · ${escapar(produto.gtin)}` : ""}</small></span>
                         </span>
                         <span class="text-end">
                             <strong>${moeda(produto.preco)}</strong>
@@ -484,44 +482,78 @@
         }
     });
 
-    corpoItens.addEventListener("click", async (evento) => {
-        const linha = evento.target.closest("[data-item-id]");
-        if (!linha) return;
+    // Serializa gravacoes para impedir que respostas antigas sobrescrevam o carrinho.
+    let operacaoItens = Promise.resolve();
+    let alteracaoPendente = false;
+    const enfileirarItem = (acao) => {
+        alteracaoPendente = true;
+        const tarefa = operacaoItens.catch(() => {}).then(acao);
+        operacaoItens = tarefa.finally(() => { alteracaoPendente = false; });
+        return operacaoItens;
+    };
 
+    const atualizarItem = (linha) => {
+        if (!linha || !linha.isConnected) return Promise.resolve();
+        const quantidade = linha.querySelector(".pdv-quantidade");
+        const desconto = linha.querySelector(".pdv-desconto-item");
+        if (!quantidade || !desconto) return Promise.resolve();
+        const qtd = quantidade.value;
+        const desc = desconto.value;
+        const originalQtd = quantidade.defaultValue;
+        const originalDesc = desconto.defaultValue;
+        if (qtd === originalQtd && desc === originalDesc) return Promise.resolve();
         const id = linha.dataset.itemId;
-
-        if (evento.target.closest(".pdv-salvar-item")) {
+        quantidade.disabled = true;
+        desconto.disabled = true;
+        return enfileirarItem(async () => {
             try {
-                const payload = await post(
-                    urlItem(app.dataset.alterarUrlBase, id),
-                    {
-                        quantidade: linha.querySelector(".pdv-quantidade").value,
-                        desconto: linha.querySelector(".pdv-desconto-item").value,
-                    }
-                );
-
+                const payload = await post(urlItem(app.dataset.alterarUrlBase, id), {
+                    quantidade: qtd, desconto: desc,
+                });
                 renderVenda(payload.venda);
-                mostrarAlerta("Item atualizado.", "success");
             } catch (erro) {
+                // Restaura os valores confirmados, evitando divergencia com o servidor.
+                quantidade.value = originalQtd;
+                desconto.value = originalDesc;
                 mostrarAlerta(erro.message);
+                throw erro;
+            } finally {
+                quantidade.disabled = false;
+                desconto.disabled = false;
             }
-        }
+        });
+    };
 
-        if (evento.target.closest(".pdv-remover-item")) {
-            if (!window.confirm("Remover este item da venda?")) return;
+    corpoItens.addEventListener("focusout", (evento) => {
+        if (!evento.target.matches(".pdv-quantidade, .pdv-desconto-item")) return;
+        atualizarItem(evento.target.closest("[data-item-id]")).catch(() => {});
+    });
+    corpoItens.addEventListener("keydown", (evento) => {
+        if (evento.key !== "Enter" || !evento.target.matches(".pdv-quantidade, .pdv-desconto-item")) return;
+        evento.preventDefault();
+        evento.target.blur();
+    });
 
+    corpoItens.addEventListener("click", (evento) => {
+        const botao = evento.target.closest(".pdv-remover-item");
+        if (!botao) return;
+        const linha = botao.closest("[data-item-id]");
+        if (!linha) return;
+        botao.disabled = true;
+        enfileirarItem(async () => {
             try {
                 const payload = await post(
-                    urlItem(app.dataset.cancelarUrlBase, id),
+                    urlItem(app.dataset.cancelarUrlBase, linha.dataset.itemId),
                     { motivo: "Removido na frente de caixa." }
                 );
-
                 renderVenda(payload.venda);
                 mostrarAlerta("Item removido.", "success");
             } catch (erro) {
                 mostrarAlerta(erro.message);
+            } finally {
+                botao.disabled = false;
             }
-        }
+        }).catch(() => {});
     });
 
     const numero = (valor) => {
@@ -568,8 +600,11 @@
 
     const atualizarCashbackPrevistoFechamento = () => {
         const percentual = numero(vendaAtual?.beneficios?.percentual_cashback);
-        const previsto = baseCashback() * percentual / 100;
+        const clienteIdentificado = Boolean(
+            vendaAtual?.cliente && vendaAtual.cliente.cpf !== "CONSUMIDOR"
+        );
         const base = baseCashback();
+        const previsto = clienteIdentificado ? base * percentual / 100 : 0;
         const elementoBase = document.getElementById("pdv-fechamento-base-cashback");
         if (elementoBase) elementoBase.textContent = moeda(base);
         const elementoModal = document.getElementById("pdv-fechamento-cashback-previsto");
@@ -667,6 +702,16 @@
 
     const abrirFechamento = async () => {
         if (!botaoFinalizar || botaoFinalizar.disabled) return;
+        // O clique tira o foco do campo: aguarda sua gravacao antes de fechar.
+        const ativo = document.activeElement;
+        if (ativo?.matches?.(".pdv-quantidade, .pdv-desconto-item")) ativo.blur();
+        try {
+            await operacaoItens;
+        } catch (_) {
+            mostrarAlerta("Corrija o item antes de finalizar a venda.");
+            return;
+        }
+        if (alteracaoPendente) return;
         erroFechamento("");
         try {
             const resposta = await fetch(app.dataset.opcoesFechamentoUrl, {
