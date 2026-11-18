@@ -1,0 +1,64 @@
+{% extends 'produtos/base_catalogo.html' %}
+{% block catalogo_content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h2>{{ titulo }}</h2><a class="btn btn-primary" href="{% url 'produtos:logistica_novo' tipo=tipo %}">Novo cadastro</a></div>
+<div class="table-responsive"><table class="table table-striped align-middle"><thead><tr><th>Nome / referência</th><th>Detalhes</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+{% for item in pagina %}<tr><td>{% if item.nome %}{{ item.nome }}{% elif item.caixa %}{{ item.caixa }} / {{ item.apresentacao }}{% elif item.refil %}{{ item.refil }} / {{ item.apresentacao_original }}{% else %}{{ item.aba }} / linha {{ item.linha }}{% endif %}</td><td>{% if item.quantidade != None %}Quantidade: {{ item.quantidade }}{% elif item.tipo %}{{ item.get_tipo_display }}{% elif item.fornecedor %}{{ item.fornecedor }}{% elif item.quantidade_original %}{{ item.quantidade_original }}{% endif %}</td><td>{% if pode_inativar %}{% if item.ativo %}<span class="badge bg-success">Ativo</span>{% else %}<span class="badge bg-secondary">Inativo</span>{% endif %}{% else %}—{% endif %}</td><td><div class="d-flex flex-wrap gap-2"><a class="btn btn-sm btn-outline-primary" href="{% url 'produtos:logistica_editar' tipo=tipo item_id=item.pk %}">Editar</a>{% if pode_inativar %}<form method="post" action="{% url 'produtos:logistica_acao' tipo=tipo item_id=item.pk %}">{% csrf_token %}<input type="hidden" name="acao" value="{% if item.ativo %}inativar{% else %}reativar{% endif %}"><button class="btn btn-sm btn-outline-secondary" type="submit">{% if item.ativo %}Inativar{% else %}Reativar{% endif %}</button></form>{% endif %}<form method="post" action="{% url 'produtos:logistica_acao' tipo=tipo item_id=item.pk %}" data-f33-excluir="1">{% csrf_token %}<input type="hidden" name="acao" value="excluir"><button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button></form></div></td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted">Nenhum cadastro encontrado.</td></tr>{% endfor %}
+</tbody></table></div>
+{% if pagina.paginator.num_pages > 1 %}<nav aria-label="Paginação dos cadastros logísticos"><ul class="pagination justify-content-end flex-wrap gap-1"><li class="page-item {% if not pagina.has_previous %}disabled{% endif %}">{% if pagina.has_previous %}<a class="page-link" href="?page={{ pagina.previous_page_number }}">Anterior</a>{% else %}<span class="page-link">Anterior</span>{% endif %}</li>{% for numero in pagina.paginator.page_range %}<li class="page-item {% if numero == pagina.number %}active{% endif %}"><a class="page-link" href="?page={{ numero }}" {% if numero == pagina.number %}aria-current="page"{% endif %}>{{ numero }}</a></li>{% endfor %}<li class="page-item {% if not pagina.has_next %}disabled{% endif %}">{% if pagina.has_next %}<a class="page-link" href="?page={{ pagina.next_page_number }}">Próxima</a>{% else %}<span class="page-link">Próxima</span>{% endif %}</li></ul><p class="text-end text-muted small">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} · {{ pagina.paginator.count }} registros</p></nav>{% endif %}
+
+<div class="modal fade" id="f33d2h7-modal-exclusao" tabindex="-1" aria-labelledby="f33d2h7-titulo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="f33d2h7-titulo">Confirmar exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja excluir definitivamente <strong id="f33d2h7-nome"></strong>?</p>
+        <p class="text-muted mb-0">Se houver dependências, o sistema bloqueará a exclusão. A inativação preserva o histórico.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="f33d2h7-confirmar">Confirmar exclusão</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var modalEl = document.getElementById('f33d2h7-modal-exclusao');
+  var confirmar = document.getElementById('f33d2h7-confirmar');
+  var nome = document.getElementById('f33d2h7-nome');
+  var pendente = null;
+  document.addEventListener('submit', function (ev) {
+    var form = ev.target;
+    if (!form || !form.matches || !form.matches('form[data-f33-excluir="1"]')) return;
+    ev.preventDefault();
+    if (!(window.bootstrap && window.bootstrap.Modal)) {
+      console.error('Modal Bootstrap indisponível: exclusão bloqueada por segurança.');
+      return;
+    }
+    pendente = form;
+    var linha = form.closest('tr');
+    var celula = linha && linha.querySelector('td');
+    nome.textContent = celula ? celula.textContent.trim() : 'este cadastro';
+    window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  });
+  confirmar.addEventListener('click', function () {
+    if (!pendente) return;
+    var form = pendente;
+    pendente = null;
+    confirmar.disabled = true;
+    confirmar.textContent = 'Excluindo...';
+    HTMLFormElement.prototype.submit.call(form);
+  });
+  modalEl.addEventListener('hidden.bs.modal', function () {
+    pendente = null;
+    confirmar.disabled = false;
+    confirmar.textContent = 'Confirmar exclusão';
+  });
+})();
+</script>
+
+{% endblock %}

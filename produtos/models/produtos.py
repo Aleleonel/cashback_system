@@ -33,6 +33,11 @@ class Produto(models.Model):
         related_name='produtos'
     )
 
+    apresentacao_logistica = models.ForeignKey(
+        'produtos.ApresentacaoProduto', on_delete=models.PROTECT,
+        null=True, blank=True, related_name='produtos'
+    )
+
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.PROTECT,
@@ -344,6 +349,12 @@ class Produto(models.Model):
         super().clean()
 
         erros = {}
+
+        if (self.apresentacao_logistica_id and
+                self.apresentacao_logistica.matriz_id != self.matriz_id):
+            erros['apresentacao_logistica'] = (
+                'A apresentacao deve pertencer a mesma matriz do produto.'
+            )
 
         if self.categoria_id and self.categoria.matriz_id != self.matriz_id:
             erros['categoria'] = (

@@ -2,6 +2,7 @@ from django import forms
 from django.db.models import Q
 
 from core.forms import BootstrapModelForm
+from produtos.models.logistica import ApresentacaoProduto
 from produtos.models import (
     Categoria,
     Marca,
@@ -71,6 +72,7 @@ class ProdutoForm(BootstrapModelForm):
             'preco_venda',
             'atacado_elegivel',
             'promocional',
+            'apresentacao_logistica',
             'peso_liquido_gramas',
             'peso_bruto_gramas',
             'altura_cm',
@@ -166,6 +168,12 @@ class ProdutoForm(BootstrapModelForm):
         if matriz is not None:
             self.instance.matriz = matriz
 
+        self.fields['apresentacao_logistica'].queryset = (
+            ApresentacaoProduto.objects.filter(matriz=self.matriz).filter(
+                Q(ativo=True) | Q(pk=self.instance.apresentacao_logistica_id)
+            ).order_by('nome') if self.matriz is not None
+            else ApresentacaoProduto.objects.none()
+        )
         self._configurar_relacionamentos()
         self._configurar_campos_fiscais()
 

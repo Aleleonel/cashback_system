@@ -180,6 +180,10 @@
             <hr class="my-4">
 
             <h2 class="h6 mb-3">Logística e frete</h2>
+            <div class="mb-3">
+                {% include 'partials/campo_formulario.html' with campo=form.apresentacao_logistica %}
+                <div class="form-text">Apresentação individual comercializada (pote, refil etc.). Não é caixa de expedição.</div>
+            </div>
 
             <div class="row g-3">
                 <div class="col-md-6">

@@ -1,4 +1,5 @@
-﻿from django.urls import path
+from django.urls import path
+from .views.logistica import lista_logistica, editar_logistica, acao_logistica
 
 from .views import (
     baixar_modelo_importacao_produtos,
@@ -24,6 +25,10 @@ app_name = 'produtos'
 
 
 urlpatterns = [
+    path('logistica/<str:tipo>/', lista_logistica, name='logistica_lista'),
+    path('logistica/<str:tipo>/<int:item_id>/acao/', acao_logistica, name='logistica_acao'),
+    path('logistica/<str:tipo>/novo/', editar_logistica, name='logistica_novo'),
+    path('logistica/<str:tipo>/<int:item_id>/editar/', editar_logistica, name='logistica_editar'),
     path(
         '',
         lista_produtos,
